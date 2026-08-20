@@ -66,6 +66,19 @@ const MAX_BODY_SPEED = 24;
  * time but doesn't stop a single frame's solver impulse from being huge. */
 const MAX_ANGULAR = 0.35;
 
+/** How hard a still-pinned body is nudged back toward its lane each tick —
+ * see the pin block in stepPhysics for why this replaced a hard teleport.
+ * GAIN is the proportional term (fraction of the remaining x distance
+ * converted to velocity per tick). SPEED is in px/step at REFERENCE_WIDTH
+ * (scaled by the container's own `scale` at the call site, like every
+ * other px constant here) and caps the result so a body that's drifted far
+ * from its lane doesn't get flung back at an unrealistic speed in one
+ * tick. At 60 ticks/s, GAIN 0.3 clears a typical few-tens-of-px drift in
+ * well under a second while still losing a tug-of-war with the collision
+ * solver instead of overpowering it every frame. */
+const PIN_CORRECT_GAIN = 0.3;
+const PIN_CORRECT_SPEED = 10;
+
 /** An item's alpha-bbox longest edge renders at BASE_SIZE * item.sizeScale,
  * at the REFERENCE_WIDTH container width — sizing is driven entirely by the
  * alpha bbox (see alpha-bbox.ts), never by the source file's pixel
@@ -690,8 +703,28 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
           // tip, roll and collide with whatever's already in the jar.
           if (!hasEnteredJar.get(id)) {
             const targetX = (TARGET_X_FRACTION[id] ?? 0.5) * width;
-            Body.setPosition(body, { x: targetX, y: body.position.y });
-            Body.setVelocity(body, { x: 0, y: body.velocity.y });
+            // A hard teleport straight to targetX every tick (this used to
+            // be a plain Body.setPosition, matching the old Jar.js
+            // reference exactly) fights the collision solver whenever a
+            // still-pinned body is touching something — an already-landed
+            // neighbour, or another pinned item packed into a nearby lane.
+            // The solver pushes it sideways that same tick to resolve the
+            // overlap; the very next tick this teleports it straight back
+            // to targetX, undoing that; the tick after, the solver pushes
+            // it away again — repeating every frame reads as visible
+            // shaking. The old reference didn't hit this because its
+            // collision boxes were much smaller (BODY_SCALE 0.36 there vs.
+            // this roster's larger, more crowded ones) — contact between
+            // two still-pinned bodies was rare enough not to matter. Nudge
+            // toward targetX with a capped velocity instead of teleporting:
+            // it still reliably reaches its lane (see PIN_CORRECT_SPEED's
+            // own comment), but converges instead of snapping, so it can
+            // actually lose a tug-of-war with the solver instead of re-
+            // starting it every frame.
+            const dx = targetX - body.position.x;
+            const pinSpeedCap = PIN_CORRECT_SPEED * scale;
+            const pinVx = Math.max(-pinSpeedCap, Math.min(pinSpeedCap, dx * PIN_CORRECT_GAIN));
+            Body.setVelocity(body, { x: pinVx, y: body.velocity.y });
             // Keep it upright while still pinned, too. The neck opening
             // (see jar-shape.ts) has margin for every column's item at its
             // authored, axis-aligned footprint — but a body that's picked
