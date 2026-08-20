@@ -1,0 +1,47 @@
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.circle {
+  --toggle-color: #000;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--toggle-color);
+  background-color: transparent;
+  box-sizing: border-box;
+}
+
+.circle.active {
+  background-color: var(--toggle-color);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .circle {
+    transition: background-color 150ms ease;
+  }
+}
+
+/* OFF + hover: fill appears at 50% opacity */
+.toggle:hover .circle:not(.active) {
+  background-color: color-mix(in srgb, var(--toggle-color) 50%, transparent);
+}
+
+/* ON + hover: ring stays visible, fill drops to 50% opacity */
+.toggle:hover .circle.active {
+  background-color: color-mix(in srgb, var(--toggle-color) 50%, transparent);
+}
+
+.label {
+  font-size: var(--fs-small);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.8);
+}

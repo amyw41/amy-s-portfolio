@@ -1,0 +1,278 @@
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-block: 24px;
+  /* Rough budget for the vertical space actually left for .columns once
+   * the top bar and this section's own block padding are accounted for —
+   * not a live measurement (there's no ResizeObserver on the top bar), so
+   * treat it as an approximation. It only matters as a ceiling for the
+   * jar's height on short-but-wide viewports (see .jarWrapper below); being
+   * a bit conservative there is harmless. */
+  --available-height: calc(100dvh - 96px);
+}
+
+/* The width/centring itself comes from the global .pageContainer class
+ * (see globals.css) — this local class only adds the flex layout .hero's
+ * two rows (topBar, columns) need, and fills .hero's own height so
+ * min-height:100vh above still means something once .hero's horizontal
+ * padding moved from the section itself onto this inner box. */
+.container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* ---------- top bar ---------- */
+
+.topBar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 24px;
+}
+
+.langToggle {
+  display: flex;
+  gap: 12px;
+}
+
+.langButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--fs-small);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .langButton {
+    transition: color 150ms ease;
+  }
+}
+
+.langButton:hover {
+  color: #9a9a9a;
+}
+
+.socialGroup {
+  display: flex;
+  border: 1px solid #000;
+}
+
+.socialIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.socialIcon + .socialIcon {
+  border-left: 1px solid #000;
+}
+
+.socialIcon img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  user-select: none;
+}
+
+/* ---------- columns ---------- */
+
+.columns {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 56px;
+  /* Items now spawn well above the jar (see SPAWN_BASE/SPAWN_STEP in
+   * useJarPhysics) so they visibly fall in from off-screen rather than
+   * popping into existence at the jar's mouth. .itemLayer stays
+   * overflow:visible so that fall is actually visible, so the clip has to
+   * happen somewhere above it instead — here, not on .hero itself: .topBar
+   * is .hero's own first child, sitting *above* .columns in the same box,
+   * so clipping at .hero's edge wouldn't stop an item from rendering over
+   * the nav row while still comfortably inside .hero's box. Clipping here,
+   * at .columns's top edge (exactly where .topBar ends), is what actually
+   * guarantees a falling item can never cover the nav bar. */
+  overflow: clip;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  /* Natural width up to this share of the content box, so a long line of
+   * text can't push the jar column around — it stops growing at 46% and
+   * lets .right take the rest. */
+  max-width: 46%;
+}
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.logo {
+  width: 48px;
+  height: auto;
+  margin-bottom: 8px;
+  user-select: none;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 300;
+  color: #000;
+  /* Belt-and-braces alongside the --fs-title/--pad sizing fix (tokens.css):
+   * this should never be forced to wrap now, but nowrap keeps "amy wang's
+   * jar" on one line even if some future change makes the column tighter
+   * again. */
+  white-space: nowrap;
+}
+
+.tagline {
+  margin: 0;
+  font-size: var(--fs-tagline);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 64px;
+}
+
+.navLink {
+  width: fit-content;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+  font-family: inherit;
+  font-size: var(--fs-nav);
+  font-weight: 400;
+  color: #000;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .navLink {
+    transition: color 150ms ease;
+  }
+}
+
+.navLink:hover {
+  color: #9a9a9a;
+}
+
+/* ---------- right column: jar + toggles ---------- */
+
+.right {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.jarWrapper {
+  /* Largest width that's simultaneously: within the design reference's
+   * clamp, ≤ the available horizontal space, and small enough that height
+   * still fits within the available viewport height. Picking width from a
+   * single formula (rather than separate width/height caps that could
+   * disagree) guarantees the box's ratio always matches jar.png exactly —
+   * required so the invisible physics walls (fractions of this box) stay
+   * aligned with the visibly drawn jar at every screen size. The height
+   * term is the one meant to bind on typical (short-ish) screens now — the
+   * width clamp and the safety term below exist mainly to keep it from
+   * running away on a very tall, narrow viewport.
+   *
+   * The height term's own multiplier, 0.6, is 88% of the jar's own
+   * width:height ratio (jar.png is 1600x2257 — verified against the actual
+   * file; see JarStage.module.css) collapsed into one rounded constant:
+   * 0.88 * 1600/2257 ≈ 0.624, rounded to 0.6. If jar.png's own pixel
+   * dimensions ever change, this needs updating by hand along with the
+   * `aspect-ratio: 1600 / 2257` in JarStage.module.css — it's no longer
+   * derived from those numbers directly.
+   *
+   * The middle term is `min(100vw, content-max) - 2*pad` rather than a
+   * bare `100%`: .right is a shrink-to-fit flex item (it isn't grown/
+   * stretched to a definite share of .columns), so a plain percentage
+   * here would resolve against .right's own width — which is itself
+   * derived from this element's content, including this very `width`
+   * property. That circularity collapses to a degenerate near-zero size
+   * instead of the intended cap. A viewport-relative bound sidesteps it
+   * while still guarding the same case (an unreasonably narrow column)
+   * the literal 100% was meant to catch — capped at content-max too, to
+   * match the page's own content box rather than the raw (unbounded)
+   * viewport once content-max is what's actually binding.
+   *
+   * The outer `calc(0.8 * min(...))` scales the jar and every item down
+   * together as one entity (per feedback that the whole jar read too big) —
+   * multiplying the whole formula rather than adjusting its individual caps
+   * keeps every term's own reasoning above intact, just resolved 0.8x
+   * smaller. Since JarStage's physics sizing is entirely a function of this
+   * container's own rendered width (REFERENCE_WIDTH in useJarPhysics), items
+   * shrink right along with the jar automatically. */
+  width: calc(
+    0.8 *
+      min(
+        clamp(300px, 46vw, 700px),
+        calc(min(100vw, var(--content-max)) - 2 * var(--pad)),
+        calc(var(--available-height) * 0.6)
+      )
+  );
+  flex: 0 0 auto;
+}
+
+.toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 900px) {
+  .columns {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .left {
+    /* .left's 46% cap is a two-column thing — once .columns stacks,
+     * .left is the full-width row on its own and should use all of it. */
+    max-width: none;
+  }
+
+  .nav {
+    margin-top: 40px;
+  }
+
+  .right {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .jarWrapper {
+    /* Same 0.8x "jar + items as one entity" scale as the two-column layout
+     * above, applied to the stacked-layout width (100% -> 80%). */
+    width: 80%;
+  }
+
+  .toggles {
+    flex-direction: row;
+    gap: 24px;
+    padding-top: 16px;
+  }
+}

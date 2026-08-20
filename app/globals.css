@@ -1,0 +1,58 @@
+@import "../lib/tokens.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-roboto), system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  color: #000;
+  background: #fff;
+}
+
+img {
+  user-select: none;
+}
+
+/* Shared content-alignment contract: every section's inner container uses
+ * this so the hero, projects, footer, etc. all share identical left/right
+ * edges at every viewport width, instead of each section rolling its own
+ * padding independently and slowly drifting out of alignment. Below
+ * ~1250px --pad is the binding constraint and this tracks the viewport;
+ * above it --content-max takes over and the side margins simply grow. A
+ * plain global class (not a CSS Module one) on purpose — this needs to be
+ * reachable from every section's own component, not scoped to one. */
+.pageContainer {
+  width: min(100% - (2 * var(--pad)), var(--content-max));
+  margin-inline: auto;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: #f9e6e8;
+  color: #ae0c24;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,46 @@
+/*
+ * Design tokens. Reference viewport: 1280px wide, ~90px padding both
+ * sides (7vw). Every clamp() below is (min, px/1280*100vw, max) so
+ * values land exactly on their comment at a 1280px viewport.
+ */
+:root {
+  /* Was 14vw/300px — that ate so much side margin that the content box
+   * stayed pad-bound (narrower than --content-max) all the way up to
+   * ~1458px-wide viewports, squeezing .left's column well below what
+   * --content-max was meant to guarantee. Trimmed so --content-max takes
+   * over — and the hero title reliably has room for its one line (see
+   * --fs-title below) — starting around ~1220px instead. */
+  --pad: clamp(24px, 7vw, 150px);
+  /* Caps every section's inner content box so text and the jar (or any
+   * other section content) read as one composition instead of drifting to
+   * opposite edges on wide screens. Below ~1220px --pad is still the
+   * binding constraint (100% - 2*pad < content-max); above it this cap
+   * takes over and the side margins simply grow instead of the content. */
+  --content-max: 1050px;
+
+  /* Was 5.08vw/78px, scaling off the raw viewport with no ceiling tied to
+   * --content-max — past ~1250px wide the font kept growing while the
+   * container itself stopped (content-max binds), so "amy wang's jar"
+   * outgrew .left's 46%-of-content-max column and wrapped to two lines.
+   * Lowered so it stays comfortably inside that column at every width. */
+  --fs-title: clamp(32px, 4vw, 56px); /* 51px @1280 */
+  --fs-section: clamp(32px, 3.91vw, 60px); /* 50px @1280 */
+  --fs-footer-h: clamp(28px, 3.13vw, 48px); /* 40px @1280 */
+  --fs-nav: clamp(18px, 1.72vw, 26px); /* 22px @1280 */
+  --fs-tagline: clamp(16px, 1.56vw, 24px); /* 20px @1280 */
+  --fs-small: clamp(14px, 1.25vw, 19px); /* 16px @1280 */
+
+  --c-red: #ff2841;
+  --c-blue: #42b4fa;
+  --c-magenta: #fb28ff;
+  --dim-white: 0.4;
+}
+
+/* 14vw is far too much gutter once the viewport gets phone-narrow (e.g.
+ * ~54px at 390px wide would eat a huge share of the screen) — below 768px
+ * the gutter is fixed instead of viewport-relative. */
+@media (max-width: 768px) {
+  :root {
+    --pad: 24px;
+  }
+}

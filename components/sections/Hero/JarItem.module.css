@@ -1,0 +1,21 @@
+.item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  overflow: hidden;
+  /* Matter.Mouse hit-tests physics bodies directly, not DOM elements —
+   * item divs stay out of the way of the container's own mouse listeners. */
+  pointer-events: none;
+}
+
+.image {
+  /* Sized and positioned inline per-item (see JarItem.tsx) so the file's
+   * alpha bbox — not its full padded bounds — lines up with the div. */
+  position: absolute;
+  display: block;
+  user-select: none;
+  /* See the matching comment in JarStage.module.css's .jarImage — same
+   * native-image-drag defense, here for each item's own <img>. */
+  -webkit-user-drag: none;
+}
