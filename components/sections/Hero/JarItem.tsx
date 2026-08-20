@@ -30,7 +30,12 @@ const JarItem = forwardRef<HTMLDivElement, JarItemProps>(function JarItem(
       style={{
         width,
         height,
-        borderRadius: item.shape === "box" ? 12 : 0,
+        // Proportional to the div's own rendered size (~6% of the shorter
+        // edge) instead of a flat pixel value — a flat 12px didn't scale
+        // with BASE_SIZE*scale the way every other size in this feature
+        // does, so on a narrower viewport (smaller div, same 12px) the
+        // project cards read as noticeably more rounded than intended.
+        borderRadius: item.shape === "box" ? Math.min(width, height) * 0.06 : 0,
       }}
     >
       <img

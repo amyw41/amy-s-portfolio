@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import Matter from "matter-js";
 import { JAR_INTERIOR_POINTS, JAR_WALL_THICKNESS, computeJarWallRects, createJarWallBodies, type JarWallRect } from "./jar-shape";
-import { computeAlphaBBox, type AlphaBBox } from "./alpha-bbox";
+import { computeAlphaBBox, type AlphaBBox, type ScanRegion } from "./alpha-bbox";
 import { PLACEMENT_ORDER, LAYER_ORDER, TARGET_X_FRACTION } from "./jar-layout";
 import type { JarItemDef } from "./items.manifest";
 
-const { Engine, Bodies, Body, Composite, Mouse, MouseConstraint, Events, Sleeping } = Matter;
+const { Engine, Bodies, Body, Composite, Mouse, Constraint, Events, Sleeping } = Matter;
 
 /** The jar container's own width at the reference viewport — every size
  * derived below (item sizes, body sizes, spawn heights, rustle radius,
@@ -86,58 +86,42 @@ const BASE_SIZE = 160;
  * behind whatever's in front of them, per the original design) before
  * their (much smaller) rigid bodies actually touch. One global constant,
  * not per-item: the per-item character lives entirely in density / friction
- * / restitution / frictionAir instead. */
-const BODY_SCALE = 0.38;
-
-/** Every item is released into its own column this many ms after the
- * previous one, in PLACEMENT_ORDER. Timed rather than staggered by spawn
- * height, so rhythm and fall speed can be tuned independently — and so the
- * release schedule can be driven off the deterministic sim clock instead of
- * wall-clock setTimeout jitter (see the `simTime` bookkeeping below). Short
- * enough that several items are airborne at once, so a later one lands on
- * a pile that's still visibly settling rather than arriving one at a time
- * onto something already static. */
-const RELEASE_INTERVAL_MS = 90;
-
-/** Collision group for every item that hasn't entered the jar yet (see
- * hasEnteredJar / PIN_RELEASE_Y_FRACTION below). Matter treats bodies
- * sharing the same *negative* group as never colliding with each other,
- * regardless of category/mask — which is what column-pinned bodies need:
- * while still pinned, a body's x is rigidly forced back to its own lane
- * every tick, so it can never actually move away from a collision. Two
- * still-pinned bodies in nearby lanes would otherwise permanently jam each
- * other (the solver tries to push them apart, the pin immediately undoes
- * it, repeat forever). The moment a body's pin releases it's reset to the
- * default group (0) — collides normally with everything from then on,
- * including other items still above the jar, which is exactly what lets
- * the pile tumble and jostle instead of stacking in silence. */
-const FALLING_GROUP = -1;
+ * / restitution / frictionAir instead.
+ *
+ * Was 0.38 — with the current 13-item roster that let items sink deep
+ * enough into the pile that whatever landed in front of them could hide
+ * most of their silhouette, not just "a quarter". Raised to 0.55, which
+ * fixed the burial complaint but — combined with several items being sized
+ * up afterward (bottle 1.3x, skullpanda/chips ~1.3x, bear-hirono/rabbit
+ * 1.5x) — made collision hitboxes big enough that a landing item visibly
+ * shoves its already-settled neighbours, reading as constant bouncing.
+ * Pulled back to 0.48, then nudged up a small step to 0.54 — still reading
+ * as slightly too much overlap/burial at 0.48. If the pile now reads as
+ * too loose/spread out or starts bouncing again, bring this back down; if
+ * things are still overlapping too much, push it up further (toward ~0.7
+ * before it starts looking like items barely touch at all) — but the
+ * oversized items (bottle/skullpanda/chips/bear-hirono/rabbit) are the
+ * more likely lever if burial complaints come back hard, not this
+ * constant alone. */
+const BODY_SCALE = 0.54;
 
 /** Report (once, per item) when a PNG carries more than 15% untrimmed
  * transparent padding, so it can be cleaned up at the source file. */
 const PADDING_WARNING_THRESHOLD = 0.15;
 
-/** How far above the frame each item spawns, as a multiple of the
- * container's own height: item n (0-based, in fall order) spawns at
- * -(SPAWN_BASE + n * SPAWN_STEP) * height. n=0 spawns half a jar-height
- * above the frame; later items spawn further still, so nothing pops into
- * existence inside the visible page — everything genuinely falls in from
- * off-screen. */
-const SPAWN_BASE = 0.5;
-const SPAWN_STEP = 0.12;
-
-/** frictionAir while an item hasn't entered the jar yet — uniform across
- * every item, overriding whatever it's individually authored to in
- * items.manifest.ts (0.008–0.045). That per-item value exists to give each
- * object its own settle character (a light patch jostles, a heavy bottle
- * thuds), but it also acts as an air-drag terminal-velocity cap during the
- * fall itself — at 0.03 vs 0.008 that's a dramatically different fall
- * speed for no reason a viewer would read as intentional. Forcing this one
- * low value while still above the mouth decouples "how fast it falls" from
- * "how it settles": every item drops at the same brisk, consistent rate,
- * then the instant it enters the jar (see hasEnteredJar in stepPhysics)
- * its authored frictionAir is restored and its own character takes over. */
-const FALL_FRICTION_AIR = 0.001;
+/** Base gap, in px at REFERENCE_WIDTH (scales with the container like
+ * everything else), between the bottom of one item's spawn position and
+ * the top of the next one's, in fall order — see the spawnYById cursor
+ * below. Ported directly from the old Jar.js reference's own spawnCursor
+ * logic: guaranteed vertical gaps at spawn (sized to each item's own
+ * actual height, not a flat fraction of the container) instead of letting
+ * Matter's overlap-resolution untangle already-interpenetrating bodies on
+ * frame 1 — that reference found deep initial overlaps could launch bodies
+ * clean through the walls on the very first few steps. */
+const SPAWN_GAP = 30;
+/** How far above the very top of the frame the *first* item's spawn cursor
+ * starts, same units as SPAWN_GAP. */
+const SPAWN_LEAD = 40;
 
 interface RenderInfo {
   /** The div's size — i.e. the alpha bbox at display scale. This IS the
@@ -160,12 +144,12 @@ interface PhysicsItem {
   halfHeight: number;
 }
 
-function preloadImage(src: string): Promise<AlphaBBox> {
+function preloadImage(src: string, scanRegion?: ScanRegion): Promise<AlphaBBox> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
     img.onload = () => {
       try {
-        resolve(computeAlphaBBox(img));
+        resolve(computeAlphaBBox(img, scanRegion));
       } catch (err) {
         reject(err instanceof Error ? err : new Error(String(err)));
       }
@@ -175,23 +159,24 @@ function preloadImage(src: string): Promise<AlphaBBox> {
   });
 }
 
-/** Where the column pin releases, as a fraction of container height. An
- * item is pinned to its lane for as long as its centre is above this line;
- * the instant it crosses below, the pin drops permanently and it's free to
- * tumble under pure physics — see hasEnteredJar in the hook below.
+/** Deep safety-valve fallback only — NOT the normal release path anymore
+ * (see landedIds/collisionStart in the hook below, which is what actually
+ * lets go of a column pin now: the moment an item's body touches the jar
+ * floor or an already-landed item). This fraction-of-height line exists
+ * purely so a body can never get physically stuck pinned forever if a
+ * collision is somehow missed (two static bodies briefly overlapping
+ * without generating a Matter collision event is rare, but not provably
+ * impossible) — set close to the floor, so in the normal case landedIds
+ * always fires first and this never engages.
  *
- * Deliberately well below the jar's actual mouth (JAR_INTERIOR_POINTS[0].y,
- * 0.06) rather than equal to it: releasing right at the mouth used to hand
- * an item to pure physics while it was still up in the neck — and the
- * neck's own shoulder (see jar-shape.ts's JAR_INTERIOR_POINTS) narrows in
- * before the body widens back out again, so a newly-freed item in an outer
- * lane would immediately graze that taper on its way down and get
- * deflected inward, reading as "items from the sides rolling into the
- * center" before they'd ever reached the pile. Held at 0.36 — just past
- * where the body widens back out (y:0.38 in jar-shape.ts) — an item stays
- * column-locked all the way through the narrow part and is only released
- * once it's already inside the wide body, with nothing left to graze. */
-const PIN_RELEASE_Y_FRACTION = 0.36;
+ * Used to be the *only* release condition, at 0.36 (just past the neck's
+ * shoulder, jar-shape.ts's y:0.38) — releasing there reliably got items
+ * clear of the narrow neck, but still handed them to free physics while
+ * they could easily be well above the actual pile in a mostly-empty jar.
+ * Whatever they grazed on the remaining unpinned drop could still nudge
+ * them sideways before they ever touched down, which is what kept reading
+ * as "items rolling toward center" for the first few arrivals. */
+const PIN_RELEASE_Y_FRACTION = 0.92;
 
 export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, items: JarItemDef[]) {
   const [ready, setReady] = useState(false);
@@ -261,7 +246,7 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       // one's alpha bounding box — sizing and physics geometry come from
       // that bbox, not the file's own pixel dimensions (see alpha-bbox.ts).
       const bboxEntries = await Promise.all(
-        items.map(async (item) => [item.id, await preloadImage(item.src)] as const),
+        items.map(async (item) => [item.id, await preloadImage(item.src, item.cropRegion)] as const),
       );
       if (cancelled) return;
       const bboxes = Object.fromEntries(bboxEntries) as Record<string, AlphaBBox>;
@@ -283,13 +268,10 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
 
       const engine = Engine.create({
         enableSleeping: true,
-        // Was 3.0 (3x Matter's own default of 1) — items covered the whole
-        // fall in well under half a second, closer to being fired down
-        // than dropped. Halved to 1.5: still brisk enough that the
-        // staggered release (see RELEASE_INTERVAL_MS) reads as a lively
-        // tumble in rather than a slow drift, but with enough hang time in
-        // the air to actually look like gravity.
-        gravity: { x: 0, y: 1.5 },
+        // Matches the old Jar.js reference's own gravity exactly (2.6) —
+        // this had drifted to 1.5 at some point this session, which reads
+        // noticeably floatier/slower than the reference's snappier drop.
+        gravity: { x: 0, y: 2.6 },
         // Higher gravity + a higher speed cap means a body can cross more
         // distance in a single step — more solver iterations keep contacts
         // (the floor, the walls) properly resolved instead of tunnelling
@@ -320,10 +302,55 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       // a one-way latch (see stepPhysics): once true, never re-pinned,
       // even if it later bounces back above that y for a moment.
       const hasEnteredJar = new Map<string, boolean>(items.map((item) => [item.id, false]));
+      // Set the instant a still-pinned item's body actually touches the
+      // jar's floor or an already-landed item — see the collisionStart
+      // listener below. This, not a height threshold, is what stepPhysics
+      // now checks before letting go of a column pin. Ported from the old
+      // Jar.js reference's own `landed` flag (there tracked by array index
+      // off a single floor body; here by id off the jar-floor segments —
+      // see jar-shape.ts's FLOOR_SEGMENT_INDICES).
+      //
+      // The previous approach released the pin once a body's centre simply
+      // crossed a fixed y line (PIN_RELEASE_Y_FRACTION) partway down the
+      // jar — which reliably got items clear of the neck, but still handed
+      // them to free physics while they could easily be well above the
+      // actual pile in a mostly-empty jar. Whatever they grazed on that
+      // remaining unpinned drop — the curved lower wall, another item
+      // mid-fall — could still nudge them sideways before they ever
+      // touched down, which is what kept reading as "items rolling toward
+      // center" for the first few arrivals even after the neck-taper fix.
+      // Collision-gating removes that gap entirely: a pinned item now
+      // free-falls straight down its lane for the *entire* drop and only
+      // ever leaves pure column control at the exact moment it has
+      // something solid under it.
+      const landedIds = new Set<string>();
       const fallIndexById = new Map<string, number>(orderedIds.map((id, i) => [id, i]));
-      const releasedIds = new Set<string>();
-      const releaseSimTime = new Map<string, number>(orderedIds.map((id, i) => [id, i * RELEASE_INTERVAL_MS]));
-      let simTime = 0;
+
+      // Marks landedIds the instant a still-pinned body's very first real
+      // contact is with the floor or something already landed — mirrors the
+      // old Jar.js reference's collisionStart-driven `landed` flag exactly.
+      // Reads bodyIdToItemId/hasEnteredJar, so this only needs registering
+      // once, after both exist; it doesn't need wallBodies/physicsItems to
+      // be populated yet since it only ever fires once real collisions
+      // happen, well after setup. The hasEnteredJar checks below are the
+      // guard: only a still-falling item can BE marked landed, and only
+      // floor/an already-landed item can DO the marking.
+      function handleLandingPair(body: Matter.Body, other: Matter.Body) {
+        const id = bodyIdToItemId.get(body.id);
+        if (!id || hasEnteredJar.get(id)) return;
+        const otherIsFloor = other.label === "jar-floor";
+        const otherId = bodyIdToItemId.get(other.id);
+        const otherIsLandedItem = otherId !== undefined && hasEnteredJar.get(otherId) === true;
+        if (otherIsFloor || otherIsLandedItem) landedIds.add(id);
+      }
+      const handleCollisionStart = (event: Matter.IEventCollision<Matter.Engine>) => {
+        for (const pair of event.pairs) {
+          handleLandingPair(pair.bodyA, pair.bodyB);
+          handleLandingPair(pair.bodyB, pair.bodyA);
+        }
+      };
+      Events.on(engine, "collisionStart", handleCollisionStart);
+      cleanupFns.push(() => Events.off(engine, "collisionStart", handleCollisionStart));
 
       function buildWalls(w: number, h: number, s: number) {
         wallBodies = createJarWallBodies(JAR_INTERIOR_POINTS, w, h, JAR_WALL_THICKNESS * s);
@@ -351,7 +378,13 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
         return info;
       }
 
-      let currentRenderInfo = computeRenderInfo(1);
+      // Populated for real once the container's first measured (right after
+      // buildWalls, below) — a placeholder computeRenderInfo(1) call used to
+      // sit here instead, but nothing ever reads it before that real call
+      // overwrites it: spawnBody (the only reader) doesn't run until after
+      // the container's measured too. That was a full bbox-math pass over
+      // every item, thrown away unread every single mount.
+      let currentRenderInfo: Record<string, RenderInfo> = {};
 
       function createBodyForItem(item: JarItemDef, info: RenderInfo, x: number, y: number, angle: number) {
         // A rectangle matching the alpha bbox's own aspect ratio, lightly
@@ -370,12 +403,12 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
           frictionAir: item.frictionAir,
           angle,
           label: item.id,
-          // Starts in the "falling" group (never collides with other
-          // not-yet-entered bodies) — the hasEnteredJar check in
-          // stepPhysics resets this to 0 (normal collision) the moment the
-          // body crosses the mouth line.
-          collisionFilter: { group: FALLING_GROUP },
-          chamfer: { radius: Math.min(bodyW, bodyH) * 0.12 },
+          // Matches the old Jar.js reference's own chamfer proportion
+          // (radius = 0.4 × its hitbox size) — was 0.12 here, which reads
+          // much more sharp-edged/rectangular. The rounder hitbox lets
+          // things roll and settle more smoothly, closer to how the
+          // reference's pile actually moved.
+          chamfer: { radius: Math.min(bodyW, bodyH) * 0.4 },
         };
         const body = Bodies.rectangle(x, y, bodyW, bodyH, options);
         // Heavily scaled-up (not infinite) inertia: collisions can still
@@ -393,33 +426,49 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
         return body;
       }
 
-      // instant === reduced motion: every body starts dynamic, already
-      // falling, with no release stagger — the whole sim is then fast-
-      // forwarded synchronously (see below) before anything is ever
-      // painted, so it reads as "already settled", not as a skipped
-      // animation.
+      // instant === reduced motion: the whole sim is fast-forwarded
+      // synchronously (see below) before anything is ever painted, so it
+      // reads as "already settled", not as a skipped animation. Every body
+      // is dynamic and actually falling from the moment it's spawned
+      // either way — there's no separate release step to skip.
       const instant = reducedMotion;
+
+      // Guaranteed vertical gaps at spawn, in fall order — see SPAWN_GAP's
+      // own doc comment. Populated just before the spawn loop below (needs
+      // currentRenderInfo/scale, both only real after the container's
+      // measured — see computeSpawnYById's call site), keyed by id since
+      // spawnBody is called in `items` (manifest) order, not fall order.
+      const spawnYById = new Map<string, number>();
+      function computeSpawnYById() {
+        spawnYById.clear();
+        let cursor = SPAWN_LEAD * scale;
+        for (const id of orderedIds) {
+          const info = currentRenderInfo[id];
+          const size = Math.max(info?.divW ?? 0, info?.divH ?? 0) * BODY_SCALE;
+          spawnYById.set(id, -(cursor + size / 2));
+          cursor += size + SPAWN_GAP * scale;
+        }
+      }
 
       function spawnBody(item: JarItemDef) {
         const info = currentRenderInfo[item.id];
         const targetX = (TARGET_X_FRACTION[item.id] ?? 0.5) * width;
-        // Item n (0-based, in fall order) spawns n*SPAWN_STEP jar-heights
-        // further above the frame than the first — see SPAWN_BASE/STEP.
-        // Comfortably off-screen for every item, not just the last few.
-        const n = fallIndexById.get(item.id) ?? 0;
-        const spawnY = -(SPAWN_BASE + n * SPAWN_STEP) * height;
-        const body = createBodyForItem(item, info, targetX, spawnY, 0);
-        if (!instant) Body.setStatic(body, true); // see createBodyForItem's dynamic-then-freeze note below
+        const spawnY = spawnYById.get(item.id) ?? -height;
+        // item.rotate (degrees) is the angle it falls in at — see its own
+        // doc comment in items.manifest.ts. 0/undefined keeps the old
+        // upright spawn.
+        const spawnAngle = ((item.rotate ?? 0) * Math.PI) / 180;
+        const body = createBodyForItem(item, info, targetX, spawnY, spawnAngle);
         bodyIdToItemId.set(body.id, item.id);
         physicsItems.push({ id: item.id, body, halfWidth: info.divW / 2, halfHeight: info.divH / 2 });
         Composite.add(world, body);
-        if (instant) releasedIds.add(item.id);
       }
 
-      // Mouse / touch drag. Matter.Mouse hit-tests physics bodies directly
-      // (not DOM elements), so item divs stay pointer-events:none and this
-      // one listener set on the stage container is all drag needs. Because
-      // item divs are pointer-events:none, a mousedown inside the jar's
+      // Mouse / touch drag. Matter.Mouse (not the higher-level
+      // MouseConstraint) hit-tests physics bodies directly (not DOM
+      // elements), so item divs stay pointer-events:none and this one
+      // listener set on the stage container is all drag needs. Because item
+      // divs are pointer-events:none, a mousedown inside the jar's
       // silhouette actually lands on the plain <img> underneath (jar.png,
       // or an item's own <img> once painted) — both already have
       // draggable={false} (see JarStage.tsx / JarItem.tsx), but that alone
@@ -429,22 +478,79 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       // takes over the gesture: the item visibly "drags the image" instead
       // of the physics body (bug 1), and because the browser is now
       // driving a native drag-and-drop instead of firing ordinary
-      // mouse/touch events, the mouseup that would normally end the Matter
-      // drag can go missing entirely, leaving mouseConstraint stuck
-      // "holding" a body forever (bug 2 — release does nothing). Blocking
-      // dragstart here stops the native gesture from ever starting, so
-      // Matter.Mouse's own mousedown/mousemove/mouseup always wins.
+      // mouse/touch events, the mouseup that would normally end the drag
+      // can go missing entirely, leaving the item glued to the cursor
+      // forever (bug 2 — release does nothing). Blocking dragstart here
+      // stops the native gesture from ever starting, so Matter.Mouse's own
+      // mousedown/mousemove/mouseup always wins.
       container.addEventListener("dragstart", (e) => e.preventDefault());
 
+      // Only Matter.Mouse, not MouseConstraint — Mouse still gives us
+      // robust, already-battle-tested mouse *and* touch position/button
+      // tracking (mouse.position, mouse.button) relative to `container`,
+      // pixelRatio-corrected. What we don't want is MouseConstraint's own
+      // *picking*: it hit-tests against a body's actual collision geometry,
+      // which for every item here is BODY_SCALE (0.38) of the rendered
+      // image — deliberately small so the pile can overlap and pack down
+      // tightly (see BODY_SCALE's own comment). That's great for physics,
+      // but it means only the small dead-centre of an item was ever
+      // grabbable, which read as "the drag is only centered on a tiny spot"
+      // rather than the whole visible object. pickBodyAt below hit-tests
+      // against each item's full *visual* footprint (its alpha-bbox size,
+      // the same size the div actually renders at) instead, so grabbing
+      // anywhere on the object works — while the collision body driving the
+      // pile stays exactly as small as it was.
       const mouse = Mouse.create(container);
       mouse.pixelRatio = window.devicePixelRatio || 1;
-      const mouseConstraint = MouseConstraint.create(engine, {
-        mouse,
-        constraint: { stiffness: 0.2, damping: 0.1, render: { visible: false } },
-      });
-      Composite.add(world, mouseConstraint);
 
-      // The mouse constraint grabs a body wherever the cursor actually
+      // Finds the front-most (highest z-index) item whose full rendered
+      // rectangle — not its small collision body — contains world point
+      // (x, y), accounting for the body's current rotation. dx/dy is the
+      // click point relative to the body's centre in world space; rotating
+      // that by -body.angle gives the same offset in the body's own
+      // unrotated local frame, which is what both the rectangle test and
+      // the drag constraint's pointB (below) need.
+      function pickBodyAt(x: number, y: number): PhysicsItem | null {
+        let best: PhysicsItem | null = null;
+        let bestZ = -Infinity;
+        for (const pi of physicsItems) {
+          const info = currentRenderInfo[pi.id];
+          if (!info) continue;
+          const { body } = pi;
+          const dx = x - body.position.x;
+          const dy = y - body.position.y;
+          const cosA = Math.cos(body.angle);
+          const sinA = Math.sin(body.angle);
+          const localX = dx * cosA + dy * sinA;
+          const localY = -dx * sinA + dy * cosA;
+          if (Math.abs(localX) > info.divW / 2 || Math.abs(localY) > info.divH / 2) continue;
+          const z = zIndexRef.current.get(pi.id) ?? 0;
+          if (z > bestZ) {
+            bestZ = z;
+            best = pi;
+          }
+        }
+        return best;
+      }
+
+      // Cursor: "grab" (open hand) over any draggable item, "grabbing"
+      // (closed hand) for the duration of an actual drag, the plain
+      // pointer otherwise — makes the mouse itself read as the hand doing
+      // the grabbing instead of just being an arrow that happens to move
+      // things. Deduped against the container's current inline style so a
+      // fast mousemove burst isn't writing to the DOM every single event.
+      let currentCursorStyle = "";
+      const setCursor = (style: string) => {
+        if (currentCursorStyle === style) return;
+        currentCursorStyle = style;
+        container.style.cursor = style;
+      };
+      const updateHoverCursor = (x: number, y: number) => {
+        if (dragConstraint) return; // already dragging — "grabbing" owns the cursor until release
+        setCursor(pickBodyAt(x, y) ? "grab" : "");
+      };
+
+      // The drag constraint grabs a body wherever the cursor actually
       // clicked, not necessarily its centre — the constraint then pulls
       // that exact point toward the cursor, and a stiff pull from an
       // off-centre point is a torque. A fast or jerky drag could apply
@@ -455,52 +561,64 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       // sidesteps the torque entirely: the item still translates wherever
       // it's dragged, it just can't be spun while being held, matching how
       // picking something up by one corner doesn't actually spin it in
-      // your hand. Keyed by body id so each drag restores its own item's
-      // real inertia (its lockRotation-scaled value if it has one, its
-      // plain rectangle inertia otherwise) rather than some other item's.
-      const preDragInertia = new Map<number, number>();
+      // your hand.
+      let dragConstraint: Matter.Constraint | null = null;
+      let dragBody: Matter.Body | null = null;
+      let dragOriginalInertia = 0;
+      // Tracks mouse.button across ticks so the pick below only fires on
+      // the up-> down edge (see stepPhysics) — read/written there.
+      let wasMouseDown = false;
 
-      Events.on(mouseConstraint, "startdrag", (e: Matter.IEvent<Matter.MouseConstraint> & { body?: Matter.Body }) => {
-        const body = e.body;
-        if (!body) return;
-        const id = bodyIdToItemId.get(body.id);
-        if (id) bringToFront(id);
-        preDragInertia.set(body.id, body.inertia);
+      function beginDrag(x: number, y: number) {
+        const target = pickBodyAt(x, y);
+        if (!target) return;
+        const { body } = target;
+        const dx = x - body.position.x;
+        const dy = y - body.position.y;
+        const cosA = Math.cos(body.angle);
+        const sinA = Math.sin(body.angle);
+        bringToFront(target.id);
+        dragOriginalInertia = body.inertia;
         Body.setInertia(body, Infinity);
-      });
+        dragBody = body;
+        dragConstraint = Constraint.create({
+          pointA: { x, y },
+          bodyB: body,
+          pointB: { x: dx * cosA + dy * sinA, y: -dx * sinA + dy * cosA },
+          stiffness: 0.2,
+          damping: 0.1,
+          length: 0,
+          render: { visible: false },
+        });
+        Composite.add(world, dragConstraint);
+        setCursor("grabbing");
+      }
 
-      const restoreDragInertia = (body: Matter.Body | null | undefined) => {
-        if (!body) return;
-        const original = preDragInertia.get(body.id);
-        if (original !== undefined) {
-          Body.setInertia(body, original);
-          preDragInertia.delete(body.id);
-        }
-      };
+      function endDrag() {
+        if (!dragConstraint) return;
+        Composite.remove(world, dragConstraint);
+        if (dragBody) Body.setInertia(dragBody, dragOriginalInertia);
+        dragConstraint = null;
+        dragBody = null;
+        setCursor("");
+        const c = cursorRef.current;
+        if (c) updateHoverCursor(c.x, c.y);
+      }
 
-      Events.on(mouseConstraint, "enddrag", (e: Matter.IEvent<Matter.MouseConstraint> & { body?: Matter.Body }) => {
-        restoreDragInertia(e.body);
-      });
-
-      // Belt-and-braces for the "doesn't drop" half of the bug above (and
-      // for the ordinary case of releasing the mouse/finger past the
-      // stage's own edge while dragging an item near the jar's rim):
-      // Matter.Mouse's mouseup/touchend listener is scoped to `container`,
-      // so a release that lands outside it (native drag-ghost swallowing
-      // the event, or the cursor having genuinely left the element first)
-      // never reaches Matter, and mouseConstraint keeps its body attached
-      // indefinitely — the item stays glued to wherever the mouse last was.
-      // A window-level listener catches every release regardless of where
-      // it lands and force-clears the constraint's drag state. Also
-      // restores the dragged body's real inertia directly (rather than
-      // relying on "enddrag" to fire) since this bypasses Matter's own
-      // release path entirely.
+      // Belt-and-braces for the "doesn't drop" half of the drag-ghost bug
+      // above (and for the ordinary case of releasing the mouse/finger past
+      // the stage's own edge while dragging an item near the jar's rim):
+      // Matter.Mouse's own mouseup/touchend listener is scoped to
+      // `container`, so a release that lands outside it (native drag-ghost
+      // swallowing the event, or the cursor having genuinely left the
+      // element first) never reaches it, and mouse.button would stay stuck
+      // at "down" — the item would stay glued to wherever the mouse last
+      // was. A window-level listener catches every release regardless of
+      // where it lands and force-clears both the button state and our own
+      // drag constraint.
       const forceReleaseDrag = () => {
-        if (mouseConstraint.body) {
-          restoreDragInertia(mouseConstraint.body);
-          mouseConstraint.body = null as unknown as Matter.Body;
-        }
         mouse.button = -1;
+        endDrag();
       };
       window.addEventListener("mouseup", forceReleaseDrag);
       window.addEventListener("touchend", forceReleaseDrag);
@@ -521,9 +639,11 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
         const y = e.clientY - r.top;
         const prev = cursorRef.current;
         cursorRef.current = { x, y, prevX: prev ? prev.x : x, prevY: prev ? prev.y : y };
+        updateHoverCursor(x, y);
       };
       const handleMouseLeave = () => {
         cursorRef.current = null;
+        setCursor("");
       };
       if (!reducedMotion) {
         container.addEventListener("mousemove", handleMouseMove);
@@ -541,31 +661,33 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       // loop before the first paint, so both paths share identical,
       // deterministic behaviour.
       function stepPhysics() {
-        if (!instant) {
-          simTime += STEP_MS;
-          for (const id of orderedIds) {
-            if (releasedIds.has(id)) continue;
-            const at = releaseSimTime.get(id) ?? 0;
-            if (simTime >= at) {
-              releasedIds.add(id);
-              const pi = physicsItems.find((p) => p.id === id);
-              if (pi) Body.setStatic(pi.body, false);
-            }
-          }
+        // Edge-triggered: pick (mouse.button transitioning up -> down) only
+        // fires beginDrag once per press, not every tick it's held — so
+        // holding the button down over empty space and then drifting over
+        // an item afterward doesn't retroactively start dragging it, same
+        // as a normal click-and-drag gesture would only ever grab whatever
+        // was directly under the cursor at the moment of the press.
+        const isMouseDown = mouse.button === 0;
+        if (isMouseDown && !wasMouseDown && !dragConstraint) {
+          beginDrag(mouse.position.x, mouse.position.y);
+        } else if (!isMouseDown && dragConstraint) {
+          endDrag();
         }
+        if (dragConstraint) dragConstraint.pointA = { x: mouse.position.x, y: mouse.position.y };
+        wasMouseDown = isMouseDown;
 
         Engine.update(engine, STEP_MS);
 
         for (const { id, body } of physicsItems) {
-          // Column pinning: while an item's centre hasn't yet crossed the
-          // jar's mouth line, force its x back to its own lane and zero out
+          // Column pinning: while an item hasn't yet touched down (see
+          // landedIds above), force its x back to its own lane and zero out
           // any sideways velocity every tick. This is what guarantees every
           // item actually enters the jar rather than converging on wherever
-          // it first grazes something, or drifting off to the side while
-          // still well above the opening. The instant the centre crosses
-          // below the line, the pin drops for good (never re-checked) and
-          // the item falls under pure physics from then on — free to tip,
-          // roll and collide with whatever's already in the jar.
+          // it first grazes something, or drifting off to the side before
+          // it's actually landed. The instant it touches the floor or an
+          // already-landed item, the pin drops for good (never re-checked)
+          // and the item falls under pure physics from then on — free to
+          // tip, roll and collide with whatever's already in the jar.
           if (!hasEnteredJar.get(id)) {
             const targetX = (TARGET_X_FRACTION[id] ?? 0.5) * width;
             Body.setPosition(body, { x: targetX, y: body.position.y });
@@ -593,21 +715,8 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
             // interrupting something still falling).
             if (body.isSleeping) Sleeping.set(body, false);
 
-            // Fall speed decoupled from settle character — see
-            // FALL_FRICTION_AIR. Every not-yet-entered body gets forced to
-            // the same low value every tick (its authored value is
-            // restored the instant it enters, right below).
-            body.frictionAir = FALL_FRICTION_AIR;
-
-            if (body.position.y >= pinReleaseYPx) {
+            if (landedIds.has(id) || body.position.y >= pinReleaseYPx) {
               hasEnteredJar.set(id, true);
-              // Out of the never-collide-with-other-not-yet-entered group
-              // (see FALLING_GROUP) — from here on it collides normally
-              // with everything, including other items still above the
-              // jar, which is exactly what makes the pile tumble and
-              // jostle instead of quietly stacking.
-              body.collisionFilter.group = 0;
-              body.frictionAir = itemsById.get(id)?.frictionAir ?? body.frictionAir;
             }
           }
 
@@ -723,12 +832,12 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       scale = width / REFERENCE_WIDTH;
       buildWalls(width, height, scale);
       currentRenderInfo = computeRenderInfo(scale);
-      // Built dynamic (isStatic:false, the constructor default) always, so
-      // mass/inertia get computed normally from density × area — passing
-      // isStatic:true straight into the constructor options skips that
-      // computation entirely (mass stays null), which then produces NaN
-      // position the moment the body is later flipped dynamic. Freezing via
-      // Body.setStatic afterward (in spawnBody, above) avoids that.
+      computeSpawnYById();
+      // Every body is created dynamic and immediately falling — no static-
+      // then-released staging. Real vertical gaps at spawn (spawnYById)
+      // stand in for the old artificial release timer: the arrival stagger
+      // now falls naturally out of gravity + each item's own starting
+      // height/frictionAir, the same way the old Jar.js reference did it.
       for (const item of items) spawnBody(item);
 
       if (instant) {
@@ -739,13 +848,11 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
         // more headroom than the entrance needs even for the furthest
         // (deepest-spawned) item, given the new off-screen spawn heights.
         for (let i = 0; i < 1200; i++) stepPhysics();
-        for (const { id, body } of physicsItems) {
+        // Belt-and-braces: force every item marked entered even if one
+        // never actually crossed the mouth line in the fast-forward window,
+        // so it doesn't stay pinned to its lane forever.
+        for (const { id } of physicsItems) {
           hasEnteredJar.set(id, true);
-          // Belt-and-braces: force every item marked entered even if one
-          // never actually crossed the mouth line in the fast-forward
-          // window (so it doesn't stay pinned, or stuck in the never-
-          // collide-with-not-yet-entered group forever — see FALLING_GROUP).
-          body.collisionFilter.group = 0;
         }
       }
 
@@ -755,6 +862,14 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
         if (!container) return;
         const r = measure();
         if (r.w <= 0 || r.h <= 0) return;
+
+        // Every body gets destroyed and recreated below — a drag in
+        // progress would otherwise leave dragConstraint/dragBody pointing
+        // at a body that's no longer in the world (harmless, but the item
+        // would silently stop following the cursor mid-drag with no visible
+        // release). Cleanly end it first so a resize during a drag just
+        // drops the item where it was, same as letting go of the mouse.
+        endDrag();
 
         // Capture every body's position as a fraction of the *old* box
         // (works fine for still-off-screen bodies above the jar too — a
@@ -786,12 +901,6 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
           if (!item || !info) continue;
           const body = createBodyForItem(item, info, snap.xFrac * width, snap.yFrac * height, snap.angle);
           if (snap.wasStatic) Body.setStatic(body, true);
-          // createBodyForItem defaults every new body into FALLING_GROUP —
-          // correct for a body that hasn't entered the jar yet, but one
-          // that already has needs to come back out of it or it'd stop
-          // colliding with whatever's still dropping into neighbouring
-          // lanes after the rebuild.
-          if (hasEnteredJar.get(snap.id)) body.collisionFilter.group = 0;
           bodyIdToItemId.set(body.id, snap.id);
           physicsItems.push({ id: snap.id, body, halfWidth: info.divW / 2, halfHeight: info.divH / 2 });
           Composite.add(world, body);
