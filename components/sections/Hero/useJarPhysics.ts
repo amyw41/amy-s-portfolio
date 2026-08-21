@@ -165,8 +165,17 @@ function getOutlineThicknessPx(): number {
  * clean through the walls on the very first few steps. */
 const SPAWN_GAP = 30;
 /** How far above the very top of the frame the *first* item's spawn cursor
- * starts, same units as SPAWN_GAP. */
-const SPAWN_LEAD = 40;
+ * starts, same units as SPAWN_GAP. Was 40 — far too small relative to the
+ * stage's own reference height (~680px): the first item spawned barely
+ * above the jar drawing itself, well inside the already-visible column, so
+ * nothing was ever actually hidden by .columns's overflow:clip (Hero.module
+ * .css) — items just popped into an already-visible spot and fell a short
+ * distance, instead of genuinely falling in from off-screen. Raised to be
+ * comparable to the stage's own height so the first item's spawn point sits
+ * at or above .columns's clip boundary on typical viewports, making the
+ * clip line do its actual job (item is truly hidden, then reveals as it
+ * crosses the boundary) rather than being irrelevant. */
+const SPAWN_LEAD = 480;
 
 interface RenderInfo {
   /** The div's size — i.e. the alpha bbox at display scale. This IS the

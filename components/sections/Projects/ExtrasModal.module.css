@@ -1,0 +1,126 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  z-index: 100;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .backdrop {
+    animation: fadeIn 200ms ease-out;
+  }
+}
+
+.sheet {
+  /* Slightly narrower than the viewport, symmetric side spacing (the
+   * backdrop's own flex centring supplies the "symmetric" half; this width
+   * supplies the "slightly narrower"). Flush against the bottom edge —
+   * that's what makes "top corners rounded, bottom corners square" (below)
+   * a coherent shape rather than an arbitrary one. */
+  align-self: flex-end;
+  width: min(92%, 960px);
+  max-height: 85vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet {
+    animation: slideUp 250ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+.sheetInner {
+  /* Same --pad as the page (lib/tokens.css) so this content's left/right
+   * edges line up with every other section's, even though the sheet
+   * itself is narrower than the viewport. */
+  padding-inline: var(--pad);
+  padding-block: 32px calc(32px + env(safe-area-inset-bottom, 0px));
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--fs-section);
+  font-weight: 300;
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: none;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+  color: #000;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .closeButton {
+    transition: background-color 150ms ease;
+  }
+}
+
+.closeButton:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  min-height: 160px;
+  padding: 24px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.galleryPlaceholder {
+  grid-column: 1 / -1;
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-small);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+}

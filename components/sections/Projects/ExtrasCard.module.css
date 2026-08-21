@@ -1,0 +1,43 @@
+/* Undoes <button>'s default chrome and re-lays-out as the same flex row
+ * ProjectCard.module.css's .card already defines — .trigger only adds
+ * what a <button> needs beyond that (reset + cursor + text alignment),
+ * it doesn't redefine layout. */
+.trigger {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .trigger {
+    transition: opacity 150ms ease;
+  }
+}
+
+.trigger:hover {
+  opacity: 0.85;
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px dashed rgba(0, 0, 0, 0.25);
+  /* .media (ProjectCard.module.css) clips via overflow:hidden at its own
+   * 12px radius regardless — this just keeps the dashed border itself
+   * following a rounded corner into that clip, rather than a square corner
+   * getting cut off abruptly at the clip edge. */
+  border-radius: inherit;
+  box-sizing: border-box;
+  color: rgba(0, 0, 0, 0.4);
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 300;
+}

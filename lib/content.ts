@@ -14,9 +14,9 @@ export const content = {
         zh: "中文",
       },
       social: {
-        linkedin: { label: "LinkedIn", href: "https://linkedin.com/in/amy-wang" },
-        gmail: { label: "Email", href: "mailto:hello@amywang.dev" },
-        twitter: { label: "Twitter", href: "https://twitter.com/amywang" },
+        linkedin: { label: "LinkedIn", href: "https://linkedin.com/in/amyw41" },
+        gmail: { label: "Email", href: "mailto:amy.wang1@uwaterloo.ca" },
+        twitter: { label: "Twitter", href: "https://twitter.com/apriberri" },
       },
       nav: {
         work: "my work",
@@ -26,6 +26,21 @@ export const content = {
       toggles: {
         projects: "Projects",
         favourites: "Favourites",
+      },
+    },
+    projects: {
+      heading: "what's inside?",
+      filters: {
+        work: "Work",
+        personal: "Personal Project",
+        hackathon: "Hackathon",
+      },
+      extras: {
+        title: "extras",
+        description: "A few more things worth a look.",
+        modalTitle: "Extras",
+        galleryPlaceholder: "Gallery — coming soon.",
+        closeLabel: "Close",
       },
     },
     about: {

@@ -10,7 +10,18 @@
 }
 
 .circle {
-  --toggle-color: #000;
+  /* NOT --toggle-color: #000 here — CircleToggle.tsx sets the real value
+   * (var(--c-red) / var(--c-blue)) as an inline custom property on the
+   * parent <button>, meant to be inherited down to this span. But a custom
+   * property declared directly on an element always wins over one
+   * inherited from an ancestor, whatever that ancestor's own value is —
+   * so this line was silently shadowing the button's colour with a
+   * hardcoded black on every single render, which is why neither FF2841
+   * nor 42B4FA was ever actually reaching the circle. Removed; the button
+   * always sets --toggle-color itself (see CircleToggle.tsx's `color`
+   * prop, which is required), so there's no missing-value case to guard
+   * against here.
+   */
   width: 16px;
   height: 16px;
   min-width: 16px;
