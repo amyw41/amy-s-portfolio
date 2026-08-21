@@ -4,15 +4,21 @@ import { useRef } from "react";
 import styles from "./JarStage.module.css";
 import JarItem from "./JarItem";
 import { useJarPhysics } from "./useJarPhysics";
+import { getJarItemVisualState } from "./jar-visual-state";
 import type { JarItemDef } from "./items.manifest";
 
 interface JarStageProps {
   items: JarItemDef[];
+  projectsOn: boolean;
+  favouritesOn: boolean;
 }
 
-export default function JarStage({ items }: JarStageProps) {
+export default function JarStage({ items, projectsOn, favouritesOn }: JarStageProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { ready, renderInfo, registerItemEl, debugWalls, debugPhysicsEnabled } = useJarPhysics(containerRef, items);
+  const { ready, renderInfo, outlineMasks, registerItemEl, debugWalls, debugPhysicsEnabled } = useJarPhysics(
+    containerRef,
+    items,
+  );
 
   return (
     <div ref={containerRef} className={styles.stage}>
@@ -30,6 +36,7 @@ export default function JarStage({ items }: JarStageProps) {
           {items.map((item) => {
             const info = renderInfo[item.id];
             if (!info) return null;
+            const { dimmed, bordered } = getJarItemVisualState(item.category, projectsOn, favouritesOn);
             return (
               <JarItem
                 key={item.id}
@@ -41,6 +48,13 @@ export default function JarStage({ items }: JarStageProps) {
                 imgHeight={info.imgH}
                 imgLeft={info.imgLeft}
                 imgTop={info.imgTop}
+                ringLeft={info.ringLeft}
+                ringTop={info.ringTop}
+                ringWidth={info.ringWidth}
+                ringHeight={info.ringHeight}
+                outlineMask={outlineMasks[item.id] ?? null}
+                dimmed={dimmed}
+                bordered={bordered}
               />
             );
           })}

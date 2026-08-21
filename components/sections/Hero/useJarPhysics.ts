@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import Matter from "matter-js";
 import { JAR_INTERIOR_POINTS, JAR_WALL_THICKNESS, computeJarWallRects, createJarWallBodies, type JarWallRect } from "./jar-shape";
-import { computeAlphaBBox, type AlphaBBox, type ScanRegion } from "./alpha-bbox";
+import { computeAlphaBBox, type AlphaBBox } from "./alpha-bbox";
+import { getOutlineMask } from "@/lib/outline";
 import { PLACEMENT_ORDER, LAYER_ORDER, TARGET_X_FRACTION } from "./jar-layout";
 import type { JarItemDef } from "./items.manifest";
 
@@ -122,6 +123,37 @@ const BODY_SCALE = 0.54;
  * transparent padding, so it can be cleaned up at the source file. */
 const PADDING_WARNING_THRESHOLD = 0.15;
 
+/** Fallback only, used if --outline-thickness (lib/tokens.css) can't be read
+ * for some reason (e.g. getComputedStyle returning an empty string) — the
+ * real value always comes from that CSS custom property (see
+ * getOutlineThicknessPx below), which is the single source of truth shared
+ * with the 'box' items' own box-shadow border. Kept numerically equal to
+ * tokens.css's own default so the fallback is never visibly different. */
+const FALLBACK_OUTLINE_THICKNESS_PX = 4;
+
+/** Ring sample count passed to getOutlineMask (lib/outline.ts) — raised from
+ * the alpha-bbox-era flat-radius design's 16. Per-item dilation radius (see
+ * getOutlineThicknessPx / the dilation-radius computation in preloadImage
+ * below) can now be noticeably larger for a heavily-scaled-down item than
+ * the old flat 3px source-space radius ever was, and a larger radius needs
+ * denser sampling to avoid gaps at thin protrusions (ballet's straps,
+ * kitty-mirror's handle/stand) — 16 samples at a bigger radius left visible
+ * facets/gaps that 16 at the old small radius never showed. */
+const OUTLINE_SAMPLES = 24;
+
+/** Reads --outline-thickness (lib/tokens.css) off :root, in px — the single
+ * source of truth for both border techniques (see JarItem.tsx): 'box' items
+ * read it live via CSS; this is how 'blob' items read the same number to
+ * size the dilation radius baked into each item's generated ring. Falls
+ * back to FALLBACK_OUTLINE_THICKNESS_PX if the property is somehow missing
+ * or unparsable, rather than throwing. */
+function getOutlineThicknessPx(): number {
+  if (typeof window === "undefined") return FALLBACK_OUTLINE_THICKNESS_PX;
+  const raw = getComputedStyle(document.documentElement).getPropertyValue("--outline-thickness").trim();
+  const parsed = parseFloat(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : FALLBACK_OUTLINE_THICKNESS_PX;
+}
+
 /** Base gap, in px at REFERENCE_WIDTH (scales with the container like
  * everything else), between the bottom of one item's spawn position and
  * the top of the next one's, in fall order — see the spawnYById cursor
@@ -148,6 +180,16 @@ interface RenderInfo {
    * — not the file's own centre — lines up with the div's bounds. */
   imgLeft: number;
   imgTop: number;
+  /** Geometry for the 'blob' border ring (see JarItem.tsx / lib/outline.ts),
+   * in the same div-relative coordinate space as imgLeft/imgTop — the ring
+   * raster covers the alpha bbox plus that item's own dilation radius
+   * (see preloadImage's PreloadResult.dilationRadius) of padding on every
+   * side, at display scale. Unused (left at 0) for 'box' items, which use
+   * the box-shadow border technique instead and need no ring geometry. */
+  ringLeft: number;
+  ringTop: number;
+  ringWidth: number;
+  ringHeight: number;
 }
 
 interface PhysicsItem {
@@ -157,18 +199,66 @@ interface PhysicsItem {
   halfHeight: number;
 }
 
-function preloadImage(src: string, scanRegion?: ScanRegion): Promise<AlphaBBox> {
+interface PreloadResult {
+  bbox: AlphaBBox;
+  /** Only generated for 'blob' items (see items.manifest.ts's JarItemShape)
+   * — 'box' items border via box-shadow instead and never need a ring. Null
+   * either when the item isn't a blob, or when mask generation itself
+   * failed (see getOutlineMask's own fallback/warning). */
+  outlineMask: string | null;
+  /** The native-source-pixel dilation radius actually used to generate
+   * outlineMask (null alongside it for 'box' items / failed generation) —
+   * computeRenderInfo reuses this EXACT value (not a recomputation) to size
+   * the ring's on-screen geometry, so the raster and its displayed geometry
+   * can never drift out of sync with each other (see RenderInfo's own
+   * comment on ringLeft/Top/Width/Height). */
+  dilationRadius: number | null;
+}
+
+/**
+ * itemDisplayScale is this item's rendered on-screen longest edge ÷ its own
+ * alpha-bbox longest edge, in native file pixels — computed at REFERENCE_WIDTH
+ * (i.e. container scale s=1), from the SAME bbox computeRenderInfo itself
+ * derives pixelScale from (never the file's raw naturalWidth/Height — a
+ * file with untrimmed transparent padding has a bbox much smaller than its
+ * file size, and sizing off the file here would reproduce the exact bug the
+ * original alpha-bbox sizing normalisation already had to solve once).
+ * dilationRadius (native px) = outlineThicknessPx ÷ itemDisplayScale, so
+ * that at ANY container scale s, ringPad = dilationRadius × pixelScale(s)
+ * collapses to exactly outlineThicknessPx × s — the same on-screen
+ * thickness for every item, independent of how small its own bbox is
+ * relative to BASE_SIZE.
+ */
+function computeDilationRadius(item: JarItemDef, bbox: AlphaBBox, outlineThicknessPx: number): number {
+  const bboxLongest = Math.max(bbox.bboxW, bbox.bboxH);
+  if (bboxLongest <= 0) return outlineThicknessPx; // degenerate (fully transparent) file — arbitrary but harmless
+  const itemDisplayScale = (BASE_SIZE * item.sizeScale) / bboxLongest;
+  return outlineThicknessPx / itemDisplayScale;
+}
+
+function preloadImage(item: JarItemDef, outlineThicknessPx: number): Promise<PreloadResult> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
     img.onload = () => {
       try {
-        resolve(computeAlphaBBox(img, scanRegion));
+        const bbox = computeAlphaBBox(img, item.cropRegion);
+        // Generated here, synchronously inside onload, while `img` is still
+        // a live loaded element — getOutlineMask itself is cache-checked
+        // (lib/outline.ts), so a remount/resize never re-runs the canvas
+        // work for a src already generated once.
+        let outlineMask: string | null = null;
+        let dilationRadius: number | null = null;
+        if (item.shape === "blob") {
+          dilationRadius = computeDilationRadius(item, bbox, outlineThicknessPx);
+          outlineMask = getOutlineMask(item.src, img, dilationRadius, OUTLINE_SAMPLES);
+        }
+        resolve({ bbox, outlineMask, dilationRadius });
       } catch (err) {
         reject(err instanceof Error ? err : new Error(String(err)));
       }
     };
-    img.onerror = () => reject(new Error(`Failed to load ${src}`));
-    img.src = src;
+    img.onerror = () => reject(new Error(`Failed to load ${item.src}`));
+    img.src = item.src;
   });
 }
 
@@ -194,6 +284,11 @@ const PIN_RELEASE_Y_FRACTION = 0.92;
 export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, items: JarItemDef[]) {
   const [ready, setReady] = useState(false);
   const [renderInfo, setRenderInfo] = useState<Record<string, RenderInfo>>({});
+  // Set once after the initial preload pass and never touched again (not
+  // even by rebuildForResize) — a ring's raster is resolution-independent
+  // of the container's own scale; only its display geometry (ringLeft/Top/
+  // Width/Height, inside renderInfo) needs recomputing on resize.
+  const [outlineMasks, setOutlineMasks] = useState<Record<string, string | null>>({});
   const [debugWalls, setDebugWalls] = useState<JarWallRect[]>([]);
   const [debugPhysicsEnabled, setDebugPhysicsEnabled] = useState(false);
 
@@ -258,11 +353,27 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       // Preload every sprite before starting the sim, and compute each
       // one's alpha bounding box — sizing and physics geometry come from
       // that bbox, not the file's own pixel dimensions (see alpha-bbox.ts).
-      const bboxEntries = await Promise.all(
-        items.map(async (item) => [item.id, await preloadImage(item.src, item.cropRegion)] as const),
+      // 'blob' items also get their border-ring mask generated in this same
+      // pass (see preloadImage/lib/outline.ts) — once, before the sim
+      // starts, per the toggle-border spec. outlineThicknessPx is read once
+      // up front (from --outline-thickness, the single source of truth
+      // shared with 'box' items' own box-shadow) and passed to every item so
+      // they all target the same on-screen thickness.
+      const outlineThicknessPx = getOutlineThicknessPx();
+      const preloadEntries = await Promise.all(
+        items.map(async (item) => [item.id, await preloadImage(item, outlineThicknessPx)] as const),
       );
       if (cancelled) return;
-      const bboxes = Object.fromEntries(bboxEntries) as Record<string, AlphaBBox>;
+      const bboxes = Object.fromEntries(
+        preloadEntries.map(([id, r]) => [id, r.bbox]),
+      ) as Record<string, AlphaBBox>;
+      const outlineMasksById = Object.fromEntries(
+        preloadEntries.map(([id, r]) => [id, r.outlineMask]),
+      ) as Record<string, string | null>;
+      setOutlineMasks(outlineMasksById);
+      const dilationRadii = Object.fromEntries(
+        preloadEntries.map(([id, r]) => [id, r.dilationRadius]),
+      ) as Record<string, number | null>;
 
       for (const item of items) {
         const b = bboxes[item.id];
@@ -379,13 +490,31 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
           const longestNatural = Math.max(bbox.bboxW, bbox.bboxH);
           const targetLongest = BASE_SIZE * item.sizeScale * s;
           const pixelScale = longestNatural > 0 ? targetLongest / longestNatural : 1;
+          const imgLeft = -bbox.bboxX * pixelScale;
+          const imgTop = -bbox.bboxY * pixelScale;
+          // Reuses this exact item's own dilationRadius (computed once at
+          // preload from this same bbox — see computeDilationRadius) rather
+          // than a flat constant, and multiplies by this item's own
+          // pixelScale (also derived from this same bbox) — same bbox, same
+          // scale source as both the image and the mask raster itself, so
+          // geometry can't drift out of sync with what was actually baked
+          // into the ring (see PreloadResult.dilationRadius's own comment).
+          const ringPad = (dilationRadii[item.id] ?? 0) * pixelScale;
           info[item.id] = {
             divW: bbox.bboxW * pixelScale,
             divH: bbox.bboxH * pixelScale,
             imgW: bbox.naturalWidth * pixelScale,
             imgH: bbox.naturalHeight * pixelScale,
-            imgLeft: -bbox.bboxX * pixelScale,
-            imgTop: -bbox.bboxY * pixelScale,
+            imgLeft,
+            imgTop,
+            // Encloses the full (padded) image plus this item's own ring
+            // padding on every side — matching what generateOutlineMask
+            // actually baked into the ring raster (lib/outline.ts) — in the
+            // same div-relative coordinate frame as imgLeft/imgTop.
+            ringLeft: imgLeft - ringPad,
+            ringTop: imgTop - ringPad,
+            ringWidth: bbox.naturalWidth * pixelScale + ringPad * 2,
+            ringHeight: bbox.naturalHeight * pixelScale + ringPad * 2,
           };
         }
         return info;
@@ -1021,6 +1150,7 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
   return {
     ready,
     renderInfo,
+    outlineMasks,
     registerItemEl,
     debugWalls,
     debugPhysicsEnabled,

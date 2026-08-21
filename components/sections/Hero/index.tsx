@@ -86,7 +86,7 @@ export default function Hero() {
 
           <div className={styles.right}>
             <div className={styles.jarWrapper}>
-              <JarStage items={JAR_ITEMS} />
+              <JarStage items={JAR_ITEMS} projectsOn={projectsOn} favouritesOn={favouritesOn} />
             </div>
             <div className={styles.toggles}>
               <CircleToggle

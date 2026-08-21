@@ -34,6 +34,23 @@
   --c-blue: #42b4fa;
   --c-magenta: #fb28ff;
   --dim-white: 0.4;
+
+  /* Jar item border — single source of truth for BOTH border techniques
+   * (see JarItem.tsx): 'box' items read this live via box-shadow's spread;
+   * 'blob' items read it in useJarPhysics.ts (via getComputedStyle on
+   * :root, at ring-generation time) to size the dilation radius that gets
+   * baked into each item's generated ring raster. Changing this value alone
+   * thickens/thins both techniques together — 'box' items update live
+   * (pure CSS), 'blob' items need their ring regenerated (a reload), since
+   * the raster itself is cached per-src and doesn't re-read this on its
+   * own. */
+  --outline-thickness: 4px;
+  /* Shared corner radius for all 3 'box' (project-card) items — previously
+   * computed per-item from each card's own aspect ratio (6% of its own
+   * shorter edge), which drifted between cards whenever their alpha bboxes
+   * didn't share the same aspect ratio. Fixed value instead: all 3 project
+   * items render with an identical radius no matter their own art. */
+  --jar-item-radius: 12px;
 }
 
 /* 14vw is far too much gutter once the viewport gets phone-narrow (e.g.

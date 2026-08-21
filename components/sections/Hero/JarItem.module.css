@@ -3,10 +3,31 @@
   top: 0;
   left: 0;
   will-change: transform;
-  overflow: hidden;
+  /* Deliberately NOT overflow:hidden (unlike .clip below) — the 'blob'
+   * border ring pads past the div's own bounds by design (ringLeft/Top/
+   * Width/Height — see useJarPhysics.ts's RenderInfo), and the drop-shadow
+   * border fallback (see JarItem.tsx) needs room to paint outside the box
+   * too. Nothing extra becomes visible for 'box' items or a ringless
+   * 'blob' item — .clip still clips the actual image to the alpha bbox. */
+  overflow: visible;
   /* Matter.Mouse hit-tests physics bodies directly, not DOM elements —
    * item divs stay out of the way of the container's own mouse listeners. */
   pointer-events: none;
+  transition:
+    box-shadow 250ms ease-out,
+    filter 250ms ease-out;
+}
+
+/* Clips the full (padded) source image down to the alpha bbox — carried
+ * forward from .item's own overflow:hidden before the border ring needed
+ * room to paint outside it (see .item's own comment above). E.g. cam.png's
+ * beaded strap hangs outside its cropRegion and must never actually
+ * render. */
+.clip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
 }
 
 .image {
@@ -18,4 +39,46 @@
   /* See the matching comment in JarStage.module.css's .jarImage — same
    * native-image-drag defense, here for each item's own <img>. */
   -webkit-user-drag: none;
+}
+
+/* ---------- border ring ('blob' items only — see JarItem.tsx) ---------- */
+
+.ring {
+  position: absolute;
+  /* One generated ring (per src, cached — see lib/outline.ts) serves every
+   * category colour: only this custom property changes between them. */
+  background-color: var(--cat-color);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  opacity: 0;
+  transition: opacity 250ms ease-out;
+  pointer-events: none;
+}
+
+.ringActive {
+  opacity: 1;
+}
+
+/* ---------- dim overlay (see JarItem.tsx's own construction comment) --- */
+
+.dimOverlay {
+  position: absolute;
+  background: #fff;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  opacity: 0;
+  transition: opacity 250ms ease-out;
+  pointer-events: none;
+}
+
+.dimActive {
+  opacity: var(--dim-white);
 }
