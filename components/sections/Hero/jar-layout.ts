@@ -18,8 +18,18 @@ export const PLACEMENT_ORDER = [
   "bottle",
   "cam",
   "cybersea",
-  "skullpanda",
+  // rabbit/skullpanda swapped — rabbit (sizeScale 1.5, the biggest of this
+  // foursome) now lands first, skullpanda (1.34) second, kitty-mirror
+  // (1.23) third, skinsprout (0.9, project box, the smallest) last — per
+  // this file's own "biggest-first" principle (see the comment above
+  // PLACEMENT_ORDER). Their lanes (rabbit 0.28, skullpanda 0.42, kitty-
+  // mirror 0.23, skinsprout 0.36) all sit close together, so this cluster
+  // effectively settles as one group; skinsprout landing last, smallest,
+  // was still visibly nudging the other three on arrival — descending size
+  // means each later (smaller/lighter) arrival disturbs the pile less
+  // instead of a late one shoving an already-settled bigger neighbor.
   "rabbit",
+  "skullpanda",
   "kitty-mirror",
   "skinsprout",
   "bear-hirono",
@@ -38,19 +48,22 @@ export const PLACEMENT_ORDER = [
  * list (== the very back of the pile) on request; ballet moved to the very
  * end (== the very front of the pile) on a later request. skinsprout moved
  * up next to bear-hirono (== toward the back of the pile) on a later
- * request, and spotify joined it there on a later request still. */
+ * request, and spotify joined it there on a later request still. cybersea/
+ * skullpanda/rabbit/pineapple/cam then reshuffled into one contiguous
+ * chain — cybersea, skullpanda, rabbit, pineapple, cam, each in front of
+ * the one before it — on a later request still. */
 export const LAYER_ORDER = [
   "bear-hirono",
   "skinsprout",
   "spotify",
-  "skullpanda",
-  "cybersea",
   "kitty-mirror",
   "bottle",
   "chips",
+  "cybersea",
+  "skullpanda",
+  "rabbit",
   "pineapple",
   "cam",
-  "rabbit",
   "laneige",
   "ballet",
 ] as const;
@@ -92,10 +105,27 @@ export const LAYER_ORDER = [
 export const TARGET_X_FRACTION: Record<string, number> = {
   pineapple: 0.2,
   "kitty-mirror": 0.23,
-  rabbit: 0.28,
-  skinsprout: 0.42,
-  laneige: 0.45,
-  skullpanda: 0.5,
+  // Nudged left (0.28 -> 0.26) on request — rabbit was reading as getting
+  // pushed far off its own lane (toward laneige/skullpanda's crowded
+  // corner) while settling, which was itself a source of shaking. A little
+  // more starting room to the left gives it more distance to be pushed
+  // before it reaches that crowded area. This does tighten the gap to
+  // kitty-mirror (0.23) to 0.03 — worth watching if kitty-mirror starts
+  // showing the same kind of landing bump laneige/skullpanda had.
+  rabbit: 0.26,
+  skinsprout: 0.36,
+  // Nudged right (0.45 -> 0.48) on request: this isn't the same shake that
+  // was fixed via the sleep-motion-threshold in useJarPhysics — that one
+  // was bodies stuck idling forever after everything looked done. This is
+  // a genuine mid-fall collision: laneige lands early (see PLACEMENT_ORDER)
+  // and is already resting by the time skullpanda falls into its own lane
+  // (0.42) later — only 0.03 away — so skullpanda's landing visibly bumps
+  // the already-settled laneige. A little more lane clearance from
+  // skullpanda (and a touch more from rabbit's 0.28 too) means less of that
+  // landing gets transmitted as a bump in the first place. Small, isolated
+  // move — still 0.07 clear of cam (0.55) on the other side.
+  laneige: 0.48,
+  skullpanda: 0.42,
   cam: 0.55,
   cybersea: 0.57,
   spotify: 0.6,

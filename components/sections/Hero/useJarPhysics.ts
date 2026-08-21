@@ -7,6 +7,7 @@ import { computeAlphaBBox, type AlphaBBox } from "./alpha-bbox";
 import { getOutlineMask } from "@/lib/outline";
 import { PLACEMENT_ORDER, LAYER_ORDER, TARGET_X_FRACTION } from "./jar-layout";
 import type { JarItemDef } from "./items.manifest";
+import { JAR_PHYSICS_DELAY_MS } from "./motion-timing";
 
 const { Engine, Bodies, Body, Composite, Mouse, Constraint, Events, Sleeping } = Matter;
 
@@ -32,12 +33,23 @@ const RESIZE_DEBOUNCE_MS = 150;
  * the same load could settle into a different pile depending on frame
  * timing jitter alone. */
 const STEP_MS = 1000 / 60;
-/** Caps how many fixed steps a single real frame can run to catch up (e.g.
- * after the tab was backgrounded and the rAF gap was seconds long) — without
- * this, a long gap would otherwise demand thousands of steps in one go and
- * visibly stall the page. The sim just resumes a little behind real time
- * instead; it doesn't affect the eventual settled pile. */
-const MAX_STEPS_PER_FRAME = 5;
+/** Caps how many fixed steps a single real frame can run to catch up.
+ * Was 5 (~83ms) — this turned out to be the actual cause of the settled
+ * pile coming out slightly different every load: the very first few
+ * frames are also when item images are decoding and alpha-bbox masks are
+ * being computed, real work that can easily make a frame take well past
+ * 83ms. Any elapsed time beyond the cap was just silently dropped rather
+ * than simulated, so a load with a bit more incidental jank ran fewer
+ * total physics steps than a smoother one — same wall-clock fall
+ * duration, less actual simulated time, different resting spot. (The
+ * backgrounded-tab case this was originally written to guard against
+ * doesn't actually hit this cap at all — see updateRunning below, which
+ * resets the accumulator to 0 on resume instead of ever asking for a
+ * multi-second catch-up.) Raised generously so ordinary load jank always
+ * gets fully simulated rather than truncated; only a genuinely pathological
+ * multi-second main-thread stall would still hit this and visibly skip
+ * ahead, which is an acceptable trade for a consistent pile every time. */
+const MAX_STEPS_PER_FRAME = 600;
 
 const RUSTLE_RADIUS = 80;
 const RUSTLE_FORCE = 0.0009;
@@ -76,9 +88,92 @@ const MAX_ANGULAR = 0.35;
  * from its lane doesn't get flung back at an unrealistic speed in one
  * tick. At 60 ticks/s, GAIN 0.3 clears a typical few-tens-of-px drift in
  * well under a second while still losing a tug-of-war with the collision
- * solver instead of overpowering it every frame. */
+ * solver instead of overpowering it every frame.
+ *
+ * SMOOTHING addresses a different failure mode than GAIN/SPEED do: two
+ * *neighbouring* pinned lanes close enough together that both items'
+ * actual footprints overlap while both are still falling (e.g. laneige/
+ * skullpanda at one point). GAIN alone is a pure proportional response —
+ * every tick it recomputes a fresh correction velocity from position error
+ * only, with no memory of anything — so a neighbour shoving the body away
+ * gets met with the exact same full-strength snap back next tick, over and
+ * over, reading as a visible side-to-side shake.
+ *
+ * First tried subtracting a fraction of the body's own post-solver
+ * velocity from the correction, on the idea that "the solver just pushed
+ * back, so soften the response" — that turned out to be the wrong lever:
+ * since this is a per-tick setVelocity, not a force integrated over
+ * existing momentum, feeding the *adversarial* solver's own output back
+ * into the next command can flip its sign tick to tick and made the shake
+ * worse, not better. SMOOTHING instead low-pass-filters our own outgoing
+ * command against what *we* commanded last tick (see pinVxById above) —
+ * blending a fraction of the fresh target in each tick rather than jumping
+ * straight to it. That has no feedback path through the solver at all, so
+ * it can only ever shrink the commanded velocity's tick-to-tick swing,
+ * never amplify it — a contested lane settles into a much smaller, slower
+ * back-and-forth instead of a full-amplitude fight. */
 const PIN_CORRECT_GAIN = 0.3;
 const PIN_CORRECT_SPEED = 10;
+const PIN_CORRECT_SMOOTHING = 0.18;
+
+/** Matter's own enableSleeping (on below) puts a body to sleep once its
+ * rolling "motion" (~ speed² + angularSpeed²) has stayed under
+ * Sleeping._motionSleepThreshold for ~60 ticks in a row. A screen recording
+ * of the real (non-instant) load showed several bodies in the most crowded
+ * lane cluster (skullpanda/kitty-mirror/cybersea/cam) still visibly
+ * creeping a full 6+ seconds after the fall looked finished — every
+ * consecutive-frame pixel diff kept finding real movement, not just
+ * compression noise. That's this: two chamfered rectangles resting
+ * against each other rarely reach a perfectly static contact — the solver
+ * keeps making tiny sub-pixel corrections every tick to resolve a hair of
+ * residual overlap, and each of those corrections is enough real motion to
+ * reset Matter's default threshold (0.08) before the 60-tick counter ever
+ * completes. The body never sleeps, so the live rAF loop (see
+ * startLiveLoop below) keeps genuinely re-simulating it forever — which is
+ * why this could look perfectly still in a quick check (a fast, idle
+ * machine's real-time timing happened to damp out sooner) but keep
+ * visibly creeping on a real device. Raised well above Matter's default so
+ * that kind of small persistent settle-jitter actually counts as "still"
+ * and the body is allowed to fall asleep — a genuinely moving body (an
+ * actual fall, a drag, a rustle push) has motion far above even this
+ * raised threshold, so this doesn't dull real movement, only the
+ * never-quite-zero residual contact noise. Was 0.4 — measurably helped
+ * (a follow-up recording's frame-diff actually converged to ~0 by the end,
+ * where the previous one never did) but the tail before it finally
+ * crossed under 0.4 for a full 60-tick stretch was still long enough to
+ * read as ongoing shaking, not settling. Raised further on that evidence.
+ *
+ * Both 0.4 and 1 were still too timid — a third recording showed the same
+ * shape again: converges toward 0 but with a visible ~0.8s tail of real,
+ * decreasing-but-still-there motion after the pile already looks done.
+ * Went back to the actual units instead of nudging by feel: Matter's
+ * `motion` is speed² + angularSpeed², and a body legitimately falling or
+ * tumbling (MAX_BODY_SPEED = 24 px/step) has speed alone contributing up
+ * to 24² = 576 — even a modest real tumble is comfortably in the tens.
+ * Settle-jitter, by contrast, is sub-pixel-per-tick — under ~1–2 in this
+ * same unit. There's a wide gap between "resting, still nudging a hair"
+ * and "actually moving" that 0.4/1 weren't anywhere near exploiting. Jumped
+ * to 4: still a small fraction of what real motion looks like, so an
+ * actual fall/tumble/drag/rustle is nowhere close to being mistaken for
+ * settle-noise, but comfortably past whatever the lingering contact jitter
+ * has been topping out at. Also turned out a chunk of the visible "jump"
+ * this was chasing was actually a mislabeled item's free rotation (see
+ * bear-hirono's lockRotation, items.manifest.ts) — not this threshold at
+ * all. With that fixed too, nudged once more (4 -> 8) for the small
+ * remaining tail, still nowhere near real fall/tumble motion (tens to
+ * hundreds). Still not quite there: a later recording (frame-diffed at
+ * 25fps over the fall/settle window) found the pixel-diff between
+ * consecutive frames never actually reached 0 before the clip ended —
+ * 1889, then 582, then 340 changed px in the last three frame-pairs,
+ * against a ~325,000px crop, i.e. a real but tiny (~0.1%) residual right
+ * up to the last frame. A diff mask isolating exactly what moved in that
+ * final window showed two regions: the skullpanda/kitty-mirror cluster and
+ * bear-hirono — both already lockRotation (items.manifest.ts), so this
+ * isn't rotational; it's the same kind of sub-pixel contact correction
+ * this threshold already targets, just still narrowly surviving under 8.
+ * Nudged once more (8 -> 16): still under 3% of a real tumble's minimum
+ * (576), so nowhere near dulling an actual fall. */
+const SETTLE_MOTION_THRESHOLD = 16;
 
 /** An item's alpha-bbox longest edge renders at BASE_SIZE * item.sizeScale,
  * at the REFERENCE_WIDTH container width — sizing is driven entirely by the
@@ -359,6 +454,12 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
     async function setup() {
       if (!container) return;
 
+      // Reference point for the entrance delay below — captured here, at
+      // the very start of the effect, since this is as close as JS gets to
+      // "the same moment the jar's CSS fade (Hero.module.css's heroFadeIn)
+      // begins": both are driven by the same initial mount/commit.
+      const setupStartTime = performance.now();
+
       // Preload every sprite before starting the sim, and compute each
       // one's alpha bounding box — sizing and physics geometry come from
       // that bbox, not the file's own pixel dimensions (see alpha-bbox.ts).
@@ -398,6 +499,16 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       }
 
       const reducedMotion = window.matchMedia(REDUCED_MOTION).matches;
+
+      // See SETTLE_MOTION_THRESHOLD's own comment above — raises how much
+      // residual motion Matter will tolerate before actually letting a body
+      // sleep, so persistent tiny settle-jitter between resting neighbours
+      // stops resetting the sleep counter forever. This is a mutable field
+      // on the Sleeping module itself (not per-engine), so it only needs
+      // setting once — safe to reassign on every mount.
+      // Cast: _motionSleepThreshold is an internal Matter field (undocumented
+      // in @types/matter-js), reassigned intentionally — not a typo/mistake.
+      (Sleeping as unknown as { _motionSleepThreshold: number })._motionSleepThreshold = SETTLE_MOTION_THRESHOLD;
 
       const engine = Engine.create({
         enableSleeping: true,
@@ -469,6 +580,10 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       // ever leaves pure column control at the exact moment it has
       // something solid under it.
       const landedIds = new Set<string>();
+      // Previous tick's *commanded* pin-correction x-velocity, per item —
+      // see PIN_CORRECT_SMOOTHING's own comment (the constant above) for
+      // why this replaced subtracting the body's own post-solver velocity.
+      const pinVxById = new Map<string, number>();
       const fallIndexById = new Map<string, number>(orderedIds.map((id, i) => [id, i]));
 
       // Marks landedIds the instant a still-pinned body's very first real
@@ -886,7 +1001,14 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
             // starting it every frame.
             const dx = targetX - body.position.x;
             const pinSpeedCap = PIN_CORRECT_SPEED * scale;
-            const pinVx = Math.max(-pinSpeedCap, Math.min(pinSpeedCap, dx * PIN_CORRECT_GAIN));
+            const rawTargetPinVx = Math.max(-pinSpeedCap, Math.min(pinSpeedCap, dx * PIN_CORRECT_GAIN));
+            // See PIN_CORRECT_SMOOTHING's own comment above — blend toward
+            // the fresh target instead of jumping straight to it, so a
+            // neighbour contesting this lane produces a small, decaying
+            // wobble instead of a full-strength fight every tick.
+            const prevPinVx = pinVxById.get(id) ?? 0;
+            const pinVx = prevPinVx + (rawTargetPinVx - prevPinVx) * PIN_CORRECT_SMOOTHING;
+            pinVxById.set(id, pinVx);
             Body.setVelocity(body, { x: pinVx, y: body.velocity.y });
             // Keep it upright while still pinned, too. The neck opening
             // (see jar-shape.ts) has margin for every column's item at its
@@ -1027,11 +1149,23 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
           cursor.prevY = cursor.y;
         }
 
-        for (const { id, body, halfWidth, halfHeight } of physicsItems) {
-          const el = itemElsRef.current.get(id);
-          if (!el) continue;
-          el.style.transform = `translate3d(${body.position.x - halfWidth}px, ${body.position.y - halfHeight}px, 0) rotate(${body.angle}rad)`;
-        }
+        // DOM transform writes used to happen right here, every tick. Moved
+        // out to each caller instead (see renderPhysicsItems below): this
+        // function now only ever advances physics state. The precompute
+        // loop below calls this 1200x back-to-back with nothing painted in
+        // between anyway (the writes here were pure waste there), and the
+        // live loop needs to call this a variable number of times per
+        // frame (0, 1, or several, depending on real elapsed time) without
+        // painting after every single one of them — see rafTick's own
+        // comment for why that "paint after every step" was the actual
+        // cause of the choppy/stutter report on higher-refresh-rate
+        // displays: a fixed 60Hz physics tick was being used AS the paint
+        // cadence, so on a 90/120/144Hz screen the vast majority of real
+        // frames landed between two ticks and simply repainted the exact
+        // same transform as the frame before (a run of duplicate frames),
+        // then one frame would jump a full tick's worth of motion at once
+        // — visually that reads as judder, not smooth motion, even though
+        // the underlying simulation itself was never actually running slow.
       }
 
       function measure() {
@@ -1058,19 +1192,63 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       // height/frictionAir, the same way the old Jar.js reference did it.
       for (const item of items) spawnBody(item);
 
+      // --- deterministic settle: always precompute synchronously --------
+      // Driving Matter.js live off requestAnimationFrame's real elapsed
+      // time — even though Engine.update itself always runs at the fixed
+      // STEP_MS timestep (see STEP_MS's own comment) — turned out not to
+      // be fully reproducible in practice: sub-STEP_MS *phase* differences
+      // in exactly when the first rAF callback lands relative to when
+      // bodies were spawned (itself downstream of real image-decode/layout
+      // timing) shift which tick two bodies first make contact on. With
+      // this many colliding rigid bodies, that's enough to occasionally
+      // cascade into a visibly different final pile — a genuine chaotic-
+      // sensitivity issue, not something the MAX_STEPS_PER_FRAME fix above
+      // solves on its own, since that was about dropped total simulated
+      // time, not this kind of phase alignment.
+      //
+      // The fix: remove real time from the physics entirely. Run the whole
+      // fall-and-settle synchronously, back-to-back Engine.update calls
+      // with nothing in between and nothing painted — the exact same
+      // fixed-STEP_MS sequence runs in the exact same order on every load,
+      // deterministically, same as the old reduced-motion fast-forward
+      // below already did (that path stays as-is). Reduced motion still
+      // just shows the finished pile immediately; everyone else gets this
+      // recorded as `history` (one frame per physicsItems entry per tick)
+      // and played back afterward as a real-time-driven animation instead
+      // of ever stepping the live engine during the visible fall — see
+      // replayTick below. 1200 ticks (20 sim-seconds) is more headroom
+      // than the entrance needs even for the furthest (deepest-spawned)
+      // item, but the loop bails out early the moment every body is
+      // actually asleep, so it essentially never runs anywhere near that
+      // long in practice.
+      const history: { x: number; y: number; angle: number }[][] = [];
+      for (let i = 0; i < 1200; i++) {
+        stepPhysics();
+        if (!instant) {
+          history.push(physicsItems.map(({ body }) => ({ x: body.position.x, y: body.position.y, angle: body.angle })));
+        }
+        if (physicsItems.every(({ body }) => body.isSleeping)) break;
+      }
+      // Belt-and-braces: force every item marked entered even if one never
+      // actually crossed the mouth line in the precompute window, so it
+      // doesn't stay pinned to its lane forever.
+      for (const { id } of physicsItems) {
+        hasEnteredJar.set(id, true);
+      }
+      // Reduced-motion has no replay/fall animation to paint first (see
+      // `instant` above and the replay/startLiveLoop branch below) — paint
+      // the already-precomputed final settled positions right now, once,
+      // so there isn't a blank/default-position frame between `setReady`
+      // below and the live loop's own first rAF tick actually running.
+      // Every other path leaves the first paint to replay's own first
+      // frame (history[0], i.e. spawn position) instead — painting the
+      // finished pile here too would just be an extra frame replay's own
+      // first tick immediately overwrites anyway.
       if (instant) {
-        // Fast-forward: step the exact same deterministic physics many
-        // times synchronously, with no rAF and nothing painted yet, until
-        // the pile has settled. Reduced motion then sees the finished pile
-        // immediately with no visible drop. 1200 ticks (20 sim-seconds) —
-        // more headroom than the entrance needs even for the furthest
-        // (deepest-spawned) item, given the new off-screen spawn heights.
-        for (let i = 0; i < 1200; i++) stepPhysics();
-        // Belt-and-braces: force every item marked entered even if one
-        // never actually crossed the mouth line in the fast-forward window,
-        // so it doesn't stay pinned to its lane forever.
-        for (const { id } of physicsItems) {
-          hasEnteredJar.set(id, true);
+        for (const { id, body, halfWidth, halfHeight } of physicsItems) {
+          const el = itemElsRef.current.get(id);
+          if (!el) continue;
+          el.style.transform = `translate3d(${body.position.x - halfWidth}px, ${body.position.y - halfHeight}px, 0) rotate(${body.angle}rad)`;
         }
       }
 
@@ -1080,6 +1258,18 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
         if (!container) return;
         const r = measure();
         if (r.w <= 0 || r.h <= 0) return;
+        // ResizeObserver fires once immediately on the very first observe()
+        // call, per spec, even though nothing has actually resized — this
+        // guards against acting on that spurious initial callback (or any
+        // other sub-pixel no-op) doing a full destroy-and-recreate of every
+        // body for literally no reason. That was visible as a pop shortly
+        // after mount — skullpanda (and, since every body gets rebuilt
+        // from a fresh fractional snapshot at once, everything touching
+        // it) shifting slightly — landing close to the end of the settle
+        // once that only takes a second or so (see the deterministic
+        // replay above), rather than mid-fall where it used to go
+        // unnoticed. A real resize is easily bigger than this.
+        if (Math.abs(r.w - width) < 1 && Math.abs(r.h - height) < 1) return;
 
         // Every body gets destroyed and recreated below — a drag in
         // progress would otherwise leave dragConstraint/dragBody pointing
@@ -1139,56 +1329,188 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       });
 
       // --- real-time loop, gated by visibility -------------------------
+      // Wrapped in a function, not run unconditionally, because it's now
+      // started from two different places: immediately for reduced motion
+      // (nothing to replay), or once the recorded history above has
+      // finished playing back (see replayTick below) for everyone else.
+      // Either way, by the time this runs the live Matter world is already
+      // sitting at the fully-settled state — the precompute above actually
+      // advanced the real engine, `history` was only ever a recording of
+      // it for display — so there's no state to hand off, just the visible
+      // rAF loop to start.
       let rafId = 0;
-      let accumulator = 0;
-      let lastTime = performance.now();
-      function rafTick(now: number) {
-        accumulator += now - lastTime;
-        lastTime = now;
-        accumulator = Math.min(accumulator, STEP_MS * MAX_STEPS_PER_FRAME);
-        while (accumulator >= STEP_MS) {
-          stepPhysics();
-          accumulator -= STEP_MS;
+      function startLiveLoop() {
+        let accumulator = 0;
+        let lastTime = performance.now();
+        // Fixes the choppy/stutter report: this loop's physics still only
+        // ever advances in fixed STEP_MS (60Hz-equivalent) increments —
+        // that's deliberate, see STEP_MS's own comment — but painting used
+        // to happen inside stepPhysics itself, i.e. only on ticks when the
+        // physics actually advanced. rAF fires at the *display's* refresh
+        // rate, not 60Hz — on anything above 60Hz (90/120/144Hz screens,
+        // now common) most real frames land strictly between two physics
+        // ticks, so painting only-on-tick meant those frames just repainted
+        // an unchanged transform, then one frame jumped a whole tick's
+        // worth of motion at once: a run of duplicate frames followed by a
+        // snap, which reads as judder even though the simulation itself
+        // was never actually running behind. Standard fix: keep stepping
+        // physics at its own fixed cadence, but paint every rAF frame
+        // regardless, interpolated between the position from just before
+        // the most recent tick (`prev`) and the position that tick landed
+        // on (the body's current position) — `alpha` (always in [0,1), the
+        // leftover time since that last tick, as a fraction of one tick)
+        // says how far between those two to render. On a 60Hz display this
+        // converges to alpha≈1 every frame (i.e. same as before); on a
+        // 144Hz display it smoothly renders the in-between position instead
+        // of holding the last tick's position for ~2.4 frames straight.
+        let prev = physicsItems.map(({ body }) => ({ x: body.position.x, y: body.position.y, angle: body.angle }));
+        function renderInterpolated(alpha: number) {
+          for (let i = 0; i < physicsItems.length; i++) {
+            const { id, body, halfWidth, halfHeight } = physicsItems[i];
+            const el = itemElsRef.current.get(id);
+            if (!el) continue;
+            const p = prev[i];
+            const x = p.x + (body.position.x - p.x) * alpha;
+            const y = p.y + (body.position.y - p.y) * alpha;
+            const angle = p.angle + (body.angle - p.angle) * alpha;
+            el.style.transform = `translate3d(${x - halfWidth}px, ${y - halfHeight}px, 0) rotate(${angle}rad)`;
+          }
         }
-        rafId = requestAnimationFrame(rafTick);
-      }
-
-      let isIntersecting = true;
-      let isRunning = false;
-      const updateRunning = () => {
-        const shouldRun = isIntersecting && !document.hidden;
-        if (shouldRun && !isRunning) {
-          lastTime = performance.now();
-          accumulator = 0;
+        function rafTick(now: number) {
+          accumulator += now - lastTime;
+          lastTime = now;
+          accumulator = Math.min(accumulator, STEP_MS * MAX_STEPS_PER_FRAME);
+          while (accumulator >= STEP_MS) {
+            // Snapshot BEFORE stepping — this becomes the "just before the
+            // most recent tick" endpoint interpolation renders from.
+            prev = physicsItems.map(({ body }) => ({ x: body.position.x, y: body.position.y, angle: body.angle }));
+            stepPhysics();
+            accumulator -= STEP_MS;
+          }
+          renderInterpolated(accumulator / STEP_MS);
           rafId = requestAnimationFrame(rafTick);
-          isRunning = true;
-        } else if (!shouldRun && isRunning) {
-          cancelAnimationFrame(rafId);
-          isRunning = false;
         }
-      };
 
-      const intersectionObserver = new IntersectionObserver(
-        ([entry]) => {
-          isIntersecting = entry.isIntersecting;
-          updateRunning();
-        },
-        { threshold: 0 },
-      );
-      intersectionObserver.observe(container);
-      cleanupFns.push(() => intersectionObserver.disconnect());
+        let isIntersecting = true;
+        let isRunning = false;
+        const updateRunning = () => {
+          const shouldRun = isIntersecting && !document.hidden;
+          if (shouldRun && !isRunning) {
+            lastTime = performance.now();
+            accumulator = 0;
+            rafId = requestAnimationFrame(rafTick);
+            isRunning = true;
+          } else if (!shouldRun && isRunning) {
+            cancelAnimationFrame(rafId);
+            isRunning = false;
+          }
+        };
 
-      const handleVisibilityChange = () => updateRunning();
-      document.addEventListener("visibilitychange", handleVisibilityChange);
-      cleanupFns.push(() => document.removeEventListener("visibilitychange", handleVisibilityChange));
+        const intersectionObserver = new IntersectionObserver(
+          ([entry]) => {
+            isIntersecting = entry.isIntersecting;
+            updateRunning();
+          },
+          { threshold: 0 },
+        );
+        intersectionObserver.observe(container);
+        cleanupFns.push(() => intersectionObserver.disconnect());
 
-      updateRunning();
+        const handleVisibilityChange = () => updateRunning();
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        cleanupFns.push(() => document.removeEventListener("visibilitychange", handleVisibilityChange));
+
+        updateRunning();
+      }
 
       cleanupFns.push(() => {
         cancelAnimationFrame(rafId);
+        cancelAnimationFrame(replayRafId);
         Composite.clear(world, false);
         Engine.clear(engine);
       });
+
+      // --- entrance delay: don't reveal the fall until the jar's mostly
+      // visible ------------------------------------------------------------
+      // Everything above this point (preload, engine/body setup, the
+      // synchronous fall-and-settle precompute into `history`) has no
+      // visual effect yet — `ready` is still false, so JarStage hasn't
+      // mounted any item divs at all. What actually needs delaying is the
+      // moment the fall becomes visible: items dropping into a jar outline
+      // that's still mostly transparent (Hero.module.css's heroFadeIn) reads
+      // as broken. JAR_PHYSICS_DELAY_MS (motion-timing.ts) is derived from
+      // that same fade's own duration, not a bare hardcoded number — see
+      // its own comment. Timed against setupStartTime (captured at the top
+      // of this function, effectively "the fade's own start"), not a fresh
+      // clock read here, so the real work already done above counts against
+      // the delay instead of stacking an extra ~280ms on top of it.
+      // Skipped entirely under reduced motion: `instant` has already
+      // rendered the settled pile above with no fall to delay, and there's
+      // no fade running to wait on in the first place.
+      if (!instant) {
+        const elapsed = performance.now() - setupStartTime;
+        const remaining = JAR_PHYSICS_DELAY_MS - elapsed;
+        if (remaining > 0) {
+          await new Promise((resolve) => setTimeout(resolve, remaining));
+        }
+        if (cancelled) return;
+      }
+
+      // --- replay: play the precomputed history back in real time -------
+      // Same accumulator/fixed-STEP_MS pattern as the live loop above, but
+      // reading pre-baked positions out of `history` instead of stepping
+      // the engine — so a slow frame here just shows a later already-
+      // computed frame (like a dropped-frame catch-up), never a different
+      // physics outcome. physicsItems' order is stable between recording
+      // and playback (nothing rebuilds it in between), so history[n][i]
+      // always lines up with physicsItems[i].
+      let replayRafId = 0;
+      if (instant || history.length === 0) {
+        startLiveLoop();
+      } else {
+        let replayIndex = 0;
+        let replayAccumulator = 0;
+        let replayLastTime = performance.now();
+        function replayTick(now: number) {
+          replayAccumulator += now - replayLastTime;
+          replayLastTime = now;
+          replayAccumulator = Math.min(replayAccumulator, STEP_MS * MAX_STEPS_PER_FRAME);
+          while (replayAccumulator >= STEP_MS && replayIndex < history.length - 1) {
+            replayIndex++;
+            replayAccumulator -= STEP_MS;
+          }
+          // Same judder fix as the live loop's rafTick (see its own long
+          // comment) — but simpler here, since replay has the whole fall
+          // precomputed already: rather than only ever painting on a
+          // history-index change (a snap on higher-than-60Hz displays, same
+          // as the old stepPhysics-paints-inline bug), lerp toward whatever
+          // the *next* not-yet-reached frame is by `alpha` (the leftover
+          // time since replayIndex last advanced, as a fraction of one
+          // tick). No lookahead risk here the way there would be in the
+          // live loop — `history[replayIndex + 1]` already exists.
+          const alpha = replayAccumulator / STEP_MS;
+          const frame = history[replayIndex];
+          const nextFrame = history[Math.min(replayIndex + 1, history.length - 1)];
+          for (let i = 0; i < physicsItems.length; i++) {
+            const { id, halfWidth, halfHeight } = physicsItems[i];
+            const el = itemElsRef.current.get(id);
+            const rec = frame[i];
+            const next = nextFrame[i];
+            if (el && rec && next) {
+              const x = rec.x + (next.x - rec.x) * alpha;
+              const y = rec.y + (next.y - rec.y) * alpha;
+              const angle = rec.angle + (next.angle - rec.angle) * alpha;
+              el.style.transform = `translate3d(${x - halfWidth}px, ${y - halfHeight}px, 0) rotate(${angle}rad)`;
+            }
+          }
+          if (replayIndex >= history.length - 1) {
+            startLiveLoop();
+            return;
+          }
+          replayRafId = requestAnimationFrame(replayTick);
+        }
+        replayRafId = requestAnimationFrame(replayTick);
+      }
 
       setRenderInfo(currentRenderInfo);
       setReady(true);

@@ -6,6 +6,7 @@ import CircleToggle from "@/components/ui/CircleToggle";
 import ProjectCard from "./ProjectCard";
 import ExtrasCard from "./ExtrasCard";
 import { useFlipReorder } from "./useFlipReorder";
+import { useScrollReveal } from "./useScrollReveal";
 import { PROJECTS, PROJECT_CATEGORY_COLOR, type ProjectCategory } from "@/lib/projects";
 import { content } from "@/lib/content";
 
@@ -16,6 +17,9 @@ const CATEGORY_ORDER: ProjectCategory[] = ["work", "personal", "hackathon"];
  * even a Project), so it needs an id of its own for FLIP/dimming to key
  * off, outside the slug namespace. */
 const EXTRAS_ID = "extras";
+/** Same idea, for the scroll-reveal — the heading + filter toggles reveal
+ * together as one group, keyed outside the card id namespace. */
+const HEADER_ID = "header";
 
 export default function Projects() {
   const [activeCategories, setActiveCategories] = useState<Set<ProjectCategory>>(() => new Set());
@@ -51,7 +55,22 @@ export default function Projects() {
       .map((c) => c.id);
   }, [activeCategories]);
 
-  const registerRef = useFlipReorder(displayIds);
+  const registerFlipRef = useFlipReorder(displayIds);
+  const { registerRef: registerRevealRef, getRevealState } = useScrollReveal();
+  const headerReveal = getRevealState(HEADER_ID);
+
+  // Merges FLIP's own ref (position-in-list transform, imperative) with the
+  // reveal's (rise-on-first-entry, imperative registration only — the
+  // transform itself is applied declaratively via a class, see .reveal in
+  // ProjectCard.module.css) onto the same outer DOM node. They never write
+  // to the same inline style property, so sharing one node between them is
+  // safe — see ProjectCard.module.css's .card/.reveal comment for why.
+  function registerCardRef(id: string) {
+    return (el: HTMLElement | null) => {
+      registerFlipRef(id)(el);
+      registerRevealRef(id)(el);
+    };
+  }
 
   const dimmedIds = useMemo(() => {
     const dimmed = new Set<string>();
@@ -69,7 +88,11 @@ export default function Projects() {
   return (
     <section id="projects" className={styles.projects}>
       <div className={`pageContainer ${styles.container}`}>
-        <div className={styles.header}>
+        <div
+          ref={registerRevealRef(HEADER_ID)}
+          className={`${styles.header} ${headerReveal.revealed ? styles.headerRevealed : ""}`}
+          style={{ transitionDelay: `${headerReveal.delayMs}ms` }}
+        >
           <h2 className={styles.heading}>{copy.heading}</h2>
           <div className={styles.filters}>
             {CATEGORY_ORDER.map((category) => (
@@ -85,13 +108,27 @@ export default function Projects() {
         </div>
 
         <div className={styles.list}>
-          {displayIds.map((id) =>
-            id === EXTRAS_ID ? (
-              <ExtrasCard key={id} ref={registerRef(id)} dimmed={dimmedIds.has(id)} />
+          {displayIds.map((id) => {
+            const reveal = getRevealState(id);
+            return id === EXTRAS_ID ? (
+              <ExtrasCard
+                key={id}
+                ref={registerCardRef(id)}
+                dimmed={dimmedIds.has(id)}
+                revealed={reveal.revealed}
+                revealDelayMs={reveal.delayMs}
+              />
             ) : (
-              <ProjectCard key={id} ref={registerRef(id)} project={projectsBySlug.get(id)!} dimmed={dimmedIds.has(id)} />
-            ),
-          )}
+              <ProjectCard
+                key={id}
+                ref={registerCardRef(id)}
+                project={projectsBySlug.get(id)!}
+                dimmed={dimmedIds.has(id)}
+                revealed={reveal.revealed}
+                revealDelayMs={reveal.delayMs}
+              />
+            );
+          })}
         </div>
       </div>
     </section>

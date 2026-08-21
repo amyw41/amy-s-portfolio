@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import Link from "next/link";
 import styles from "./Hero.module.css";
 import CircleToggle from "@/components/ui/CircleToggle";
 import JarStage from "./JarStage";
 import { JAR_ITEMS } from "./items.manifest";
+import { JAR_FADE_MS } from "./motion-timing";
 import { content } from "@/lib/content";
 
 const copy = content.en.hero;
@@ -85,7 +86,14 @@ export default function Hero() {
           </div>
 
           <div className={styles.right}>
-            <div className={styles.jarWrapper}>
+            <div
+              className={styles.jarWrapper}
+              // Read by Hero.module.css's heroFadeIn animation (var(--jar-fade-ms))
+              // and, via the same JAR_FADE_MS constant, by useJarPhysics.ts's own
+              // "don't start falling until the fade is ~70% done" delay — see
+              // motion-timing.ts.
+              style={{ "--jar-fade-ms": `${JAR_FADE_MS}ms` } as CSSProperties}
+            >
               <JarStage items={JAR_ITEMS} projectsOn={projectsOn} favouritesOn={favouritesOn} />
             </div>
             <div className={styles.toggles}>

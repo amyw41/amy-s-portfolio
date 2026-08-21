@@ -269,6 +269,116 @@
 
 /* ---------- responsive ---------- */
 
+/* ---------- load-in sequence ----------
+ * Runs once, on mount — plain CSS `animation` (not scroll/JS-triggered), so
+ * there's nothing to re-trigger on scrolling back up to the hero later.
+ * Every element's un-animated default (opacity:1, transform:none — neither
+ * property is set outside this block) IS its final resting state, so
+ * scoping the whole thing inside prefers-reduced-motion:no-preference is
+ * enough on its own to make reduced-motion users see everything at final
+ * position/opacity immediately, with no separate override needed (compare
+ * .langButton/.navLink's hover transitions above, same pattern). */
+
+@keyframes heroDropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroSlideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes heroFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes heroRiseIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Left column: star -> title -> tagline, 80ms stagger, in that order. */
+  .logo {
+    animation: heroDropIn 500ms ease-out both;
+  }
+
+  .title {
+    animation: heroDropIn 500ms ease-out both;
+    animation-delay: 80ms;
+  }
+
+  .tagline {
+    animation: heroDropIn 500ms ease-out both;
+    animation-delay: 160ms;
+  }
+
+  /* Nav links: fade in from the right, starting 100ms after the left
+   * column above so the two groups read as related but not identical (not
+   * one single timer for every piece of text) — 80ms stagger in reading
+   * order after that. */
+  .nav > .navLink:nth-child(1) {
+    animation: heroSlideInRight 450ms ease-out both;
+    animation-delay: 100ms;
+  }
+
+  .nav > .navLink:nth-child(2) {
+    animation: heroSlideInRight 450ms ease-out both;
+    animation-delay: 180ms;
+  }
+
+  .nav > .navLink:nth-child(3) {
+    animation: heroSlideInRight 450ms ease-out both;
+    animation-delay: 260ms;
+  }
+
+  /* Jar: fade only, deliberately no slide/scale — it already gets a large
+   * amount of motion from the physics entrance (items dropping in); a
+   * container-level slide on top of that would compete with gravity's own
+   * direction instead of reading as one thing happening. Duration comes
+   * from --jar-fade-ms (set inline in index.tsx from JAR_FADE_MS) —
+   * useJarPhysics.ts derives its own "don't start falling until the jar's
+   * mostly visible" delay from that exact same constant (motion-timing.ts),
+   * so the two stay in lockstep if this number ever changes; the literal
+   * 400ms below is only a fallback for the custom property being missing. */
+  .jarWrapper {
+    animation: heroFadeIn var(--jar-fade-ms, 400ms) ease-out both;
+  }
+
+  /* Toggles: fade + a slight rise — paired with the jar (both start
+   * relative to its fade) but visually distinct from its plain fade.
+   * Starts 120ms after the jar fade begins (the jar fade itself starts at
+   * mount, same as everything else here). */
+  .toggles {
+    animation: heroRiseIn 400ms ease-out both;
+    animation-delay: 120ms;
+  }
+}
+
 @media (max-width: 900px) {
   .columns {
     flex-direction: column;

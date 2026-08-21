@@ -13,30 +13,44 @@ interface ProjectCardProps {
    * top at var(--dim-white), not a raw opacity drop on the card itself) so
    * the two dimmed states in this codebase stay visually identical. */
   dimmed: boolean;
+  /** Scroll-reveal state from useScrollReveal (Projects/index.tsx) — see
+   * .reveal/.revealVisible's own comment in ProjectCard.module.css for why
+   * this lives on an inner wrapper rather than `ref`'s own element. */
+  revealed: boolean;
+  revealDelayMs: number;
 }
 
-const ProjectCard = forwardRef<HTMLDivElement, ProjectCardProps>(function ProjectCard({ project, dimmed }, ref) {
+const ProjectCard = forwardRef<HTMLDivElement, ProjectCardProps>(function ProjectCard(
+  { project, dimmed, revealed, revealDelayMs },
+  ref,
+) {
   const dotColor = PROJECT_CATEGORY_COLOR[project.category];
   const dimClass = dimmed ? styles.dimActive : "";
+  const revealClass = revealed ? styles.revealVisible : "";
 
   return (
     <div ref={ref} className={styles.card}>
-      <div className={styles.media}>
-        {project.video ? (
-          <AutoplayVideo src={project.video} poster={project.cover} />
-        ) : (
-          <img src={project.cover} alt="" className={styles.poster} draggable={false} />
-        )}
-        <div className={`${styles.dimOverlay} ${dimClass}`} />
-      </div>
-
-      <div className={styles.text}>
-        <div className={styles.titleRow}>
-          <span className={styles.dot} style={{ "--dot-color": dotColor } as CSSProperties} />
-          <h3 className={styles.title}>{project.title}</h3>
+      <div
+        className={`${styles.reveal} ${revealClass}`}
+        style={{ transitionDelay: `${revealDelayMs}ms` } as CSSProperties}
+      >
+        <div className={styles.media}>
+          {project.video ? (
+            <AutoplayVideo src={project.video} poster={project.cover} />
+          ) : (
+            <img src={project.cover} alt="" className={styles.poster} draggable={false} />
+          )}
+          <div className={`${styles.dimOverlay} ${dimClass}`} />
         </div>
-        <p className={styles.description}>{project.description}</p>
-        <div className={`${styles.dimOverlay} ${dimClass}`} />
+
+        <div className={styles.text}>
+          <div className={styles.titleRow}>
+            <span className={styles.dot} style={{ "--dot-color": dotColor } as CSSProperties} />
+            <h3 className={styles.title}>{project.title}</h3>
+          </div>
+          <p className={styles.description}>{project.description}</p>
+          <div className={`${styles.dimOverlay} ${dimClass}`} />
+        </div>
       </div>
     </div>
   );

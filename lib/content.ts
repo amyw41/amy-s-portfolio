@@ -43,6 +43,15 @@ export const content = {
         closeLabel: "Close",
       },
     },
+    footer: {
+      links: {
+        linkedin: { label: "Linkedin", href: "https://linkedin.com/in/amyw41" },
+        email: { label: "Email", href: "mailto:amy.wang1@uwaterloo.ca" },
+        twitter: { label: "X / Twitter", href: "https://twitter.com/apriberri" },
+      },
+      heading: "thank you for dropping by !",
+      credit: "Designed + built by Amy (2026)",
+    },
     about: {
       placeholder: "About — coming soon.",
     },

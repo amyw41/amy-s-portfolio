@@ -21,7 +21,14 @@ export interface JarItemDef {
    * hitbox itself is NOT per-item — see the global BODY_SCALE constant.
    * frictionAir is nudged up on the lightest (lowest-density) items so a
    * tumble bleeds off its spin naturally instead of relying solely on the
-   * global MAX_ANGULAR clamp.
+   * global MAX_ANGULAR clamp. Kept within a fairly tight band (0.010–0.016)
+   * on request, though — frictionAir is air drag, and under gravity that's
+   * the ONLY thing that makes one item's fall visibly faster or slower than
+   * another's (mass/density alone doesn't change fall acceleration, same as
+   * real gravity); the original spread was 0.008–0.035, over 4x top to
+   * bottom, which read as items dropping at noticeably different speeds
+   * rather than falling together. Relative order (lighter items still drag
+   * a little more than heavier ones) is preserved, just compressed.
    *
    * restitution values were cut hard (roughly a third of their old selves)
    * after items were landing in their correct lane, then visibly bouncing
@@ -76,9 +83,9 @@ export interface JarItemDef {
 export const JAR_ITEMS: JarItemDef[] = [
   // Sized down 0.8x, then back up slightly to 0.9x — 0.8 read too small
   // next to the resized favourites below.
-  { id: "cybersea", src: "/images/items/cybersea.png", category: "project", sizeScale: 0.9, shape: "box", density: 0.0012, friction: 0.45, restitution: 0.05, frictionAir: 0.012, lockRotation: true },
-  { id: "skinsprout", src: "/images/items/skinsprout.png", category: "project", sizeScale: 0.9, shape: "box", density: 0.0012, friction: 0.45, restitution: 0.05, frictionAir: 0.012, lockRotation: true },
-  { id: "spotify", src: "/images/items/spotify.png", category: "project", sizeScale: 0.9, shape: "box", density: 0.0012, friction: 0.45, restitution: 0.05, frictionAir: 0.012, lockRotation: true },
+  { id: "cybersea", src: "/images/items/cybersea.png", category: "project", sizeScale: 0.9, shape: "box", density: 0.0012, friction: 0.45, restitution: 0.05, frictionAir: 0.011, lockRotation: true },
+  { id: "skinsprout", src: "/images/items/skinsprout.png", category: "project", sizeScale: 0.9, shape: "box", density: 0.0012, friction: 0.45, restitution: 0.05, frictionAir: 0.011, lockRotation: true },
+  { id: "spotify", src: "/images/items/spotify.png", category: "project", sizeScale: 0.9, shape: "box", density: 0.0012, friction: 0.45, restitution: 0.05, frictionAir: 0.011, lockRotation: true },
 
   // sizeScale for the 7 items below is reverse-engineered from the old
   // Jar.js reference (see the comment block above JAR_ITEMS) rather than
@@ -109,29 +116,38 @@ export const JAR_ITEMS: JarItemDef[] = [
   // actual spec here.
   // Sized up 0.91 -> 1.05, then further to 1.22 — still read too small
   // relative to the rest of the roster.
-  { id: "ballet", src: "/images/items/ballet.png", category: "favourite", sizeScale: 1.22, shape: "blob", density: 0.0005, friction: 0.5, restitution: 0.06, frictionAir: 0.03 },
+  { id: "ballet", src: "/images/items/ballet.png", category: "favourite", sizeScale: 1.22, shape: "blob", density: 0.0005, friction: 0.5, restitution: 0.06, frictionAir: 0.015 },
   // Sized up 1.3x, then a further small bump to 1.4x — still read a touch
   // small. Falls in rotated 90° so it lands lying on its side rather than
   // standing upright — it's long and thin, and stood upright it was
   // reading as visually odd against the rest of the (mostly laid-down)
   // pile. Already lockRotation, so it stays close to this the whole way
   // down.
-  { id: "bottle", src: "/images/items/bottle.png", category: "favourite", sizeScale: 1.4, shape: "blob", density: 0.002, friction: 0.35, restitution: 0.04, frictionAir: 0.008, lockRotation: true, rotate: 90 },
+  { id: "bottle", src: "/images/items/bottle.png", category: "favourite", sizeScale: 1.4, shape: "blob", density: 0.002, friction: 0.35, restitution: 0.04, frictionAir: 0.01, lockRotation: true, rotate: 90 },
   // Falls in rotated 32° cw — was 20°, nudged steeper to better match the
   // sharper diagonal in the reference collage. Still paired against
   // pineapple's 20° ccw so the two lean away from each other. Not
   // lockRotation, so this is where it *enters* the pile, not a guaranteed
   // final rest angle (see rotate's own doc comment above).
-  { id: "chips", src: "/images/items/chips.png", category: "favourite", sizeScale: 1.32, shape: "blob", density: 0.0004, friction: 0.5, restitution: 0.07, frictionAir: 0.035, rotate: 32 },
-  { id: "kitty-mirror", src: "/images/items/kitty-mirror.png", category: "favourite", sizeScale: 1.23, shape: "blob", density: 0.001, friction: 0.3, restitution: 0.1, frictionAir: 0.01, lockRotation: true },
+  { id: "chips", src: "/images/items/chips.png", category: "favourite", sizeScale: 1.32, shape: "blob", density: 0.0004, friction: 0.5, restitution: 0.07, frictionAir: 0.016, rotate: 32 },
+  { id: "kitty-mirror", src: "/images/items/kitty-mirror.png", category: "favourite", sizeScale: 1.23, shape: "blob", density: 0.001, friction: 0.3, restitution: 0.1, frictionAir: 0.011, lockRotation: true },
   // Sized up 1.07 -> 1.22 — read too small relative to the rest of the
   // roster. Falls in rotated 90° so it lands lying on its side rather than
   // upright — already lockRotation, so it stays close to that the whole
   // way down.
-  { id: "laneige", src: "/images/items/laneige.png", category: "favourite", sizeScale: 1.22, shape: "blob", density: 0.0007, friction: 0.4, restitution: 0.08, frictionAir: 0.022, lockRotation: true, rotate: 90 },
+  { id: "laneige", src: "/images/items/laneige.png", category: "favourite", sizeScale: 1.22, shape: "blob", density: 0.0007, friction: 0.4, restitution: 0.08, frictionAir: 0.013, lockRotation: true, rotate: 90 },
   // Falls in rotated 20° ccw (see chips above).
-  { id: "pineapple", src: "/images/items/pineapple.png", category: "favourite", sizeScale: 1.16, shape: "blob", density: 0.0016, friction: 0.25, restitution: 0.08, frictionAir: 0.008, rotate: -20 },
-  { id: "skullpanda", src: "/images/items/skullpanda.png", category: "favourite", sizeScale: 1.34, shape: "blob", density: 0.0006, friction: 0.6, restitution: 0.06, frictionAir: 0.03 },
+  { id: "pineapple", src: "/images/items/pineapple.png", category: "favourite", sizeScale: 1.16, shape: "blob", density: 0.0016, friction: 0.25, restitution: 0.08, frictionAir: 0.01, rotate: -20 },
+  // lockRotation added: skullpanda was the one item repeatedly showing up
+  // in frame-by-frame recordings as still visibly moving well after
+  // everything else looked done — not a translation drift, a slow
+  // rotational settle (it was the one large item in this crowded corner
+  // without lockRotation, so nothing stopped it from still turning a
+  // little as it found its final resting angle). That last bit of
+  // rotation, on a large/central item, reads as "the pile jumping" even
+  // though its position barely moved. Same treatment already given to
+  // bottle/laneige/kitty-mirror/cam/cybersea/skinsprout/spotify.
+  { id: "skullpanda", src: "/images/items/skullpanda.png", category: "favourite", sizeScale: 1.34, shape: "blob", density: 0.0006, friction: 0.6, restitution: 0.06, frictionAir: 0.015, lockRotation: true },
 
   // New arrivals this round — no old-Jar.js reference value to reverse-
   // engineer a sizeScale from (see the comment block above), so these
@@ -142,13 +158,18 @@ export const JAR_ITEMS: JarItemDef[] = [
   // x:135–955, y:0–455) and excludes the beaded strap/charm hanging below
   // and to the left of it, which was inflating the alpha bbox (see
   // cropRegion's own doc comment).
-  { id: "cam", src: "/images/items/cam.png", category: "favourite", sizeScale: 1.0, shape: "blob", density: 0.0012, friction: 0.4, restitution: 0.05, frictionAir: 0.015, lockRotation: true, cropRegion: { left: 0.1355, top: 0, right: 0.9588, bottom: 0.56875 } },
+  { id: "cam", src: "/images/items/cam.png", category: "favourite", sizeScale: 1.0, shape: "blob", density: 0.0012, friction: 0.4, restitution: 0.05, frictionAir: 0.012, lockRotation: true, cropRegion: { left: 0.1355, top: 0, right: 0.9588, bottom: 0.56875 } },
   // Sized up 1.5x, then back down a little to 1.35x.
-  { id: "bear-hirono", src: "/images/items/bear-hirono.png", category: "favourite", sizeScale: 1.35, shape: "blob", density: 0.0006, friction: 0.5, restitution: 0.06, frictionAir: 0.03 },
+  // lockRotation added: this (not skullpanda — those two were mixed up by
+  // mistake for a round) was the item actually still turning slightly in
+  // frame-by-frame recordings well after the rest of the pile looked done
+  // — a large, centrally-placed item with nothing stopping it from still
+  // finding its final angle late. Same fix, correct target this time.
+  { id: "bear-hirono", src: "/images/items/bear-hirono.png", category: "favourite", sizeScale: 1.35, shape: "blob", density: 0.0006, friction: 0.5, restitution: 0.06, frictionAir: 0.015, lockRotation: true },
   // Sized up 1.5x (was 1.0). Falls in rotated 90° so it lands lying down
   // (was standing straight up, which read wrong for its long/skinny shape
   // — same fix as bottle/laneige). Wasn't lockRotation before; added it so
   // it actually stays laid down once it settles instead of being free to
   // tumble back upright.
-  { id: "rabbit", src: "/images/items/rabbit.png", category: "favourite", sizeScale: 1.5, shape: "blob", density: 0.0005, friction: 0.5, restitution: 0.07, frictionAir: 0.03, lockRotation: true, rotate: 90 },
+  { id: "rabbit", src: "/images/items/rabbit.png", category: "favourite", sizeScale: 1.5, shape: "blob", density: 0.0005, friction: 0.5, restitution: 0.07, frictionAir: 0.015, lockRotation: true, rotate: 90 },
 ];
