@@ -36,6 +36,7 @@ const MAX_FRACTION = 1.15;
  * negative base, scaling by the *larger* fraction actually produces the
  * more negative (smaller) number. */
 function scaled(base: number): string {
+  base = base * 1.2;
   const a = base * MIN_FRACTION;
   const b = base * MAX_FRACTION;
   const min = Math.min(a, b);

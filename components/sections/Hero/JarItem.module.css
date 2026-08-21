@@ -18,16 +18,25 @@
     filter 250ms ease-out;
 }
 
-/* Clips the full (padded) source image down to the alpha bbox — carried
- * forward from .item's own overflow:hidden before the border ring needed
- * room to paint outside it (see .item's own comment above). E.g. cam.png's
- * beaded strap hangs outside its cropRegion and must never actually
- * render. */
+/* Was overflow:hidden, clipping the full (padded) source image down to the
+ * alpha bbox — e.g. cam.png's beaded strap/gems, excluded from the bbox via
+ * cropRegion (items.manifest.ts) so they wouldn't drag sizing/physics/
+ * layering out of shape, ended up never rendering at all as a side effect
+ * of that same clip. cropRegion's own job is still just to keep that
+ * content out of the bbox math (see its doc comment in items.manifest.ts)
+ * — it was never meant to hide the content, just to stop it from steering
+ * this div's own size. Switched to overflow:visible so a cropRegion'd
+ * item's excluded content (e.g. the gems) still paints — same z-index as
+ * the rest of the item, no different than any other part of its own image
+ * — while divW/divH (and therefore the physics body) stay driven by the
+ * smaller, cropped bbox, untouched. No visible effect on any item without
+ * a cropRegion: for those the excluded area is just transparent padding,
+ * invisible whether clipped or not. */
 .clip {
   position: absolute;
   top: 0;
   left: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .image {

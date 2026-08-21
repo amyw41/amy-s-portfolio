@@ -64,10 +64,13 @@ export interface JarItemDef {
   /** Restricts alpha-bbox scanning (see computeAlphaBBox in alpha-bbox.ts)
    * to a sub-rectangle of the source file, normalised 0–1. For items where
    * the alpha-trimmed content includes something that shouldn't drive
-   * sizing/physics/layering — cam.png's beaded strap dangles well past the
-   * camera body and was dragging the bbox (and therefore the div, which
-   * clips to it) out with it. Measured by hand against the actual PNG,
-   * not derived from anything else. */
+   * sizing/physics/layering — cam.png's beaded strap/gems dangle well past
+   * the camera body and were dragging the bbox (and therefore the div and
+   * physics body sized off it) out with them. Measured by hand against the
+   * actual PNG, not derived from anything else.
+   * Excluded content still renders (JarItem.module.css's .clip is
+   * overflow:visible) — this field only keeps it out of the sizing math,
+   * it was never meant to hide it. */
   cropRegion?: { left: number; top: number; right: number; bottom: number };
 }
 
@@ -116,7 +119,10 @@ export const JAR_ITEMS: JarItemDef[] = [
   // actual spec here.
   // Sized up 0.91 -> 1.05, then further to 1.22 — still read too small
   // relative to the rest of the roster.
-  { id: "ballet", src: "/images/items/ballet.png", category: "favourite", sizeScale: 1.22, shape: "blob", density: 0.0005, friction: 0.5, restitution: 0.06, frictionAir: 0.015 },
+  // Falls in rotated 90° cw, per request — a trial, not locked, so it can
+  // still tumble further from here rather than being forced to hold this
+  // angle the whole way down (see rotate's own doc comment above).
+  { id: "ballet", src: "/images/items/ballet.png", category: "favourite", sizeScale: 1.22, shape: "blob", density: 0.0005, friction: 0.5, restitution: 0.06, frictionAir: 0.015, rotate: 90 },
   // Sized up 1.3x, then a further small bump to 1.4x — still read a touch
   // small. Falls in rotated 90° so it lands lying on its side rather than
   // standing upright — it's long and thin, and stood upright it was

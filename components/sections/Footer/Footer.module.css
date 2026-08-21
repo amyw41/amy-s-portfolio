@@ -20,11 +20,6 @@
    * every term so the panel keeps scaling the same way across viewports,
    * just shorter. */
   height: clamp(285px, 27vw, 390px);
-  /* The panel sits 32px above the bottom of the page. .credit lives in
-   * that gap (position: absolute below, anchored to .container's own
-   * bottom) rather than in normal flow after the panel, so it doesn't
-   * push the panel's own bottom edge any further up. */
-  margin-bottom: 32px;
 }
 
 /* ---------- text block ---------- */
@@ -39,6 +34,18 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  /* This block sits visually above the item pile (z-index above), but was
+   * still stealing clicks/drags from any item underneath it and letting
+   * its own plain text get text-selected on a click-drag — neither is
+   * wanted, since this is just static heading copy sitting over a
+   * draggable pile. pointer-events:none removes it from hit-testing
+   * entirely, so a click here passes straight through to whatever item is
+   * actually underneath; user-select:none stops the text highlighting on a
+   * drag that misses an item. .link re-enables pointer-events (below) so
+   * the 3 real links keep working — only the plain text/dots become
+   * click-through. */
+  pointer-events: none;
+  user-select: none;
 }
 
 .links {
@@ -50,6 +57,11 @@
 }
 
 .link {
+  /* Re-enables what .textBlock's own pointer-events:none turned off — a
+   * child can opt back in even under a pointer-events:none ancestor, so
+   * these 3 real links (LinkedIn/email/twitter) stay clickable while the
+   * surrounding plain text/dots (heading, .dot) do not. */
+  pointer-events: auto;
   color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
   transition: color 0.15s ease;
@@ -83,15 +95,21 @@
 
 /* ---------- draggable items ---------- */
 
-/* The outer, visible box — sized to the item's own alpha bbox (clipW/clipH
- * in items.ts), same as the jar's own JarItem.tsx .clip. overflow:hidden
- * here is what actually crops the full source image (.image below) down to
- * just its non-transparent content, so an item reads the same on-screen
- * size here as it does in the jar rather than including each PNG's own
- * (very unevenly-sized) transparent padding. */
+/* The outer, draggable box — sized to the item's own alpha bbox (clipW/
+ * clipH in items.ts), same as the jar's own JarItem.tsx .clip. Was
+ * overflow:hidden, cropping the full source image (.image below) down to
+ * just this box — for cam, whose clipW/clipH are deliberately measured off
+ * a cropRegion-restricted bbox (excluding its beaded strap/gems, so they
+ * don't drag the item's own on-screen size around — see items.manifest.ts's
+ * cropRegion doc), that clip was also hiding the gems entirely as a side
+ * effect. Switched to overflow:visible, matching the same fix on the jar's
+ * own JarItem.module.css .clip, so the gems paint again; clipW/clipH still
+ * drive this item's actual size/position, untouched. No visible effect on
+ * any other item — everywhere else the area outside the box is just
+ * transparent padding, invisible either way. */
 .item {
   position: absolute;
-  overflow: hidden;
+  overflow: visible;
   touch-action: none;
   cursor: grab;
   user-select: none;
@@ -115,10 +133,7 @@
 /* ---------- below the footer ---------- */
 
 .credit {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  margin: 0;
+  margin: 10px 0 10px 0;
   font-size: var(--fs-small);
   font-weight: 300;
   color: #000;
