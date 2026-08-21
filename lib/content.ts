@@ -9,10 +9,6 @@ export const content = {
     hero: {
       title: "amy wang's jar",
       tagline: "I design systems that make sense.",
-      lang: {
-        en: "EN",
-        zh: "中文",
-      },
       social: {
         linkedin: { label: "LinkedIn", href: "https://linkedin.com/in/amyw41" },
         gmail: { label: "Email", href: "mailto:amy.wang1@uwaterloo.ca" },
@@ -24,16 +20,16 @@ export const content = {
         playground: "playground",
       },
       toggles: {
-        projects: "Projects",
-        favourites: "Favourites",
+        projects: "projects",
+        favourites: "favourites",
       },
     },
     projects: {
       heading: "what's inside?",
       filters: {
-        work: "Work",
-        personal: "Personal Project",
-        hackathon: "Hackathon",
+        work: "work",
+        personal: "personal project",
+        hackathon: "hackathon",
       },
       extras: {
         title: "extras",

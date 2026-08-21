@@ -129,13 +129,13 @@ export const JAR_ITEMS: JarItemDef[] = [
   // pineapple's 20° ccw so the two lean away from each other. Not
   // lockRotation, so this is where it *enters* the pile, not a guaranteed
   // final rest angle (see rotate's own doc comment above).
-  { id: "chips", src: "/images/items/chips.png", category: "favourite", sizeScale: 1.32, shape: "blob", density: 0.0004, friction: 0.5, restitution: 0.07, frictionAir: 0.016, rotate: 32 },
+  { id: "chips", src: "/images/items/chips.png", category: "favourite", sizeScale: 1.32, shape: "blob", density: 0.0004, friction: 0.5, restitution: 0.07, frictionAir: 0.016, rotate: 50 },
   { id: "kitty-mirror", src: "/images/items/kitty-mirror.png", category: "favourite", sizeScale: 1.23, shape: "blob", density: 0.001, friction: 0.3, restitution: 0.1, frictionAir: 0.011, lockRotation: true },
   // Sized up 1.07 -> 1.22 — read too small relative to the rest of the
   // roster. Falls in rotated 90° so it lands lying on its side rather than
   // upright — already lockRotation, so it stays close to that the whole
   // way down.
-  { id: "laneige", src: "/images/items/laneige.png", category: "favourite", sizeScale: 1.22, shape: "blob", density: 0.0007, friction: 0.4, restitution: 0.08, frictionAir: 0.013, lockRotation: true, rotate: 90 },
+  { id: "laneige", src: "/images/items/laneige.png", category: "favourite", sizeScale: 1.22, shape: "blob", density: 0.0007, friction: 0.4, restitution: 0.08, frictionAir: 0.013, lockRotation: true, rotate: 0 },
   // Falls in rotated 20° ccw (see chips above).
   { id: "pineapple", src: "/images/items/pineapple.png", category: "favourite", sizeScale: 1.16, shape: "blob", density: 0.0016, friction: 0.25, restitution: 0.08, frictionAir: 0.01, rotate: -20 },
   // lockRotation added: skullpanda was the one item repeatedly showing up

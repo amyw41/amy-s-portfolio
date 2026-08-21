@@ -228,8 +228,8 @@ const FALLBACK_OUTLINE_THICKNESS_PX = 4;
 
 /** Ring sample count passed to getOutlineMask (lib/outline.ts) — raised from
  * the alpha-bbox-era flat-radius design's 16. Per-item dilation radius (see
- * getOutlineThicknessPx / the dilation-radius computation in preloadImage
- * below) can now be noticeably larger for a heavily-scaled-down item than
+ * getOutlineThicknessPx / computeDilationRadius below) can now be noticeably
+ * larger for a heavily-scaled-down item than
  * the old flat 3px source-space radius ever was, and a larger radius needs
  * denser sampling to avoid gaps at thin protrusions (ballet's straps,
  * kitty-mirror's handle/stand) — 16 samples at a bigger radius left visible
@@ -286,9 +286,9 @@ interface RenderInfo {
   imgTop: number;
   /** Geometry for the 'blob' border ring (see JarItem.tsx / lib/outline.ts),
    * in the same div-relative coordinate space as imgLeft/imgTop — the ring
-   * raster covers the alpha bbox plus that item's own dilation radius
-   * (see preloadImage's PreloadResult.dilationRadius) of padding on every
-   * side, at display scale. Unused (left at 0) for 'box' items, which use
+   * raster covers the alpha bbox plus that item's own dilation radius (see
+   * computeDilationRadius's own comment) of padding on every side, at
+   * display scale. Unused (left at 0) for 'box' items, which use
    * the box-shadow border technique instead and need no ring geometry. */
   ringLeft: number;
   ringTop: number;
@@ -303,21 +303,17 @@ interface PhysicsItem {
   halfHeight: number;
 }
 
-interface PreloadResult {
-  bbox: AlphaBBox;
-  /** Only generated for 'blob' items (see items.manifest.ts's JarItemShape)
-   * — 'box' items border via box-shadow instead and never need a ring. Null
-   * either when the item isn't a blob, or when mask generation itself
-   * failed (see getOutlineMask's own fallback/warning). */
-  outlineMask: string | null;
-  /** The native-source-pixel dilation radius actually used to generate
-   * outlineMask (null alongside it for 'box' items / failed generation) —
-   * computeRenderInfo reuses this EXACT value (not a recomputation) to size
-   * the ring's on-screen geometry, so the raster and its displayed geometry
-   * can never drift out of sync with each other (see RenderInfo's own
-   * comment on ringLeft/Top/Width/Height). */
-  dilationRadius: number | null;
-}
+/** dilationRadius: the native-source-pixel dilation radius used to generate
+ * a 'blob' item's outlineMask (null for 'box' items, which border via
+ * box-shadow instead and never need a ring). This is cheap pure arithmetic
+ * (computeDilationRadius below) computed synchronously for every item right
+ * after its bbox resolves — computeRenderInfo reuses this EXACT value (not
+ * a recomputation) to size the ring's on-screen geometry, so the raster and
+ * its displayed geometry can never drift out of sync with each other (see
+ * RenderInfo's own comment on ringLeft/Top/Width/Height). outlineMask
+ * itself — the actual ring raster — is real canvas work and generated
+ * separately, deferred until after the fall has already started (see the
+ * preloadBBox split's own comments below). */
 
 /**
  * itemDisplayScale is this item's rendered on-screen longest edge ÷ its own
@@ -340,23 +336,25 @@ function computeDilationRadius(item: JarItemDef, bbox: AlphaBBox, outlineThickne
   return outlineThicknessPx / itemDisplayScale;
 }
 
-function preloadImage(item: JarItemDef, outlineThicknessPx: number): Promise<PreloadResult> {
+interface BBoxPreloadResult {
+  bbox: AlphaBBox;
+  /** Kept around (not just the bbox) so the deferred outline-mask pass
+   * below can reuse this exact already-decoded element instead of loading
+   * the same src a second time. */
+  img: HTMLImageElement;
+}
+
+/** Fast half of what used to be one combined preloadImage: decode + alpha
+ * bbox only — no canvas dilation, no PNG encoding. This is the ONLY preload
+ * work the fall itself actually needs (bbox drives every item's sizing and
+ * physics geometry) — see the split's own reasoning at this function's call
+ * site below. */
+function preloadBBox(item: JarItemDef): Promise<BBoxPreloadResult> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
     img.onload = () => {
       try {
-        const bbox = computeAlphaBBox(img, item.cropRegion);
-        // Generated here, synchronously inside onload, while `img` is still
-        // a live loaded element — getOutlineMask itself is cache-checked
-        // (lib/outline.ts), so a remount/resize never re-runs the canvas
-        // work for a src already generated once.
-        let outlineMask: string | null = null;
-        let dilationRadius: number | null = null;
-        if (item.shape === "blob") {
-          dilationRadius = computeDilationRadius(item, bbox, outlineThicknessPx);
-          outlineMask = getOutlineMask(item.src, img, dilationRadius, OUTLINE_SAMPLES);
-        }
-        resolve({ bbox, outlineMask, dilationRadius });
+        resolve({ bbox: computeAlphaBBox(img, item.cropRegion), img });
       } catch (err) {
         reject(err instanceof Error ? err : new Error(String(err)));
       }
@@ -456,33 +454,41 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
 
       // Reference point for the entrance delay below — captured here, at
       // the very start of the effect, since this is as close as JS gets to
-      // "the same moment the jar's CSS fade (Hero.module.css's heroFadeIn)
-      // begins": both are driven by the same initial mount/commit.
+      // "the same moment the hero's shared CSS load-in (Hero.module.css's
+      // heroLoadIn) begins": both are driven by the same initial mount/
+      // commit.
       const setupStartTime = performance.now();
 
       // Preload every sprite before starting the sim, and compute each
       // one's alpha bounding box — sizing and physics geometry come from
       // that bbox, not the file's own pixel dimensions (see alpha-bbox.ts).
-      // 'blob' items also get their border-ring mask generated in this same
-      // pass (see preloadImage/lib/outline.ts) — once, before the sim
-      // starts, per the toggle-border spec. outlineThicknessPx is read once
-      // up front (from --outline-thickness, the single source of truth
-      // shared with 'box' items' own box-shadow) and passed to every item so
-      // they all target the same on-screen thickness.
+      // This bbox decode is the ONLY preload work the fall itself actually
+      // needs to wait on. Border-ring generation (getOutlineMask, real
+      // canvas work — 24 drawImage calls plus 2 more full-canvas composites
+      // plus a toDataURL PNG encode, PER 'blob' item) used to run in this
+      // same blocking pass too, and measured out as the actual ~2s+ of the
+      // "why does it take so long to start falling" complaint (see the
+      // [jar-timing] console line below) — nothing about it is needed
+      // before a single body can spawn or the fall can start, only before a
+      // ring can be *drawn*, so it's deferred below instead (see that
+      // block's own comment) and no longer blocks this await at all.
       const outlineThicknessPx = getOutlineThicknessPx();
-      const preloadEntries = await Promise.all(
-        items.map(async (item) => [item.id, await preloadImage(item, outlineThicknessPx)] as const),
-      );
+      const preloadEntries = await Promise.all(items.map(async (item) => [item.id, await preloadBBox(item)] as const));
       if (cancelled) return;
       const bboxes = Object.fromEntries(
         preloadEntries.map(([id, r]) => [id, r.bbox]),
       ) as Record<string, AlphaBBox>;
-      const outlineMasksById = Object.fromEntries(
-        preloadEntries.map(([id, r]) => [id, r.outlineMask]),
-      ) as Record<string, string | null>;
-      setOutlineMasks(outlineMasksById);
+      const imgsById = new Map(preloadEntries.map(([id, r]) => [id, r.img]));
+      // Cheap pure arithmetic (see computeDilationRadius), not canvas work —
+      // computed synchronously right away so ring GEOMETRY (ringLeft/Top/
+      // Width/Height in computeRenderInfo below) is correct from the very
+      // first render, even though the ring RASTER itself (outlineMask,
+      // below) arrives later.
       const dilationRadii = Object.fromEntries(
-        preloadEntries.map(([id, r]) => [id, r.dilationRadius]),
+        items.map((item) => [
+          item.id,
+          item.shape === "blob" ? computeDilationRadius(item, bboxes[item.id], outlineThicknessPx) : null,
+        ]),
       ) as Record<string, number | null>;
 
       for (const item of items) {
@@ -634,7 +640,7 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
           // pixelScale (also derived from this same bbox) — same bbox, same
           // scale source as both the image and the mask raster itself, so
           // geometry can't drift out of sync with what was actually baked
-          // into the ring (see PreloadResult.dilationRadius's own comment).
+          // into the ring (see computeDilationRadius's own comment).
           const ringPad = (dilationRadii[item.id] ?? 0) * pixelScale;
           info[item.id] = {
             divW: bbox.bboxW * pixelScale,
@@ -1413,7 +1419,11 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
           },
           { threshold: 0 },
         );
-        intersectionObserver.observe(container);
+        // TS can't carry the `if (!container) return` narrowing above into
+        // this nested function declaration (only arrow functions keep it) —
+        // same non-null assertion already used for `container` elsewhere in
+        // this file (e.g. measure()'s getBoundingClientRect() call).
+        intersectionObserver.observe(container!);
         cleanupFns.push(() => intersectionObserver.disconnect());
 
         const handleVisibilityChange = () => updateRunning();
@@ -1432,21 +1442,27 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
 
       // --- entrance delay: don't reveal the fall until the jar's mostly
       // visible ------------------------------------------------------------
-      // Everything above this point (preload, engine/body setup, the
-      // synchronous fall-and-settle precompute into `history`) has no
-      // visual effect yet — `ready` is still false, so JarStage hasn't
-      // mounted any item divs at all. What actually needs delaying is the
-      // moment the fall becomes visible: items dropping into a jar outline
-      // that's still mostly transparent (Hero.module.css's heroFadeIn) reads
-      // as broken. JAR_PHYSICS_DELAY_MS (motion-timing.ts) is derived from
-      // that same fade's own duration, not a bare hardcoded number — see
-      // its own comment. Timed against setupStartTime (captured at the top
-      // of this function, effectively "the fade's own start"), not a fresh
-      // clock read here, so the real work already done above counts against
-      // the delay instead of stacking an extra ~280ms on top of it.
-      // Skipped entirely under reduced motion: `instant` has already
-      // rendered the settled pile above with no fall to delay, and there's
-      // no fade running to wait on in the first place.
+      // The jar briefly didn't fade in at all (a request in between this
+      // one), which made this delay a no-op for a while — it's back now
+      // that the jar is back to fading in with everything else
+      // (Hero.module.css's shared heroLoadIn, see motion-timing.ts): items
+      // dropping into a still-mostly-transparent jar reads as broken.
+      // JAR_PHYSICS_DELAY_MS (motion-timing.ts) is derived from that same
+      // fade's own duration, not a bare hardcoded number — see its own
+      // comment. Timed against setupStartTime (captured at the top of this
+      // function, effectively "the fade's own start"), not a fresh clock
+      // read here, so the real work already done above counts against the
+      // delay instead of stacking an extra ~300ms on top of it. This is
+      // NOT the whole "why does it take a while to start falling" story —
+      // most of that was real preload + precompute time; see the
+      // [jar-timing]-tagged commits' history for the measurements that led
+      // to preloadBBox's split from outline-mask generation, and to
+      // downscaling the oversized source PNGs in public/images/items/
+      // (several were 2000px+ on a side for content that renders at a
+      // couple hundred px — real, measured cost, not guesswork; roughly
+      // halved the settle time end to end). Skipped entirely under reduced
+      // motion: `instant` has already rendered the settled pile above with
+      // no fall to delay, and there's no fade running to wait on either.
       if (!instant) {
         const elapsed = performance.now() - setupStartTime;
         const remaining = JAR_PHYSICS_DELAY_MS - elapsed;
@@ -1514,6 +1530,33 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
 
       setRenderInfo(currentRenderInfo);
       setReady(true);
+
+      // --- deferred: generate 'blob' ring rasters in the background ------
+      // The heavy part of border-ring generation (getOutlineMask -> lib/
+      // outline.ts's 24x drawImage + 2 more full-canvas composites + a
+      // toDataURL PNG encode, per item) used to block the fall from
+      // starting at all — see the big comment above the preload await for
+      // the measured cost. None of that is needed to spawn a body or paint
+      // an item, only the bbox (already resolved) is — so it runs here
+      // instead, after the fall is already underway, fire-and-forget (not
+      // awaited by anything). Spread across a setTimeout(0) yield between
+      // each item so this heavy synchronous canvas work can't itself cause
+      // the fall to stutter — one item's ring finishing a beat behind its
+      // own image is already a handled, existing state (JarItem.tsx's
+      // useDropShadowFallback), not a new edge case.
+      (async () => {
+        for (const item of items) {
+          if (cancelled || item.shape !== "blob") continue;
+          const img = imgsById.get(item.id);
+          const bbox = bboxes[item.id];
+          if (!img || !bbox) continue;
+          const dilationRadius = dilationRadii[item.id] ?? 0;
+          const outlineMask = getOutlineMask(item.src, img, dilationRadius, OUTLINE_SAMPLES);
+          if (cancelled) return;
+          setOutlineMasks((prev) => ({ ...prev, [item.id]: outlineMask }));
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+      })();
     }
 
     setup();

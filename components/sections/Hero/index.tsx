@@ -6,7 +6,7 @@ import styles from "./Hero.module.css";
 import CircleToggle from "@/components/ui/CircleToggle";
 import JarStage from "./JarStage";
 import { JAR_ITEMS } from "./items.manifest";
-import { JAR_FADE_MS } from "./motion-timing";
+import { HERO_LOAD_IN_MS } from "./motion-timing";
 import { content } from "@/lib/content";
 
 const copy = content.en.hero;
@@ -23,19 +23,16 @@ export default function Hero() {
   const [favouritesOn, setFavouritesOn] = useState(false);
 
   return (
-    <section className={styles.hero}>
+    <section
+      className={styles.hero}
+      // Read by every hero element's shared heroLoadIn animation
+      // (Hero.module.css, via var(--hero-load-ms)) — jar included. Set once
+      // here (not per-element) since every animated child shares this exact
+      // same duration.
+      style={{ "--hero-load-ms": `${HERO_LOAD_IN_MS}ms` } as CSSProperties}
+    >
       <div className={`pageContainer ${styles.container}`}>
         <div className={styles.topBar}>
-          {/* Inert for now — locale switching gets wired up later. */}
-          <div className={styles.langToggle}>
-            <button type="button" className={styles.langButton}>
-              {copy.lang.en}
-            </button>
-            <button type="button" className={styles.langButton}>
-              {copy.lang.zh}
-            </button>
-          </div>
-
           <div className={styles.socialGroup}>
             <a
               className={styles.socialIcon}
@@ -86,14 +83,7 @@ export default function Hero() {
           </div>
 
           <div className={styles.right}>
-            <div
-              className={styles.jarWrapper}
-              // Read by Hero.module.css's heroFadeIn animation (var(--jar-fade-ms))
-              // and, via the same JAR_FADE_MS constant, by useJarPhysics.ts's own
-              // "don't start falling until the fade is ~70% done" delay — see
-              // motion-timing.ts.
-              style={{ "--jar-fade-ms": `${JAR_FADE_MS}ms` } as CSSProperties}
-            >
+            <div className={styles.jarWrapper}>
               <JarStage items={JAR_ITEMS} projectsOn={projectsOn} favouritesOn={favouritesOn} />
             </div>
             <div className={styles.toggles}>

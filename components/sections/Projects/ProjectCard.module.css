@@ -46,6 +46,12 @@
   aspect-ratio: 3 / 2;
   border-radius: var(--jar-item-radius); /* same 12px as the jar's own cards */
   overflow: hidden;
+  /* Light gray frame around every thumbnail (video, plain cover image, and
+   * ExtrasCard's placeholder alike, since they all share this class) — on
+   * the border-box, inside the radius/clip above rather than adding its own
+   * separate layer. */
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
 }
 
 /* Shared by AutoplayVideo's own poster/video layers (both fill .media

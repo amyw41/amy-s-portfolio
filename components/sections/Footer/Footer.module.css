@@ -15,7 +15,11 @@
   overflow: hidden;
   background: #000;
   border-radius: 20px 20px 0 0;
-  height: clamp(380px, 36vw, 520px);
+  /* Cut by a quarter (was clamp(380px, 36vw, 520px)) to match the 931x326
+   * prototype's own proportions (~2.86:1 width:height) — 0.75x applied to
+   * every term so the panel keeps scaling the same way across viewports,
+   * just shorter. */
+  height: clamp(285px, 27vw, 390px);
   /* The panel sits 32px above the bottom of the page. .credit lives in
    * that gap (position: absolute below, anchored to .container's own
    * bottom) rather than in normal flow after the panel, so it doesn't
@@ -79,8 +83,15 @@
 
 /* ---------- draggable items ---------- */
 
+/* The outer, visible box — sized to the item's own alpha bbox (clipW/clipH
+ * in items.ts), same as the jar's own JarItem.tsx .clip. overflow:hidden
+ * here is what actually crops the full source image (.image below) down to
+ * just its non-transparent content, so an item reads the same on-screen
+ * size here as it does in the jar rather than including each PNG's own
+ * (very unevenly-sized) transparent padding. */
 .item {
   position: absolute;
+  overflow: hidden;
   touch-action: none;
   cursor: grab;
   user-select: none;
@@ -88,6 +99,17 @@
 
 .item:active {
   cursor: grabbing;
+}
+
+/* The full, uncropped source file, sized and offset (imgW/imgH/imgLeft/
+ * imgTop in items.ts) so its own alpha content lines up with .item's
+ * bounds — everything outside that falls outside .item's clip and is
+ * simply never painted. No ring, no dim overlay, no border — this brief
+ * asked for the crop/size only, not the jar's click-to-highlight styling. */
+.image {
+  position: absolute;
+  display: block;
+  pointer-events: none;
 }
 
 /* ---------- below the footer ---------- */

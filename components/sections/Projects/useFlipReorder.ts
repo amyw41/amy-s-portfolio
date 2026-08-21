@@ -29,9 +29,17 @@ const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
  * its *contents* are compared (via a joined-string dependency) so passing
  * a fresh array reference each render doesn't cause spurious re-measures.
  */
+/** Just the top/left this hook's math actually needs, measured in
+ * document-absolute coordinates rather than a real (viewport-relative)
+ * DOMRect — see where these get taken, below, for why. */
+interface FlipPoint {
+  top: number;
+  left: number;
+}
+
 export function useFlipReorder(order: string[]) {
   const nodesRef = useRef<Map<string, HTMLElement>>(new Map());
-  const prevRectsRef = useRef<Map<string, DOMRect> | null>(null);
+  const prevRectsRef = useRef<Map<string, FlipPoint> | null>(null);
   const isFirstRunRef = useRef(true);
 
   const registerRef = useMemo(() => {
@@ -62,8 +70,27 @@ export function useFlipReorder(order: string[]) {
     }
 
     const nodes = nodesRef.current;
-    const newRects = new Map<string, DOMRect>();
-    for (const [id, el] of nodes) newRects.set(id, el.getBoundingClientRect());
+    // getBoundingClientRect() is viewport-relative — fine for a reorder that
+    // happens to fire without the page having scrolled in between, but nine
+    // times out of ten in practice the very first couple of filter clicks on
+    // a fresh load happen right after the user scrolled down to actually
+    // see the cards. That scroll moves every card's viewport-relative rect
+    // by however far the page moved, with nothing to do with reordering at
+    // all — and since this hook diffs "now" against whatever was measured
+    // last render, that scroll delta leaks straight into dx/dy, on top of
+    // the real reorder distance. The result: a big, spurious jump that
+    // undoes itself over FLIP_DURATION_MS, before/after any actual card
+    // movement. Adding the current scroll offset converts each rect to
+    // document-absolute coordinates, which don't change just because the
+    // user scrolled — so a scroll between two reorders (or between mount
+    // and the first one) no longer pollutes the measured delta. Once the
+    // user stops scrolling between clicks the two methods agree, which is
+    // why this only ever showed up on the first click or two.
+    const newRects = new Map<string, FlipPoint>();
+    for (const [id, el] of nodes) {
+      const r = el.getBoundingClientRect();
+      newRects.set(id, { top: r.top + window.scrollY, left: r.left + window.scrollX });
+    }
 
     const prevRects = prevRectsRef.current;
     const reducedMotion = typeof window !== "undefined" && window.matchMedia(REDUCED_MOTION).matches;

@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import styles from "./Projects.module.css";
 import CircleToggle from "@/components/ui/CircleToggle";
 import ProjectCard from "./ProjectCard";
 import ExtrasCard from "./ExtrasCard";
 import { useFlipReorder } from "./useFlipReorder";
 import { useScrollReveal } from "./useScrollReveal";
+import { useGroupReveal } from "./useGroupReveal";
 import { PROJECTS, PROJECT_CATEGORY_COLOR, type ProjectCategory } from "@/lib/projects";
 import { content } from "@/lib/content";
 
@@ -58,17 +59,21 @@ export default function Projects() {
   const registerFlipRef = useFlipReorder(displayIds);
   const { registerRef: registerRevealRef, getRevealState } = useScrollReveal();
   const headerReveal = getRevealState(HEADER_ID);
+  // Project cards (skinsprout/cybersea/spotify/extras) reveal as one group,
+  // together, the moment the shared list container below is in view — see
+  // useGroupReveal's own comment for why this watches one shared container
+  // rather than any single card, and why it's a separate hook from the
+  // per-element useScrollReveal above (which the header still uses on its
+  // own).
+  const listRef = useRef<HTMLDivElement>(null);
+  const cardsRevealed = useGroupReveal(listRef);
 
-  // Merges FLIP's own ref (position-in-list transform, imperative) with the
-  // reveal's (rise-on-first-entry, imperative registration only — the
-  // transform itself is applied declaratively via a class, see .reveal in
-  // ProjectCard.module.css) onto the same outer DOM node. They never write
-  // to the same inline style property, so sharing one node between them is
-  // safe — see ProjectCard.module.css's .card/.reveal comment for why.
+  // FLIP's own ref (position-in-list transform, imperative) — the reveal
+  // above no longer shares this node; it watches the list container as a
+  // whole instead (see listRef).
   function registerCardRef(id: string) {
     return (el: HTMLElement | null) => {
       registerFlipRef(id)(el);
-      registerRevealRef(id)(el);
     };
   }
 
@@ -107,16 +112,15 @@ export default function Projects() {
           </div>
         </div>
 
-        <div className={styles.list}>
+        <div className={styles.list} ref={listRef}>
           {displayIds.map((id) => {
-            const reveal = getRevealState(id);
             return id === EXTRAS_ID ? (
               <ExtrasCard
                 key={id}
                 ref={registerCardRef(id)}
                 dimmed={dimmedIds.has(id)}
-                revealed={reveal.revealed}
-                revealDelayMs={reveal.delayMs}
+                revealed={cardsRevealed}
+                revealDelayMs={0}
               />
             ) : (
               <ProjectCard
@@ -124,8 +128,8 @@ export default function Projects() {
                 ref={registerCardRef(id)}
                 project={projectsBySlug.get(id)!}
                 dimmed={dimmedIds.has(id)}
-                revealed={reveal.revealed}
-                revealDelayMs={reveal.delayMs}
+                revealed={cardsRevealed}
+                revealDelayMs={0}
               />
             );
           })}

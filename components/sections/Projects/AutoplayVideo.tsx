@@ -90,7 +90,23 @@ export default function AutoplayVideo({ src, poster }: AutoplayVideoProps) {
       ([entry]) => {
         if (entry.isIntersecting && !loaded) {
           loaded = true;
+          // `preload="none"` in the JSX below is deliberate — it's what
+          // keeps a card that never scrolls near from fetching anything at
+          // all. But once this observer decides it's worth loading, that
+          // same "none" would otherwise carry forward and block the browser
+          // from buffering any actual video data until `play()` is called
+          // by the *other*, stricter (50%) observer below — meaning the
+          // 200px lead margin this observer exists to provide was being
+          // thrown away, and playback started from a cold, empty buffer.
+          // That's what read as "random images" flashing before the video
+          // settled: the first fraction of a second of playback stuttering
+          // across whatever partial frames had decoded so far. Switching to
+          // "auto" here, right as loading is actually greenlit, lets the
+          // browser start buffering during that 200px lead instead of at
+          // the moment playback is requested.
+          video.preload = "auto";
           video.src = src;
+          video.load();
           loadObserver.disconnect();
         }
       },

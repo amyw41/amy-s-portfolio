@@ -32,32 +32,6 @@
   gap: 24px;
 }
 
-.langToggle {
-  display: flex;
-  gap: 12px;
-}
-
-.langButton {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: var(--fs-small);
-  font-weight: 300;
-  color: rgba(0, 0, 0, 0.8);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .langButton {
-    transition: color 150ms ease;
-  }
-}
-
-.langButton:hover {
-  color: #9a9a9a;
-}
-
 .socialGroup {
   display: flex;
   border: 1px solid #000;
@@ -277,105 +251,40 @@
  * scoping the whole thing inside prefers-reduced-motion:no-preference is
  * enough on its own to make reduced-motion users see everything at final
  * position/opacity immediately, with no separate override needed (compare
- * .langButton/.navLink's hover transitions above, same pattern). */
+ * .navLink's hover transitions above, same pattern). */
 
-@keyframes heroDropIn {
-  from {
-    opacity: 0;
-    transform: translateY(-24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes heroSlideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(32px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes heroFadeIn {
+/* Simplified further on request: was fade + a 10px rise. Now a plain
+ * opacity fade, "on the spot" — no movement at all. Every hero element
+ * (jar included again — it had briefly been pulled out of this, see
+ * motion-timing.ts's own note) shares this exact keyframe, exact duration,
+ * no stagger, so the load-in reads as one single arrival rather than
+ * several independent motions or directions. */
+@keyframes heroLoadIn {
   from {
     opacity: 0;
   }
   to {
     opacity: 1;
-  }
-}
-
-@keyframes heroRiseIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* Left column: star -> title -> tagline, 80ms stagger, in that order. */
-  .logo {
-    animation: heroDropIn 500ms ease-out both;
-  }
-
-  .title {
-    animation: heroDropIn 500ms ease-out both;
-    animation-delay: 80ms;
-  }
-
-  .tagline {
-    animation: heroDropIn 500ms ease-out both;
-    animation-delay: 160ms;
-  }
-
-  /* Nav links: fade in from the right, starting 100ms after the left
-   * column above so the two groups read as related but not identical (not
-   * one single timer for every piece of text) — 80ms stagger in reading
-   * order after that. */
-  .nav > .navLink:nth-child(1) {
-    animation: heroSlideInRight 450ms ease-out both;
-    animation-delay: 100ms;
-  }
-
-  .nav > .navLink:nth-child(2) {
-    animation: heroSlideInRight 450ms ease-out both;
-    animation-delay: 180ms;
-  }
-
-  .nav > .navLink:nth-child(3) {
-    animation: heroSlideInRight 450ms ease-out both;
-    animation-delay: 260ms;
-  }
-
-  /* Jar: fade only, deliberately no slide/scale — it already gets a large
-   * amount of motion from the physics entrance (items dropping in); a
-   * container-level slide on top of that would compete with gravity's own
-   * direction instead of reading as one thing happening. Duration comes
-   * from --jar-fade-ms (set inline in index.tsx from JAR_FADE_MS) —
-   * useJarPhysics.ts derives its own "don't start falling until the jar's
-   * mostly visible" delay from that exact same constant (motion-timing.ts),
-   * so the two stay in lockstep if this number ever changes; the literal
-   * 400ms below is only a fallback for the custom property being missing. */
-  .jarWrapper {
-    animation: heroFadeIn var(--jar-fade-ms, 400ms) ease-out both;
-  }
-
-  /* Toggles: fade + a slight rise — paired with the jar (both start
-   * relative to its fade) but visually distinct from its plain fade.
-   * Starts 120ms after the jar fade begins (the jar fade itself starts at
-   * mount, same as everything else here). */
+  /* Every animated hero element, one shared animation, zero stagger between
+   * them — see heroLoadIn's own comment above. Duration comes from
+   * --hero-load-ms (set once on the .hero section itself in index.tsx, from
+   * HERO_LOAD_IN_MS) — the literal 450ms below is only a fallback for the
+   * custom property being missing. useJarPhysics.ts derives its own "don't
+   * start falling until this is ~70% done" delay from that same constant
+   * (motion-timing.ts) — items dropping into a still-mostly-transparent jar
+   * reads as broken, now that the jar is back to fading in with everything
+   * else — so the two stay in lockstep if this duration ever changes.*/
+  .logo,
+  .title,
+  .tagline,
+  .nav > .navLink,
+  .jarWrapper,
   .toggles {
-    animation: heroRiseIn 400ms ease-out both;
-    animation-delay: 120ms;
+    animation: heroLoadIn var(--hero-load-ms, 450ms) ease-out both;
   }
 }
 

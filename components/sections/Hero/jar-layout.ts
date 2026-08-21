@@ -128,9 +128,9 @@ export const TARGET_X_FRACTION: Record<string, number> = {
   skullpanda: 0.42,
   cam: 0.55,
   cybersea: 0.57,
-  spotify: 0.6,
+  spotify: 0.65,
   chips: 0.65,
   bottle: 0.72,
-  ballet: 0.76,
+  ballet: 0.81,
   "bear-hirono": 0.8,
 };

@@ -1,21 +1,25 @@
 /**
  * Hero load-in choreography constants shared across files that otherwise
- * can't see each other's values: the jar's own CSS fade duration
- * (Hero.module.css, via the --jar-fade-ms custom property set inline in
- * index.tsx) and useJarPhysics.ts's "don't start falling until the jar is
- * mostly visible" entrance delay. Deriving the delay from this one constant
- * means it can never silently drift out of sync with how long the fade
- * actually takes.
+ * can't see each other's values: the shared CSS fade duration every hero
+ * element — jar included — animates with (Hero.module.css, via the
+ * --hero-load-ms custom property set inline in index.tsx), and
+ * useJarPhysics.ts's own "don't start falling until the jar is mostly
+ * visible" entrance delay.
+ *
+ * History, briefest version: started as several independently-timed,
+ * independently-directed pieces (star/title/tagline staggered one way, nav
+ * links staggered another way and sliding in, jar fading on its own timer,
+ * toggles rising on a third timer) → collapsed to one shared fade+rise,
+ * jar excluded (jar reads as "just there" instantly) → simplified once more
+ * to a plain fade, no rise, jar included again — "everything appears on
+ * the spot together" was the actual ask underneath all those iterations.
+ * HERO_LOAD_IN_MS is that one shared duration.
  */
+export const HERO_LOAD_IN_MS = 450;
 
-/** Must match the fallback in Hero.module.css's `var(--jar-fade-ms, 400ms)`
- * — that fallback only ever matters if the inline custom property is
- * somehow missing. This constant is the real source of truth; it's passed
- * down via inline style in Hero/index.tsx. */
-export const JAR_FADE_MS = 400;
-
-/** Physics visibly starts falling once the jar outline's own fade is ~70%
- * complete — items dropping into a not-yet-visible jar reads as broken.
- * Derived from JAR_FADE_MS itself (not a bare hardcoded 280) so it stays
- * correct if that duration above ever changes. */
-export const JAR_PHYSICS_DELAY_MS = Math.round(JAR_FADE_MS * 0.7);
+/** Physics visibly starts falling once the shared fade is ~70% complete —
+ * items dropping into a still-mostly-transparent jar reads as broken, and
+ * the jar is back to fading in with everything else (see Hero.module.css).
+ * Derived from HERO_LOAD_IN_MS itself (not a bare hardcoded number) so it
+ * stays correct if that duration above ever changes. */
+export const JAR_PHYSICS_DELAY_MS = Math.round(HERO_LOAD_IN_MS * 0.7);

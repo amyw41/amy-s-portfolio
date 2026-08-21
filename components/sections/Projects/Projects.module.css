@@ -35,7 +35,7 @@
 
 .heading {
   margin: 0;
-  font-size: var(--fs-section);
+  font-size: clamp(26px, 3.13vw, 48px); /* slightly smaller than --fs-section */
   font-weight: 300;
   color: #000;
 }
