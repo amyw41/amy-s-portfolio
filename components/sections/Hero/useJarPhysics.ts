@@ -426,6 +426,18 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       let width = 0;
       let height = 0;
       let scale = 1;
+      /** How far the stage's own top sits below the actual viewport top,
+       * in real px (container.getBoundingClientRect().top at spawn time).
+       * SPAWN_LEAD alone is measured in the stage's own local coordinate
+       * space, which floats depending on how .columns's vertical centring
+       * (Hero.module.css) happens to size that gap on a given viewport —
+       * on a tall screen there's easily more headroom above the stage than
+       * SPAWN_LEAD accounts for, so the "spawn point" sits well inside the
+       * already-visible area instead of truly off past the top of the
+       * page. Folding this measured offset into computeSpawnYById (below)
+       * makes the spawn point track the real viewport top instead, so
+       * items always start genuinely above the browser window itself. */
+      let containerTop = 0;
       let wallBodies: Matter.Body[] = [];
       let pinReleaseYPx = 0;
 
@@ -590,9 +602,22 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       // measured — see computeSpawnYById's call site), keyed by id since
       // spawnBody is called in `items` (manifest) order, not fall order.
       const spawnYById = new Map<string, number>();
+      /** How far above the actual top of the browser window (not the
+       * stage) the very first item's spawn point sits, real px, regardless
+       * of viewport height or how .columns's vertical centring happens to
+       * place the stage. Guarantees a genuinely off-page start — see
+       * containerTop's own comment above. */
+      const OFF_VIEWPORT_LEAD = 80;
       function computeSpawnYById() {
         spawnYById.clear();
-        let cursor = SPAWN_LEAD * scale;
+        // Whichever is larger: SPAWN_LEAD's own scaled distance above the
+        // stage, or enough to clear containerTop (how far the stage sits
+        // below the viewport's top edge) plus OFF_VIEWPORT_LEAD. On a short
+        // viewport where the stage sits right under the nav, SPAWN_LEAD
+        // alone is probably already past the viewport top and wins; on a
+        // tall one where .columns centres the stage well down the page,
+        // containerTop dominates instead.
+        let cursor = Math.max(SPAWN_LEAD * scale, containerTop + OFF_VIEWPORT_LEAD);
         for (const id of orderedIds) {
           const info = currentRenderInfo[id];
           const size = Math.max(info?.divW ?? 0, info?.divH ?? 0) * BODY_SCALE;
@@ -908,8 +933,16 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
         // above. Rare fast-impact solver frames can still push a body
         // through a wall — this clamps every body back inside the walls'
         // own combined bounding envelope no matter what the solver did.
-        // Only left/right/bottom are clamped (never top): items legitimately
-        // start above the jar, before they've fallen in.
+        // Left/right/bottom are clamped for every body; the mouth (top) is
+        // clamped too, but ONLY for bodies that have already entered the
+        // jar (hasEnteredJar) — a body still on its way in has to be able
+        // to pass through the mouth's y in the first place, or it could
+        // never fall in at all. Without this, a body an already-settled
+        // item bumps hard enough could sail straight up through the open
+        // mouth with nothing to stop it short of the CSS clip way off the
+        // top of the page (Hero.module.css's .columns) — visually it would
+        // launch clean out of the jar instead of hitting the rim and
+        // dropping back in, which is the whole point of a lid.
         if (wallBodies.length > 0) {
           let leftBound = Infinity;
           let rightBound = -Infinity;
@@ -919,7 +952,11 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
             rightBound = Math.max(rightBound, w.bounds.max.x);
             floorBound = Math.max(floorBound, w.bounds.max.y);
           }
-          for (const { body, halfWidth, halfHeight } of physicsItems) {
+          // Same y the mouth's own two edge points sit at (JAR_INTERIOR_
+          // POINTS[0]/[16], jar-shape.ts) — i.e. exactly where the drawn
+          // rim is, not some separate invented boundary.
+          const mouthY = JAR_INTERIOR_POINTS[0].y * height;
+          for (const { id, body, halfWidth, halfHeight } of physicsItems) {
             const hw = halfWidth * BODY_SCALE;
             const hh = halfHeight * BODY_SCALE;
             let { x, y } = body.position;
@@ -939,6 +976,15 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
             if (y + hh > floorBound) {
               y = floorBound - hh;
               vy = Math.min(vy, 0);
+              clamped = true;
+            }
+            if (hasEnteredJar.get(id) && y - hh < mouthY) {
+              y = mouthY + hh;
+              // Cancel the upward velocity rather than reflecting it into a
+              // bounce — reads as "bumped into the underside of the lid and
+              // dropped", not a springy ricochet, matching the rest of this
+              // jar's soft/heavy feel (see BODY_SCALE, restitution values).
+              vy = Math.max(vy, 0);
               clamped = true;
             }
             if (clamped) {
@@ -990,7 +1036,7 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
 
       function measure() {
         const rect = container!.getBoundingClientRect();
-        return { w: rect.width, h: rect.height };
+        return { w: rect.width, h: rect.height, top: rect.top };
       }
 
       // Bodies are only ever created once the container has actually been
@@ -1000,6 +1046,7 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       const initial = measure();
       width = initial.w;
       height = initial.h;
+      containerTop = initial.top;
       scale = width / REFERENCE_WIDTH;
       buildWalls(width, height, scale);
       currentRenderInfo = computeRenderInfo(scale);

@@ -103,24 +103,26 @@
   align-items: center;
   justify-content: space-between;
   gap: 56px;
-  /* Items now spawn well above the jar (see SPAWN_LEAD/SPAWN_GAP in
-   * useJarPhysics) so they visibly fall in from off-screen rather than
-   * popping into existence at the jar's mouth. .itemLayer stays
-   * overflow:visible so that fall is actually visible, so the clip has to
-   * happen somewhere above it instead — here, not on .hero itself: .topBar
-   * is .hero's own first child, sitting *above* .columns in the same box,
-   * so clipping at .hero's edge wouldn't stop an item from rendering over
-   * the nav row while still comfortably inside .hero's box. Clipping here,
-   * at .columns's top edge, is what actually guarantees a falling item can
-   * never cover the nav bar.
+  /* Was overflow:clip here (see git history if this needs resurrecting) —
+   * deliberately removed. That clip line sat only a little below .topBar,
+   * still well inside the visible viewport, so every item's initial fall
+   * had a real, visible moment of "popping into view" as it crossed that
+   * line — no matter how far above the *stage* the item spawned (see
+   * SPAWN_LEAD/containerTop in useJarPhysics), the reveal itself was
+   * always happening on-screen, in full view, because the clip boundary
+   * was on-screen. A clip can only ever hide the reveal moment if the
+   * clip edge itself sits above the viewport's own top edge — which this
+   * one, by design (right under the nav row), never did.
    *
-   * The small margin-top pushes that clip edge a touch lower than exactly
-   * where .topBar ends — on request, so the clip boundary reads as sitting
-   * a little further from the nav row rather than snapped flush to it.
-   * Kept small deliberately: this eats into .columns's own flex-1 height,
-   * so too much would start crowding .right's vertical centring. */
-  margin-top: 12px;
-  overflow: clip;
+   * Removing the clip means a falling item's initial drop can now visibly
+   * cross over .topBar (the EN/中文 + social icons row) for the brief
+   * moment it's falling past that height — this is the deliberate trade
+   * made on request, in exchange for a genuinely clean "falls in from off
+   * the top of the page" look with no visible pop/cutoff at all. Once an
+   * item has settled into the jar it can never get back up this high —
+   * see the mouth/lid clamp in useJarPhysics's per-tick containment block,
+   * gated on hasEnteredJar — so this only ever affects the ~1-2s initial
+   * load-in, not anything after. */
 }
 
 .left {
@@ -260,8 +262,9 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  /* Was 8px — nudged down slightly on request. */
-  padding-top: 16px;
+  /* Was 8px, then 16px (too subtle to read as "lower" per feedback) — now
+   * a clearly visible drop. */
+  padding-top: 48px;
 }
 
 /* ---------- responsive ---------- */
