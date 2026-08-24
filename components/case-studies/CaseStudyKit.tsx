@@ -79,7 +79,7 @@ export function CaseStudyImage({
   return (
     <div
       style={{ aspectRatio: ratio, backgroundColor: bg ? highlightColor : undefined }}
-      className={`relative w-full overflow-hidden rounded-[8px] ${className}`}
+      className={`relative w-full overflow-hidden rounded-[8px] border border-black/[0.12] ${className}`}
     >
       {video ? (
         // No `autoPlay` — see useAutoPlayInView, starts fresh from the
