@@ -1,7 +1,6 @@
 export interface FooterItemDef {
   id: string;
   src: string;
-  alt: string;
   /** Percentage coordinates (of the panel's own box) for the item's
    * center point. Percentage, not px, so the arrangement holds together
    * while the panel scales with the viewport. */
@@ -79,12 +78,17 @@ const ITEM_SCALE = 2;
  * Clicking an item re-derives its own z-index from its position in
  * Footer/index.tsx's `order` state, same as before — this array order is
  * only the starting point, same as the old file.
+ *
+ * No per-item `alt` here (the old file had one): these images are
+ * decorative, same as their jar counterparts (see JarItem.tsx) — the
+ * whole item is aria-hidden at render (FooterItem.tsx) rather than given
+ * descriptive alt text, so there's nothing for an `alt` field to feed here
+ * any more.
  */
 export const FOOTER_ITEMS: FooterItemDef[] = [
   {
     id: "laneige",
     src: "/images/items/laneige.png",
-    alt: "Laneige lip sleeping mask",
     left: 60,
     top: 52,
     rotate: 6,
@@ -98,7 +102,6 @@ export const FOOTER_ITEMS: FooterItemDef[] = [
   {
     id: "chips",
     src: "/images/items/chips.png",
-    alt: "Bag of chips",
     left: 90,
     top: 80,
     rotate: -12,
@@ -116,7 +119,6 @@ export const FOOTER_ITEMS: FooterItemDef[] = [
     // wrong shoes entirely, swapped out directly on disk) — bbox geometry
     // here is specific to one file's own alpha content, so a new file needs
     // its own numbers, not just a new src path.
-    alt: "Ballet shoes",
     left: 95,
     top: 35,
     rotate: 50,
@@ -131,7 +133,6 @@ export const FOOTER_ITEMS: FooterItemDef[] = [
   {
     id: "skullpanda",
     src: "/images/items/skullpanda.png",
-    alt: "Skullpanda figure",
     left: 70,
     top: 35,
     rotate: -20,
@@ -146,7 +147,6 @@ export const FOOTER_ITEMS: FooterItemDef[] = [
   {
     id: "cam",
     src: "/images/items/cam.png",
-    alt: "Camera with beaded strap",
     left: 40,
     top: 52,
     rotate: -10,
@@ -160,7 +160,6 @@ export const FOOTER_ITEMS: FooterItemDef[] = [
   {
     id: "kitty-mirror",
     src: "/images/items/kitty-mirror.png",
-    alt: "Hello Kitty compact mirror",
     left: 52,
     top: 82,
     rotate: 9,
@@ -174,7 +173,6 @@ export const FOOTER_ITEMS: FooterItemDef[] = [
   {
     id: "rabbit",
     src: "/images/items/rabbit.png",
-    alt: "White Rabbit candy",
     left: 32,
     top: 88,
     rotate: 70,
@@ -188,7 +186,6 @@ export const FOOTER_ITEMS: FooterItemDef[] = [
   {
     id: "bottle",
     src: "/images/items/bottle.png",
-    alt: "Water bottle",
     left: 78,
     top: 60,
     rotate: -20,
@@ -202,7 +199,6 @@ export const FOOTER_ITEMS: FooterItemDef[] = [
   {
     id: "bear-hirono",
     src: "/images/items/bear-hirono.png",
-    alt: "Hirono bear figure",
     left: 68,
     top: 90,
     rotate: 20,
@@ -222,7 +218,6 @@ export const FOOTER_ITEMS: FooterItemDef[] = [
   {
     id: "cybersea",
     src: "/images/items/cybersea.png",
-    alt: "CyberSea project tile",
     left: 20,
     top: 60,
     rotate: 10,
@@ -236,7 +231,6 @@ export const FOOTER_ITEMS: FooterItemDef[] = [
   {
     id: "pineapple",
     src: "/images/items/pineapple.png",
-    alt: "Pineapple-shaped can",
     left: 18,
     top: 90,
     rotate: -20,
@@ -250,7 +244,6 @@ export const FOOTER_ITEMS: FooterItemDef[] = [
   {
     id: "skinsprout",
     src: "/images/items/skinsprout.png",
-    alt: "SkinSprout project tile",
     left: 1,
     top: 90,
     rotate: 4,
@@ -264,7 +257,6 @@ export const FOOTER_ITEMS: FooterItemDef[] = [
   {
     id: "spotify",
     src: "/images/items/spotify.png",
-    alt: "Spotify project tile",
     left: 2,
     top: 52,
     rotate: -10,

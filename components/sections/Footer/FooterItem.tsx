@@ -36,7 +36,11 @@ const MAX_FRACTION = 1.15;
  * negative base, scaling by the *larger* fraction actually produces the
  * more negative (smaller) number. */
 function scaled(base: number): string {
-  base = base * 1.2;
+  // 1.2 (the other session's own bump) * 0.8 (shrink everything, per
+  // request) = 0.96 — one shared multiplier so every item's clipW/clipH/
+  // imgW/imgH/imgLeft/imgTop scales down together in lockstep, same as the
+  // 1.2 bump it's layered on top of.
+  base = base * 1.2 * 0.8;
   const a = base * MIN_FRACTION;
   const b = base * MAX_FRACTION;
   const min = Math.min(a, b);
@@ -102,6 +106,7 @@ export default function FooterItem({ item, zIndex, onActivate }: FooterItemProps
   return (
     <div
       className={styles.item}
+      aria-hidden="true"
       style={
         {
           left: `${item.left}%`,
@@ -119,7 +124,8 @@ export default function FooterItem({ item, zIndex, onActivate }: FooterItemProps
     >
       <img
         src={item.src}
-        alt={item.alt}
+        alt=""
+        loading="lazy"
         draggable={false}
         className={styles.image}
         style={

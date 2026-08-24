@@ -1,6 +1,8 @@
 "use client";
 
 import { forwardRef, type CSSProperties } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import styles from "./ProjectCard.module.css";
 import AutoplayVideo from "./AutoplayVideo";
 import { PROJECT_CATEGORY_COLOR, type Project } from "@/lib/projects";
@@ -20,7 +22,7 @@ interface ProjectCardProps {
   revealDelayMs: number;
 }
 
-const ProjectCard = forwardRef<HTMLDivElement, ProjectCardProps>(function ProjectCard(
+const ProjectCard = forwardRef<HTMLAnchorElement, ProjectCardProps>(function ProjectCard(
   { project, dimmed, revealed, revealDelayMs },
   ref,
 ) {
@@ -29,7 +31,7 @@ const ProjectCard = forwardRef<HTMLDivElement, ProjectCardProps>(function Projec
   const revealClass = revealed ? styles.revealVisible : "";
 
   return (
-    <div ref={ref} className={styles.card}>
+    <Link ref={ref} href={`/projects/${project.slug}`} className={styles.card}>
       <div
         className={`${styles.reveal} ${revealClass}`}
         style={{ transitionDelay: `${revealDelayMs}ms` } as CSSProperties}
@@ -38,7 +40,14 @@ const ProjectCard = forwardRef<HTMLDivElement, ProjectCardProps>(function Projec
           {project.video ? (
             <AutoplayVideo src={project.video} poster={project.cover} />
           ) : (
-            <img src={project.cover} alt="" className={styles.poster} draggable={false} />
+            <Image
+              src={project.cover}
+              alt=""
+              fill
+              sizes="(max-width: 900px) 100vw, 624px"
+              className={styles.poster}
+              draggable={false}
+            />
           )}
           <div className={`${styles.dimOverlay} ${dimClass}`} />
         </div>
@@ -52,7 +61,7 @@ const ProjectCard = forwardRef<HTMLDivElement, ProjectCardProps>(function Projec
           <div className={`${styles.dimOverlay} ${dimClass}`} />
         </div>
       </div>
-    </div>
+    </Link>
   );
 });
 

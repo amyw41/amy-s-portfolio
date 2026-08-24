@@ -72,8 +72,25 @@
   color: #fff;
 }
 
+/* The global a:focus-visible ring (globals.css) is ink-coloured — invisible
+ * against this panel's own black background. White outline instead, same
+ * offset/thickness, so keyboard focus still reads clearly here. */
+.link:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
 .dot {
   color: rgba(255, 255, 255, 0.8);
+}
+
+/* Above 900px this exactly overlays .panel (items' left/top %, items.ts,
+ * were authored against .panel's own box before this element existed) — see
+ * the 900px query below for the actual reflow. */
+.itemPile {
+  position: absolute;
+  inset: 0;
 }
 
 .heading {
@@ -137,4 +154,36 @@
   font-size: var(--fs-small);
   font-weight: 300;
   color: #000;
+}
+
+/* ---------- responsive ---------- */
+
+/* Below 900px the item pile no longer shares .panel's absolutely-positioned
+ * box with .textBlock (both stacked on top of each other, relying on the
+ * pile's own shrink — FooterItem.tsx's `scaled()` — to stay clear) — the
+ * text becomes a normal in-flow block up top and the pile gets its own
+ * dedicated, positioned region underneath, so a narrow viewport can never
+ * land a dragged/settled item on top of the heading or links. */
+@media (max-width: 900px) {
+  .panel {
+    /* Was a fixed clamp() sized to fit .textBlock and .itemPile
+     * overlapping in the same box — now the two stack, so the panel's own
+     * height needs to be content-driven instead of a fixed number that
+     * assumed the overlap. */
+    height: auto;
+  }
+
+  .textBlock {
+    position: static;
+    padding: 32px 32px 0;
+  }
+
+  .itemPile {
+    position: relative;
+    inset: auto;
+    /* Dedicated room for the pile now that it's not sharing space with the
+     * text above it — same rough proportions as the old shared .panel
+     * height, just belonging to the pile alone. */
+    height: clamp(240px, 65vw, 340px);
+  }
 }

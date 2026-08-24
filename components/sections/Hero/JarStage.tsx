@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Image from "next/image";
 import styles from "./JarStage.module.css";
 import JarItem from "./JarItem";
 import { useJarPhysics } from "./useJarPhysics";
@@ -22,13 +23,15 @@ export default function JarStage({ items, projectsOn, favouritesOn }: JarStagePr
 
   return (
     <div ref={containerRef} className={styles.stage}>
-      <img
+      <Image
         src="/images/drawings/jar.png"
         alt=""
+        aria-hidden="true"
         className={styles.jarImage}
         draggable={false}
         width={1600}
         height={2257}
+        priority
       />
 
       {ready && (

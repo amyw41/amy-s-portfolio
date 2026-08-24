@@ -150,9 +150,15 @@ const JarItem = forwardRef<HTMLDivElement, JarItemProps>(function JarItem(
        * the original comment this carried forward: e.g. cam.png's beaded
        * strap hangs outside its cropRegion and must never actually render. */}
       <div className={styles.clip} style={{ width, height, borderRadius }}>
+        {/* Plain <img>, not next/image, on purpose: width/height/left/top
+         * here are per-render floats out of computeRenderInfo's alpha-bbox
+         * math (useJarPhysics.ts), not fixed intrinsic dimensions — next/
+         * image's own optimizer/loader has no role to play on a size that's
+         * entirely recomputed client-side every resize. */}
         <img
           src={item.src}
           alt=""
+          aria-hidden="true"
           className={styles.image}
           draggable={false}
           style={{ width: imgWidth, height: imgHeight, left: imgLeft, top: imgTop }}

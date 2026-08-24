@@ -459,6 +459,18 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       // commit.
       const setupStartTime = performance.now();
 
+      // ?debug=perf: asserts (console.assert, not a thrown error — this is
+      // a dev-time sanity check, not something that should ever break the
+      // page) that the live rAF loop's actual running state agrees with
+      // "should it be running" (in viewport AND tab visible) every time
+      // either condition changes — see updateRunning below, the single
+      // place both get evaluated together. Also logs each transition, so
+      // scrolling the hero off/onscreen or switching tabs while watching
+      // the console gives a direct, visible confirmation that the physics
+      // runner actually stopped (not just "probably stopped because CPU
+      // usage looks lower").
+      const debugPerf = new URLSearchParams(window.location.search).get("debug") === "perf";
+
       // Preload every sprite before starting the sim, and compute each
       // one's alpha bounding box — sizing and physics geometry come from
       // that bbox, not the file's own pixel dimensions (see alpha-bbox.ts).
@@ -1409,6 +1421,20 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
           } else if (!shouldRun && isRunning) {
             cancelAnimationFrame(rafId);
             isRunning = false;
+          }
+          if (debugPerf) {
+            // isRunning was just brought in line with shouldRun above (or
+            // already agreed with it) — this asserts that update actually
+            // happened, not just that the two values happen to match.
+            console.assert(
+              isRunning === shouldRun,
+              "[jar][debug=perf] runner state didn't converge to shouldRun",
+              { shouldRun, isRunning, isIntersecting, hidden: document.hidden },
+            );
+            console.log(
+              `[jar][debug=perf] physics runner ${isRunning ? "RUNNING" : "STOPPED"} ` +
+                `(intersecting=${isIntersecting}, tabHidden=${document.hidden})`,
+            );
           }
         };
 

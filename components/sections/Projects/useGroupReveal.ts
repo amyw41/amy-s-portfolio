@@ -44,6 +44,10 @@ export function useGroupReveal(containerRef: RefObject<HTMLElement | null>) {
     if (!el) return;
 
     if (typeof IntersectionObserver === "undefined") {
+      // Feature-detection fallback, not a response to any external
+      // event — same justification (and same pattern) as useJarPhysics.ts's
+      // own post-mount setState for reading location.search.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRevealed(true);
       return;
     }

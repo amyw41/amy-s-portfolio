@@ -67,7 +67,7 @@
   border: 1px solid rgba(0, 0, 0, 0.2);
   background: none;
   cursor: pointer;
-  font-size: 22px;
+  font-size: var(--fs-nav); /* 22px @1280 — same reference size this glyph was authored at */
   line-height: 1;
   color: #000;
 }

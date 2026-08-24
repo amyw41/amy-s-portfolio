@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import styles from "./Footer.module.css";
 import FooterItem from "./FooterItem";
 import { FOOTER_ITEMS } from "./items";
@@ -41,18 +42,34 @@ export default function Footer() {
             </div>
             <div className={styles.heading}>
               <span>{copy.heading}</span>
-              <img src="/images/logos/white-star.png" alt="" className={styles.star} draggable={false} />
+              <Image
+                src="/images/logos/white-star.png"
+                alt=""
+                aria-hidden="true"
+                width={200}
+                height={212}
+                className={styles.star}
+                draggable={false}
+              />
             </div>
           </div>
 
-          {FOOTER_ITEMS.map((item) => (
-            <FooterItem
-              key={item.id}
-              item={item}
-              zIndex={order.indexOf(item.id) + 1}
-              onActivate={() => bringToFront(item.id)}
-            />
-          ))}
+          {/* Own positioned box (item left/top % — items.ts — resolve against
+           * THIS, not .panel directly) so the responsive reflow below 900px
+           * (Footer.module.css) can give the pile its own space below the
+           * text block instead of the two sharing one absolutely-positioned
+           * stack. Exactly overlays .panel above 900px (inset:0), so item
+           * placement is pixel-identical to before this element existed. */}
+          <div className={styles.itemPile}>
+            {FOOTER_ITEMS.map((item) => (
+              <FooterItem
+                key={item.id}
+                item={item}
+                zIndex={order.indexOf(item.id) + 1}
+                onActivate={() => bringToFront(item.id)}
+              />
+            ))}
+          </div>
         </div>
 
         <p className={styles.credit}>{copy.credit}</p>

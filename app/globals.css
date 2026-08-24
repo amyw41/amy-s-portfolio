@@ -10,6 +10,26 @@ html,
 body {
   padding: 0;
   margin: 0;
+  /* The case-study pages' sidebar row (components/case-studies/
+   * CaseStudyKit.tsx's CaseStudyLayout) breaks out to the true viewport
+   * edge via `width: 100vw`, which includes the vertical scrollbar's own
+   * width — a few px wider than the page's actual visible content box on
+   * any page tall enough to have one. Clipping horizontal overflow
+   * globally, once, here, is more robust than fighting that vw/scrollbar
+   * mismatch on that one page specifically, and catches it if a similar
+   * full-bleed element is ever added elsewhere.
+   *
+   * `clip`, specifically NOT `hidden` — `overflow-x: hidden` would silently
+   * break every `position: sticky` element on the entire site (the case
+   * study's own sticky sidebar included): any overflow value other than
+   * `visible` on an ancestor turns it into a new scrolling container, and
+   * sticky computes its offset against the *nearest* one of those — so a
+   * sticky descendant would "stick" to html/body's own box instead of the
+   * real viewport, which (since html/body aren't independently scrollable)
+   * means it wouldn't visibly stick at all. `clip` still clips the same
+   * overflow but is explicitly excluded from that scroll-container
+   * promotion. */
+  overflow-x: clip;
 }
 
 body {
@@ -39,6 +59,22 @@ img {
 
 a {
   color: inherit;
+}
+
+/* Global visible-focus contract: every interactive element (links, buttons,
+ * toggles, the extras trigger/close button) gets the same keyboard-focus
+ * ring by default — a solid offset outline in the site's ink colour, thick
+ * enough to read clearly against the white background used everywhere
+ * except the footer's black panel, which overrides this locally (see
+ * Footer.module.css's .link:focus-visible) rather than fighting a single
+ * global colour that can't suit both backgrounds at once. :focus-visible
+ * (not :focus) so a mouse click never shows the ring, only actual keyboard
+ * navigation. */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 3px;
+  border-radius: 2px;
 }
 
 ::selection {

@@ -2,6 +2,7 @@
 
 import { useState, type CSSProperties } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import styles from "./Hero.module.css";
 import CircleToggle from "@/components/ui/CircleToggle";
 import JarStage from "./JarStage";
@@ -40,7 +41,14 @@ export default function Hero() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <img src="/images/logos/linkedin.png" alt={copy.social.linkedin.label} draggable={false} />
+              <Image
+                src="/images/logos/linkedin.png"
+                alt={copy.social.linkedin.label}
+                width={176}
+                height={176}
+                draggable={false}
+                priority
+              />
             </a>
             <a
               className={styles.socialIcon}
@@ -48,7 +56,14 @@ export default function Hero() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <img src="/images/logos/gmail.png" alt={copy.social.gmail.label} draggable={false} />
+              <Image
+                src="/images/logos/gmail.png"
+                alt={copy.social.gmail.label}
+                width={172}
+                height={172}
+                draggable={false}
+                priority
+              />
             </a>
             <a
               className={styles.socialIcon}
@@ -56,7 +71,14 @@ export default function Hero() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <img src="/images/logos/twitter.png" alt={copy.social.twitter.label} draggable={false} />
+              <Image
+                src="/images/logos/twitter.png"
+                alt={copy.social.twitter.label}
+                width={155}
+                height={155}
+                draggable={false}
+                priority
+              />
             </a>
           </div>
         </div>
@@ -64,7 +86,16 @@ export default function Hero() {
         <div className={styles.columns}>
           <div className={styles.left}>
             <div className={styles.identity}>
-              <img src="/images/logos/black-star.png" alt="" className={styles.logo} draggable={false} />
+              <Image
+                src="/images/logos/black-star.png"
+                alt=""
+                aria-hidden="true"
+                width={231}
+                height={249}
+                className={styles.logo}
+                draggable={false}
+                priority
+              />
               <h1 className={styles.title}>{copy.title}</h1>
               <p className={styles.tagline}>{copy.tagline}</p>
             </div>

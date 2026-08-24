@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import styles from "./ProjectCard.module.css";
 
 interface AutoplayVideoProps {
@@ -142,7 +143,14 @@ export default function AutoplayVideo({ src, poster }: AutoplayVideoProps) {
 
   return (
     <div ref={wrapperRef} className={styles.mediaInner}>
-      <img src={poster} alt="" className={styles.poster} draggable={false} />
+      <Image
+        src={poster}
+        alt=""
+        fill
+        sizes="(max-width: 900px) 100vw, 624px"
+        className={styles.poster}
+        draggable={false}
+      />
       {!reducedMotion && (
         <video
           ref={videoRef}

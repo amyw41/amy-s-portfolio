@@ -5,36 +5,34 @@
  * kept on a separate inner element on purpose, so the two systems never
  * write to the same element's `transform` at once (see the brief). display
  * is explicit (rather than relying on each root tag's own default) since
- * ExtrasCard's root is a <button>, not a <div> — this way both behave
- * identically as a full-width block wrapper regardless of tag. */
+ * ExtrasCard's root is a <button> and this one's a <Link> (renders an
+ * <a>), not a <div> — this way all of them behave identically as a
+ * full-width block wrapper regardless of tag. text-decoration:none — an
+ * <a> whose own text content includes the title/description shouldn't
+ * render the browser's default underline under a whole card. */
 .card {
   display: block;
   width: 100%;
+  text-decoration: none;
 }
 
 .reveal {
   display: flex;
   align-items: flex-start;
   gap: clamp(24px, 3.5vw, 48px);
-  /* Un-animated default = the final, revealed state (opacity:1,
-   * transform:none — neither property is set outside the no-preference
-   * query below), so reduced-motion users see the finished layout
-   * immediately with no dependency on the observer/JS ever running. */
+  /* Load-in reveal animation removed per request — always renders in its
+   * final state now, no fade/rise-on-scroll. */
   opacity: 1;
   transform: none;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .reveal {
-    opacity: 0;
-    transform: translateY(28px);
-    transition: opacity 500ms ease-out, transform 500ms ease-out;
-  }
-
-  .revealVisible {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Empty, not deleted — ProjectCard.tsx/ExtrasCard.tsx still do
+ * `${revealed ? styles.revealVisible : ""}`. Removing the key entirely
+ * would make that lookup resolve to `undefined`, which React stringifies
+ * into a literal "undefined" class name. Keeping this as a real-but-empty
+ * rule keeps that lookup harmless without having to touch those components'
+ * still-running (now visually inert) reveal plumbing. */
+.revealVisible {
 }
 
 /* ---------- media (left) ---------- */

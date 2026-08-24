@@ -1,0 +1,112 @@
+/* Tailwind entry for the ported case-study pages — imported once, from
+ * app/projects/[slug]/layout.tsx only, so it never ships to (or affects)
+ * any route outside /projects/*.
+ *
+ * Deliberately `theme.css` + `utilities.css`, NOT the plain `@import
+ * "tailwindcss"` jar-portfolio itself used — that shorthand also pulls in
+ * Tailwind's preflight.css, a global reset on bare element selectors (*,
+ * h1..h6, a, ul, button, ...) with no scoping mechanism of its own. Since
+ * this file is real global CSS, importing preflight here would reskin
+ * every OTHER page on the site too the moment it's bundled (every margin
+ * zeroed, links losing their underline, box-sizing changed, ...) — the rest
+ * of this codebase's CSS Modules were never written expecting that reset to
+ * exist. Instead, the small subset of preflight the ported components
+ * actually depend on is hand-copied below, scoped under a `.tw-scope`
+ * wrapper class (see CaseStudyKit.tsx's CaseStudyLayout, the only place
+ * that class is applied) so it can only ever affect case-study markup.
+ */
+/* Declares the priority order for the two named layers used below, same
+ * relative order (base below utilities) real Tailwind's own preflight.css/
+ * utilities.css use internally — CSS cascade layers rank by DECLARATION
+ * order, not specificity or source position, so this line has to come
+ * before either @layer block for utilities to actually win the border-
+ * style/list-style/link-color conflicts described below (a bare, un-layered
+ * version of these same rules would rank ABOVE both layers regardless of
+ * this order, and silently cancel out the real Tailwind utilities that are
+ * supposed to override them — that was the actual first-draft bug here). */
+@layer theme, base, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* `font-body` and `font-instrument` (see CaseStudyKit.tsx's TEXT system,
+ * and CaseStudyHero's own h1) were jar-portfolio's original Public Sans /
+ * Instrument Serif fonts. This site uses Roboto exclusively, loaded once by
+ * the root layout (app/layout.tsx) as `--font-roboto` on <html> — both
+ * theme values point at that same variable now (matching app/globals.css's
+ * own font-family stack) so every existing `font-instrument`/`font-body`
+ * class in the three ported case-study components keeps working, just
+ * rendering in Roboto like the rest of the site, with no extra font loaded
+ * for this route. `@theme inline` (not plain `@theme`) because the value
+ * being mapped here is itself a variable set outside this file (the root
+ * layout's next/font className) — inline resolves that at the point of use
+ * in each generated utility rather than trying to bake a single static
+ * value in up front.
+ */
+@theme inline {
+  --font-body: var(--font-roboto), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-instrument: var(--font-roboto), system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* ---------- scoped preflight subset ----------
+ * Every rule below exists because a specific, named ported component
+ * depends on it to render correctly (not a blanket "just in case" reset) —
+ * if a future edit removes the last thing relying on one, it can go too.
+ *
+ * `@layer base` — NOT left unlayered — for the same reason the top-level
+ * `@layer theme, base, utilities;` declaration above exists: an unlayered
+ * rule outranks every layered one regardless of specificity, so an
+ * unlayered version of this block would have silently beaten Tailwind's
+ * own `utilities`-layer classes instead of yielding to them (this was
+ * the actual bug behind an earlier version of this file — `border-b
+ * border-black/30` computed to `border-style: solid; border-width: 0px`,
+ * i.e. correctly styled but invisible, because this block's own
+ * `border: 0 solid` was winning the width too).
+ */
+@layer base {
+  .tw-scope,
+  .tw-scope *,
+  .tw-scope *::before,
+  .tw-scope *::after {
+    /* CaseStudyKit's whole spacing system (Row's grid gaps, Section's
+     * space-y, every padded box like StatRow/PlaceholderBox/the Figma+
+     * GitHub CTA links) is written assuming border-box sizing and a zeroed
+     * starting margin/padding, same as every Tailwind project assumes
+     * preflight already provides. */
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    /* Tailwind's border-* utilities (CaseStudyImage/CaseStudyHero's
+     * `border border-gray-200`, SkinSproutCaseStudy's ComparisonTable
+     * `border-b border-black/30` / `border-black/10`) only ever set border
+     * WIDTH and COLOR — they lean on preflight having already set every
+     * element's border-style to `solid` globally. Without this, those
+     * utilities compute to a 1px-wide border in `border-style: none` (the
+     * plain <div>/<table>/<tr> default), i.e. invisible. */
+    border: 0 solid;
+  }
+
+  /* BulletList, the persona Needs/Pain-Points lists, SkinSproutCaseStudy's
+   * numbered "What This Meant For My Design" <ol>, and CyberSeaCaseStudy's
+   * "Result" <ul> all draw their own leading glyph by hand (a separate
+   * <span>: "–", "•", "1.") instead of a native list marker — exactly what
+   * Tailwind's own reset assumes. Without this, every one of those lists
+   * would show both the native marker/indent AND the hand-drawn one. */
+  .tw-scope :where(ol, ul, menu) {
+    list-style: none;
+  }
+
+  /* TableOfContents' sidebar/mobile-nav links and the Figma/GitHub CTA
+   * links (every case study's "04/05 Final Project" section) don't set
+   * their own non-hover text color — they inherit the page's own black/60
+   * the same way any other element would. Browsers' UA stylesheet gives
+   * <a> its own specific blue color and underline, which does NOT lose to
+   * a merely-inherited color from an ancestor the way it would if the
+   * color had been set with an actual CSS rule — only `color: inherit`
+   * stated explicitly (preflight's own fix, replicated here) makes that
+   * inheritance win. */
+  .tw-scope :where(a) {
+    color: inherit;
+    text-decoration: inherit;
+  }
+}
