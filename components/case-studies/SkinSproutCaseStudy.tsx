@@ -56,41 +56,41 @@ const PERSONAS: {
   painPoints: string[];
   needs: string[];
 }[] = [
-  {
-    name: "Abby",
-    top: [
-      <>
-        Skincare <strong className="font-medium">intermediate</strong> (understands to an extent)
-      </>,
-      "Loves trying new skincare",
-    ],
-    painPoints: [
-      "Forgets what products she's tried before and whether it worked or not",
-      "Spends too much $ on skincare",
-      "Difficulty finding new products that work",
-      "Can't afford a dermatologist",
-    ],
-    needs: ["A way to track her skincare history", "Customized skincare recommendations"],
-  },
-  {
-    name: "Grace",
-    top: [
-      <>
-        Skincare <strong className="font-medium">beginner</strong> (knows nothing about skincare)
-      </>,
-    ],
-    painPoints: [
-      "Wants to get into skincare but there's too much to learn!",
-      "Overwhelmed by the amount of products",
-      "Uses products that don't work",
-    ],
-    needs: [
-      "A simple app that provides skincare info",
-      "A way to track her skincare progress",
-      "Customized skincare recommendations",
-    ],
-  },
-];
+    {
+      name: "Abby",
+      top: [
+        <>
+          Skincare <strong className="font-medium">intermediate</strong> (understands to an extent)
+        </>,
+        "Loves trying new skincare",
+      ],
+      painPoints: [
+        "Forgets what products she's tried before and whether it worked or not",
+        "Spends too much $ on skincare",
+        "Difficulty finding new products that work",
+        "Can't afford a dermatologist",
+      ],
+      needs: ["A way to track her skincare history", "Customized skincare recommendations"],
+    },
+    {
+      name: "Grace",
+      top: [
+        <>
+          Skincare <strong className="font-medium">beginner</strong> (knows nothing about skincare)
+        </>,
+      ],
+      painPoints: [
+        "Wants to get into skincare but there's too much to learn!",
+        "Overwhelmed by the amount of products",
+        "Uses products that don't work",
+      ],
+      needs: [
+        "A simple app that provides skincare info",
+        "A way to track her skincare progress",
+        "Customized skincare recommendations",
+      ],
+    },
+  ];
 
 // Real competitive analysis copy from Amy — Skin Bliss, ACloset, and
 // Incidecoder, the three apps compared in the competitive-analysis.png
@@ -241,7 +241,10 @@ export default function SkinSproutCaseStudy() {
     <CaseStudyLayout sectionNav={SECTION_NAV}>
       <CaseStudyHero
         title="SkinSprout"
-        subtitle="Make skincare easier."
+        // A bit smaller than the shared default clamp() — per request, this
+        // page's own title read too large. CyberSea/Spotify are untouched.
+        titleClassName="text-[clamp(2.5rem,6.75vw,4rem)]"
+        subtitle="Track your skincare history to get personalized product recommendations."
         heroSrc="/images/projects/skinsprout/skinsprout.mp4"
         heroAlt="SkinSprout app preview"
         heroVideo
@@ -251,9 +254,22 @@ export default function SkinSproutCaseStudy() {
 
       {/* Amy's source page still carries this literal banner — keeping it
           verbatim per "accurately put this onto my website," but it's an
-          easy one-line delete in this file once the page is actually done. */}
-      <div className="mt-8 rounded-[8px] px-6 py-[14px]" style={{ backgroundColor: HIGHLIGHT }}>
-        <p className="font-body text-[16px] font-medium text-black/70 text-center">
+          easy one-line delete in this file once the page is actually done.
+          py-8 (was py-[14px]) and the same text treatment as the Problem
+          Statement/Navigation problem boxes below (was a one-off
+          text-[16px] font-medium) — per request, so all 3 highlight boxes
+          on this page read as one consistent component instead of 3
+          hand-tuned ones. Spelled out the same way those two do (not
+          `${TEXT.frame} text-center`) since TEXT.frame's own text-left
+          and an appended text-center would both be real utility classes
+          competing for the same property — safer to just match their
+          exact className than rely on Tailwind's generated stylesheet
+          order to pick the right one. */}
+      {/* px-5 py-7, down a tiny bit from px-6 py-8 — per request. leading-
+          relaxed added so a 2-line wrap (see the two boxes below) gets more
+          room between its lines than the browser default. */}
+      <div className="mt-8 rounded-[8px] px-5 py-7" style={{ backgroundColor: HIGHLIGHT }}>
+        <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
           THIS PAGE IS CURRENTLY A WIP!
         </p>
       </div>
@@ -368,19 +384,19 @@ export default function SkinSproutCaseStudy() {
                     className={
                       isLeftItem
                         ? // The "left" item: phone flush to the body
-                          // column's LEFT edge (ml-[19rem] = 16rem heading
-                          // col + 3rem gap), text flush to its RIGHT edge —
-                          // spanning the box to the body column's own width
-                          // (no fixed width here, just the left offset) so
-                          // justify-between's gap is scoped to that column,
-                          // and the text lands aligned with the phone in
-                          // the item directly above it (both flush to the
-                          // same right edge).
-                          "flex flex-col items-center gap-8 md:ml-[19rem] md:flex-row md:flex-row-reverse md:justify-between"
+                        // column's LEFT edge (ml-[19rem] = 16rem heading
+                        // col + 3rem gap), text flush to its RIGHT edge —
+                        // spanning the box to the body column's own width
+                        // (no fixed width here, just the left offset) so
+                        // justify-between's gap is scoped to that column,
+                        // and the text lands aligned with the phone in
+                        // the item directly above it (both flush to the
+                        // same right edge).
+                        "flex flex-col items-center gap-8 md:ml-[19rem] md:flex-row md:flex-row-reverse md:justify-between"
                         : // The "right" items: shrink to fit their own
-                          // content (phone+text+gap) and hug the body
-                          // column's right edge.
-                          "flex flex-col items-center gap-8 md:w-fit md:flex-row md:ml-auto"
+                        // content (phone+text+gap) and hug the body
+                        // column's right edge.
+                        "flex flex-col items-center gap-8 md:w-fit md:flex-row md:ml-auto"
                     }
                   >
                     <div className="w-full md:w-[320px]">
@@ -575,8 +591,13 @@ export default function SkinSproutCaseStudy() {
         <Row
           heading="Problem Statement:"
           media={
-            <div className="rounded-[8px] px-6 py-[14px]" style={{ backgroundColor: HIGHLIGHT }}>
-              <p className="font-body text-[22px] font-light text-black/60 text-center">
+            // py-8, not py-[14px] — per request, more top/bottom breathing
+            // room, matching the WIP/Navigation problem boxes. px-5 py-7,
+            // down a tiny bit from px-6 py-8 — per a later request. leading-
+            // relaxed added so its own 2-line wrap gets more room between
+            // lines than the browser default.
+            <div className="rounded-[8px] px-5 py-7" style={{ backgroundColor: HIGHLIGHT }}>
+              <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
                 How can we make skincare easier to purchase based on each user&apos;s
                 personalized skincare history?
               </p>
@@ -589,28 +610,28 @@ export default function SkinSproutCaseStudy() {
       <Section id="design-process">
         {/* "03 / Design Process" sits above the Row instead of inside its
             own eyebrow column, so the body text lines up with "Moodboard"
-            (the subheader) rather than with the eyebrow above it — same
-            -mt-0.5 idiom as CyberSea's "06 / Learnings" restructure. */}
-        <p className={TEXT.header}>03 / Design Process</p>
-        <div className="-mt-0.5">
-          <Row
-            heading="Moodboard"
-            media={
-              <CaseStudyImage
-                src="/images/projects/skinsprout/moodboard.avif"
-                alt="Moodboard of skincare apps and modern, simplistic UI references"
-                ratio="1024/648"
-                bg={false}
-              />
-            }
-          >
-            <p>
-              In order to fully understand the vision, I created a mood board. The main
-              inspiration was made of skincare apps and other apps with modern,
-              simplistic UI.
-            </p>
-          </Row>
-        </div>
+            (the subheader) rather than with the eyebrow above it. mb-2, not
+            the old -mt-0.5 (a line-height-overlap hack) — same real gap
+            Row's own eyebrow now uses, so this reads identically to it and
+            to CyberSea's "06 / Learnings" restructure. */}
+        <p className={`${TEXT.header} mb-2`}>03 / Design Process</p>
+        <Row
+          heading="Moodboard"
+          media={
+            <CaseStudyImage
+              src="/images/projects/skinsprout/moodboard.avif"
+              alt="Moodboard of skincare apps and modern, simplistic UI references"
+              ratio="1024/648"
+              bg={false}
+            />
+          }
+        >
+          <p>
+            In order to fully understand the vision, I created a mood board. The main
+            inspiration was made of skincare apps and other apps with modern,
+            simplistic UI.
+          </p>
+        </Row>
 
         <Row
           heading="User Flow Chart"
@@ -634,18 +655,32 @@ export default function SkinSproutCaseStudy() {
         {/* CHECK: "Branding" had no body copy in what you sent — just the
             heading, matching the group-label rows in Spotify's own page
             ("Spotify's Design System", "Branding"). Add real copy once
-            it's ready. */}
-        <div>
-          <p className={TEXT.header}>Branding</p>
-          <div className="-mt-0.5">
+            it's ready.
+            Was a hand-rolled <div><p>heading</p><div className="-mt-0.5">
+            image</div></div> — that -mt-0.5 was borrowed from the eyebrow-
+            to-heading idiom elsewhere in this file (a near-zero
+            compensation for line-height, not a real gap), so this title
+            sat almost flush against the image below it: a visibly tighter
+            gap than "Design Choices"/"Problem Statement" have to THEIR own
+            media below (both plain Rows, whose own mediaGap gives a real
+            mt-2 when there's no body copy — see Row's own comment in
+            CaseStudyKit.tsx). Switched to an actual Row (same heading/
+            headingClassName/media shape "Wireframing" below already uses)
+            so this gets that same mt-2 gap for free, and can't quietly
+            drift out of sync with it again the way a second hand-tuned
+            magic number could. */}
+        <Row
+          heading="Branding"
+          headingClassName={TEXT.header}
+          media={
             <CaseStudyImage
               src="/images/projects/skinsprout/branding.avif"
               alt="SkinSprout brand mark, color palette, typography, and buttons"
               ratio="1024/590"
               bg={false}
             />
-          </div>
-        </div>
+          }
+        />
 
         <Row
           heading="Wireframing"
@@ -688,8 +723,17 @@ export default function SkinSproutCaseStudy() {
           heading="Design Choices"
           media={
             <div className="space-y-[36px]">
-              <div className="rounded-[8px] bg-[#fbeded] px-6 py-[14px]">
-                <p className="font-body text-[22px] font-light text-black/60 text-center">
+              {/* Was bg-[#fbeded] — a hardcoded hex that didn't actually
+                  match HIGHLIGHT (#faf1f6, this page's own accent color,
+                  used by the WIP/Problem Statement boxes) — close enough to
+                  read as "basically the same pink" but not pixel-identical.
+                  py-8, not py-[14px] — same padding bump as those two boxes,
+                  per request. px-5 py-7, down a tiny bit from px-6 py-8 —
+                  per a later request, same as those two boxes. leading-
+                  relaxed added so its own 2-line wrap gets more room
+                  between lines than the browser default. */}
+              <div className="rounded-[8px] px-5 py-7" style={{ backgroundColor: HIGHLIGHT }}>
+                <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
                   Navigation problem: Users needed a way to move between stat cards
                   without breaking the visual rhythm of the layout.
                 </p>

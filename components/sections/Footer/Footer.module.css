@@ -138,9 +138,11 @@
 
 /* The full, uncropped source file, sized and offset (imgW/imgH/imgLeft/
  * imgTop in items.ts) so its own alpha content lines up with .item's
- * bounds — everything outside that falls outside .item's clip and is
- * simply never painted. No ring, no dim overlay, no border — this brief
- * asked for the crop/size only, not the jar's click-to-highlight styling. */
+ * bounds. NOT hard-clipped to those bounds anymore (.item above is
+ * overflow:visible) — cam's excluded gems (see .item's own comment) paint
+ * past them same as any other part of the image. No ring, no dim overlay,
+ * no border — this brief asked for the crop/size only, not the jar's
+ * click-to-highlight styling. */
 .image {
   position: absolute;
   display: block;

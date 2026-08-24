@@ -146,9 +146,15 @@ const JarItem = forwardRef<HTMLDivElement, JarItemProps>(function JarItem(
         />
       )}
 
-      {/* Clips the full (padded) source image down to the alpha bbox — see
-       * the original comment this carried forward: e.g. cam.png's beaded
-       * strap hangs outside its cropRegion and must never actually render. */}
+      {/* Sizes/positions the full (padded) source image against the alpha
+       * bbox — NOT a hard clip anymore (JarItem.module.css's .clip is
+       * overflow:visible): a cropRegion'd item's excluded content (e.g.
+       * cam.png's beaded strap/gems) still paints past this div's own
+       * bounds, at this same item's z-index, same as any other part of its
+       * own image. cropRegion only ever kept that content out of the
+       * sizing/physics math (see its doc comment in items.manifest.ts) —
+       * it never hid it on purpose; this div's own width/height (the
+       * cropped bbox) still drive that math untouched. */}
       <div className={styles.clip} style={{ width, height, borderRadius }}>
         {/* Plain <img>, not next/image, on purpose: width/height/left/top
          * here are per-render floats out of computeRenderInfo's alpha-bbox

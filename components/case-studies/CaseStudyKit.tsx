@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useState } from "react";
@@ -190,26 +191,44 @@ export function Row({
   const childrenGap = tight ? "mt-2 md:mt-0" : "mt-[36px] md:mt-0";
   const mediaGap = children ? "mt-[36px]" : "mt-2";
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[16rem_1fr] md:gap-x-12">
-      <div className="md:col-start-1">
-        {eyebrow && <p className={TEXT.header}>{eyebrow}</p>}
-        {/* eyebrow and heading here are two plain sibling <p>s inside the
-            same div, so mt-0 alone left a gap: each line still carries its
-            own line-height plus the font's own internal ascent/descent
-            padding, neither of which margin-top:0 touches. Negative margin
-            is what actually pulls it in past that residual space. */}
-        <p className={`${eyebrow ? "-mt-0.5 " : ""}${headingClassName ?? TEXT.subheader}`}>{heading}</p>
+    <div>
+      {/* eyebrow rendered as its own full-width block ABOVE the grid, not
+          as a second stacked <p> inside the grid's left column alongside
+          heading (the old structure — see git blame if curious). That old
+          layout needed heading pulled up with a hand-tuned -mt-0.5 to sit
+          close to eyebrow, AND meant `children` (the right column below,
+          via childrenGap's md:mt-0) started level with the TOP of the left
+          column — i.e. flush with eyebrow's own line, spanning down past
+          heading too, when it should read as aligned with heading/subheader
+          alone. Both problems were really one problem: eyebrow living
+          inside the same grid row as heading. Pulling it out fixes both at
+          once — heading is now the only thing at the top of the grid's left
+          column, so children (right column, same grid row) naturally lines
+          up with heading, not eyebrow. mb-2 below is the actual, real gap
+          between eyebrow and heading (not a line-height-overlap
+          compensation hack) — the exact same class every standalone
+          "group label" header elsewhere in these case studies
+          (SkinSprout's "03 / Design Process", CyberSea's "06 / Learnings",
+          Spotify's "Spotify's Design System"/"Branding") now also uses
+          above ITS own next block, so every header-to-subheader gap on
+          these pages reads as the same distance, whichever of the two ways
+          it's built. */}
+      {eyebrow && <p className={`${TEXT.header} mb-2`}>{eyebrow}</p>}
+      <div className="grid grid-cols-1 md:grid-cols-[16rem_1fr] md:gap-x-12">
+        <div className="md:col-start-1">
+          <p className={headingClassName ?? TEXT.subheader}>{heading}</p>
+        </div>
+        {children && (
+          <div className={`min-w-0 md:col-start-2 ${childrenGap} ${TEXT.content}`}>{children}</div>
+        )}
+        {media && <div className={`md:col-span-2 ${mediaGap}`}>{media}</div>}
+        {/* Full width (md:col-span-2, matching `media`) — `after` follows a
+            full-width image with no heading of its own beside it, so
+            confining it to just the narrow content column (like `children`)
+            left it looking squeezed relative to the image directly above
+            it. */}
+        {after && <div className={`min-w-0 md:col-span-2 mt-[36px] ${TEXT.content}`}>{after}</div>}
       </div>
-      {children && (
-        <div className={`min-w-0 md:col-start-2 ${childrenGap} ${TEXT.content}`}>{children}</div>
-      )}
-      {media && <div className={`md:col-span-2 ${mediaGap}`}>{media}</div>}
-      {/* Full width (md:col-span-2, matching `media`) — `after` follows a
-          full-width image with no heading of its own beside it, so
-          confining it to just the narrow content column (like `children`)
-          left it looking squeezed relative to the image directly above
-          it. */}
-      {after && <div className={`min-w-0 md:col-span-2 mt-[36px] ${TEXT.content}`}>{after}</div>}
     </div>
   );
 }
@@ -282,8 +301,8 @@ function useActiveSection(ids: string[]) {
 // other over a shared default. font-instrument (serif); the active section
 // (see useActiveSection) gets the site's case-study accent blue.
 //
-// Slides in from the left on mount, in step with CaseStudyHero's own
-// fade/slide-up (no delay — both start together). Both call sites (the
+// Fades in on the spot on mount, in step with CaseStudyHero's own
+// fade-in (no delay — both start together). Both call sites (the
 // sticky desktop sidebar and the mobile inline fallback) get this for free
 // since it lives here, not per call site — same reasoning CaseStudyHero
 // itself already uses for owning HERO_RATIO.
@@ -293,21 +312,49 @@ function TableOfContents({
   sectionNav,
   className,
   style,
+  home = false,
 }: {
   sectionNav: SectionNavItem[];
   className: string;
   style?: CSSProperties;
+  // Renders the home logo link as the first child inside this same
+  // motion.nav, ahead of the section links, instead of a separate element
+  // sitting outside it — so it picks up this nav's own fade mount
+  // animation for free rather than needing (and staying in sync with) a
+  // duplicate motion wrapper of its own. Only the desktop sidebar call
+  // site opts in; the mobile inline fallback doesn't render one at all.
+  home?: boolean;
 }) {
   const activeId = useActiveSection(sectionNav.map((s) => s.id));
 
   return (
     <motion.nav
-      initial={{ opacity: 0, x: -40 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut", delay: TOC_DELAY }}
-      className={`flex text-left font-instrument text-2xl font-light text-black/60 ${className}`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.45, ease: "easeOut", delay: TOC_DELAY }}
+      // text-xl (20px) — bumped from text-lg (18px), "just a smidge" per
+      // request, still well under the original text-2xl (24px) this
+      // started at. The mobile inline fallback below already overrides
+      // this with its own text-sm anyway, so this default only ever
+      // actually shows on the desktop sticky sidebar.
+      className={`flex text-left font-instrument text-xl font-light text-black/60 ${className}`}
       style={style}
     >
+      {home && (
+        // Same site logo as the homepage's own identity mark (Hero/
+        // index.tsx's .logo, black-star.png), shrunk from 48px (w-12) to
+        // 40px (w-10) per request to decrease the logo sizing slightly.
+        // -mb-2, not a positive margin: this nav's own flex gap (gap-3,
+        // 12px — see each call site's className) already adds space
+        // between the logo and the first nav link below it; a negative
+        // margin here claws most of that back so the two sit close
+        // together, per request ("way closer"/"decrease the gap"), rather
+        // than stacking a margin on top of the gap the way mb-3/mb-5
+        // previously did.
+        <Link href="/" aria-label="Home" className="-mb-2 block w-fit">
+          <img src="/images/logos/black-star.png" alt="" className="h-auto w-10" draggable={false} />
+        </Link>
+      )}
       {sectionNav.map((s) => (
         <a
           key={s.id}
@@ -332,16 +379,17 @@ function TableOfContents({
 export const HERO_RATIO = "848/636";
 
 // The hero block — title, subtitle, hero image, and the timeline/team/role/
-// skills meta box, rendered (and animated) as one unit: it fades/slides up
-// on mount in step with TableOfContents's own slide-in-from-left (see
-// TOC_DELAY there), so opening a case study reads as everything arriving
-// together rather than one piece settling before the next. Takes the
-// hero media's own src/alt/video/highlightColor directly (not a pre-built
-// <CaseStudyImage/> node) so this component is the one place HERO_RATIO gets
-// applied — a case study can't accidentally diverge from it the way it could
-// if each page built its own hero image element by hand.
+// skills meta box, rendered (and animated) as one unit: it fades in on
+// mount in step with TableOfContents's own fade-in (see TOC_DELAY there),
+// so opening a case study reads as everything arriving together rather than
+// one piece settling before the next. Takes the hero media's own
+// src/alt/video/highlightColor directly (not a pre-built <CaseStudyImage/>
+// node) so this component is the one place HERO_RATIO gets applied — a
+// case study can't accidentally diverge from it the way it could if each
+// page built its own hero image element by hand.
 export function CaseStudyHero({
   title,
+  titleClassName,
   subtitle,
   heroSrc,
   heroAlt,
@@ -350,6 +398,11 @@ export function CaseStudyHero({
   meta,
 }: {
   title: string;
+  // Overrides the default title size below — for SkinSprout, whose own
+  // "SkinSprout" title read a bit large next to the rest of its page, per
+  // request. Per-call, not a shared shrink: CyberSea/Spotify keep the
+  // original shared clamp() untouched.
+  titleClassName?: string;
   subtitle: string;
   heroSrc: string;
   heroAlt: string;
@@ -359,11 +412,19 @@ export function CaseStudyHero({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.45, ease: "easeOut" }}
     >
-      <h1 className="font-instrument text-[clamp(2.75rem,7.5vw,4.5rem)] font-normal leading-none tracking-[-0.04em] text-black/90">
+      {/* font-light (300), not the old font-normal (400) — matches the
+          homepage's own h1 weight (Hero.module.css's .title), per request
+          that this read the same as "amy wang's jar" on the homepage
+          rather than noticeably bolder. Shared by all 3 case studies (this
+          component, not any one page's own file), so they all match the
+          homepage consistently rather than one getting a special case. */}
+      <h1
+        className={`font-instrument ${titleClassName ?? "text-[clamp(2.75rem,7.5vw,4.5rem)]"} font-light leading-none tracking-[-0.04em] text-black/90`}
+      >
         {title}
       </h1>
       <p className="mt-3 font-body text-[20px] font-light text-black/70">{subtitle}</p>
@@ -460,13 +521,14 @@ export function CaseStudyLayout({ sectionNav, children }: { sectionNav: SectionN
     // so Tailwind can't visually affect anything outside a case-study page.
     <div className="tw-scope relative left-1/2 w-screen -translate-x-1/2">
       {/* Absolutely positioned against the row above, NOT a flex/grid
-          sibling of the content column — it occupies zero layout space, so
-          the content column's centering (via .pageContainer below) is
-          identical whether this renders or not. `inset-y-0` stretches this
-          outer box to the row's own height (i.e. the content column's
-          height, since that's the row's only in-flow child) purely so the
-          sticky box nested inside knows where to stop — see that box's own
-          comment. */}
+          sibling of the content column — it occupies zero layout space of
+          its own. `inset-y-0` stretches this outer box to the row's own
+          height (i.e. the content column's height, since that's the row's
+          only in-flow child) purely so the sticky box nested inside knows
+          where to stop — see that box's own comment.
+          Its own width (w-72) is echoed as padding-left on the content
+          wrapper just below, at the same min-[1760px] breakpoint this
+          shows at — see that wrapper's own comment for why. */}
       <aside className="absolute inset-y-0 left-0 z-10 hidden w-72 min-[1760px]:block">
         {/* `sticky`, not `fixed` — fixed floats free of the document and
             bleeds over the footer once scrolled past the end of the case
@@ -479,35 +541,63 @@ export function CaseStudyLayout({ sectionNav, children }: { sectionNav: SectionN
             from), this site has no sticky/fixed global header for the
             sidebar to clear, so it sticks straight to the true top of the
             viewport instead of offsetting below one. */}
-        <div className="sticky top-0 flex h-dvh w-72 flex-col border-r border-gray-200 bg-white px-10 py-8">
+        {/* pt-14, up from py-8's original 32px — more breathing room above
+            the logo/nav, per request. pb-8 (bottom) left alone, split out
+            of the old shared py-8 so only the top grew. Echoed by the
+            content column's own pt-14 just below, so the two stay lined
+            up the same way they always have. */}
+        <div className="sticky top-0 flex h-dvh w-72 flex-col border-r border-gray-200 bg-white px-10 pb-8 pt-14">
           {/* Slide-in-from-left mount animation lives inside TableOfContents
               itself (see TOC_DELAY there) — shared by this sidebar and the
-              mobile inline fallback below instead of duplicated per call. */}
-          <TableOfContents sectionNav={sectionNav} className="flex-col gap-3" />
+              mobile inline fallback below instead of duplicated per call.
+              home: only this (desktop) call site gets the logo/home link,
+              rendered as this same nav's own first child — see TableOfContents'
+              own `home` prop comment for why it lives there instead of as a
+              separate element above it. */}
+          <TableOfContents sectionNav={sectionNav} className="flex-col gap-3" home />
         </div>
       </aside>
 
-      {/* Same width/centering contract as every homepage section (see the
-          gutter-math comment above) — no extra px-* here on top of it,
-          same as Hero/Projects/Footer's own use of this class, so the
-          edges match exactly rather than just approximately. */}
-      <div className="pageContainer">
-        {/* pt-8 lines the title up with the sidebar's own py-8 (32px).
-            pb-24 at the bottom — the sidebar is deliberately flush against
-            the footer with no gap, but that's the sidebar's border/
-            background, not this text column: without its own bottom
-            padding, the last paragraph's text would butt directly up
-            against the footer. */}
-        <div className="pb-24 pt-8 text-left">
-          {/* Same section links, inline — mobile/tablet fallback for the
-              sticky sidebar, which is hidden below the 1760px sidebar
-              breakpoint. */}
-          <TableOfContents
-            sectionNav={sectionNav}
-            className="mb-8 flex-row flex-wrap gap-x-6 gap-y-2 text-sm min-[1760px]:hidden"
-          />
+      {/* Echoes the sidebar's own w-72 as left padding, at the same
+          min-[1760px] breakpoint the sidebar shows at — per request, the
+          content column should read as centered in the space beside the
+          sidebar (i.e. balanced against the sidebar's own visual weight),
+          not centered on the true middle of the browser window while the
+          sidebar sits off in the left gutter as extra, unbalanced mass.
+          .pageContainer's own margin-inline:auto centers it within
+          whatever box it's actually inside — padding here on ITS parent is
+          what shifts that centering axis rightward by the sidebar's width,
+          without pageContainer itself (or any other section that reuses
+          that class) needing to know anything about a sidebar. Below
+          1760px, where the sidebar is hidden (only the inline mobile/
+          tablet TOC fallback shows, taking no width of its own), this
+          padding is 0 and .pageContainer centers on the full window again,
+          same as everywhere else on the site. */}
+      <div className="min-[1760px]:pl-72">
+        {/* Same width contract as every homepage section (see the
+            gutter-math comment above) — no extra px-* here on top of it,
+            same as Hero/Projects/Footer's own use of this class, so the
+            edges match exactly rather than just approximately. Its own
+            centering axis is shifted by the wrapper just above. */}
+        <div className="pageContainer">
+          {/* pt-14 lines the title up with the sidebar's own pt-14 (up from
+              the original 32px, per request — more room above both).
+              pb-24 at the bottom — the sidebar is deliberately flush against
+              the footer with no gap, but that's the sidebar's border/
+              background, not this text column: without its own bottom
+              padding, the last paragraph's text would butt directly up
+              against the footer. */}
+          <div className="pb-24 pt-14 text-left">
+            {/* Same section links, inline — mobile/tablet fallback for the
+                sticky sidebar, which is hidden below the 1760px sidebar
+                breakpoint. */}
+            <TableOfContents
+              sectionNav={sectionNav}
+              className="mb-8 flex-row flex-wrap gap-x-6 gap-y-2 text-sm min-[1760px]:hidden"
+            />
 
-          {children}
+            {children}
+          </div>
         </div>
       </div>
     </div>

@@ -49,14 +49,14 @@ const PROJECT_SEEDS: ProjectSeed[] = [
   {
     slug: "skinsprout",
     title: "SkinSprout",
-    description: "Making skincare recommendations easier.",
+    description: "Track your skincare history to get personalized product recommendations.",
     category: "personal",
     hasVideo: true,
   },
   {
     slug: "cybersea",
     title: "CyberSea",
-    description: "1st overall @ uOttahacks 8",
+    description: "Plan and understand Arctic routes with live data and interactive 3D maps.",
     category: "hackathon",
     hasVideo: true,
   },
@@ -69,7 +69,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     // a special case to coverPath/videoPath.
     slug: "spotify",
     title: "Spotify Guessr",
-    description: "Spotify Minigames",
+    description: "Turn your Spotify Blend into a multiplayer guessing game.",
     category: "personal",
     hasVideo: false,
   },

@@ -16,7 +16,13 @@
  * (see globals.css) — this local class only adds the flex layout .hero's
  * two rows (topBar, columns) need, and fills .hero's own height so
  * min-height:100vh above still means something once .hero's horizontal
- * padding moved from the section itself onto this inner box. */
+ * padding moved from the section itself onto this inner box.
+ *
+ * (A page-local --content-max override briefly lived here — narrowing
+ * just the homepage to match the case-study route's own 900px. Reverted:
+ * per a follow-up request, that 900px is now the sitewide default itself,
+ * lib/tokens.css's own --content-max, so every page narrows together
+ * rather than each needing its own local override.) */
 .container {
   display: flex;
   flex-direction: column;
@@ -30,6 +36,32 @@
   justify-content: flex-end;
   align-items: center;
   gap: 24px;
+}
+
+.langToggle {
+  display: flex;
+  gap: 12px;
+}
+
+.langButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--fs-small);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .langButton {
+    transition: color 150ms ease;
+  }
+}
+
+.langButton:hover {
+  color: #9a9a9a;
 }
 
 .socialGroup {
@@ -235,9 +267,9 @@
 .toggles {
   display: flex;
   flex-direction: column;
-  gap: 16px;
   /* Was 8px, then 16px (too subtle to read as "lower" per feedback) — now
-   * a clearly visible drop. */
+   * 10px, per a later request to tighten it back up a bit. */
+  gap: 10px;
   padding-top: 48px;
 }
 
@@ -251,7 +283,7 @@
  * scoping the whole thing inside prefers-reduced-motion:no-preference is
  * enough on its own to make reduced-motion users see everything at final
  * position/opacity immediately, with no separate override needed (compare
- * .navLink's hover transitions above, same pattern). */
+ * .langButton/.navLink's hover transitions above, same pattern). */
 
 /* Simplified further on request: was fade + a 10px rise. Now a plain
  * opacity fade, "on the spot" — no movement at all. Every hero element

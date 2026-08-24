@@ -108,7 +108,7 @@ export default function CyberSeaCaseStudy() {
     <CaseStudyLayout sectionNav={SECTION_NAV}>
       <CaseStudyHero
         title="CyberSea"
-        subtitle="1st Overall @ uOttaHacks 2026"
+        subtitle="Plan and understand Arctic routes with live data and interactive 3D maps."
         heroSrc="/images/projects/cybersea/cybersea.mp4"
         heroAlt="CyberSea app preview"
         heroVideo
@@ -242,8 +242,12 @@ export default function CyberSeaCaseStudy() {
             // Red, not the page's usual blue highlight — matches the same
             // #fbeded shade Spotify's own case study uses for its problem/
             // challenge callouts (see Spotify's "Challenge" boxes).
-            <div className="rounded-[8px] bg-[#fbeded] px-6 py-[14px]">
-              <p className="font-body text-[22px] font-light text-black/60 text-center">
+            // px-5 py-7 + leading-relaxed — matches SkinSprout's own
+            // Problem Statement/WIP/Navigation-problem boxes, so this same
+            // highlight-box component reads identically across all 3 case
+            // studies, not just within this one page.
+            <div className="rounded-[8px] bg-[#fbeded] px-5 py-7">
+              <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
                 How might we close the gap between Arctic expertise and public
                 understanding?
               </p>
@@ -289,8 +293,10 @@ export default function CyberSeaCaseStudy() {
           eyebrow="04 / Implementation"
           heading="Challenge"
           media={
-            <div className="rounded-[8px] bg-[#fbeded] px-6 py-[14px]">
-              <p className="font-body text-[22px] font-light text-black/60 text-center">
+            // px-5 py-7 + leading-relaxed — same consistency pass as this
+            // page's own Problem Statement box above.
+            <div className="rounded-[8px] bg-[#fbeded] px-5 py-7">
+              <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
                 How can we balance heavy branding with accessibility?
               </p>
             </div>
@@ -400,29 +406,29 @@ export default function CyberSeaCaseStudy() {
         {/* "06 / Learnings" sits above the Row instead of stacked inside its
             own label column (Row's usual `eyebrow` prop) — that way the body
             text lines up with "Working on a team of non-designers" (the
-            subheader) rather than with the eyebrow above it. Same -mt-0.5
-            tight-stacking idiom SpotifyCaseStudy.tsx uses for its own
-            standalone group headers (see "Spotify's Design System"). */}
-        <p className={TEXT.header}>06 / Learnings</p>
-        <div className="-mt-0.5">
-          <Row heading="Working on a team of non-designers">
-            <p>
-              Design is often reduced to just &ldquo;making things look aesthetic,&rdquo;
-              something I especially noticed while working with a team of non-designers. I
-              often found myself in a position where teammates wanted to add a feature or
-              element that would just make the interface feel cluttered.
-            </p>
-            <p className="mt-[36px]">
-              {/* CHECK: paraphrased from a partially-legible paragraph. */}
-              That meant my job wasn&apos;t just deciding how things looked — spacing and
-              content aren&apos;t just visual choices, they shape how usable the whole
-              experience is. It taught me that a huge part of design isn&apos;t just
-              creating solutions, but{" "}
-              <TextHighlight color={HIGHLIGHT}>communicating effectively to others</TextHighlight> why those
-              solutions matter.
-            </p>
-          </Row>
-        </div>
+            subheader) rather than with the eyebrow above it. mb-2, not the
+            old -mt-0.5 (a line-height-overlap hack) — same real gap Row's
+            own eyebrow now uses, so this reads identically to it and to
+            SpotifyCaseStudy.tsx's own standalone group headers (see
+            "Spotify's Design System"). */}
+        <p className={`${TEXT.header} mb-2`}>06 / Learnings</p>
+        <Row heading="Working on a team of non-designers">
+          <p>
+            Design is often reduced to just &ldquo;making things look aesthetic,&rdquo;
+            something I especially noticed while working with a team of non-designers. I
+            often found myself in a position where teammates wanted to add a feature or
+            element that would just make the interface feel cluttered.
+          </p>
+          <p className="mt-[36px]">
+            {/* CHECK: paraphrased from a partially-legible paragraph. */}
+            That meant my job wasn&apos;t just deciding how things looked — spacing and
+            content aren&apos;t just visual choices, they shape how usable the whole
+            experience is. It taught me that a huge part of design isn&apos;t just
+            creating solutions, but{" "}
+            <TextHighlight color={HIGHLIGHT}>communicating effectively to others</TextHighlight> why those
+            solutions matter.
+          </p>
+        </Row>
 
         <Row heading="The Hackathon Mindset">
           {/* CHECK: this section was legible but paraphrased in places —

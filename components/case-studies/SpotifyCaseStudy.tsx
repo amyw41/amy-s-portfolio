@@ -104,7 +104,7 @@ export default function SpotifyCaseStudy() {
     <CaseStudyLayout sectionNav={SECTION_NAV}>
       <CaseStudyHero
         title="Spotify Guessr"
-        subtitle="Make your Spotify Blend more fun with a quick minigame!"
+        subtitle="Turn your Spotify Blend into a multiplayer guessing game."
         heroSrc="/images/projects/spotify/spotify.webp"
         heroAlt="Spotify Guessr app screens"
         highlightColor={HIGHLIGHT}
@@ -276,8 +276,11 @@ export default function SpotifyCaseStudy() {
         <Row
           heading="Problem Statement:"
           media={
-            <div className="rounded-[8px] bg-[#f2f0f5] px-6 py-[14px]">
-              <p className="font-body text-[22px] font-light text-black/60 text-center">
+            // px-5 py-7 + leading-relaxed — matches the same highlight-box
+            // treatment on SkinSprout/CyberSea, so it reads identically
+            // across all 3 case studies.
+            <div className="rounded-[8px] bg-[#f2f0f5] px-5 py-7">
+              <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
                 How might we extend the social excitement of Spotify Blend beyond the
                 first interaction?
               </p>
@@ -292,8 +295,10 @@ export default function SpotifyCaseStudy() {
           eyebrow="03 / Design Process"
           heading="Challenge"
           media={
-            <div className="rounded-[8px] bg-[#fbeded] px-6 py-[14px]">
-              <p className="font-body text-[22px] font-light text-black/60 text-center">
+            // px-5 py-7 + leading-relaxed — same consistency pass as this
+            // page's other highlight boxes.
+            <div className="rounded-[8px] bg-[#fbeded] px-5 py-7">
+              <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
                 How do we make the product familiar to Spotify while also resembling its
                 own creation?
               </p>
@@ -302,20 +307,21 @@ export default function SpotifyCaseStudy() {
         />
 
         <div>
-          <p className={TEXT.header}>Spotify&apos;s Design System</p>
-          <div className="-mt-0.5">
-            <Row
-              heading="Spotify's Main App"
-              media={
-                <CaseStudyImage
-                  src="/images/projects/spotify/main.avif"
-                  alt="Spotify main app screens annotated with design observations"
-                  ratio="1024/427"
-                  highlightColor={HIGHLIGHT}
-                />
-              }
-            />
-          </div>
+          {/* mb-2, not the old -mt-0.5 (a line-height-overlap hack) — same
+              real gap Row's own eyebrow now uses, so this standalone
+              group-header idiom reads identically to it. */}
+          <p className={`${TEXT.header} mb-2`}>Spotify&apos;s Design System</p>
+          <Row
+            heading="Spotify's Main App"
+            media={
+              <CaseStudyImage
+                src="/images/projects/spotify/main.avif"
+                alt="Spotify main app screens annotated with design observations"
+                ratio="1024/427"
+                highlightColor={HIGHLIGHT}
+              />
+            }
+          />
           <div className="mt-[72px]">
             <Row
               heading="Spotify Wrapped"
@@ -340,20 +346,21 @@ export default function SpotifyCaseStudy() {
         </div>
 
         <div>
-          <p className={TEXT.header}>Branding</p>
-          <div className="-mt-0.5">
-            <Row
-              heading="Mascots"
-              media={
-                <CaseStudyImage
-                  src="/images/projects/spotify/branding.avif"
-                  alt="Triangle, star, and circle mascot characters in three poses each"
-                  ratio="1024/773"
-                  highlightColor={HIGHLIGHT}
-                />
-              }
-            />
-          </div>
+          {/* mb-2, not the old -mt-0.5 (a line-height-overlap hack) — same
+              real gap Row's own eyebrow now uses, so this standalone
+              group-header idiom reads identically to it. */}
+          <p className={`${TEXT.header} mb-2`}>Branding</p>
+          <Row
+            heading="Mascots"
+            media={
+              <CaseStudyImage
+                src="/images/projects/spotify/branding.avif"
+                alt="Triangle, star, and circle mascot characters in three poses each"
+                ratio="1024/773"
+                highlightColor={HIGHLIGHT}
+              />
+            }
+          />
           <div className="mt-[72px]">
             <Row
               heading="Color Scheme"
@@ -391,8 +398,10 @@ export default function SpotifyCaseStudy() {
           heading="Navigation Problem"
           media={
             <div className="space-y-[36px]">
-              <div className="rounded-[8px] bg-[#fbeded] px-6 py-[14px]">
-                <p className="font-body text-[22px] font-light text-black/60 text-center">
+              {/* px-5 py-7 + leading-relaxed — same consistency pass as this
+                  page's other highlight boxes. */}
+              <div className="rounded-[8px] bg-[#fbeded] px-5 py-7">
+                <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
                   Users needed a way to move between stat cards without breaking the
                   visual rhythm of the layout.
                 </p>
