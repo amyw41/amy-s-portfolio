@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAutoPlayInView } from "@/lib/useAutoPlayInView";
 
 // Shared building blocks behind every written case study on the site
@@ -317,43 +318,39 @@ function TableOfContents({
   sectionNav: SectionNavItem[];
   className: string;
   style?: CSSProperties;
-  // Renders the home logo link as the first child inside this same
-  // motion.nav, ahead of the section links, instead of a separate element
-  // sitting outside it — so it picks up this nav's own fade mount
-  // animation for free rather than needing (and staying in sync with) a
-  // duplicate motion wrapper of its own. Only the desktop sidebar call
-  // site opts in; the mobile inline fallback doesn't render one at all.
+  // When true, renders a ← BACK button above the section links — calls
+  // router.back() so the browser restores the user to their exact scroll
+  // position on the previous page rather than jumping to the top.
+  // Only the desktop sidebar call site opts in; the mobile inline
+  // fallback doesn't render one at all.
   home?: boolean;
 }) {
   const activeId = useActiveSection(sectionNav.map((s) => s.id));
+  const router = useRouter();
 
   return (
     <motion.nav
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45, ease: "easeOut", delay: TOC_DELAY }}
-      // text-xl (20px) — bumped from text-lg (18px), "just a smidge" per
-      // request, still well under the original text-2xl (24px) this
-      // started at. The mobile inline fallback below already overrides
-      // this with its own text-sm anyway, so this default only ever
-      // actually shows on the desktop sticky sidebar.
-      className={`flex text-left font-instrument text-xl font-light text-black/60 ${className}`}
+      // text-lg (18px) — decreased a touch per request. The mobile inline
+      // fallback below already overrides this with its own text-sm anyway,
+      // so this default only ever shows on the desktop sticky sidebar.
+      className={`flex text-left font-instrument text-lg font-light text-black/60 ${className}`}
       style={style}
     >
       {home && (
-        // Same site logo as the homepage's own identity mark (Hero/
-        // index.tsx's .logo, black-star.png), shrunk from 48px (w-12) to
-        // 40px (w-10) per request to decrease the logo sizing slightly.
-        // -mb-2, not a positive margin: this nav's own flex gap (gap-3,
-        // 12px — see each call site's className) already adds space
-        // between the logo and the first nav link below it; a negative
-        // margin here claws most of that back so the two sit close
-        // together, per request ("way closer"/"decrease the gap"), rather
-        // than stacking a margin on top of the gap the way mb-3/mb-5
-        // previously did.
-        <Link href="/" aria-label="Home" className="-mb-2 block w-fit">
-          <img src="/images/logos/black-star.png" alt="" className="h-auto w-10" draggable={false} />
-        </Link>
+        // ← BACK button — calls router.back() so the browser restores the
+        // user's exact scroll position on the previous page instead of
+        // jumping to its top. Styled to match the nav's own font/weight.
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="mb-3 flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer font-instrument text-lg font-light tracking-[-0.03em] uppercase text-black/40 hover:text-black/70 transition-colors"
+        >
+          <span aria-hidden="true">←</span>
+          Back
+        </button>
       )}
       {sectionNav.map((s) => (
         <a
@@ -368,15 +365,10 @@ function TableOfContents({
   );
 }
 
-// Every case study's hero box locks to this one ratio (CyberSea's own hero
-// video, 848x636) rather than each page picking a ratio to match its own
-// source file's real dimensions — that per-asset matching is exactly right
-// for body content (see CaseStudyImage's `ratio` prop elsewhere on a page,
-// still per-call) but wrong for the hero specifically, since the hero is the
-// one box every case study puts in the same spot and readers compare page to
-// page. object-cover (inside CaseStudyImage) crops each source video/image
-// to this shape instead of showing it at its own native proportions.
-export const HERO_RATIO = "848/636";
+// Every case study's hero box locks to 3/2 to match the homepage's project
+// thumbnail ratio. object-cover (inside CaseStudyImage) crops each source
+// video/image to this shape instead of showing it at its own native proportions.
+export const HERO_RATIO = "3/2";
 
 // The hero block — title, subtitle, hero image, and the timeline/team/role/
 // skills meta box, rendered (and animated) as one unit: it fades in on
@@ -461,20 +453,25 @@ export function CaseStudyHero({
   );
 }
 
-// Gutter math for the sidebar breakpoint below: the content column now
-// centers itself using the site's own .pageContainer contract (app/
+// Gutter math for the sidebar breakpoint below: the sidebar only ever
+// shows once the viewport is wide enough that it can sit entirely in the
+// side margin without touching the content column, which itself always
+// centers on the true window width via .pageContainer's own contract (app/
 // globals.css) — width: min(100% - 2*pad, --content-max), --content-max:
-// 1050px (lib/tokens.css) — instead of an ad hoc max-w/px combo, so it
-// lands on the exact same horizontal center as every homepage section at
-// every viewport width. --content-max already caps the content width (i.e.
-// 100% - 2*--pad > 1050px) starting around an ~1221px-wide viewport, well
-// below anywhere the sidebar could plausibly fit — so at every viewport
-// width this breakpoint actually cares about, each side gutter is simply
-// (viewport - --content-max) / 2, independent of --pad's own value. The
-// fixed sidebar (w-72 = 288px) needs to fit in that
-// gutter with room to spare on both sides — 32px between the sidebar and
-// the content column, and another 32px between the sidebar and the true
-// viewport edge — so it never touches or nudges the content column:
+// 1050px (lib/tokens.css). (An earlier version of this layout padded the
+// content column by the sidebar's own width so it centered in the space
+// beside the sidebar instead — reverted per a later request: the content
+// now centers on the whole page again, same as every other section, and
+// the sidebar just floats in whatever margin is left over.)
+// --content-max already caps the content width (i.e. 100% - 2*--pad >
+// 1050px) starting around an ~1221px-wide viewport, well below anywhere the
+// sidebar could plausibly fit — so at every viewport width this breakpoint
+// actually cares about, each side gutter is simply (viewport -
+// --content-max) / 2, independent of --pad's own value. The fixed sidebar
+// (w-72 = 288px) needs to fit in that gutter with room to spare on both
+// sides — 32px between the sidebar and the content column, and another
+// 32px between the sidebar and the true viewport edge — so it never
+// touches or nudges the content column:
 //   gutter >= 288 + 32 + 32 = 352
 //   (viewport - 1050) / 2 >= 352  =>  viewport >= 1754
 // Rounded up to 1760px for a clean value with a little extra breathing
@@ -545,8 +542,12 @@ export function CaseStudyLayout({ sectionNav, children }: { sectionNav: SectionN
             the logo/nav, per request. pb-8 (bottom) left alone, split out
             of the old shared py-8 so only the top grew. Echoed by the
             content column's own pt-14 just below, so the two stay lined
-            up the same way they always have. */}
-        <div className="sticky top-0 flex h-dvh w-72 flex-col border-r border-gray-200 bg-white px-10 pb-8 pt-14">
+            up the same way they always have.
+            No border-r here anymore — the divider line between the sidebar
+            and the content column was removed per request; the gap between
+            them (see the gutter math above) reads as separation enough on
+            its own. */}
+        <div className="sticky top-0 flex h-dvh w-72 flex-col bg-white pl-14 pr-6 pb-8 pt-14">
           {/* Slide-in-from-left mount animation lives inside TableOfContents
               itself (see TOC_DELAY there) — shared by this sidebar and the
               mobile inline fallback below instead of duplicated per call.
@@ -554,31 +555,22 @@ export function CaseStudyLayout({ sectionNav, children }: { sectionNav: SectionN
               rendered as this same nav's own first child — see TableOfContents'
               own `home` prop comment for why it lives there instead of as a
               separate element above it. */}
-          <TableOfContents sectionNav={sectionNav} className="flex-col gap-3" home />
+          <TableOfContents sectionNav={sectionNav} className="flex-col gap-1.5" home />
         </div>
       </aside>
 
-      {/* Echoes the sidebar's own w-72 as left padding, at the same
-          min-[1760px] breakpoint the sidebar shows at — per request, the
-          content column should read as centered in the space beside the
-          sidebar (i.e. balanced against the sidebar's own visual weight),
-          not centered on the true middle of the browser window while the
-          sidebar sits off in the left gutter as extra, unbalanced mass.
-          .pageContainer's own margin-inline:auto centers it within
-          whatever box it's actually inside — padding here on ITS parent is
-          what shifts that centering axis rightward by the sidebar's width,
-          without pageContainer itself (or any other section that reuses
-          that class) needing to know anything about a sidebar. Below
-          1760px, where the sidebar is hidden (only the inline mobile/
-          tablet TOC fallback shows, taking no width of its own), this
-          padding is 0 and .pageContainer centers on the full window again,
-          same as everywhere else on the site. */}
-      <div className="min-[1760px]:pl-72">
+      {/* No left-padding wrapper here anymore — per a later request, the
+          content column goes back to centering on the true middle of the
+          browser window (same as every other section on the site) instead
+          of being shifted right to center in the space beside the sidebar.
+          The sidebar is `absolute`/out of flow (see the `aside` above), so
+          it simply overlays whatever side margin is left over at this
+          width; it never affects this column's own centering. */}
+      <div>
         {/* Same width contract as every homepage section (see the
             gutter-math comment above) — no extra px-* here on top of it,
             same as Hero/Projects/Footer's own use of this class, so the
-            edges match exactly rather than just approximately. Its own
-            centering axis is shifted by the wrapper just above. */}
+            edges match exactly rather than just approximately. */}
         <div className="pageContainer">
           {/* pt-14 lines the title up with the sidebar's own pt-14 (up from
               the original 32px, per request — more room above both).
