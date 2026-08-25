@@ -16,6 +16,22 @@
   text-decoration: none;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .card {
+    /* Was 150ms ease — that snap felt jarring on hover; slowed down and
+     * switched to ease-out (the same curve the dim/ring overlays elsewhere
+     * on this page already use) so it eases into place instead of jumping. */
+    transition: opacity 300ms ease-out;
+  }
+}
+
+.card:hover {
+  /* Was 0.65 — lightens the whole card toward the white page background
+   * behind it, same as the dim overlay's own white; bumped 10% whiter here
+   * too (0.35 of white showing through -> 0.385, i.e. opacity 0.615). */
+  opacity: 0.615;
+}
+
 .reveal {
   display: flex;
   align-items: flex-start;
@@ -121,6 +137,8 @@
 
 .description {
   margin: 0;
+  /* Was --fs-tagline — matched to the category filter buttons' own label
+   * size (CircleToggle.module.css's .label) per request. */
   font-size: var(--fs-small);
   font-weight: 300;
   line-height: 1.5;

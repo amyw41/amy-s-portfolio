@@ -1,0 +1,84 @@
+/* In normal document flow — NOT position: fixed anymore (an earlier version
+ * floated as a fixed pill over the page's own content, fading in/out based
+ * on scroll position via an IntersectionObserver sentinel). Reverted per
+ * request: it should sit at the top of the page like an ordinary element
+ * and push whatever follows it down, not overlap it — on the case-study
+ * route in particular, the fixed/floating version sat directly on top of
+ * the sidebar's own Back button. margin (not left:50%/translateX) is what
+ * centers it now, same effect but the normal-flow way; the width formula
+ * itself is unchanged and still identical to .pageContainer's, so the
+ * pill's edges line up with every other section's content edges at every
+ * viewport width. */
+.pill {
+  margin: 24px auto 0;
+  width: min(100% - (2 * var(--pad)), var(--content-max));
+  height: clamp(48px, 4.5vw, 64px);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: clamp(16px, 2vw, 28px);
+  border-radius: 999px;
+  border: 1px solid #000;
+  background: #fff;
+}
+
+/* Mobile only: sticky to the top and slides out of view on scroll-down,
+ * back in on scroll-up (Taskbar.tsx's scroll listener toggles .pillHidden).
+ * `position: sticky` (not fixed) keeps this in normal document flow — it
+ * still reserves its own space at the top, so translating it away doesn't
+ * cause the page underneath to jump up into the gap it leaves; it just
+ * slides the visible pill while its slot in the layout stays put. Scoped to
+ * mobile only (matching lucide's own md:hidden cutoff in the original
+ * jar-portfolio Taskbar) — desktop keeps the plain in-flow, no-hide
+ * behavior described above .pill's own comment. */
+@media (max-width: 767px) {
+  .pill {
+    position: sticky;
+    top: 24px;
+    z-index: 50;
+    transition: transform 300ms ease-in-out;
+  }
+
+  .pillHidden {
+    transform: translateY(calc(-100% - 24px));
+  }
+}
+
+.logoLink {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  width: clamp(24px, 2.5vw, 32px);
+  height: auto;
+  user-select: none;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2.2vw, 32px);
+}
+
+/* Same visual treatment as the hero's black text nav buttons (see
+ * Hero.module.css's .navLink) — same ink color and hover-to-grey, just at
+ * the taskbar's own (slightly smaller) --fs-taskbar size. */
+.navLink {
+  text-decoration: none;
+  font-family: inherit;
+  font-size: var(--fs-taskbar);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .navLink {
+    transition: color 150ms ease;
+  }
+}
+
+.navLink:hover {
+  color: #9a9a9a;
+}

@@ -86,7 +86,7 @@
   height: 40px;
 }
 
-.socialIcon + .socialIcon {
+.socialIcon+.socialIcon {
   border-left: 1px solid #000;
 }
 
@@ -166,8 +166,14 @@
 }
 
 .tagline {
-  margin: 0;
-  font-size: var(--fs-tagline);
+  margin: 5px 0 0 0;
+  /* Was var(--fs-tagline) (clamp(16px, 1.56vw, 24px), 20px @1280) — sized
+   * down on its own, scoped here rather than shrinking the shared token
+   * (which the about/playground placeholder pages also read). Same
+   * floor/ceiling proportions as that original token, just landing on 19px
+   * at the 1280px reference width instead of 20px. */
+  font-size: clamp(15px, 1.4vw, 23px);
+  /* 19px @1280 */
   font-weight: 300;
   color: rgba(0, 0, 0, 0.8);
 }
@@ -175,8 +181,8 @@
 .nav {
   display: flex;
   flex-direction: column;
-  /* Was 16px — tightened on request. */
-  gap: 10px;
+  /* Tightened on request. */
+  gap: 6px;
   margin-top: 64px;
 }
 
@@ -253,14 +259,9 @@
    * smaller. Since JarStage's physics sizing is entirely a function of this
    * container's own rendered width (REFERENCE_WIDTH in useJarPhysics), items
    * shrink right along with the jar automatically. */
-  width: calc(
-    0.8 *
-      min(
-        clamp(300px, 46vw, 700px),
+  width: calc(0.8 * min(clamp(300px, 46vw, 700px),
         calc(min(100vw, var(--content-max)) - 2 * var(--pad)),
-        calc(var(--available-height) * 0.6)
-      )
-  );
+        calc(var(--available-height) * 0.6)));
   flex: 0 0 auto;
 }
 
@@ -295,12 +296,14 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
+
   /* Every animated hero element, one shared animation, zero stagger between
    * them — see heroLoadIn's own comment above. Duration comes from
    * --hero-load-ms (set once on the .hero section itself in index.tsx, from
@@ -313,7 +316,7 @@
   .logo,
   .title,
   .tagline,
-  .nav > .navLink,
+  .nav>.navLink,
   .jarWrapper,
   .toggles {
     animation: heroLoadIn var(--hero-load-ms, 450ms) ease-out both;

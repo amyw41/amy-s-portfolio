@@ -31,11 +31,11 @@ import { useAutoPlayInView } from "@/lib/useAutoPlayInView";
 //     notch bolder than subheader so it reads as a grouping label, not just
 //     another row in the list
 export const TEXT = {
-  header: "font-body text-[28px] font-medium text-black text-left",
-  subheader: "font-body text-[24px] font-normal text-black/60 text-left",
-  content: "font-body text-[18px] font-light leading-relaxed text-black/60 text-left",
-  frame: "font-body text-[22px] font-light text-black/60 text-left",
-  groupHeader: "font-body text-[24px] font-medium text-black/80 text-left",
+  header: "font-body text-[clamp(22px,2.4vw,28px)] font-medium text-black text-left",
+  subheader: "font-body text-[clamp(19px,2vw,24px)] font-normal text-black/60 text-left",
+  content: "font-body text-[clamp(16px,1.45vw,18px)] font-light leading-relaxed text-black/60 text-left",
+  frame: "font-body text-[clamp(18px,1.75vw,22px)] font-light text-black/60 text-left",
+  groupHeader: "font-body text-[clamp(20px,2.1vw,24px)] font-medium text-black/80 text-left",
 };
 
 // Fallback tint behind a placeholder/neutral image box when a case study
@@ -215,7 +215,7 @@ export function Row({
           these pages reads as the same distance, whichever of the two ways
           it's built. */}
       {eyebrow && <p className={`${TEXT.header} mb-2`}>{eyebrow}</p>}
-      <div className="grid grid-cols-1 md:grid-cols-[16rem_1fr] md:gap-x-12">
+      <div className="grid grid-cols-1 md:grid-cols-[14rem_1fr] lg:grid-cols-[16rem_1fr] md:gap-x-8 lg:gap-x-12">
         <div className="md:col-start-1">
           <p className={headingClassName ?? TEXT.subheader}>{heading}</p>
         </div>
@@ -276,9 +276,11 @@ export type SectionNavItem = { id: string; label: string };
 // of it is visible.
 function useActiveSection(ids: string[]) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const idKey = ids.join(",");
 
   useEffect(() => {
-    const elements = ids.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => el !== null);
+    const idList = idKey ? idKey.split(",") : [];
+    const elements = idList.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => el !== null);
     if (elements.length === 0) return;
 
     const observer = new IntersectionObserver(
@@ -292,21 +294,14 @@ function useActiveSection(ids: string[]) {
 
     elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [ids]);
+  }, [idKey]);
 
   return activeId;
 }
 
-// `className` supplies the full flex layout (direction/wrap/gap) so the
-// fixed sidebar version and the mobile inline-row fallback don't fight each
-// other over a shared default. font-instrument (serif); the active section
-// (see useActiveSection) gets the site's case-study accent blue.
-//
-// Fades in on the spot on mount, in step with CaseStudyHero's own
-// fade-in (no delay — both start together). Both call sites (the
-// sticky desktop sidebar and the mobile inline fallback) get this for free
-// since it lives here, not per call site — same reasoning CaseStudyHero
-// itself already uses for owning HERO_RATIO.
+// `className` supplies the flex layout (direction/wrap/gap).
+// font-instrument (serif); the active section (see useActiveSection) gets
+// the site's case-study accent blue.
 const TOC_DELAY = 0;
 
 function TableOfContents({
@@ -321,8 +316,6 @@ function TableOfContents({
   // When true, renders a ← BACK button above the section links — calls
   // router.back() so the browser restores the user to their exact scroll
   // position on the previous page rather than jumping to the top.
-  // Only the desktop sidebar call site opts in; the mobile inline
-  // fallback doesn't render one at all.
   home?: boolean;
 }) {
   const activeId = useActiveSection(sectionNav.map((s) => s.id));
@@ -333,20 +326,21 @@ function TableOfContents({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45, ease: "easeOut", delay: TOC_DELAY }}
-      // text-lg (18px) — decreased a touch per request. The mobile inline
-      // fallback below already overrides this with its own text-sm anyway,
-      // so this default only ever shows on the desktop sticky sidebar.
-      className={`flex text-left font-instrument text-lg font-light text-black/60 ${className}`}
+      className={`flex text-left font-instrument leading-none text-[clamp(16px,1.5vw,18px)] font-light text-black/60 ${className}`}
       style={style}
     >
       {home && (
-        // ← BACK button — calls router.back() so the browser restores the
-        // user's exact scroll position on the previous page instead of
-        // jumping to its top. Styled to match the nav's own font/weight.
+        // leading-none — the sidebar's own pt matches CaseStudyHero's h1 pt
+        // exactly (see CaseStudyLayout), but the h1 is set leading-none
+        // too, so its glyph sits right at the top of its own padding box;
+        // this nav's normal line-height was adding extra space above BACK's
+        // glyph that the h1 doesn't have, making the two look misaligned
+        // even though their boxes start at the same y. leading-none here
+        // closes that gap so both read as starting the same distance down.
         <button
           type="button"
           onClick={() => router.back()}
-          className="mb-3 flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer font-instrument text-lg font-light tracking-[-0.03em] uppercase text-black/40 hover:text-black/70 transition-colors"
+          className="mb-5 flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer font-instrument leading-none text-[clamp(18px,1.7vw,20px)] font-light tracking-[-0.03em] uppercase text-black/40 hover:text-black/70 transition-colors"
         >
           <span aria-hidden="true">←</span>
           Back
@@ -356,7 +350,7 @@ function TableOfContents({
         <a
           key={s.id}
           href={`#${s.id}`}
-          className={`text-left transition-colors hover:text-[#2460A4] ${activeId === s.id ? "text-[#2460A4]" : ""}`}
+          className={`text-left transition-colors hover:text-[#2460A4] whitespace-nowrap ${activeId === s.id ? "text-[#2460A4]" : ""}`}
         >
           {s.label}
         </a>
@@ -419,7 +413,7 @@ export function CaseStudyHero({
       >
         {title}
       </h1>
-      <p className="mt-3 font-body text-[20px] font-light text-black/70">{subtitle}</p>
+      <p className="mt-3 font-body text-[clamp(16px,1.56vw,20px)] font-light text-black/70">{subtitle}</p>
 
       <div className="mt-8">
         <CaseStudyImage
@@ -440,9 +434,9 @@ export function CaseStudyHero({
             give the already-tallest columns more breathing room. */}
         {meta.map((m, i) => (
           <div key={m.label} className={`text-center ${i !== 0 ? "pb-3" : ""}`}>
-            <p className="font-instrument text-[28px] font-medium tracking-[-0.035em] text-black/80">{m.label}</p>
+            <p className="font-instrument text-[clamp(20px,2.2vw,28px)] font-medium tracking-[-0.035em] text-black/80">{m.label}</p>
             {m.values.map((v) => (
-              <p key={v} className="mt-1 font-body text-lg font-light text-black/70">
+              <p key={v} className="mt-1 font-body text-[clamp(14px,1.3vw,17px)] font-light text-black/70">
                 {v}
               </p>
             ))}
@@ -453,144 +447,37 @@ export function CaseStudyHero({
   );
 }
 
-// Gutter math for the sidebar breakpoint below: the sidebar only ever
-// shows once the viewport is wide enough that it can sit entirely in the
-// side margin without touching the content column, which itself always
-// centers on the true window width via .pageContainer's own contract (app/
-// globals.css) — width: min(100% - 2*pad, --content-max), --content-max:
-// 1050px (lib/tokens.css). (An earlier version of this layout padded the
-// content column by the sidebar's own width so it centered in the space
-// beside the sidebar instead — reverted per a later request: the content
-// now centers on the whole page again, same as every other section, and
-// the sidebar just floats in whatever margin is left over.)
-// --content-max already caps the content width (i.e. 100% - 2*--pad >
-// 1050px) starting around an ~1221px-wide viewport, well below anywhere the
-// sidebar could plausibly fit — so at every viewport width this breakpoint
-// actually cares about, each side gutter is simply (viewport -
-// --content-max) / 2, independent of --pad's own value. The fixed sidebar
-// (w-72 = 288px) needs to fit in that gutter with room to spare on both
-// sides — 32px between the sidebar and the content column, and another
-// 32px between the sidebar and the true viewport edge — so it never
-// touches or nudges the content column:
-//   gutter >= 288 + 32 + 32 = 352
-//   (viewport - 1050) / 2 >= 352  =>  viewport >= 1754
-// Rounded up to 1760px for a clean value with a little extra breathing
-// room past the exact boundary. Below this, TableOfContents' inline mobile/
-// tablet fallback (rendered inside the content column below) is what shows
-// instead — plain `lg` (1024px) would show the sidebar while the gutter is
-// still far narrower than 288px, overlapping the content column.
-//
-// The `min-[1760px]:` breakpoint below is written out literally at each use
-// (not held in a JS constant and interpolated into a className) because
-// Tailwind's class scanner matches literal text in source files — a
-// template-literal-built class name like `${x}:block` never appears as
-// that exact string anywhere in this file, so it would silently fail to
-// generate. If this number ever needs to change, update every
-// `min-[1760px]:` below together with the math above.
-
-// The full page shell every case study shares: a sticky left sidebar
-// (desktop) with the numbered-section nav, a mobile inline fallback of that
-// same nav, and a centered content column — `children` is everything below
-// the section nav (hero + numbered <Section>s).
+// The responsive case study layout — deliberately the simplest version that
+// gets this right, after a few rounds of over-engineering it (absolute
+// positioning + a live clamp()/calc() width formula to dodge overlap, a
+// divider line, custom breakpoints). Plain flexbox: sidebar and content are
+// ordinary siblings inside .pageContainer, which already gives them the
+// same width/centering as the taskbar above and every other section on the
+// site — nothing here needs to compute or guard against overlap, because
+// normal flow siblings simply can't overlap each other. At 1024px (`lg`,
+// matching jar-portfolio's own breakpoint, which this file was ported from)
+// the sidebar hides and the content falls back to an inline top-nav with a
+// Back button instead.
 export function CaseStudyLayout({ sectionNav, children }: { sectionNav: SectionNavItem[]; children: ReactNode }) {
   return (
-    // Full-bleed row — breaks out of whatever ancestor layout the app router
-    // wraps this route in (this site has no shared max-width/padded section
-    // around page content the way some sites do, but this still needs to
-    // hold even if that ever changes) so the sidebar below can anchor off
-    // the true left edge of the viewport regardless. `100vw` is the only
-    // unit that reaches the true viewport edge regardless of an ancestor's
-    // own width — a percentage-based negative-margin breakout can't reach
-    // past a max-width ancestor on any viewport wider than that cap.
-    // `100vw` does include the vertical scrollbar's own width, though —
-    // that's handled globally by the root layout's `overflow-x: clip`
-    // (deliberately clip, not hidden — hidden silently breaks
-    // position:sticky for every descendant, including the sidebar below).
-    //
-    // `relative` — the anchor `aside` below positions itself off of this
-    // element (not the flex/grid content column), which is exactly the
-    // point: taking the sidebar out of flow here means adding or removing
-    // it can never change the content column's own centering math.
-    //
-    // `tw-scope` — see case-study.css's own top comment: this class is what
-    // scopes the hand-picked preflight subset (border-style, list-style,
-    // link color/decoration, ...) to exactly this component's own subtree,
-    // so Tailwind can't visually affect anything outside a case-study page.
-    <div className="tw-scope relative left-1/2 w-screen -translate-x-1/2">
-      {/* Absolutely positioned against the row above, NOT a flex/grid
-          sibling of the content column — it occupies zero layout space of
-          its own. `inset-y-0` stretches this outer box to the row's own
-          height (i.e. the content column's height, since that's the row's
-          only in-flow child) purely so the sticky box nested inside knows
-          where to stop — see that box's own comment.
-          Its own width (w-72) is echoed as padding-left on the content
-          wrapper just below, at the same min-[1760px] breakpoint this
-          shows at — see that wrapper's own comment for why. */}
-      <aside className="absolute inset-y-0 left-0 z-10 hidden w-72 min-[1760px]:block">
-        {/* `sticky`, not `fixed` — fixed floats free of the document and
-            bleeds over the footer once scrolled past the end of the case
-            study. Sticky is bounded by its containing block — the `aside`
-            above, whose `inset-y-0` makes that exactly the content column's
-            own height — so it naturally stops exactly where the content
-            ends instead of covering the site's global Footer.
+    <div className="tw-scope min-h-screen bg-white">
+      <div className="pageContainer flex w-full gap-10 lg:gap-16">
+        {/* h-fit — sticks to its own content height, not stretched to match
+            <main>'s (flex's default align-items:stretch would otherwise
+            make it tall enough to overlap the footer while sticky). */}
+        <aside className="sticky top-14 hidden h-fit w-48 shrink-0 pb-24 pt-8 lg:block lg:pt-14">
+          <TableOfContents sectionNav={sectionNav} className="flex-col gap-3.5" home />
+        </aside>
 
-            top-0 / h-dvh — unlike jar-portfolio (where this was ported
-            from), this site has no sticky/fixed global header for the
-            sidebar to clear, so it sticks straight to the true top of the
-            viewport instead of offsetting below one. */}
-        {/* pt-14, up from py-8's original 32px — more breathing room above
-            the logo/nav, per request. pb-8 (bottom) left alone, split out
-            of the old shared py-8 so only the top grew. Echoed by the
-            content column's own pt-14 just below, so the two stay lined
-            up the same way they always have.
-            No border-r here anymore — the divider line between the sidebar
-            and the content column was removed per request; the gap between
-            them (see the gutter math above) reads as separation enough on
-            its own. */}
-        <div className="sticky top-0 flex h-dvh w-72 flex-col bg-white pl-14 pr-6 pb-8 pt-14">
-          {/* Slide-in-from-left mount animation lives inside TableOfContents
-              itself (see TOC_DELAY there) — shared by this sidebar and the
-              mobile inline fallback below instead of duplicated per call.
-              home: only this (desktop) call site gets the logo/home link,
-              rendered as this same nav's own first child — see TableOfContents'
-              own `home` prop comment for why it lives there instead of as a
-              separate element above it. */}
-          <TableOfContents sectionNav={sectionNav} className="flex-col gap-1.5" home />
-        </div>
-      </aside>
-
-      {/* No left-padding wrapper here anymore — per a later request, the
-          content column goes back to centering on the true middle of the
-          browser window (same as every other section on the site) instead
-          of being shifted right to center in the space beside the sidebar.
-          The sidebar is `absolute`/out of flow (see the `aside` above), so
-          it simply overlays whatever side margin is left over at this
-          width; it never affects this column's own centering. */}
-      <div>
-        {/* Same width contract as every homepage section (see the
-            gutter-math comment above) — no extra px-* here on top of it,
-            same as Hero/Projects/Footer's own use of this class, so the
-            edges match exactly rather than just approximately. */}
-        <div className="pageContainer">
-          {/* pt-14 lines the title up with the sidebar's own pt-14 (up from
-              the original 32px, per request — more room above both).
-              pb-24 at the bottom — the sidebar is deliberately flush against
-              the footer with no gap, but that's the sidebar's border/
-              background, not this text column: without its own bottom
-              padding, the last paragraph's text would butt directly up
-              against the footer. */}
-          <div className="pb-24 pt-14 text-left">
-            {/* Same section links, inline — mobile/tablet fallback for the
-                sticky sidebar, which is hidden below the 1760px sidebar
-                breakpoint. */}
-            <TableOfContents
-              sectionNav={sectionNav}
-              className="mb-8 flex-row flex-wrap gap-x-6 gap-y-2 text-sm min-[1760px]:hidden"
-            />
-
-            {children}
-          </div>
-        </div>
+        {/* Main reading content: shrinks responsively with the container.
+            Below 1024px the sidebar above just hides — no inline top-nav
+            fallback anymore (an earlier version showed a Back button +
+            horizontal section list here); per request, this breakpoint now
+            reads as just the taskbar and then straight into the content,
+            nothing else. */}
+        <main className="min-w-0 flex-1 pb-24 pt-8 lg:pt-14 text-left">
+          {children}
+        </main>
       </div>
     </div>
   );

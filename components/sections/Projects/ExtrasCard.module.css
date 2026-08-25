@@ -15,12 +15,15 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .trigger {
-    transition: opacity 150ms ease;
+    /* Matches ProjectCard.module.css's own .card transition (same hover
+     * lighten effect, same fix for the same jarring snap). */
+    transition: opacity 300ms ease-out;
   }
 }
 
 .trigger:hover {
-  opacity: 0.85;
+  /* Matches ProjectCard.module.css's own .card:hover — see its comment. */
+  opacity: 0.615;
 }
 
 .placeholder {

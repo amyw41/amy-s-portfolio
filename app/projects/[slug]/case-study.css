@@ -111,27 +111,11 @@
   }
 }
 
-/* Narrower content column, per request ("make everything in content
- * section skinnier"). Scoped to THIS route's own .pageContainer only —
- * custom-property declarations directly on an element win over an
- * inherited value regardless of selector specificity, so setting --pad/
- * --content-max here (rather than editing lib/tokens.css's :root rule)
- * is a clean, page-local override — not the global :root value in
- * lib/tokens.css (1050px), so every other page (Hero/Projects/Footer)
- * keeps the site's normal width. (A later request briefly made 900px the
- * sitewide default too, but that was reverted — this route keeps its own
- * narrower width via this override again, same as originally.)
- * --content-max is the one that actually matters here: on any normal
- * laptop/desktop-width window it's the binding constraint, not --pad
- * (that only matters below ~1220px wide) — so it's lowered to 900px, a
- * noticeably tighter reading column that still comfortably fits this
- * component's own ~900px-wide media (see CaseStudyImage's default `sizes`
- * and CaseStudyHero's own hero image sizes above).
- * --pad also gets a modest bump so the same "skinnier" feel holds on
- * narrower windows too, where --pad is what actually binds. */
-/* --content-max nudged from 900px to 820px, per a later request to condense
- * this route a bit further still. */
-.tw-scope .pageContainer {
-  --content-max: 820px;
-  --pad: clamp(28px, 8vw, 160px);
-}
+/* Case-study pages no longer override --content-max here — back to matching
+ * the homepage's width exactly again (this value has gone back and forth a
+ * few times over the course of this session; this is the current, "same
+ * width as the homepage" preference). This route inherits BOTH --pad and
+ * --content-max straight from lib/tokens.css's :root, same as every other
+ * page, so .pageContainer renders at the exact same width here as it does
+ * on the homepage at every viewport size. */
+

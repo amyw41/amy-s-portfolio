@@ -15,7 +15,12 @@
    * other section content) read as one composition instead of drifting to
    * opposite edges on wide screens. Below ~1220px --pad is still the
    * binding constraint (100% - 2*pad < content-max); above it this cap
-   * takes over and the side margins simply grow instead of the content. */
+   * takes over and the side margins simply grow instead of the content.
+   * (Was briefly dropped to 820px to match the case-study route's own
+   * width — reverted back to the original per a later request; the
+   * case-study route keeps its own narrower 820px via its own scoped
+   * override in app/projects/[slug]/case-study.css, independent of this
+   * sitewide value.) */
   --content-max: 1050px;
 
   /* Was 5.08vw/78px, scaling off the raw viewport with no ceiling tied to
@@ -27,13 +32,18 @@
   --fs-section: clamp(32px, 3.91vw, 60px); /* 50px @1280 */
   --fs-footer-h: clamp(28px, 3.13vw, 48px); /* 40px @1280 */
   --fs-nav: clamp(18px, 1.72vw, 26px); /* 22px @1280 */
+  --fs-taskbar: clamp(18px, 1.72vw, 24px); /* 22px @1280 — matches hero nav size */
   --fs-tagline: clamp(16px, 1.56vw, 24px); /* 20px @1280 */
   --fs-small: clamp(14px, 1.25vw, 19px); /* 16px @1280 */
 
   --c-red: #ff2841;
   --c-blue: #42b4fa;
   --c-magenta: #fb28ff;
-  --dim-white: 0.4;
+  /* Was 0.4 — bumped 10% (per request) for every place this drives a white
+   * overlay/lighten effect: the jar's own dimmed items (JarItem.module.css)
+   * and a project card that's filtered out of the active category
+   * (ProjectCard.module.css). */
+  --dim-white: 0.44;
 
   /* Jar item border — single source of truth for BOTH border techniques
    * (see JarItem.tsx): 'box' items read this live via box-shadow's spread;

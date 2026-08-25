@@ -8,7 +8,7 @@ export const content = {
   en: {
     hero: {
       title: "amy wang's jar",
-      tagline: "I design systems that make sense.",
+      tagline: "adding a little whimsy in every intuitive design.",
       social: {
         linkedin: { label: "LinkedIn", href: "https://linkedin.com/in/amyw41" },
         gmail: { label: "Email", href: "mailto:amy.wang1@uwaterloo.ca" },
@@ -23,6 +23,16 @@ export const content = {
         projects: "projects",
         favourites: "favourites",
       },
+    },
+    // Separate from hero.nav above on purpose — same three destinations,
+    // deliberately shorter labels ("work" not "my work", "about" not
+    // "about me") to fit the taskbar's smaller pill. Not derived from one
+    // shared string set so the two can keep reading right for their very
+    // different contexts (large hero column vs. compact floating pill).
+    taskbar: {
+      work: "work",
+      about: "about",
+      playground: "playground",
     },
     projects: {
       heading: "what's inside?",
