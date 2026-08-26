@@ -1,10 +1,26 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useMemo, useRef } from "react";
+import Image from "next/image";
 import styles from "./ExtrasModal.module.css";
 import { content } from "@/lib/content";
+import { EXTRAS_PHOTOS } from "@/lib/extras";
+import { computeJustifiedLayout } from "@/components/sections/Playground/justifiedLayout";
+import { useElementWidth } from "@/components/sections/Playground/useElementWidth";
 
 const copy = content.en.projects.extras;
+
+// Same masonry approach as Playground's own collage view (see
+// justifiedLayout.ts's own top comment) — fixed-width columns, each photo
+// at its own natural aspect ratio, gapless down every column. Column count
+// mirrors Playground's responsive breakpoints, just narrower thresholds
+// since this gallery lives inside a modal sheet rather than the full page.
+const GALLERY_GAP = 8;
+function galleryColumnCount(containerWidth: number): number {
+  if (containerWidth > 0 && containerWidth < 480) return 1;
+  if (containerWidth > 0 && containerWidth < 800) return 2;
+  return 3;
+}
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
@@ -31,6 +47,17 @@ export default function ExtrasModal({ onClose }: ExtrasModalProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
+  const [galleryRef, galleryWidth] = useElementWidth<HTMLDivElement>();
+  const galleryLayout = useMemo(
+    () =>
+      computeJustifiedLayout(
+        EXTRAS_PHOTOS.map((photo) => photo.width / photo.height),
+        galleryWidth,
+        galleryColumnCount(galleryWidth),
+        GALLERY_GAP,
+      ),
+    [galleryWidth],
+  );
 
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
@@ -90,10 +117,39 @@ export default function ExtrasModal({ onClose }: ExtrasModalProps) {
             </button>
           </div>
 
-          {/* TODO: populate from each project's own `gallery` field once
-           * case-study pages / gallery assets exist (see lib/projects.ts). */}
-          <div className={styles.gallery}>
-            <p className={styles.galleryPlaceholder}>{copy.galleryPlaceholder}</p>
+          {/* lib/extras.ts today; TODO revisit once each project's own
+           * `gallery` field / case-study assets exist (see lib/projects.ts)
+           * in case this should pull from there instead. */}
+          <div
+            ref={galleryRef}
+            className={styles.gallery}
+            style={EXTRAS_PHOTOS.length > 0 ? { height: galleryLayout.totalHeight } : undefined}
+          >
+            {EXTRAS_PHOTOS.length === 0 ? (
+              <p className={styles.galleryPlaceholder}>{copy.galleryPlaceholder}</p>
+            ) : (
+              EXTRAS_PHOTOS.map((photo, i) => {
+                const box = galleryLayout.boxes[i];
+                return (
+                  <div
+                    key={photo.src}
+                    className={styles.galleryItem}
+                    style={box ? { left: box.x, top: box.y, width: box.width, height: box.height } : undefined}
+                  >
+                    <Image
+                      src={photo.src}
+                      alt=""
+                      fill
+                      sizes={`${Math.round(box?.width ?? 300)}px`}
+                      className={styles.galleryImage}
+                      draggable={false}
+                      unoptimized={process.env.NODE_ENV !== "production"}
+                    />
+                    <p className={styles.galleryCaption}>{photo.caption}</p>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       </div>

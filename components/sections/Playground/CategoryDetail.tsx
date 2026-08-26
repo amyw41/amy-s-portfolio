@@ -188,11 +188,7 @@ export default function CategoryDetail({ category }: { category: EtcCategory }) 
   return (
     <section className={styles.section}>
       <div className="pageContainer">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={SLIDE_UP_TRANSITION}
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={SLIDE_UP_TRANSITION}>
           <button type="button" onClick={() => router.back()} className={styles.backButton}>
             <span aria-hidden="true">←</span>
             Back

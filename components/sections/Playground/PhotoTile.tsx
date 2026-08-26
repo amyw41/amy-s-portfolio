@@ -44,18 +44,18 @@ export default function PhotoTile({
   photo,
   mode,
   visible,
-  delay,
   fallback,
   collageBox,
 }: {
   photo: EtcPhoto;
   mode: "plate" | "collage";
   /** Plate mode only: has this photo's category been scrolled into view
-   * yet? Ignored in collage mode, which always shows everything. */
+   * yet? Drives this photo's own opacity fade directly — same trigger, same
+   * transition, no per-photo delay of its own any more, so every photo
+   * fades in at the exact same moment as its own plate rather than
+   * cascading in afterward (see this component's own transition below).
+   * Ignored in collage mode, which always shows everything. */
   visible: boolean;
-  /** Plate mode only: this photo's stagger delay within its category's
-   * reveal cascade (see posterLayout.ts's photoRevealDelay). */
-  delay: number;
   /** Plate-view anchor to use when `photo.plate` itself is absent (nails)
    * — its own category's plate center, so a photo with no real scatter
    * position still has somewhere sensible to (invisibly) sit in plate mode
@@ -92,21 +92,14 @@ export default function PhotoTile({
       // mount transition.
       initial={false}
       animate={{ opacity: isPlateMode ? (plate && visible ? 1 : 0) : 1 }}
-      // Split so the stagger `delay` only ever holds up the opacity fade —
-      // and only for a photo that actually has a real plate-cluster
-      // position (drawing/dancing; the delay means nothing for nails, which
-      // has no reveal cascade of its own to stay in step with). Framer
-      // applies a flat `transition` object to EVERY animatable value on
-      // this element, `layout`'s own FLIP included unless it's split out
-      // like this — with one shared `delay`, every photo sat frozen at its
-      // old (collage) position for that whole delay before the position
-      // tween even started, reading as a stall in a "wrong" spot rather
-      // than a smooth move. `layout` here has no delay of its own, so the
-      // position/size tween now starts immediately regardless of whether
-      // opacity has anything to fade.
+      // opacity split out from `layout` (rather than one shared transition)
+      // so a mode switch's position/size FLIP never wants for a delay of
+      // its own — unrelated to the plate-view opacity fade itself, which
+      // now carries no delay either (both photo and plate fade in on this
+      // exact same transition, starting the instant `visible` flips true).
       transition={{
         layout: { duration: 0.35, ease: "easeOut" },
-        opacity: { duration: 0.35, ease: "easeOut", delay: isPlateMode && plate ? delay : 0 },
+        opacity: { duration: 0.35, ease: "easeOut" },
       }}
     >
       {/* Collage mode: the root motion.div above is already sized to

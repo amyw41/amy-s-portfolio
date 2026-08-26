@@ -58,8 +58,42 @@ export const content = {
       heading: "thank you for dropping by !",
       credit: "designed + built by amy (2026)",
     },
+    // Bio copy for the About page (components/sections/About/Bio.tsx).
+    // Split into pieces instead of 4 flat paragraph strings because 2 of
+    // the source paragraphs aren't plain text: the "perfectionist" one
+    // wraps a single word in <em>, and the "reach me" one interleaves 3
+    // links — both need real JSX from the component, not markup smuggled
+    // through a content string. Splitting the surrounding text into named
+    // before/after (or bullets) pieces keeps every actual English word in
+    // this file (nothing hardcoded in the component) while leaving the
+    // markup itself to the component. Social hrefs deliberately aren't
+    // repeated here — Bio.tsx reads those straight from footer.links
+    // above, one shared source instead of two copies that could drift.
     about: {
-      placeholder: "About — coming soon.",
+      heading: "Hello! I'm Amy",
+      paragraphs: {
+        intro: "I like pretty things and cool people... so I like design!",
+        perfectionist: {
+          before:
+            "Growing up, my friends called me a perfectionist. I'd say it's a flaw if it wasn't the reason I slave over every one of my creations, waiting for it to look ",
+          emphasis: "good",
+          after: " enough to post. (And I guess it isn't necessarily SLOW, just tedious...)",
+        },
+        knownAs: {
+          intro: "I'm also known as...",
+          bullets: [
+            "a dancer! I'm currently re-learning ballet pointe",
+            "an overthinker. I'm a big fan of lore (harry potter, hunger games, just finished aot... talk about it with me)",
+            "an engineer. I'm studying Management Engineering at Waterloo!",
+          ],
+        },
+        contact: {
+          before: "You can reach me on ",
+          betweenLinkedinAndX: ", ",
+          betweenXAndEmail: ", or by ",
+          after: "!",
+        },
+      },
     },
     playground: {
       title: "what's on my plate?",

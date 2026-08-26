@@ -14,13 +14,23 @@
 }
 
 .sheet {
-  /* Was min(92%, 960px) with the backdrop's flex centring supplying
-   * symmetric side margins — widened to the full viewport per request.
-   * Flush against the bottom edge either way — that's what makes "top
-   * corners rounded, bottom corners square" (below) a coherent shape
-   * rather than an arbitrary one. */
+  /* "Full width" meant the page's own content width (.pageContainer's own
+   * formula, globals.css), not the literal viewport — was min(92%, 960px)
+   * before, then briefly a literal 100% (reaching past the page's own side
+   * gutter into it). Matching .pageContainer's own width exactly (as this
+   * briefly did) lines up the sheet's own OUTER edges with the page's
+   * content edges, but .sheetInner's own 32px padding then insets the
+   * actual TEXT another 32px past that — so "Extras" reads narrower than
+   * "what's inside?" above it on the page behind it, not flush the way two
+   * headings on the same page normally would. Widened by exactly 2×
+   * .sheetInner's own 32px (64px total) instead, so the sheet's outer edge
+   * sits 32px past the page's content edge in each direction and the INNER
+   * text lands exactly on it — same trick as e.g. a Stripe checkout panel,
+   * which is measurably wider than the page content beside it for the same
+   * reason. content-max's own cap gets the same +64px, so this still
+   * tracks .pageContainer exactly at every width, just offset. */
   align-self: flex-end;
-  width: 100%;
+  width: min(100% - (2 * var(--pad)) + 64px, calc(var(--content-max) + 64px));
   max-height: 85vh;
   overflow-y: auto;
   background: #fff;
@@ -35,12 +45,13 @@
 }
 
 .sheetInner {
-  /* Was padding-inline: var(--pad) — matched the page's own side gutter
-   * back when the sheet was narrower than the viewport (see .sheet's own
-   * comment on why that's no longer the case). --pad grows up to 150px on
-   * a wide desktop, so paired with a 32px top it made the sides look far
-   * more padded than the top rather than a balanced frame. Now flat 32px
-   * on every side, matching the top exactly. */
+  /* Was padding-inline: var(--pad), matching the page's own side gutter —
+   * but --pad grows up to 150px on a wide desktop, so paired with a fixed
+   * 32px top it made the sides look far more padded than the top rather
+   * than a balanced frame. Flat 32px on every side instead, matching the
+   * top exactly — deliberately independent of .sheet's own outer width
+   * above (that's a separate concern: how wide the sheet itself sits on
+   * the page, not how much room its own content breathes inside it). */
   padding-inline: 32px;
   padding-block: 32px calc(32px + env(safe-area-inset-bottom, 0px));
 }
@@ -97,23 +108,69 @@
   border: 0;
 }
 
+/* Same fixed-width-column masonry as Playground's own .collage (see
+ * ExtrasModal.tsx's own computeJustifiedLayout call and justifiedLayout.ts
+ * for the algorithm) — position:relative + an inline `height` from the
+ * solved layout, since every .galleryItem child is `position: absolute` and
+ * so contributes nothing to auto height. Falls back to a plain padded box
+ * around .galleryPlaceholder (below) whenever there are no photos yet. */
 .gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  position: relative;
+  width: 100%;
+}
+
+.galleryPlaceholder {
+  margin: 0;
   min-height: 160px;
   padding: 24px;
   border-radius: 12px;
   background: rgba(0, 0, 0, 0.03);
-}
-
-.galleryPlaceholder {
-  grid-column: 1 / -1;
-  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   font-size: var(--fs-small);
   font-weight: 300;
   color: rgba(0, 0, 0, 0.5);
+}
+
+.galleryItem {
+  position: absolute;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #f2f2f2;
+}
+
+.galleryImage {
+  object-fit: cover;
+}
+
+/* Bottom-overlay caption, hidden until hover — same treatment as
+ * Playground's own .collageCaption, for the same reason: the box height
+ * above is load-bearing row-packing math, not free to grow for a caption
+ * flowing below it. */
+.galleryCaption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 20px 10px 8px;
+  font-size: var(--fs-small);
+  font-weight: 300;
+  color: #fff;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .galleryCaption {
+    transition: opacity 150ms ease;
+  }
+}
+
+.galleryItem:hover .galleryCaption {
+  opacity: 1;
 }
 
 @keyframes fadeIn {

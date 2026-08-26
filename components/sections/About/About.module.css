@@ -1,0 +1,215 @@
+/* ---------- bio ---------- */
+
+.bioSection {
+  /* Same vertical rhythm as Playground.module.css's own .section, so this
+   * page's sections read at the same cadence as the rest of the site. */
+  padding-block: clamp(64px, 8vw, 120px);
+}
+
+/* Stacked (photo above text) below 900px, side-by-side above it — same
+ * breakpoint Footer.module.css/ProjectCard.module.css already use for
+ * their own stacked->row reflow, rather than introducing Tailwind's 1024px
+ * "lg" the source authored this at. */
+.bioGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: 32px;
+}
+
+@media (min-width: 900px) {
+  .bioGrid {
+    grid-template-columns: minmax(0, 460px) minmax(320px, 1fr);
+    gap: 48px;
+  }
+}
+
+/* me-framed.webp's own aspect ratio (1368x1600) — capped smaller on mobile
+ * (where it stacks above the text) than at 900px+ (where it becomes its
+ * own grid column and can use the column's full 460px ceiling). */
+.photo {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  aspect-ratio: 1368 / 1600;
+}
+
+@media (min-width: 900px) {
+  .photo {
+    max-width: 460px;
+    margin: 0;
+  }
+}
+
+.photoImage {
+  object-fit: contain;
+}
+
+/* border.png is stretched (object-fit: fill, see .borderImage) to exactly
+ * match this box's own rendered size — it's a simple hand-drawn outline
+ * meant to wrap whatever height the bio text ends up being, not a
+ * fixed-ratio frame like the photo. */
+.textBox {
+  position: relative;
+  padding: clamp(24px, 4vw, 48px);
+  text-align: left;
+}
+
+.borderImage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  object-fit: fill;
+  pointer-events: none;
+}
+
+.textContent {
+  position: relative;
+  z-index: 1;
+}
+
+/* Shared by the bio's own "Hello! I'm Amy" and Experience's "Work"/
+ * "Community" group labels — the source renders both in Instrument Serif
+ * (font-instrument), which doesn't exist outside the Tailwind-scoped
+ * case-study route (see this repo's own Playground.module.css .title for
+ * the same situation/fix). Weight 500 (not this site's usual 300) is what
+ * gives these something to stand on as a heading now that they've lost the
+ * serif's own built-in character. */
+.heading {
+  margin: 0;
+  font-size: clamp(20px, 2.2vw, 28px);
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.paragraph {
+  margin: clamp(10px, 1.6vw, 16px) 0 0;
+  font-size: var(--fs-small);
+  font-weight: 300;
+  line-height: 1.6;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(0, 0, 0, 0.3);
+  text-underline-offset: 2px;
+  transition: color 150ms ease, text-decoration-color 150ms ease;
+}
+
+.link:hover {
+  /* Matches CaseStudyKit.tsx's own hover accent — the same blue this
+   * repo's other ported-from-jar-portfolio pages (Playground's plate hover,
+   * its arc detail page's arrows) already use. */
+  color: #2460a4;
+  text-decoration-color: #2460a4;
+}
+
+/* ---------- experience ---------- */
+
+.experienceSection {
+  padding-block: clamp(64px, 8vw, 120px);
+}
+
+.group {
+  margin-top: 32px;
+}
+
+.group:first-child {
+  margin-top: 0;
+}
+
+.rows {
+  margin-top: 16px;
+}
+
+/* Stacked (date under company/title) below 900px, date pushed to the row's
+ * far right above it — see .rowDate/.rowDateInline below. */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.row:first-child {
+  border-top: none;
+}
+
+.rowMain {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Fixed square (not filled to the row's own height) — logos come in
+ * whatever aspect ratio each company's own brand mark is (square icon vs.
+ * wide wordmark), so object-contain inside a fixed box is what keeps every
+ * one the same visual weight regardless of its native shape. */
+.logo {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 5px;
+  background: #fff;
+}
+
+.logoImage {
+  object-fit: contain;
+}
+
+.rowText {
+  min-width: 0;
+  text-align: left;
+}
+
+.rowLine {
+  margin: 0;
+  font-size: var(--fs-small);
+}
+
+.companyName {
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.jobTitle {
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+/* Shown below 900px only — the standalone .rowDate (below) takes over at
+ * 900px+. */
+.rowDateInline {
+  margin: 2px 0 0;
+  font-size: var(--fs-small);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+@media (min-width: 900px) {
+  .rowDateInline {
+    display: none;
+  }
+}
+
+.rowDate {
+  display: none;
+  flex-shrink: 0;
+  font-size: var(--fs-small);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+@media (min-width: 900px) {
+  .rowDate {
+    display: block;
+  }
+}

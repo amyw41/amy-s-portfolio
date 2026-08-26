@@ -28,40 +28,29 @@ export const DESIGN_WIDTH = 1277;
 export const PLATE_SIZE = 480; // matches jar-portfolio's own PLATE_SIZE estimate
 
 const SLIDE_UP_DURATION = 0.35;
-const PHOTO_DURATION = 0.35;
-const STAGGER_STEP = 0.03;
 export const VIEWPORT_AMOUNT = 0.1;
+// Name's a holdover from when this also drove a y-offset slide (both the
+// plate's own entrance and each photo's used to animate y as well as
+// opacity — see this file's own git history) — now fade-only, so this is
+// really just "entrance duration/easing," reused as-is for the plate's own
+// fade and, per Amy's request, every one of its photos' fades too (see
+// index.tsx/PhotoTile.tsx — photos used to cascade in one-by-one AFTER the
+// plate via their own per-photo delay; that stagger is gone, everything in
+// a category now fades in on this exact same transition, together). Kept
+// this name rather than renaming to avoid unrelated churn on every existing
+// call site — see the fade-in-place edit that removed the y offsets.
 export const SLIDE_UP_TRANSITION = { duration: SLIDE_UP_DURATION, ease: "easeOut" as const };
 
-const PLATE_SLIDE_OFFSET = 40; // matches the plate motion.div's initial y
-const PHOTO_SLIDE_OFFSET = 70; // matches the photo motion.div's initial y (upward)
+// Both kept as extra top/bottom headroom in the stage-height math below even
+// though neither corresponds to an actual y-slide any more (the plate and
+// photo entrances are fade-only now — see SLIDE_UP_TRANSITION's own
+// comment): removing them would shrink STAGE_HEIGHT/VISIBLE_STAGE_HEIGHT and
+// rescale the whole poster, well beyond what "no slide, just fade" asked
+// for, so this is deliberately just a safety cushion now rather than a
+// slide-clipping guard.
+const PLATE_SLIDE_OFFSET = 40;
+const PHOTO_SLIDE_OFFSET = 70;
 const STAGE_HEIGHT_PADDING = 48;
-
-// See categoryStaggerStep's own comment — caps how much slower a
-// many-photo category's cascade reads next to drawing's own 4-photo one.
-const REFERENCE_PHOTO_COUNT = 4;
-const STAGGER_SPAN = (REFERENCE_PHOTO_COUNT - 1) * STAGGER_STEP;
-
-/** Where a photo falls in its category's own top-to-bottom order (0 =
- * highest up), independent of the order it's listed in the category. */
-function topToBottomRank(photos: EtcPhoto[], target: EtcPhoto): number {
-  return [...photos].sort((a, b) => (a.plate?.yPct ?? 0) - (b.plate?.yPct ?? 0)).indexOf(target);
-}
-
-/** STAGGER_STEP is per-photo, so a category's *total* cascade time grows
- * with its photo count. This scales the step down for categories with more
- * photos than drawing, so every category's cascade stays within the same
- * time budget drawing already uses instead of stretching out further. */
-function categoryStaggerStep(photos: EtcPhoto[]): number {
-  return Math.min(STAGGER_STEP, STAGGER_SPAN / Math.max(1, photos.length - 1));
-}
-
-/** Entrance delay for a given photo within its category's cluster — shared
- * by every photo's `transition.delay` in PlateView. */
-export function photoRevealDelay(photos: EtcPhoto[], photo: EtcPhoto): number {
-  return SLIDE_UP_DURATION + topToBottomRank(photos, photo) * categoryStaggerStep(photos);
-}
-export const PHOTO_TRANSITION_DURATION = PHOTO_DURATION;
 
 function requiredStageHeight(yPct: number, size: number, topExtra: number, bottomExtra: number): number {
   const half = size / 2;
@@ -70,9 +59,11 @@ function requiredStageHeight(yPct: number, size: number, topExtra: number, botto
 }
 
 /** Tallest room any single plate/photo needs to avoid clipping top or
- * bottom, accounting for each element's *unsettled* whileInView offset (see
- * jar-portfolio's own comment this was ported from) — not just its resting
- * size. */
+ * bottom — originally accounted for each element's *unsettled* whileInView
+ * slide offset (see jar-portfolio's own comment this was ported from) on
+ * top of its resting size; the entrances are fade-only now (see
+ * PLATE_SLIDE_OFFSET/PHOTO_SLIDE_OFFSET's own comment) but the extra room
+ * stays as a plain cushion. */
 function computeStageHeight(categories: EtcCategory[]): number {
   let required = 0;
   for (const cat of categories) {

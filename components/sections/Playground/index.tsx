@@ -16,7 +16,6 @@ import {
   SLIDE_UP_TRANSITION,
   VIEWPORT_AMOUNT,
   VISIBLE_STAGE_HEIGHT,
-  photoRevealDelay,
   toPx,
 } from "./posterLayout";
 import { ETC_CATEGORIES } from "@/lib/etc";
@@ -107,8 +106,8 @@ export default function Playground() {
       <div className={`pageContainer ${styles.container}`}>
         <motion.div
           className={styles.header}
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
         >
           <div className={styles.heading}>
@@ -176,19 +175,19 @@ export default function Playground() {
                         className={styles.plateLink}
                       >
                         <motion.div
-                          // `initial` always starts hidden/offset — what
-                          // changes is which prop actually animates it to
-                          // visible. Once a category has been revealed
-                          // once, `animate` fires immediately on every
-                          // future (re)mount (i.e. every time you switch
-                          // back to plate view — AnimatePresence above
-                          // fully unmounts these on exit, so this really is
-                          // a fresh mount each time), rather than waiting
-                          // on `whileInView` again, which only matters for
-                          // the genuine first scroll-reveal below.
-                          initial={{ opacity: 0, y: 40 }}
-                          animate={revealed ? { opacity: 1, y: 0 } : undefined}
-                          whileInView={!revealed ? { opacity: 1, y: 0 } : undefined}
+                          // `initial` always starts hidden — what changes is
+                          // which prop actually animates it to visible. Once
+                          // a category has been revealed once, `animate`
+                          // fires immediately on every future (re)mount
+                          // (i.e. every time you switch back to plate view —
+                          // AnimatePresence above fully unmounts these on
+                          // exit, so this really is a fresh mount each
+                          // time), rather than waiting on `whileInView`
+                          // again, which only matters for the genuine first
+                          // scroll-reveal below.
+                          initial={{ opacity: 0 }}
+                          animate={revealed ? { opacity: 1 } : undefined}
+                          whileInView={!revealed ? { opacity: 1 } : undefined}
                           viewport={{ once: true, amount: VIEWPORT_AMOUNT }}
                           onViewportEnter={() => markRevealed(cat.slug)}
                           exit={{ opacity: 0 }}
@@ -230,7 +229,6 @@ export default function Playground() {
                     photo={photo}
                     mode={viewMode}
                     visible={revealedCats.has(cat.slug)}
-                    delay={photoRevealDelay(cat.photos, photo)}
                     fallback={{ xPct: cat.plateXPct, yPct: cat.plateYPct }}
                     collageBox={collageBoxBySrc.get(photo.src)}
                   />
