@@ -812,6 +812,22 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       const mouse = Mouse.create(container);
       mouse.pixelRatio = window.devicePixelRatio || 1;
 
+      // Matter.Mouse's own setElement (called internally by Mouse.create)
+      // always attaches a non-passive 'wheel' listener that unconditionally
+      // calls event.preventDefault() — meant for demos that use the wheel
+      // to zoom/pan the physics world, which this jar doesn't do. Left in
+      // place, it silently eats every scroll-wheel tick whenever the cursor
+      // happens to be over the stage (the jar sits right in the hero, so
+      // this was blocking page scroll entirely from a very common cursor
+      // position). Mouse doesn't expose an option to skip binding it, so
+      // the only way to drop it is removing the exact listener function
+      // Mouse.create just registered, right after creation — mousemove/
+      // mousedown/mouseup/touch* (what drag actually needs) are untouched.
+      // `mousewheel` is a real property Matter.Mouse sets at runtime, just
+      // not one @types/matter-js declares — hence the cast.
+      const mouseWheelHandler = (mouse as unknown as { mousewheel: EventListener }).mousewheel;
+      container.removeEventListener("wheel", mouseWheelHandler);
+
       // Finds the front-most (highest z-index) item whose full rendered
       // rectangle — not its small collision body — contains world point
       // (x, y), accounting for the body's current rotation. dx/dy is the

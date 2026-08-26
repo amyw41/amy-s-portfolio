@@ -28,13 +28,20 @@
    * container itself stopped (content-max binds), so "amy wang's jar"
    * outgrew .left's 46%-of-content-max column and wrapped to two lines.
    * Lowered so it stays comfortably inside that column at every width. */
-  --fs-title: clamp(32px, 4vw, 56px); /* 51px @1280 */
-  --fs-section: clamp(32px, 3.91vw, 60px); /* 50px @1280 */
-  --fs-footer-h: clamp(28px, 3.13vw, 48px); /* 40px @1280 */
-  --fs-nav: clamp(18px, 1.72vw, 26px); /* 22px @1280 */
-  --fs-taskbar: clamp(18px, 1.72vw, 24px); /* 22px @1280 — matches hero nav size */
-  --fs-tagline: clamp(16px, 1.56vw, 24px); /* 20px @1280 */
-  --fs-small: clamp(14px, 1.25vw, 19px); /* 16px @1280 */
+  --fs-title: clamp(32px, 4vw, 56px);
+  /* 51px @1280 */
+  --fs-section: clamp(32px, 3.91vw, 60px);
+  /* 50px @1280 */
+  --fs-footer-h: clamp(28px, 3.13vw, 48px);
+  /* 40px @1280 */
+  --fs-nav: clamp(18px, 1.72vw, 26px);
+  /* 22px @1280 */
+  --fs-taskbar: clamp(18px, 1.72vw, 24px);
+  /* 22px @1280 — matches hero nav size */
+  --fs-tagline: clamp(16px, 1.56vw, 24px);
+  /* 20px @1280 */
+  --fs-small: clamp(14px, 1.25vw, 19px);
+  /* 16px @1280 */
 
   --c-red: #ff2841;
   --c-blue: #42b4fa;

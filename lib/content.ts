@@ -8,7 +8,7 @@ export const content = {
   en: {
     hero: {
       title: "amy wang's jar",
-      tagline: "adding a little whimsy in every intuitive design.",
+      tagline: "adding a little charm to every intuitive design.",
       social: {
         linkedin: { label: "LinkedIn", href: "https://linkedin.com/in/amyw41" },
         gmail: { label: "Email", href: "mailto:amy.wang1@uwaterloo.ca" },
@@ -56,13 +56,18 @@ export const content = {
         twitter: { label: "X / Twitter", href: "https://twitter.com/apriberri" },
       },
       heading: "thank you for dropping by !",
-      credit: "Designed + built by Amy (2026)",
+      credit: "designed + built by amy (2026)",
     },
     about: {
       placeholder: "About — coming soon.",
     },
     playground: {
-      placeholder: "Playground — coming soon.",
+      title: "what's on my plate?",
+      caption: "click into the plate to see more!",
+      toggles: {
+        plate: "plate view",
+        collage: "collage view",
+      },
     },
   },
 } as const;

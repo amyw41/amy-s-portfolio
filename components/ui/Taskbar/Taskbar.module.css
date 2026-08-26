@@ -19,7 +19,7 @@
   justify-content: space-between;
   padding-inline: clamp(16px, 2vw, 28px);
   border-radius: 999px;
-  border: 1px solid #000;
+  border: 1px solid rgba(0, 0, 0, 0.5);
   background: #fff;
 }
 
@@ -62,10 +62,13 @@
   gap: clamp(16px, 2.2vw, 32px);
 }
 
-/* Same visual treatment as the hero's black text nav buttons (see
- * Hero.module.css's .navLink) — same ink color and hover-to-grey, just at
- * the taskbar's own (slightly smaller) --fs-taskbar size. */
+/* Same ink color as the hero's nav buttons, just at the taskbar's own
+ * (slightly smaller) --fs-taskbar size. position: relative anchors
+ * .scribble below. No hover color change and no fade transition, per
+ * request — the oval appearing (instantly) is the only hover indicator;
+ * text stays this same color always. */
 .navLink {
+  position: relative;
   text-decoration: none;
   font-family: inherit;
   font-size: var(--fs-taskbar);
@@ -73,12 +76,45 @@
   color: rgba(0, 0, 0, 0.8);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .navLink {
-    transition: color 150ms ease;
-  }
+/* Same hand-sketched hover oval as the hero's nav buttons (see
+ * Hero.module.css's own .scribble for the full explanation). Shown
+ * instantly on hover, no fade. No z-index (was -1): a negative z-index
+ * escapes past this link's own local stacking (position:relative alone
+ * doesn't create a stacking context) up to the nearest ancestor that
+ * does — here, that meant painting the oval behind .pill's own solid
+ * white background, hiding it completely. Without z-index set, it paints
+ * in DOM order — behind the link's own text, since the <svg> is written
+ * before {copy...} in the JSX — with no risk of the pill's background
+ * swallowing it.
+ *
+ * --scribble-expand + the width/height calc() (not width/height:auto) is
+ * the actual fix for the "not centered" bug: with width/height left as
+ * auto, an absolutely-positioned SVG with no explicit width/height
+ * attributes is sized by the CSS "replaced element" rules, which compute
+ * its height from its own intrinsic viewBox aspect ratio (using whatever
+ * width left/right produced) — completely ignoring top/bottom. That
+ * silently threw away every top/bottom inset we tried, which is why the
+ * oval always rendered at a fixed short height stuck near the top of the
+ * link, no matter what bottom value was set. Computing width/height
+ * explicitly from the link's own box (100% + a symmetric expand on every
+ * side) sidesteps that rule entirely, so the oval now actually grows to
+ * match the link's real text height, plus a small even margin, and stays
+ * centered on the text regardless of font-size. */
+.scribble {
+  position: absolute;
+  --scribble-expand: 4px;
+  top: calc(-1 * var(--scribble-expand));
+  left: calc(-1 * var(--scribble-expand));
+  width: calc(100% + 2 * var(--scribble-expand));
+  height: calc(100% + 2 * var(--scribble-expand));
+  color: inherit;
+  opacity: 0;
+  pointer-events: none;
 }
 
-.navLink:hover {
-  color: #9a9a9a;
+/* Dialed back from full opacity — the taskbar is a more utilitarian
+ * wayfinding element than the hero, so the oval reads as a lighter-touch
+ * hint here rather than the hero's full-strength expression. */
+.navLink:hover .scribble {
+  opacity: 0.55;
 }

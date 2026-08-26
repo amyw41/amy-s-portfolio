@@ -53,7 +53,10 @@
   align-items: center;
   gap: 8px;
   font-size: var(--fs-small);
-  font-weight: 400;
+  /* Was 400 — switched to the credit line's lighter weight per request
+   * (the credit below already matches this size; these social links now
+   * also match its weight, not just its size). */
+  font-weight: 300;
 }
 
 .link {
@@ -152,8 +155,14 @@
 /* ---------- below the footer ---------- */
 
 .credit {
-  margin: 10px 0 10px 0;
-  font-size: var(--fs-xs);
+  /* Top/bottom margin bumped by 1px (was 10px) per request. */
+  margin: 12px 0 12px 0;
+  /* font-size matched to the footer's own links (.links, above) per
+   * request — was var(--fs-xs) (an undefined token — this rule was
+   * quietly falling back to the browser default size). font-weight
+   * unchanged at its own original 300 (.links has now come down to match
+   * this, rather than this going up to match .links' old 400). */
+  font-size: var(--fs-small);
   font-weight: 300;
   color: #000;
 }

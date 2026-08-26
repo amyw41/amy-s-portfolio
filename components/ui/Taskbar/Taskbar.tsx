@@ -4,11 +4,26 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./Taskbar.module.css";
 import { content } from "@/lib/content";
+import { buildWobblyOvalPath, STROKE_COLOR, STROKE_WIDTH, VIEW_BOX } from "../../sections/Hero/wobblyOval";
 
 const copy = content.en.taskbar;
+
+// Same hand-sketched hover oval as the hero's nav buttons (see
+// components/sections/Hero/index.tsx and wobblyOval.ts for the full
+// explanation of the shape/overlap) — imported from there rather than
+// duplicated, reused with its own seeds (10/11/12) so the taskbar's ovals
+// are their own distinct variants, not copies of the hero's.
+function ScribbleOval({ seed }: { seed: number }) {
+  const path = useMemo(() => buildWobblyOvalPath(seed), [seed]);
+  return (
+    <svg className={styles.scribble} viewBox={VIEW_BOX} fill="none" preserveAspectRatio="none" aria-hidden="true">
+      <path d={path} stroke={STROKE_COLOR} strokeWidth={STROKE_WIDTH} strokeLinecap="round" />
+    </svg>
+  );
+}
 
 // Rendered once, from the root layout, gated on "not home" rather than an
 // allowlist — any future route gets this automatically with no per-page
@@ -38,7 +53,6 @@ const copy = content.en.taskbar;
 export default function Taskbar() {
   const pathname = usePathname();
   const [hidden, setHidden] = useState(false);
-
   useEffect(() => {
     const MIN_DELTA = 4;
     let lastY = window.scrollY;
@@ -94,12 +108,15 @@ export default function Taskbar() {
       </Link>
       <nav className={styles.nav}>
         <Link href="/#projects" className={styles.navLink}>
+          <ScribbleOval seed={10} />
           {copy.work}
         </Link>
         <Link href="/about" className={styles.navLink}>
+          <ScribbleOval seed={11} />
           {copy.about}
         </Link>
         <Link href="/playground" className={styles.navLink}>
+          <ScribbleOval seed={12} />
           {copy.playground}
         </Link>
       </nav>

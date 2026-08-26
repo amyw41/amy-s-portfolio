@@ -167,12 +167,9 @@
 
 .tagline {
   margin: 5px 0 0 0;
-  /* Was var(--fs-tagline) (clamp(16px, 1.56vw, 24px), 20px @1280) — sized
-   * down on its own, scoped here rather than shrinking the shared token
-   * (which the about/playground placeholder pages also read). Same
-   * floor/ceiling proportions as that original token, just landing on 19px
-   * at the 1280px reference width instead of 20px. */
-  font-size: clamp(15px, 1.4vw, 23px);
+  /* Back to its own explicit clamp (1.48vw) per request, rather than
+   * matching .navLink's size. */
+  font-size: clamp(15px, 1.48vw, 23px);
   /* 19px @1280 */
   font-weight: 300;
   color: rgba(0, 0, 0, 0.8);
@@ -181,12 +178,17 @@
 .nav {
   display: flex;
   flex-direction: column;
-  /* Tightened on request. */
-  gap: 6px;
+  /* Was 6px — opened back up a bit per request, partly just for its own
+   * sake and partly to give the hover scribble (see .scribble below) room
+   * to breathe without two adjacent buttons' ovals almost touching. */
+  gap: 16px;
   margin-top: 64px;
 }
 
 .navLink {
+  /* Anchors .scribble below, which is positioned absolute against this
+   * box. */
+  position: relative;
   width: fit-content;
   background: none;
   border: none;
@@ -195,19 +197,71 @@
   text-align: left;
   text-decoration: none;
   font-family: inherit;
-  font-size: var(--fs-nav);
+  /* Was var(--fs-nav) (clamp(18px, 1.72vw, 26px), 22px @1280) — scoped here
+   * (not the shared token, which ProjectCard.module.css's .title also
+   * reads), same floor/ceiling proportions as the original token, bumped up
+   * to 1.6vw per request. */
+  font-size: clamp(17px, 1.6vw, 24px); /* ~20.5px @1280 */
   font-weight: 400;
   color: #000;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .navLink {
-    transition: color 150ms ease;
-  }
+/* No hover color change and no fade transition on either the text or the
+ * oval, per request — the oval appearing (instantly, see .scribble below)
+ * is the ONLY hover indicator now. Text stays #000 always. */
+
+/* Hand-drawn oval that appears around a nav button on hover (see
+ * ScribbleOval in index.tsx) — hidden (opacity 0) at rest, shown
+ * instantly on hover (no transition/fade). Sized bigger than the button
+ * itself (negative inset) so the oval wraps around the text with some
+ * margin rather than hugging its exact edges. pointer-events:none keeps
+ * it from ever intercepting the click meant for the button under it. */
+.scribble {
+  position: absolute;
+  /* All of the top/bottom/left/right inset-tuning this used to have
+   * (asymmetric, hand-guessed pixel values trying to compensate for the
+   * font's descender space) turned out to be chasing a value that had no
+   * real effect: with width/height left as auto, an absolutely-positioned
+   * SVG with no explicit width/height attributes is sized by the CSS
+   * "replaced element" rules, which compute its height from its own
+   * intrinsic viewBox aspect ratio using whatever width left/right
+   * produced — completely ignoring top/bottom. That's the same bug that
+   * made the taskbar's oval sit way off-center (see Taskbar.module.css's
+   * own .scribble comment for the full explanation) — it was just harder
+   * to notice here since the hero's larger text partly masked it.
+   * Computing width/height explicitly off the button's own box (100% + a
+   * symmetric expand on every side) sidesteps that rule entirely, so the
+   * oval actually grows to match the button's real text height and stays
+   * centered on it, instead of being stuck at a fixed short height. */
+  --scribble-expand: 4px;
+  top: calc(-1 * var(--scribble-expand));
+  left: calc(-1 * var(--scribble-expand));
+  width: calc(100% + 2 * var(--scribble-expand));
+  height: calc(100% + 2 * var(--scribble-expand));
+  color: inherit;
+  opacity: 0;
+  pointer-events: none;
+  /* The ellipse's own top edge (and the tail's overshoot) sit outside the
+   * SVG's 0..height coordinate range on purpose — without this, the
+   * default SVG viewport clipping silently cuts that part off ("the top
+   * is missing"), even though the viewBox itself already has margin. No
+   * z-index here (was -1): a negative z-index escapes past this button's
+   * own local stacking (position:relative alone doesn't create a stacking
+   * context) up to the nearest ancestor that does, which can end up
+   * painting the oval behind an opaque background further up the tree
+   * (that's what was hiding it entirely inside the taskbar's pill, which
+   * has its own solid white background). Without z-index set, it just
+   * paints in DOM order — behind the button's own text, since the <svg>
+   * is written before {copy.nav...} in the JSX — with no risk of an
+   * ancestor's background swallowing it. */
+  overflow: visible;
 }
 
-.navLink:hover {
-  color: #9a9a9a;
+/* Matches the taskbar's own .scribble hover opacity (0.55), per request
+ * that both places read consistently rather than the hero showing at
+ * full strength while the taskbar is dialed back. */
+.navLink:hover .scribble {
+  opacity: 0.55;
 }
 
 /* ---------- right column: jar + toggles ---------- */

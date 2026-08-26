@@ -1,0 +1,20 @@
+.plate {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.image {
+  transform: rotate(180deg);
+  object-fit: contain;
+}
+
+.label {
+  position: relative;
+  padding-inline: 16px;
+  font-family: inherit;
+  font-weight: 300;
+  color: #4b5563; /* matches jar-portfolio's text-gray-600 */
+}

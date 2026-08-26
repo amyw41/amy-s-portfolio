@@ -1,11 +1,5 @@
-import { content } from "@/lib/content";
+import Playground from "@/components/sections/Playground";
 
 export default function PlaygroundPage() {
-  return (
-    <main style={{ paddingInline: "var(--pad)", paddingBlock: "var(--pad)" }}>
-      <p style={{ fontSize: "var(--fs-tagline)", fontWeight: 300 }}>
-        {content.en.playground.placeholder}
-      </p>
-    </main>
-  );
+  return <Playground />;
 }

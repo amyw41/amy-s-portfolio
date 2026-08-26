@@ -79,7 +79,10 @@ export function CaseStudyImage({
   return (
     <div
       style={{ aspectRatio: ratio, backgroundColor: bg ? highlightColor : undefined }}
-      className={`relative w-full overflow-hidden rounded-[8px] border border-black/[0.12] ${className}`}
+      // Border removed per request — every case-study image (screenshots,
+      // phone mockups, videos alike) went through this one component, so
+      // dropping it here removes it everywhere at once.
+      className={`relative w-full overflow-hidden rounded-[8px] ${className}`}
     >
       {video ? (
         // No `autoPlay` — see useAutoPlayInView, starts fresh from the
@@ -326,7 +329,10 @@ function TableOfContents({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.45, ease: "easeOut", delay: TOC_DELAY }}
-      className={`flex text-left font-instrument leading-none text-[clamp(16px,1.5vw,18px)] font-light text-black/60 ${className}`}
+      // Size matched exactly to TEXT.content (the case study's own body
+      // copy) per request — was its own close-but-not-quite
+      // clamp(16px,1.5vw,18px).
+      className={`flex text-left font-instrument leading-none text-[clamp(16px,1.45vw,18px)] font-light text-black/60 ${className}`}
       style={style}
     >
       {home && (
@@ -340,7 +346,13 @@ function TableOfContents({
         <button
           type="button"
           onClick={() => router.back()}
-          className="mb-5 flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer font-instrument leading-none text-[clamp(18px,1.7vw,20px)] font-light tracking-[-0.03em] uppercase text-black/40 hover:text-black/70 transition-colors"
+          // Was its own one-off text-[clamp(18px,1.7vw,20px)] — matched to
+          // var(--fs-small) per request, the same size used for every other
+          // "button"-style text on the site (footer links/credit, project
+          // category filters).
+          // font-extralight (200), not font-light (300) — a touch lighter
+          // per request.
+          className="mb-5 flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer font-instrument leading-none text-[length:var(--fs-small)] font-extralight tracking-[-0.03em] uppercase text-black/40 hover:text-black/70 transition-colors"
         >
           <span aria-hidden="true">←</span>
           Back
@@ -464,8 +476,21 @@ export function CaseStudyLayout({ sectionNav, children }: { sectionNav: SectionN
       <div className="pageContainer flex w-full gap-10 lg:gap-16">
         {/* h-fit — sticks to its own content height, not stretched to match
             <main>'s (flex's default align-items:stretch would otherwise
-            make it tall enough to overlap the footer while sticky). */}
-        <aside className="sticky top-14 hidden h-fit w-48 shrink-0 pb-24 pt-8 lg:block lg:pt-14">
+            make it tall enough to overlap the footer while sticky).
+            top-0 — this is the actual fix (earlier attempts tried top-14,
+            then a JS-measured CSS var, then a plain top-6; all of them left
+            a permanent gap between the sidebar and the top of the screen
+            once stuck, instead of the sidebar rising to close it). With
+            top-0, the sidebar isn't sticky at all yet while the taskbar
+            (which scrolls away normally, it's not fixed) is still above
+            it — it just scrolls up the page at the same rate as everything
+            else, staying wherever it naturally sits below the taskbar. It
+            only locks in place the instant its own top edge would cross
+            above the very top of the viewport — which is exactly the
+            moment the taskbar has fully scrolled out of view — so it rises
+            to fill the space the taskbar leaves behind, then sits flush
+            against the top for the rest of the page. */}
+        <aside className="sticky top-0 hidden h-fit w-48 shrink-0 pb-24 pt-8 lg:block lg:pt-14">
           <TableOfContents sectionNav={sectionNav} className="flex-col gap-3.5" home />
         </aside>
 

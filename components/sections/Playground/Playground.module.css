@@ -1,0 +1,173 @@
+.section {
+  /* Matches Projects.module.css's own section padding, so this reads as the
+   * same rhythm of section as the rest of the site. */
+  padding-block: clamp(64px, 8vw, 120px);
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- header: title + caption (left), view toggle (right) ---------- */
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: clamp(40px, 5vw, 72px);
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Same treatment as the homepage's own title (Hero.module.css's .title) —
+ * font-size: var(--fs-title), weight 300, #000 — just the site's inherited
+ * body font (Roboto), not jar-portfolio's Singsong script font, which
+ * doesn't exist in this repo. */
+.title {
+  margin: 0;
+  font-size: var(--fs-title);
+  font-weight: 300;
+  color: #000;
+}
+
+/* Same treatment as Hero.module.css's own .tagline. */
+.caption {
+  margin: 5px 0 0 0;
+  font-size: clamp(15px, 1.48vw, 23px);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.toggles {
+  display: flex;
+  gap: 28px;
+  /* Nudges the toggle row up slightly so it lands closer to the caption's
+   * own baseline instead of the (much taller) title's — .header's own
+   * align-items:flex-end already puts it at the bottom of the row; this is
+   * just a small correction for the caption's line-height leaving a sliver
+   * of space below its own baseline. */
+  padding-bottom: 3px;
+}
+
+/* ---------- shared stage: hosts either .poster or .collage ---------- */
+
+/* Sized (height) by index.tsx itself, plate mode only — VISIBLE_STAGE_HEIGHT
+ * * scale — since .poster below is absolutely positioned and a transform
+ * never contributes to a parent's auto height. Left unset in collage mode,
+ * where the columns layout just sizes itself. Stays mounted (and measured)
+ * across both modes — see index.tsx's own comment. */
+.stageWrap {
+  position: relative;
+  width: 100%;
+}
+
+/* ---------- plate mode: fixed-design poster, scaled to fit ---------- */
+
+.poster {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+}
+
+/* Plate slot: absolute position at (left, top) — the CENTER of the plate,
+ * in the poster's fixed design-space coordinates — recentered via
+ * translate. Plain CSS transform is safe here (unlike .photoSlot below):
+ * the plate's own motion.div (its child, see index.tsx) animates only
+ * opacity/y, never a `layout`-driven transform, so there's nothing to
+ * clobber this. */
+.plateSlot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+/* Photo slot: PhotoTile.tsx's own root element in plate mode — deliberately
+ * positioned via literal left/top (posterLayout.ts's slotLeft/slotTop
+ * already bake the center-of-box math in), NOT left/top-as-center plus a
+ * translate(-50%,-50%) the way .plateSlot above does — this element also
+ * carries Framer's `layout` prop, whose own FLIP animation is driven by an
+ * inline `transform` written straight onto the DOM node, which would
+ * silently override any stylesheet `transform` on the same element. */
+.photoSlot {
+  position: absolute;
+}
+
+.photoFrame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.photoImage {
+  object-fit: cover;
+}
+
+/* ---------- collage mode: dense photo wall, grouped by section ---------- */
+
+/* .collage itself is just a plain block container now — the three
+ * .collageSection children (one per category, see index.tsx) stack
+ * vertically in normal document flow; each one's own margin-bottom (below)
+ * is the gap between sections. */
+.collage {
+  display: block;
+}
+
+/* One per category (index.tsx's own collageSection wrapper — an ALWAYS-
+ * mounted div, restyled between modes rather than conditionally rendered;
+ * see its own comment there for why). column-width (not column-count) masonry
+ * — the browser packs each category's own photos into as many fixed-width
+ * columns as fit, tallest-first-fit, entirely independently of the other
+ * two categories' own columns. That independence is exactly what keeps
+ * drawing/dancing/nails each reading as a clean, separate block stacked one
+ * under the other — a single shared masonry container spanning all three
+ * categories can't guarantee that (multi-column layout packs column-major:
+ * all of column 1 top-to-bottom, then column 2, ... so a later category's
+ * photos would happily start filling a column while an earlier category's
+ * are still finishing a different one). */
+.collageSection {
+  column-width: 180px;
+  column-gap: 8px;
+  margin-bottom: 24px;
+}
+
+.collageSection:last-child {
+  margin-bottom: 0;
+}
+
+/* PhotoTile.tsx's own root element in collage mode — same "no stylesheet
+ * transform" reasoning as .photoSlot above (this is the very same DOM
+ * element, just restyled). break-inside:avoid is what stops the column
+ * layout from splitting a single photo's box across two columns. */
+.collageItem {
+  position: static;
+  margin: 0 0 8px;
+  break-inside: avoid;
+}
+
+.collageImageBox {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #f2f2f2;
+}
+
+.collageImage {
+  object-fit: cover;
+}
+
+.collageCaption {
+  margin-top: 6px;
+  font-size: var(--fs-small);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.6);
+}
