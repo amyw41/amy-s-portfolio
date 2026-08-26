@@ -23,15 +23,13 @@ export interface EtcPhoto {
   width: number;
   height: number;
   /**
-   * Position + size within the plate view's poster canvas, mockup-tuned (not
-   * a formula) as a % of the canvas for position and literal px for size —
-   * see components/sections/Playground/posterLayout.ts for how these
-   * resolve to real pixels. Omitted for every nails photo: the reference
-   * screenshot shows nails' plate bare, with no scattered photos around it
-   * (unlike jar-portfolio's own overview page, which does scatter 4 nails
-   * photos) — worth confirming with Amy whether that was ever meant to
-   * change, since the photos themselves (and their captions below) already
-   * exist and render fine in the collage view either way.
+   * Position + size within the plate view's poster canvas, hand-tuned as a
+   * % of the canvas for position and literal px for size — see
+   * components/sections/Playground/posterLayout.ts for how these resolve to
+   * real pixels. Every photo has one now, nails included — nails' own were
+   * originally left out (an early reference screenshot showed nails' plate
+   * bare), but Amy asked for them scattered around the plate too, matching
+   * drawing/dancing.
    */
   plate?: { xPct: number; yPct: number; width: number; height: number; z: number };
 }
@@ -54,13 +52,33 @@ export interface EtcCategory {
  * horizontally as one rigid unit from jar-portfolio's original left-side
  * numbers (newXPct = 100 - oldXPct) to sit on the right instead; only
  * positions moved, none of the photo files themselves are flipped.
+ *
+ * drawing/nails' plateXPct was originally 14.1, and dancing's mirror was
+ * 85.9 — both shifted by 4.69 (drawing/nails +4.69, dancing -4.69, keeping
+ * the same mirrored pair) so each plate's own left/right edge lands flush
+ * with the poster canvas edge instead of bleeding off it. The old 14.1
+ * put drawing's plate (PLATE_SIZE 480, so a 240px half-width) centered at
+ * just 14.1% of DESIGN_WIDTH (1277px) ≈ 180px — 60px less than its own
+ * half-width, so its left edge sat at roughly -60px, off the canvas
+ * entirely, well past where every other section's content (including this
+ * page's own heading) starts. 18.79% centers it at (18.79/100)*1277 ≈
+ * 240px, exactly flush with the canvas's left edge. drawing's own photos
+ * (authored as absolute canvas positions, not relative to the plate) got
+ * the same +4.69 shift so the whole plate+photo cluster moves as one rigid
+ * unit and their relative arrangement to each other and to the plate is
+ * unchanged — same rigid-unit treatment dancing's own mirror already used,
+ * just a smaller nudge instead of a full 100-x flip. Dancing's photos got
+ * -4.69 to match its own -4.69 plate shift for the same reason. Nails had
+ * no photos to shift at the time (added afterward — see EtcPhoto's own
+ * comment), so its own plate scatter below is already authored flush
+ * against the +4.69-shifted plateXPct directly, nothing to re-shift.
  */
 export const ETC_CATEGORIES: EtcCategory[] = [
   {
     slug: "drawing",
-    label: "Drawing",
+    label: "drawing",
     plateImage: "/images/drawings/plate-drawing.png",
-    plateXPct: 14.1,
+    plateXPct: 18.79,
     plateYPct: 9.7,
     photos: [
       {
@@ -68,36 +86,36 @@ export const ETC_CATEGORIES: EtcCategory[] = [
         caption: "Niu Zaizai - 2023.",
         width: 808,
         height: 1076,
-        plate: { xPct: 30, yPct: 10, width: 202, height: 269, z: 1 },
+        plate: { xPct: 34.69, yPct: 10, width: 202, height: 269, z: 1 },
       },
       {
         src: "/images/etc/drawing2.webp",
         caption: "Jo Yuri (Squid Games) - 2025.",
         width: 888,
         height: 896,
-        plate: { xPct: 42, yPct: 14, width: 222, height: 224, z: 2 },
+        plate: { xPct: 46.69, yPct: 14, width: 222, height: 224, z: 2 },
       },
       {
         src: "/images/etc/drawing3.webp",
         caption: "Cha Woongki (AHOF) - 2023.",
         width: 812,
         height: 824,
-        plate: { xPct: 45, yPct: 7, width: 233, height: 236, z: 3 },
+        plate: { xPct: 49.69, yPct: 7, width: 233, height: 236, z: 3 },
       },
       {
         src: "/images/etc/drawing4.png",
         caption: "Chihen (WIP, AHOF) - 2026.",
         width: 716,
         height: 892,
-        plate: { xPct: 57, yPct: 11, width: 209, height: 253, z: 4 },
+        plate: { xPct: 61.69, yPct: 11, width: 209, height: 253, z: 4 },
       },
     ],
   },
   {
     slug: "dancing",
-    label: "Dancing",
+    label: "dancing",
     plateImage: "/images/drawings/plate-dance.png",
-    plateXPct: 85.9,
+    plateXPct: 81.21,
     plateYPct: 36.8,
     photos: [
       {
@@ -105,82 +123,90 @@ export const ETC_CATEGORIES: EtcCategory[] = [
         caption: "Curtain call after a group recital.",
         width: 1192,
         height: 892,
-        plate: { xPct: 48, yPct: 34.6, width: 268, height: 193, z: 1 },
+        plate: { xPct: 43.5, yPct: 33, width: 268, height: 193, z: 3 },
       },
       {
         src: "/images/etc/dance3.webp",
         caption: "Korean traditional hanbok dance.",
         width: 756,
         height: 1136,
-        plate: { xPct: 63, yPct: 37, width: 200, height: 270, z: 3 },
+        plate: { xPct: 59, yPct: 37, width: 200, height: 270, z: 4 },
       },
       {
         src: "/images/etc/dance4.webp",
         caption: "Fan dance in blue stage light.",
         width: 1160,
         height: 772,
-        plate: { xPct: 32, yPct: 31, width: 270, height: 180, z: 4 },
+        plate: { xPct: 24, yPct: 30, width: 270, height: 180, z: 6 },
       },
       {
         src: "/images/etc/dance5.webp",
         caption: "Extension into an arabesque.",
         width: 992,
         height: 660,
-        plate: { xPct: 46, yPct: 40, width: 260, height: 172, z: 5 },
+        plate: { xPct: 42, yPct: 39.5, width: 260, height: 175, z: 5 },
       },
       {
         src: "/images/etc/dance6.webp",
         caption: "Backstage at the Abstract Dance Challenge.",
         width: 704,
         height: 936,
-        plate: { xPct: 14.61, yPct: 34, width: 186, height: 244, z: 10 },
+        plate: { xPct: 9.92, yPct: 34, width: 186, height: 244, z: 10 },
       },
       {
         src: "/images/etc/dance7.webp",
         caption: "Fan in hand, between poses.",
         width: 872,
         height: 580,
-        plate: { xPct: 28, yPct: 36.5, width: 280, height: 190, z: 3 },
+        plate: { xPct: 23.5, yPct: 36.5, width: 280, height: 190, z: 2 },
       },
     ],
   },
   {
     slug: "nails",
-    label: "Nails",
+    label: "nails",
     plateImage: "/images/drawings/plate-nails.png",
-    plateXPct: 14.1,
+    plateXPct: 18.79,
     plateYPct: 63.9,
-    // No `plate` position on any of these — see EtcPhoto's own comment.
+    // Scattered to the right of the plate, same spirit as drawing's own
+    // cluster (same plateXPct, so the same "flush against the canvas's own
+    // left edge, photos fanning out rightward" shape) — sized down a bit
+    // from drawing's own photos since there are 5 of these instead of 4.
     photos: [
       {
         src: "/images/etc/nails1.jpg",
         caption: "Chrome foil accents on glazed nude nails.",
         width: 2160,
         height: 2373,
+        plate: { xPct: 35.24, yPct: 59.09, width: 210, height: 231, z: 1 },
       },
       {
         src: "/images/etc/nails2.jpg",
         caption: "Negative space French with a crystal lattice accent.",
         width: 2160,
         height: 2880,
+        plate: { xPct: 48.16, yPct: 61.68, width: 190, height: 253, z: 3 },
       },
       {
         src: "/images/etc/nails3.jpg",
         caption: "Leopard print with 3D star charms.",
         width: 2160,
         height: 2880,
+        plate: { xPct: 61.86, yPct: 59.13, width: 220, height: 293, z: 5 },
       },
       {
         src: "/images/etc/nails4.jpg",
         caption: "Nude nails with bold number decals.",
         width: 2160,
         height: 2880,
+        plate: { xPct: 50.71, yPct: 70.83, width: 175, height: 233, z: 2 },
       },
       {
         src: "/images/etc/nails5.jpg",
         caption: "Shimmery mauve coffin nails with a chrome accent.",
         width: 2160,
         height: 2880,
+        plate: { xPct: 67.35, yPct: 65.24, width: 200, height: 267, z: 4 },
       },
     ],
   },

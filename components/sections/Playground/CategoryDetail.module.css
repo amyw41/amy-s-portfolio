@@ -1,0 +1,158 @@
+.section {
+  /* Matches Playground.module.css's own section padding, so this reads as
+   * the same rhythm of section as the overview page it was linked from. */
+  padding-block: clamp(64px, 8vw, 120px);
+}
+
+/* Matches CaseStudyKit.tsx's own sidebar Back button — text link, arrow +
+ * label, uppercase, dimmed until hovered — so the two "back" affordances on
+ * this site read as one convention. Plain inherited body font (Roboto), not
+ * that component's decorative Instrument Serif accent font, which is scoped
+ * to the case-study route only and has no reason to leak in here. */
+.backButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 20px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: var(--fs-small);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.backButton:hover {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* ---------- stage: hosts the plate hub + arc, scaled to fit ---------- */
+
+/* Sized (height) by CategoryDetail.tsx itself — designHeight * scale, since
+ * .hub/.hubEmpty below are absolutely positioned and a transform never
+ * contributes to a parent's auto height. */
+.stage {
+  position: relative;
+  width: 100%;
+  margin-top: clamp(32px, 4vw, 56px);
+}
+
+.hub,
+.hubEmpty {
+  position: absolute;
+  left: 50%;
+  bottom: -15px;
+  transform-origin: bottom center;
+}
+
+/* Anchor point every plate/arrow/item-track element below positions itself
+ * against — a zero-size reference, not a visible box of its own (each
+ * child re-centers itself horizontally via .plateCrop/.itemMask's own
+ * translateX(-50%)). */
+.hubAnchor {
+  position: absolute;
+  left: 50%;
+}
+
+.plateCrop {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  overflow: hidden;
+}
+
+.comingSoon {
+  position: absolute;
+  inset-inline: 0;
+  top: -24px;
+  margin: 0;
+  font-size: var(--fs-small);
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.navArrow {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  background: #fff;
+  color: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+
+.navArrow:hover {
+  border-color: #2460a4;
+  color: #2460a4;
+}
+
+/* Edge-faded mask on the item track itself (not an opaque overlay) —
+ * mask-size/-position stretch the left-right gradient to 3x this box's own
+ * height, centered, so the center item's spring can briefly overshoot past
+ * its resting scale without popping invisible at the top edge (a plain
+ * 100%-tall mask has zero coverage past its own box). */
+.itemMask {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  -webkit-mask-size: 100% 300%;
+  mask-size: 100% 300%;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.wheel {
+  position: absolute;
+  inset: 0;
+}
+
+/* Each photo's own root — left/top position the anchor point (the wheel's
+ * bottom-center); centering is done via CategoryDetail.tsx's own
+ * marginLeft/marginTop (not a stylesheet `transform: translate(-50%,-50%)`,
+ * which Framer's own animate-driven transform would silently override —
+ * see that component's own comment). */
+.item {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* This is a <button> (CategoryDetail.tsx's motion.button, for the
+   * clickable neighbors) — without this reset, every browser's default UA
+   * button chrome (a gray background + an outset border) shows through
+   * around each photo, since the button's own content box is `itemSize`
+   * square while the image inside it is only `imageSize` (~71%) square. */
+  padding: 0;
+  border: none;
+  background: none;
+  appearance: none;
+  font: inherit;
+}
+
+.itemImageWrap {
+  position: relative;
+}
+
+.itemImage {
+  object-fit: contain;
+}

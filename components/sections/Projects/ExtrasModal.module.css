@@ -14,13 +14,13 @@
 }
 
 .sheet {
-  /* Slightly narrower than the viewport, symmetric side spacing (the
-   * backdrop's own flex centring supplies the "symmetric" half; this width
-   * supplies the "slightly narrower"). Flush against the bottom edge —
-   * that's what makes "top corners rounded, bottom corners square" (below)
-   * a coherent shape rather than an arbitrary one. */
+  /* Was min(92%, 960px) with the backdrop's flex centring supplying
+   * symmetric side margins — widened to the full viewport per request.
+   * Flush against the bottom edge either way — that's what makes "top
+   * corners rounded, bottom corners square" (below) a coherent shape
+   * rather than an arbitrary one. */
   align-self: flex-end;
-  width: min(92%, 960px);
+  width: 100%;
   max-height: 85vh;
   overflow-y: auto;
   background: #fff;
@@ -35,10 +35,13 @@
 }
 
 .sheetInner {
-  /* Same --pad as the page (lib/tokens.css) so this content's left/right
-   * edges line up with every other section's, even though the sheet
-   * itself is narrower than the viewport. */
-  padding-inline: var(--pad);
+  /* Was padding-inline: var(--pad) — matched the page's own side gutter
+   * back when the sheet was narrower than the viewport (see .sheet's own
+   * comment on why that's no longer the case). --pad grows up to 150px on
+   * a wide desktop, so paired with a 32px top it made the sides look far
+   * more padded than the top rather than a balanced frame. Now flat 32px
+   * on every side, matching the top exactly. */
+  padding-inline: 32px;
   padding-block: 32px calc(32px + env(safe-area-inset-bottom, 0px));
 }
 

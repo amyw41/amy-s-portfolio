@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import CircleToggle from "@/components/ui/CircleToggle";
 import PlateCircle from "./PlateCircle";
 import PhotoTile from "./PhotoTile";
 import { useElementWidth } from "./useElementWidth";
+import { computeJustifiedLayout } from "./justifiedLayout";
 import {
   DESIGN_WIDTH,
   MAX_SCALE,
@@ -24,6 +27,21 @@ const copy = content.en.playground;
 
 type ViewMode = "plate" | "collage";
 
+// Collage mode's own row-packing tuning (see justifiedLayout.ts) — a flat,
+// category-ordered list (drawing, then dancing, then nails, each in
+// lib/etc.ts's own listed order) is what actually gives the packed rows
+// their row-major reading order; ETC_CATEGORIES itself never reorders.
+const COLLAGE_PHOTOS = ETC_CATEGORIES.flatMap((cat) => cat.photos);
+const COLLAGE_GAP = 8;
+// 3 columns per request ("3 per row") — narrowed on smaller viewports so a
+// column never gets squeezed to a sliver, same mobile-safety intent as the
+// old grid's own breakpoint.
+function collageColumnCount(containerWidth: number): number {
+  if (containerWidth > 0 && containerWidth < 420) return 1;
+  if (containerWidth > 0 && containerWidth < 700) return 2;
+  return 3;
+}
+
 /**
  * "What's on my plate?" — ported from jar-portfolio's app/etc/page.tsx (see
  * PhotoTile.tsx and posterLayout.ts for the poster-scaling and
@@ -36,15 +54,49 @@ type ViewMode = "plate" | "collage";
  * scroll-reveal on anything but the genuine first time.
  */
 export default function Playground() {
+  const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>("plate");
   const [revealedCats, setRevealedCats] = useState<Set<string>>(new Set());
   const [wrapRef, availableWidth] = useElementWidth<HTMLDivElement>();
+
+  // Kicks off compiling each category's detail route in the background as
+  // soon as this page mounts, rather than waiting on a plate's own Link to
+  // scroll into view — makes clicking into a plate feel instant instead of
+  // compiling the route on first click (matches jar-portfolio's own
+  // app/etc/page.tsx).
+  useEffect(() => {
+    for (const cat of ETC_CATEGORIES) {
+      router.prefetch(`/playground/${cat.slug}`);
+    }
+  }, [router]);
 
   const isPlateMode = viewMode === "plate";
   // 0 until the very first client measurement — useElementWidth corrects
   // that synchronously before paint, so scale:0 (poster invisible) never
   // actually renders.
   const scale = availableWidth > 0 ? Math.min(availableWidth / DESIGN_WIDTH, MAX_SCALE) : 0;
+
+  // Solved once per width change (not per render) — computeJustifiedLayout
+  // walks every photo, so this is worth memoizing even though it's cheap
+  // per-call. Recomputes in plate mode too (availableWidth still updates
+  // then, from the same ResizeObserver) so it's already correct the instant
+  // you switch to collage view, never a stale/zero flash the way `scale`
+  // above deliberately avoids for the poster.
+  const collageLayout = useMemo(
+    () =>
+      computeJustifiedLayout(
+        COLLAGE_PHOTOS.map((photo) => photo.width / photo.height),
+        availableWidth,
+        collageColumnCount(availableWidth),
+        COLLAGE_GAP,
+      ),
+    [availableWidth],
+  );
+  const collageBoxBySrc = useMemo(() => {
+    const map = new Map<string, (typeof collageLayout.boxes)[number]>();
+    COLLAGE_PHOTOS.forEach((photo, i) => map.set(photo.src, collageLayout.boxes[i]));
+    return map;
+  }, [collageLayout]);
 
   function markRevealed(slug: string) {
     setRevealedCats((prev) => (prev.has(slug) ? prev : new Set(prev).add(slug)));
@@ -94,35 +146,61 @@ export default function Playground() {
             style={
               isPlateMode
                 ? { width: DESIGN_WIDTH, height: VISIBLE_STAGE_HEIGHT, transform: `scale(${scale})` }
-                : undefined
+                : { height: collageLayout.totalHeight }
             }
           >
             {/* Plates only ever exist in plate mode — unlike the photos
-                below, they don't morph into anything in collage view, so a
-                plain conditional mount + fade is enough; no `layout` prop,
-                no shared-element concerns. */}
-            {isPlateMode &&
-              ETC_CATEGORIES.map((cat) => {
-                const revealed = revealedCats.has(cat.slug);
-                return (
-                  <div
-                    key={cat.slug}
-                    className={styles.plateSlot}
-                    style={{ left: `${cat.plateXPct}%`, top: toPx(cat.plateYPct) }}
-                  >
-                    <motion.div
-                      initial={revealed ? false : { opacity: 0, y: 40 }}
-                      animate={revealed ? { opacity: 1, y: 0 } : undefined}
-                      whileInView={!revealed ? { opacity: 1, y: 0 } : undefined}
-                      viewport={{ once: true, amount: VIEWPORT_AMOUNT }}
-                      onViewportEnter={() => markRevealed(cat.slug)}
-                      transition={SLIDE_UP_TRANSITION}
+                below, they don't morph into anything in collage view, they
+                just fade away (AnimatePresence's own `exit`) as photos
+                leave their cluster, and fade back in (see the `initial`/
+                `animate` split below) on switching back. */}
+            <AnimatePresence>
+              {isPlateMode &&
+                ETC_CATEGORIES.map((cat) => {
+                  const revealed = revealedCats.has(cat.slug);
+                  return (
+                    <div
+                      key={cat.slug}
+                      className={styles.plateSlot}
+                      style={{ left: `${cat.plateXPct}%`, top: toPx(cat.plateYPct) }}
                     >
-                      <PlateCircle label={cat.label} src={cat.plateImage} size={PLATE_SIZE} />
-                    </motion.div>
-                  </div>
-                );
-              })}
+                      {/* Each plate is a link into its own detail page (see
+                          app/playground/[category]/page.tsx) — .plateLink's
+                          own :hover rule (Playground.module.css) tints
+                          PlateCircle's label as the affordance that it's
+                          clickable, the same hover treatment jar-portfolio's
+                          own group/group-hover version used. */}
+                      <Link
+                        href={`/playground/${cat.slug}`}
+                        aria-label={`View ${cat.label} photos`}
+                        className={styles.plateLink}
+                      >
+                        <motion.div
+                          // `initial` always starts hidden/offset — what
+                          // changes is which prop actually animates it to
+                          // visible. Once a category has been revealed
+                          // once, `animate` fires immediately on every
+                          // future (re)mount (i.e. every time you switch
+                          // back to plate view — AnimatePresence above
+                          // fully unmounts these on exit, so this really is
+                          // a fresh mount each time), rather than waiting
+                          // on `whileInView` again, which only matters for
+                          // the genuine first scroll-reveal below.
+                          initial={{ opacity: 0, y: 40 }}
+                          animate={revealed ? { opacity: 1, y: 0 } : undefined}
+                          whileInView={!revealed ? { opacity: 1, y: 0 } : undefined}
+                          viewport={{ once: true, amount: VIEWPORT_AMOUNT }}
+                          onViewportEnter={() => markRevealed(cat.slug)}
+                          exit={{ opacity: 0 }}
+                          transition={SLIDE_UP_TRANSITION}
+                        >
+                          <PlateCircle label={cat.label} src={cat.plateImage} size={PLATE_SIZE} />
+                        </motion.div>
+                      </Link>
+                    </div>
+                  );
+                })}
+            </AnimatePresence>
 
             {/* One persistent wrapper per category, ALWAYS mounted in both
                 modes (never conditionally rendered like the plates above) —
@@ -132,16 +210,18 @@ export default function Playground() {
                 pass-through div (position:static, no box of its own — its
                 children are absolutely positioned against .poster directly,
                 same as if this wrapper weren't there at all); in collage
-                mode it becomes that category's own column-width masonry
-                container (see .collageSection), which is what keeps
-                drawing/dancing/nails each a clean, independently-packed
-                block stacked on the ones before it — a single masonry
-                container spanning all three categories can't do that (see
-                Playground.module.css's own comment on why). Since this
-                wrapper's own identity never changes across modes, every
-                PhotoTile inside it stays the same persistent element too —
-                the FLIP animation between plate/collage positions keeps
-                working exactly as it does for every other photo. */}
+                mode it's display:contents (see .collageSection), which
+                removes the wrapper's own box from layout so its PhotoTiles
+                position themselves directly against .collage's own single
+                shared justified-layout below (collageBoxBySrc, computed
+                once across every category's photos together — see this
+                component's own computeJustifiedLayout call above), instead
+                of each category packing its own separate block. Since this
+                wrapper's own identity never
+                changes across modes, every PhotoTile inside it stays the
+                same persistent element too — the FLIP animation between
+                plate/collage positions keeps working exactly as it does for
+                every other photo. */}
             {ETC_CATEGORIES.map((cat) => (
               <div key={cat.slug} className={isPlateMode ? undefined : styles.collageSection}>
                 {cat.photos.map((photo) => (
@@ -152,6 +232,7 @@ export default function Playground() {
                     visible={revealedCats.has(cat.slug)}
                     delay={photoRevealDelay(cat.photos, photo)}
                     fallback={{ xPct: cat.plateXPct, yPct: cat.plateYPct }}
+                    collageBox={collageBoxBySrc.get(photo.src)}
                   />
                 ))}
               </div>

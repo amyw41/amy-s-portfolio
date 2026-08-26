@@ -37,18 +37,41 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .circle {
-    transition: background-color 150ms ease;
+    transition: background-color 150ms ease, transform 100ms ease;
   }
 }
 
-/* OFF + hover: fill appears at 50% opacity */
+/* OFF + hover: a light fill hint — clearly still "off" (25%, not 50%), so
+ * hovering never makes an off circle read as on. */
 .toggle:hover .circle:not(.active) {
-  background-color: color-mix(in srgb, var(--toggle-color) 50%, transparent);
+  background-color: color-mix(in srgb, var(--toggle-color) 25%, transparent);
 }
 
-/* ON + hover: ring stays visible, fill drops to 50% opacity */
+/* ON + hover: stays mostly solid (80%, not 50%) — previously this and the
+ * off-hover rule above both landed on the exact same 50% fill, so hovering
+ * made on/off indistinguishable from each other, which is what made two
+ * quick clicks (double-click) hard to read: the state you were in mid-hover
+ * never visibly changed. Now on-hover stays clearly fuller than off-hover. */
 .toggle:hover .circle.active {
-  background-color: color-mix(in srgb, var(--toggle-color) 50%, transparent);
+  background-color: color-mix(in srgb, var(--toggle-color) 80%, transparent);
+}
+
+/* Press feedback: a quick scale-down while the mouse button is actually
+ * down, the way most native and OS-level buttons cue "this click just
+ * registered." This is what actually fixes the double-click-not-obvious
+ * complaint — each click now gets its own brief visual pulse, independent
+ * of the hover/on-off color state above. */
+.toggle:active .circle {
+  transform: scale(0.82);
+}
+
+/* Keyboard focus ring — was entirely absent before, so tabbing to a toggle
+ * gave no visible indication it was focused. :focus-visible keeps this
+ * from showing on a mouse click, only on keyboard/programmatic focus. */
+.toggle:focus-visible {
+  outline: 2px solid var(--toggle-color);
+  outline-offset: 3px;
+  border-radius: 999px;
 }
 
 .label {

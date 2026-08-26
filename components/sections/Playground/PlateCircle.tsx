@@ -9,9 +9,11 @@ import styles from "./PlateCircle.module.css";
  * this site's Tailwind dependency is scoped to just the case-study route,
  * see app/projects/[slug]/case-study.css).
  *
- * Not a link here (no /projects/etc/[category]-equivalent detail route
- * exists in this repo yet — see this page's own top-level comment), so
- * unlike the source component this never needs group-hover styling.
+ * Rendered both as a link (PlateView's overview grid, wrapped in a Link by
+ * index.tsx) and standalone (CategoryDetail.tsx's own cropped hub, where
+ * `label` is always ""), so unlike a plain presentational component this
+ * DOES need hover styling for the linked case — see the label span's own
+ * comment below for how that reaches in from the wrapping Link.
  */
 export default function PlateCircle({
   label,
@@ -50,7 +52,13 @@ export default function PlateCircle({
         className={styles.image}
         draggable={false}
       />
-      <span className={styles.label} style={{ fontSize: size * 0.1 }}>
+      {/* plateCircleLabel: a second, CSS-Modules-unscoped class name —
+          lets Playground.module.css's .plateLink:hover rule reach in and
+          tint this from outside, since a plain CSS Modules class here
+          couldn't be targeted by another file's stylesheet. Harmless when
+          this isn't wrapped in a link (CategoryDetail.tsx's usage): nothing
+          ever hovers a non-link ancestor to trigger it. */}
+      <span className={`${styles.label} plateCircleLabel`} style={{ fontSize: (size / 480) * 42 }}>
         {label}
       </span>
     </div>

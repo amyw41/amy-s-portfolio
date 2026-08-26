@@ -87,6 +87,24 @@
   transform: translate(-50%, -50%);
 }
 
+/* The plate's own Link wrapper (index.tsx) — display:block so the anchor
+ * sizes to its PlateCircle child instead of sitting inline. Hovering it
+ * tints PlateCircle's label to #2460A4 (the same accent color
+ * CaseStudyKit.tsx's own hover links use) as the affordance that a plate is
+ * clickable — jar-portfolio's own group/group-hover treatment, adapted:
+ * PlateCircle.tsx gives its label span a second, CSS-Modules-unscoped
+ * class name (`plateCircleLabel`) specifically so this rule, defined here
+ * in the *link's* stylesheet, can reach into PlateCircle's own scoped
+ * markup from outside. */
+.plateLink {
+  display: block;
+  text-decoration: none;
+}
+
+.plateLink:hover :global(.plateCircleLabel) {
+  color: #2460a4;
+}
+
 /* Photo slot: PhotoTile.tsx's own root element in plate mode — deliberately
  * positioned via literal left/top (posterLayout.ts's slotLeft/slotTop
  * already bake the center-of-box math in), NOT left/top-as-center plus a
@@ -111,51 +129,58 @@
   object-fit: cover;
 }
 
-/* ---------- collage mode: dense photo wall, grouped by section ---------- */
+/* ---------- collage mode: justified photo wall, grouped by category ---------- */
 
-/* .collage itself is just a plain block container now — the three
- * .collageSection children (one per category, see index.tsx) stack
- * vertically in normal document flow; each one's own margin-bottom (below)
- * is the gap between sections. */
+/* Every PhotoTile inside is position:absolute, placed by index.tsx's own
+ * computeJustifiedLayout call (see justifiedLayout.ts) — a "justified
+ * gallery" row-packing algorithm, not CSS grid/multi-column. That's what
+ * lets this be simultaneously row-major (drawing 1/2/3 side by side, in
+ * document order — the algorithm only ever appends to the row currently
+ * filling), gapless (each row's height is solved so its photos sum to
+ * exactly this container's width, instead of a grid row sized by its
+ * tallest cell), and true-to-shape (each photo's box uses its own real
+ * aspect ratio — see justifiedLayout.ts's own top comment for why no pure-
+ * CSS layout can get all three at once). `height` below is set inline by
+ * index.tsx from the algorithm's own `totalHeight` — needed because every
+ * child is absolute and so contributes nothing to auto height. */
 .collage {
-  display: block;
+  position: relative;
+  width: 100%;
 }
 
 /* One per category (index.tsx's own collageSection wrapper — an ALWAYS-
  * mounted div, restyled between modes rather than conditionally rendered;
- * see its own comment there for why). column-width (not column-count) masonry
- * — the browser packs each category's own photos into as many fixed-width
- * columns as fit, tallest-first-fit, entirely independently of the other
- * two categories' own columns. That independence is exactly what keeps
- * drawing/dancing/nails each reading as a clean, separate block stacked one
- * under the other — a single shared masonry container spanning all three
- * categories can't guarantee that (multi-column layout packs column-major:
- * all of column 1 top-to-bottom, then column 2, ... so a later category's
- * photos would happily start filling a column while an earlier category's
- * are still finishing a different one). */
+ * see its own comment there for why it can't just be removed/replaced with
+ * a flat list). display:contents makes this wrapper's own box disappear
+ * from layout entirely, so its PhotoTile children position themselves
+ * directly against .collage above (the nearest positioned ancestor a
+ * display:contents wrapper's absolute children can see) — as if every
+ * photo across all three categories were siblings, in that same left-to-
+ * right, top-to-bottom order as they appear in the document — while the
+ * wrapper element itself (and therefore every PhotoTile inside it) stays
+ * mounted in exactly the same place in the tree, so nothing here breaks the
+ * plate<->collage FLIP identity these wrappers exist to preserve. */
 .collageSection {
-  column-width: 180px;
-  column-gap: 8px;
-  margin-bottom: 24px;
+  display: contents;
 }
 
-.collageSection:last-child {
-  margin-bottom: 0;
-}
-
-/* PhotoTile.tsx's own root element in collage mode — same "no stylesheet
- * transform" reasoning as .photoSlot above (this is the very same DOM
- * element, just restyled). break-inside:avoid is what stops the column
- * layout from splitting a single photo's box across two columns. */
+/* PhotoTile.tsx's own root element in collage mode — absolute, positioned
+ * via literal left/top/width/height from justifiedLayout.ts's solved box,
+ * same "no stylesheet transform" reasoning as .photoSlot above (this is the
+ * very same DOM element, just restyled — a `layout`-enabled element's FLIP
+ * animation is driven by an inline transform Framer writes straight onto
+ * the node, which a stylesheet transform would silently clobber). */
 .collageItem {
-  position: static;
-  margin: 0 0 8px;
-  break-inside: avoid;
+  position: absolute;
 }
 
 .collageImageBox {
+  /* No fixed aspect-ratio here any more — the root .collageItem above is
+   * already sized to this exact photo's own natural ratio (see PhotoTile's
+   * own comment), so this box just fills it at 100%/100%. */
   position: relative;
   width: 100%;
+  height: 100%;
   overflow: hidden;
   border-radius: 4px;
   background: #f2f2f2;
@@ -165,9 +190,31 @@
   object-fit: cover;
 }
 
+/* Overlay instead of flowing below the image (see PhotoTile's own comment
+ * on why: the box height above is load-bearing row-packing math now, not
+ * free to grow for a caption). Sits at the bottom of the photo itself, on
+ * a gradient scrim for legibility over any photo, hidden until hover so the
+ * collage itself reads as a clean photo wall at rest. */
 .collageCaption {
-  margin-top: 6px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 20px 10px 8px;
   font-size: var(--fs-small);
   font-weight: 300;
-  color: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .collageCaption {
+    transition: opacity 150ms ease;
+  }
+}
+
+.collageImageBox:hover .collageCaption {
+  opacity: 1;
 }

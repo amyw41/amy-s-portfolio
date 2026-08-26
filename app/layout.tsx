@@ -3,6 +3,7 @@ import { Roboto } from "next/font/google";
 import { content } from "@/lib/content";
 import Taskbar from "@/components/ui/Taskbar/Taskbar";
 import PageTransition from "@/components/ui/PageTransition/PageTransition";
+import Footer from "@/components/sections/Footer";
 import "./globals.css";
 
 const roboto = Roboto({
@@ -46,7 +47,10 @@ export default function RootLayout({
          * Taskbar has its own independent mount fade and shouldn't remount
          * (and re-fade) every time the route changes between two non-home
          * pages the way PageTransition's pathname-keyed content does. */}
-        <PageTransition>{children}</PageTransition>
+        <PageTransition>
+          {children}
+          <Footer />
+        </PageTransition>
       </body>
     </html>
   );

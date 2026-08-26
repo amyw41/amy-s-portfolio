@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import type { EtcPhoto } from "@/lib/etc";
 import { slotLeft, slotTop } from "./posterLayout";
+import type { CollageBox } from "./justifiedLayout";
 import styles from "./Playground.module.css";
 
 // Invisible anchor box size for a photo with no real plate-view position
@@ -45,6 +46,7 @@ export default function PhotoTile({
   visible,
   delay,
   fallback,
+  collageBox,
 }: {
   photo: EtcPhoto;
   mode: "plate" | "collage";
@@ -59,6 +61,12 @@ export default function PhotoTile({
    * position still has somewhere sensible to (invisibly) sit in plate mode
    * and FLIP out from when switching to collage. */
   fallback: { xPct: number; yPct: number };
+  /** Collage mode only: this photo's box (px, relative to .collage), from
+   * index.tsx's own computeJustifiedLayout call — undefined for exactly one
+   * render (the very first, before availableWidth has ever measured
+   * anything), in which case the tile just sits collapsed at 0×0 until the
+   * next render supplies a real box. */
+  collageBox?: CollageBox;
 }) {
   const isPlateMode = mode === "plate";
   const plate = photo.plate;
@@ -67,6 +75,7 @@ export default function PhotoTile({
   const width = plate?.width ?? FALLBACK_SIZE;
   const height = plate?.height ?? FALLBACK_SIZE;
   const z = plate?.z ?? 0;
+  const box = collageBox ?? { x: 0, y: 0, width: 0, height: 0 };
 
   return (
     <motion.div
@@ -75,7 +84,7 @@ export default function PhotoTile({
       style={
         isPlateMode
           ? { left: slotLeft(xPct, width), top: slotTop(yPct, height), width, height, zIndex: z }
-          : undefined
+          : { left: box.x, top: box.y, width: box.width, height: box.height }
       }
       // initial={false}: this element is never actually mounting fresh (see
       // the component's own comment above) — its very first real appearance
@@ -100,33 +109,30 @@ export default function PhotoTile({
         opacity: { duration: 0.35, ease: "easeOut", delay: isPlateMode && plate ? delay : 0 },
       }}
     >
-      {/* Collage mode: width comes from CSS (.collageImageBox's own
-          `width: 100%`, filling its category's column-width masonry
-          container — see index.tsx's collageSection wrapper and
-          Playground.module.css), height from this inline aspectRatio — the
-          browser resolves the two straight into a definite box, no JS math
-          needed, so every photo keeps its own natural proportions (a tall
-          portrait reads taller, a wide landscape shorter) while every
-          column still lines up at the same width, the way a real pinned-up
-          photo collage reads. This lives on the INNER box (not the root
-          motion.div above) because the root also has to fit the caption
-          below it — sizing the root itself to the image's aspect ratio
-          would leave no room for that text. */}
-      <div
-        className={isPlateMode ? styles.photoFrame : styles.collageImageBox}
-        style={!isPlateMode ? { aspectRatio: `${photo.width} / ${photo.height}` } : undefined}
-      >
+      {/* Collage mode: the root motion.div above is already sized to
+          `box.width` x `box.height` — index.tsx's own computeJustifiedLayout
+          solved that box to be exactly this photo's own natural aspect
+          ratio (width/height), never a shared/cropped shape. So this inner
+          box just fills the root at 100%/100%; object-fit:cover on the
+          image below is really a no-op in practice (the box and the image
+          already share the same ratio) and is only there as a safety net
+          against any rounding sliver. The caption lives INSIDE this box as
+          a bottom-overlay (see .collageCaption) rather than flowing below
+          it, since the root's height is now load-bearing layout math —
+          adding a caption's own height below would throw off every row
+          after it. */}
+      <div className={isPlateMode ? styles.photoFrame : styles.collageImageBox}>
         <Image
           src={photo.src}
           alt=""
           fill
-          sizes={isPlateMode ? `${Math.round(width)}px` : "(min-width: 900px) 220px, 45vw"}
+          sizes={isPlateMode ? `${Math.round(width)}px` : `${Math.round(box.width)}px`}
           className={isPlateMode ? styles.photoImage : styles.collageImage}
           draggable={false}
           unoptimized={process.env.NODE_ENV !== "production"}
         />
+        {!isPlateMode && <p className={styles.collageCaption}>{photo.caption}</p>}
       </div>
-      {!isPlateMode && <p className={styles.collageCaption}>{photo.caption}</p>}
     </motion.div>
   );
 }

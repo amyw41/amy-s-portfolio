@@ -17,4 +17,5 @@
   font-family: inherit;
   font-weight: 300;
   color: #4b5563; /* matches jar-portfolio's text-gray-600 */
+  transition: color 150ms ease;
 }

@@ -4,12 +4,6 @@ import { PROJECTS } from "@/lib/projects";
 import SkinSproutCaseStudy from "@/components/case-studies/SkinSproutCaseStudy";
 import CyberSeaCaseStudy from "@/components/case-studies/CyberSeaCaseStudy";
 import SpotifyCaseStudy from "@/components/case-studies/SpotifyCaseStudy";
-// Same global Footer the homepage ends on (app/page.tsx) — per request, case
-// studies now end on it too instead of just stopping after the last
-// section. It's a plain CSS-Modules component (not Tailwind), so it renders
-// fine outside case-study.css's .tw-scope — nothing case-study-specific
-// about it, same footer either way.
-import Footer from "@/components/sections/Footer";
 
 // Keyed by this site's own project slug (lib/projects.ts) — "spotify", not
 // jar-portfolio's "spotify-guessr", so this map alone is the single source
@@ -35,10 +29,5 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   const CaseStudy = CASE_STUDIES[slug];
   if (!CaseStudy) notFound();
 
-  return (
-    <>
-      <CaseStudy />
-      <Footer />
-    </>
-  );
+  return <CaseStudy />;
 }

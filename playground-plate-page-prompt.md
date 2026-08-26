@@ -68,24 +68,26 @@ Structurally this is `jar-portfolio`'s existing `app/etc/page.tsx` content
 cluster of that category's photos, stacked top-to-bottom, alternating
 left/right) — port the `GALLERY` data, `PlateCircle` component, and the
 positioning/stagger-animation logic, but:
-- Categories: **Drawing, Nails, Dancing** only (skip `content`/"Me" — no
-  photos for it yet, matches this repo's own `lib/etc.ts`-equivalent data
-  if you create one, or just the categories actually in scope per the
-  reference screenshots).
-- Nails currently has no photos in the cluster in the reference screenshot
-  (just the bare plate) — keep it that way; don't force nails4/5 into the
-  scatter if that's not what's shown, but check with Amy if the intent was
-  ever to add a few nails photos to this view too.
+- Categories: **Drawing, Nails, Dancing** (skip `content`/"Me" — no photos
+  for it yet).
+- **Nails gets a photo cluster too**, unlike the source `GALLERY` (which
+  leaves Nails as a bare plate with an empty `photos: []`). Nails already has
+  5 photos in `ETC_PHOTOS.nails` (`nails1-5.jpg`) that just aren't plotted
+  into `GALLERY`'s scatter — pull in nails1–5 (the source only left nails2-5
+  half-positioned in commented-out code, so treat this as a fresh
+  placement, not an existing layout to copy) and give Nails the same kind of
+  loosely-overlapping cluster the other two categories have, sized/positioned
+  by eye to look intentional next to its plate — doesn't need to match any
+  exact reference pixel-for-pixel, just consistent with Drawing/Dancing's
+  density and overlap style.
 - Drive the whole composition's size off one fixed design width/height (same
   idea as `STAGE_WIDTH`/`computeStageHeight` in the source file), then scale
   it into whatever `.pageContainer` actually measures, as described above —
   not a hardcoded 1277px canvas with independent overflow scroll.
-- Plates are NOT links to a detail page for this build (no `/etc/[category]`
-  equivalent route exists yet in this repo) — render them as plain
-  non-interactive `PlateCircle`s for now. Flag to Amy separately whether she
-  wants the click-through detail carousel ported too (jar-portfolio's
-  `app/etc/[category]/page.tsx` has a full working version) — that's a
-  distinct follow-up, not part of this page.
+- **Plates are links to a detail page** — see "Click-into-plate detail page"
+  below. Each plate keeps the source's hover treatment (label text tints to
+  `#2460A4` on hover, via a `group`/`group-hover` wrapper) as the affordance
+  that it's clickable.
 - Keep the scroll-reveal (`whileInView`) slide-up entrance for each
   plate+cluster.
 
@@ -103,6 +105,54 @@ aspect ratio) that fills the same `.pageContainer` width the plate view
 scales to — this can be simpler than plate view's absolute-position poster
 math; it just needs to look intentionally tiled edge-to-edge like the
 reference, not loosely scattered.
+
+## Click-into-plate detail page
+
+Port `jar-portfolio`'s `app/etc/[category]/page.tsx` (the rotating photo-arc
+detail view you land on after clicking a plate) as a new route,
+`app/playground/[category]/page.tsx`, in this repo. This is the payoff for
+the "click into the plate to see more!" caption — right now clicking a plate
+in plate view should go somewhere, and this is that somewhere.
+
+- Reuse the source file's whole approach as-is: the plate sits at the bottom
+  as a partially-cropped "hub", photos arranged on a curved arc above it that
+  rotates as you step through them (prev/next arrow buttons + clicking a
+  visible neighbor to center it), the fixed-design-size-then-`scale()`-to-fit
+  technique (`deriveLayout`, `useElementSize`, `MAX_SCALE`), and the
+  exit/back animation (fade + slide down, navigate only once the animation
+  finishes).
+- `deriveLayout`/`MAX_ITEM_SIZE`/`useElementSize` come from
+  `jar-portfolio`'s `components/WhatsInside/layout.ts` — port whatever subset
+  of that this page actually needs (or inline the layout math directly into
+  the new page/component) rather than pulling in the whole `WhatsInside`
+  module, which is that repo's separate carousel feature.
+- `useCarouselStep` (`jar-portfolio`'s `lib/useCarouselStep.ts`) is small and
+  self-contained — port it directly into this repo's `lib/`.
+- Back navigation: the source page uses a fixed circular arrow button
+  (`ARROW_BUTTON_CLASS` from its `lib/styles.ts`) pinned top-left. This repo
+  already has its own back-button convention instead — a text "← Back"
+  link/button using `router.back()` (see
+  `components/case-studies/CaseStudyKit.tsx`'s sidebar Back button for the
+  pattern) — match that existing style instead of introducing the source
+  repo's circular-arrow button treatment, so the two "back" affordances on
+  this site stay visually consistent. It should return to `/playground`
+  (defaulting to plate view — no need to remember which view mode the user
+  left from).
+- Category data: reuse whatever `EtcCategorySlug` / `PLATE_IMAGES` /
+  `ETC_PHOTOS`-equivalent structure you set up for the plate/collage view
+  above (drawing, nails, dancing) — this detail page and the overview page
+  should read from one shared source of category+photo data in this repo,
+  not two separately maintained copies.
+- Category title styling: same `.title`-equivalent treatment as the overview
+  page's own "what's on my plate?" heading, just showing the category label
+  ("Drawing" / "Nails" / "Dancing") instead.
+- Router prefetching (`router.prefetch` for each category route on the
+  overview page's mount) is worth keeping — it's what makes the click feel
+  instant instead of compiling the route on first click.
+- The empty-state branch (`photoCount === 0`, "Coming soon.") won't be
+  needed here since all three ported categories now have photos (see the
+  Nails cluster addition above) — fine to leave the branch in for
+  robustness, or drop it, either is reasonable.
 
 ## View-switch animation
 
@@ -139,6 +189,11 @@ are needed.
 - [ ] Collage view's photos each show their caption underneath and tile
       edge-to-edge with no obvious gaps/overlaps, matching the second
       reference screenshot.
+- [ ] Nails shows a photo cluster next to its plate in plate view, not just
+      a bare plate.
+- [ ] Clicking any of the three plates in plate view navigates to
+      `/playground/[category]` and shows that category's own rotating
+      photo-arc detail view; the Back control returns to `/playground`.
 - [ ] Taskbar and Footer render normally above/below this content (already
       handled by `app/layout.tsx` — don't duplicate them in the page itself).
 - [ ] Test at a few widths (narrow mobile, ~1280px reference width, and a
