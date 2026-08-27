@@ -1611,10 +1611,44 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       // physics outcome. physicsItems' order is stable between recording
       // and playback (nothing rebuilds it in between), so history[n][i]
       // always lines up with physicsItems[i].
+      // The bug this solves: stepPhysics — which is what actually notices a
+      // mousedown/touchstart and turns it into beginDrag (see its own top
+      // comment) — only ever runs from the LIVE loop's rAF tick, never from
+      // replayTick above. So a click/tap that lands while the entrance-fall
+      // animation is still replaying was silently doing nothing at all:
+      // Matter's own Mouse.create already recorded mouse.button going down,
+      // but nothing was polling it yet to act on that. On a fast machine
+      // (or a warm cache) replay finishes in well under a second, easy to
+      // never notice; on a slower load, a normal "it's landed, let me grab
+      // one" tap can land squarely inside that dead window — which is
+      // exactly "the first few times I try to move it doesn't work" (each
+      // early attempt does nothing; by the next attempt enough time has
+      // passed that replay has finished on its own and it "just starts
+      // working"). Fix: the moment a real interaction happens, cut replay
+      // short and jump straight to the live loop — physicsItems are already
+      // sitting at their final settled positions (that's what replay was
+      // tweening TOWARD), so this is an instant, unnoticeable snap, not a
+      // visible jump — and now stepPhysics is running in time to catch this
+      // exact same press on its very next tick.
       let replayRafId = 0;
+      let replayInProgress = false;
+      const skipReplayOnInteraction = () => {
+        if (!replayInProgress) return;
+        replayInProgress = false;
+        cancelAnimationFrame(replayRafId);
+        startLiveLoop();
+      };
+      container.addEventListener("mousedown", skipReplayOnInteraction);
+      container.addEventListener("touchstart", skipReplayOnInteraction, { passive: true });
+      cleanupFns.push(() => {
+        container.removeEventListener("mousedown", skipReplayOnInteraction);
+        container.removeEventListener("touchstart", skipReplayOnInteraction);
+      });
+
       if (instant || history.length === 0) {
         startLiveLoop();
       } else {
+        replayInProgress = true;
         let replayIndex = 0;
         let replayAccumulator = 0;
         let replayLastTime = performance.now();
@@ -1652,6 +1686,7 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
             }
           }
           if (replayIndex >= history.length - 1) {
+            replayInProgress = false;
             startLiveLoop();
             return;
           }
