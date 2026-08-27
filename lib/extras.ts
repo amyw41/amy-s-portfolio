@@ -24,15 +24,15 @@ export const EXTRAS_PHOTOS: ExtrasPhoto[] = [
     height: 3208,
   },
   {
-    src: "/images/projects/extras/relish.png",
-    caption: "Relish.",
-    width: 3348,
-    height: 2324,
-  },
-  {
     src: "/images/projects/extras/rust.png",
     caption: "Rust.",
     width: 2488,
     height: 3208,
+  },
+  {
+    src: "/images/projects/extras/relish.png",
+    caption: "Relish.",
+    width: 3348,
+    height: 2324,
   },
 ];

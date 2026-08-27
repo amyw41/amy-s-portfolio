@@ -8,7 +8,7 @@ export const content = {
   en: {
     hero: {
       title: "amy wang's jar",
-      tagline: "adding a little charm to every intuitive design.",
+      tagline: "adding a little whimsy to every intuitive design.",
       social: {
         linkedin: { label: "LinkedIn", href: "https://linkedin.com/in/amyw41" },
         gmail: { label: "Email", href: "mailto:amy.wang1@uwaterloo.ca" },
@@ -70,7 +70,7 @@ export const content = {
     // repeated here — Bio.tsx reads those straight from footer.links
     // above, one shared source instead of two copies that could drift.
     about: {
-      heading: "Hello! I'm Amy",
+      heading: "hello! i'm amy",
       paragraphs: {
         intro: "I like pretty things and cool people... so I like design!",
         perfectionist: {

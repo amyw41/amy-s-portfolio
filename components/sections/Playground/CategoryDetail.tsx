@@ -1,17 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { EtcCategory } from "@/lib/etc";
 import { useCarouselStep } from "@/lib/useCarouselStep";
-import { useElementWidth } from "./useElementWidth";
+import { useElementWidth, useElementSize } from "./useElementWidth";
 import { deriveItemMetrics, getArcSlot, MAX_ITEM_SIZE } from "./arcLayout";
 import { SLIDE_UP_TRANSITION } from "./posterLayout";
 import PlateCircle from "./PlateCircle";
-import pgStyles from "./Playground.module.css";
 import styles from "./CategoryDetail.module.css";
 
 // The prev/next nav arrows on the photo ring itself — bigger than a plain
@@ -36,11 +35,25 @@ const PLATE_GEOMETRY_SCALE = 2.5;
 // The plate's diameter relative to itemSize — purely how big the plate PNG
 // itself renders, independent of PLATE_GEOMETRY_SCALE above.
 const PLATE_SCALE = 2;
-// How much of the plate image is actually visible, as a fraction of its own
+// How much of the plate image actually RENDERS, as a fraction of its own
 // diameter — the crop window always starts from the image's own top edge
 // (its clean edge post-rotation, see PlateCircle's own comment), so this is
-// "how far down from the top of the image is visible."
-const PLATE_VISIBLE_RATIO = 0.35;
+// "how far down from the top of the image is visible." Deliberately large
+// (nearly the whole plate) — tried tuning this to land the crop's bottom
+// edge exactly at the footer, but that meant fighting the same handful of
+// pixels every time the footer/arc math shifted elsewhere. Simpler: reveal
+// almost the entire plate and let the excess bleed straight past the arc's
+// own logical bottom, underneath the footer that immediately follows in the
+// DOM (paints on top, covering it) — see PLATE_LAYOUT_RATIO below for why
+// this does NOT also inflate the scale-fit math.
+const PLATE_VISIBLE_RATIO = 0.95;
+// The SAME ratio, but only for the scale-fit math (areaHeight/
+// plateBottomBelowHub below) — kept modest so the arc/arrows don't shrink
+// just to make room for the full-plate reveal above. The crop itself is
+// still rendered at PLATE_VISIBLE_RATIO's full height; it's simply allowed
+// to extend past this smaller "logical" footprint (.section's own
+// overflow-y: visible is what permits that bleed instead of clipping it).
+const PLATE_LAYOUT_RATIO = 0.35;
 // Fraction of itemSize left as breathing room between the item ring and the
 // plate's own rim.
 const PLATE_ITEM_GAP_RATIO = -0.4;
@@ -106,13 +119,31 @@ export default function CategoryDetail({ category }: { category: EtcCategory }) 
   // neighbor) is a single ±1 step, so `advance` (goBy) is the only thing
   // that ever changes it.
   const { step, index, goBy: advance } = useCarouselStep(photoCount);
+
+  // Next's App Router normally resets scroll on a <Link> navigation, but
+  // this page's own height changes right after mount (ResizeObserver-driven
+  // scale starts at 0 and jumps to its real value once useElementWidth/
+  // useElementSize measure the DOM) — if the browser was scrolled any
+  // distance down the (much taller) overview page before the click, that
+  // late height change can leave the window a little short of true 0 here,
+  // which reads as the arc's own top edge (arrows, far photos) being cropped
+  // by the viewport. Forcing it explicitly on mount is a cheap, harmless
+  // no-op on the common case (already at 0) and a real fix on the rare one.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   // Frozen at the design constant, not re-solved per viewport — the whole
   // composition (item spacing, arrow position, plate size, crop line) is
   // designed once at this one fixed size, then scaled as a single unit to
   // fit whatever space is actually available (see `scale` below).
   const itemSize = MAX_ITEM_SIZE;
   const { gap, imageSize } = deriveItemMetrics(itemSize);
+  // Width-only ref on the stage (unchanged — needed for the hub's own
+  // inline width/height sizing and the scale-to-fit horizontal axis).
   const [stageRef, availableWidth] = useElementWidth<HTMLDivElement>();
+  // Width+height ref on the content column — gives us the full vertical
+  // budget so the composition can shrink on short viewports too.
+  const [contentRef, contentSize] = useElementSize<HTMLDivElement>();
 
   // Bookkeeping for the jump-freeze behavior below — `offsets` is this
   // step's own resolved per-photo distances (computeOffsets above), and
@@ -153,12 +184,17 @@ export default function CategoryDetail({ category }: { category: EtcCategory }) 
   const attachRadius = (plateGeometryRadius + itemSize * (0.5 + PLATE_ITEM_GAP_RATIO)) * CURVE_FLATTEN;
   const plateSize = itemSize * PLATE_SCALE;
   const plateVisibleHeight = plateSize * PLATE_VISIBLE_RATIO;
+  // Only for the scale-fit math below (areaHeight) — see PLATE_LAYOUT_RATIO's
+  // own comment for why this is deliberately smaller than plateVisibleHeight
+  // (the crop's own actual rendered height) rather than reusing it directly.
+  const plateLayoutHeight = plateSize * PLATE_LAYOUT_RATIO;
   // The crop window's own top stays pinned plateGeometryRadius above the
-  // hub, so the visible sliver stays attached to the photo ring. Its bottom
-  // edge (this value) usually lands *above* the hub — how far below the hub
-  // the composition's own lowest visible pixel actually sits, normally
-  // negative.
-  const plateBottomBelowHub = plateVisibleHeight - plateGeometryRadius;
+  // hub, so the visible sliver stays attached to the photo ring. This is
+  // deliberately based on plateLayoutHeight, not the taller plateVisibleHeight
+  // actually used to size the crop below — the crop's real bottom edge now
+  // lands PAST the hub (by design, so it can reach the footer), but the
+  // scale-fit math still treats the hub as if it only extended this far.
+  const plateBottomBelowHub = plateLayoutHeight - plateGeometryRadius;
 
   // Converts a *linear* distance into the angle needed to cover that same
   // arc-length at attachRadius.
@@ -178,26 +214,55 @@ export default function CategoryDetail({ category }: { category: EtcCategory }) 
   const areaWidth = Math.abs(rightArrowSlot.x) * 2 + NAV_ARROW_SIZE + 16;
 
   const designWidth = photoCount === 0 ? plateSize : areaWidth;
-  const designHeight = photoCount === 0 ? plateVisibleHeight : areaHeight;
-  // availableWidth starts at 0 before the very first client measurement,
-  // which would make this 0 — but useElementWidth corrects that
-  // synchronously before the browser's first paint, so that never actually
-  // renders.
-  const scale = availableWidth > 0 ? Math.min(availableWidth / designWidth, MAX_SCALE) : 0;
+  // photoCount === 0 branch: same plateLayoutHeight-not-plateVisibleHeight
+  // reasoning as areaHeight above — the empty-state plate is also allowed to
+  // render taller than what the scale-fit math accounts for.
+  const designHeight = photoCount === 0 ? plateLayoutHeight : areaHeight;
+  // Scale by whichever axis is tighter: width OR height.
+  // The header (back+title) sits outside .stage but inside .content —
+  // subtract an estimate of its rendered height (≈60px for the title +
+  // margin-bottom:12px) from contentSize.height so the stage's own
+  // designHeight budget is compared against only the space below it.
+  const headerEstimate = 60;
+  const availableHeight = contentSize.height > 0 ? Math.max(contentSize.height - headerEstimate, 0) : 0;
+  // Both fall back to 0 (not 1) when unmeasured — a `1` fallback here used to
+  // mean the composition briefly rendered at its full, unscaled design size
+  // (areaWidth/areaHeight, well past what actually fits) for the one frame
+  // before useElementWidth/useElementSize's layout effects correct it. That
+  // used to be invisible behind .section's old `overflow: hidden`; now that
+  // overflow is visible (see .section's own comment — needed so the plate
+  // can bleed under the footer), the same oversized flash reads as the whole
+  // composition visibly zooming in on load. `scale`'s own `Math.max(..., 0)`
+  // below keeps this from ever going negative before real measurements land.
+  const widthScale = availableWidth > 0 ? availableWidth / designWidth : 1;
+  const heightScale = availableHeight > 0 ? availableHeight / designHeight : 1;
+  const scale = Math.min(widthScale, heightScale, MAX_SCALE);
 
   return (
     <section className={styles.section}>
-      <div className="pageContainer">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={SLIDE_UP_TRANSITION}>
-          <button type="button" onClick={() => router.back()} className={styles.backButton}>
-            <span aria-hidden="true">←</span>
-            Back
-          </button>
-
-          <h1 className={pgStyles.title}>{category.label}</h1>
+      <div className={`pageContainer ${styles.pageInner}`}>
+        <motion.div
+          ref={contentRef}
+          className={styles.content}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={SLIDE_UP_TRANSITION}
+        >
+          <header className={styles.header}>
+            {/* Solid black circle + arrow, replacing the old scribble-oval
+             * hover ring — matches the same treatment now used on the case
+             * study pages' own Back button (CaseStudyKit.tsx), per request,
+             * so "back" reads as one consistent affordance app-wide instead
+             * of two different weights depending on the page. */}
+            <button type="button" onClick={() => router.push('/')} className={styles.backButton}>
+              <span aria-hidden="true" className={styles.backCircle}>←</span>
+              Back
+            </button>
+            <h1 className={styles.title}>{category.label}</h1>
+          </header>
 
           {photoCount === 0 ? (
-            <div ref={stageRef} className={styles.stage} style={{ height: plateVisibleHeight * scale }}>
+            <div ref={stageRef} className={styles.stage} style={{ height: plateLayoutHeight * scale }}>
               <div
                 className={styles.hubEmpty}
                 style={{
@@ -249,7 +314,7 @@ export default function CategoryDetail({ category }: { category: EtcCategory }) 
                       </button>
                       <button
                         type="button"
-                        onClick={() => advance(1)}
+                        onClick={() => router.push('/')}
                         aria-label="Next photo"
                         className={styles.navArrow}
                         style={{

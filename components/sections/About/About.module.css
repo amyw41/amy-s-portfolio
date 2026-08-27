@@ -1,9 +1,10 @@
 /* ---------- bio ---------- */
 
 .bioSection {
-  /* Same vertical rhythm as Playground.module.css's own .section, so this
-   * page's sections read at the same cadence as the rest of the site. */
-  padding-block: clamp(64px, 8vw, 120px);
+  box-sizing: border-box;
+  padding-top: clamp(32px, 5vw, 64px);
+  padding-bottom: clamp(32px, 5vw, 60px);
+  padding-inline: clamp(16px, 5vw, 64px);
 }
 
 /* Stacked (photo above text) below 900px, side-by-side above it — same
@@ -19,8 +20,8 @@
 
 @media (min-width: 900px) {
   .bioGrid {
-    grid-template-columns: minmax(0, 460px) minmax(320px, 1fr);
-    gap: 48px;
+    grid-template-columns: minmax(0, 460px) minmax(400px, 1fr);
+    gap: 24px;
   }
 }
 
@@ -31,6 +32,9 @@
   position: relative;
   width: 100%;
   max-width: 320px;
+  /* Cap the height so on short viewports the photo doesn't push the text
+   * off screen — keeps everything in one viewport. */
+  max-height: min(55dvh, 420px);
   margin: 0 auto;
   aspect-ratio: 1368 / 1600;
 }
@@ -38,6 +42,7 @@
 @media (min-width: 900px) {
   .photo {
     max-width: 460px;
+    max-height: min(70dvh, 560px);
     margin: 0;
   }
 }
@@ -78,14 +83,14 @@
  * serif's own built-in character. */
 .heading {
   margin: 0;
-  font-size: clamp(20px, 2.2vw, 28px);
-  font-weight: 500;
+  font-size: clamp(18px, 1.8vw, 26px);
+  font-weight: 300;
   color: rgba(0, 0, 0, 0.9);
 }
 
 .paragraph {
-  margin: clamp(10px, 1.6vw, 16px) 0 0;
-  font-size: var(--fs-small);
+  margin: clamp(8px, 1.2vw, 12px) 0 0;
+  font-size: clamp(13px, 1.1vw, 17px);
   font-weight: 300;
   line-height: 1.6;
   color: rgba(0, 0, 0, 0.7);
@@ -110,11 +115,18 @@
 /* ---------- experience ---------- */
 
 .experienceSection {
-  padding-block: clamp(64px, 8vw, 120px);
+  padding-top: clamp(2px, 1vw, 24px);
+  padding-bottom: clamp(2px, 1vw, 24px);
+}
+
+.experienceInner {
+  width: 100%;
+  padding-inline: clamp(16px, 5vw, 64px);
+  box-sizing: border-box;
 }
 
 .group {
-  margin-top: 32px;
+  margin-top: 36px;
 }
 
 .group:first-child {
@@ -122,7 +134,7 @@
 }
 
 .rows {
-  margin-top: 16px;
+  margin-top: 6px;
 }
 
 /* Stacked (date under company/title) below 900px, date pushed to the row's
@@ -131,19 +143,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding-block: 12px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  gap: clamp(24px, 4vw, 48px);
+  padding-block: 10px;
 }
 
 .row:first-child {
-  border-top: none;
+  /* No longer needed since all borders are removed, but keeping it empty 
+   * in case other first-child styling is needed later. */
 }
 
 .rowMain {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 9px;
   min-width: 0;
 }
 
@@ -153,11 +165,11 @@
  * one the same visual weight regardless of its native shape. */
 .logo {
   position: relative;
-  width: 56px;
-  height: 56px;
+  width: 42px;
+  height: 42px;
   flex-shrink: 0;
   overflow: hidden;
-  border-radius: 5px;
+  border-radius: 4px;
   background: #fff;
 }
 

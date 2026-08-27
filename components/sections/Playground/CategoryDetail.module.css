@@ -1,19 +1,95 @@
 .section {
-  /* Matches Playground.module.css's own section padding, so this reads as
-   * the same rhythm of section as the overview page it was linked from. */
-  padding-block: clamp(64px, 8vw, 120px);
+  /* Exact height (not min-height) so the section never grows taller than
+   * the available viewport space — that's what prevents a gap between the
+   * plate's bottom edge and the footer. Combined with the height-based
+   * scale in CategoryDetail.tsx, the composition always fits inside. */
+  height: calc(100dvh - 24px - var(--taskbar-height));
+  padding-top: clamp(24px, 4vw, 48px);
+  display: flex;
+  flex-direction: column;
+  /* Was overflow: hidden — removed so the plate crop (CategoryDetail.tsx's
+   * own PLATE_VISIBLE_RATIO vs. PLATE_LAYOUT_RATIO split) can bleed DOWN
+   * past this section's own bottom edge into the footer that immediately
+   * follows (which paints over it, being later in the DOM — see that
+   * component's own comment for why this reveals the plate without also
+   * shrinking the arc/arrows). NOTE: overflow-x: hidden + overflow-y:
+   * visible is NOT equivalent to removing overflow entirely — per spec,
+   * pairing visible with a non-visible value on the other axis computes
+   * visible to auto (a scrollable, still-clipped box), which would silently
+   * defeat this whole change. Leaving overflow unset on both axes instead;
+   * width never needs its own clipping guard here since `scale` (widthScale)
+   * already fits the composition's design width to whatever's available. */
+}
+
+/* Stretches this section's single child (the global .pageContainer div) to
+ * the section's own full height, so .content below has something to flex
+ * against — .pageContainer itself (globals.css) sets no height of its own. */
+.pageInner {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* The actual flex column: back button + title stay at their natural size
+ * at the top, then margin-top: auto on whichever .stage renders below
+ * pushes it all the way down to this column's own bottom edge (which is
+ * .section's bottom edge, via .pageInner above) — see .section's own
+ * comment for why that's what makes the plate land flush against the
+ * footer. */
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+/* Same nominal font-size as PlateCircle's own label (see PlateCircle.tsx's
+ * inline fontSize: (size/480)*42 — exactly 42px at the overview page's own
+ * PLATE_SIZE constant, posterLayout.ts), not the site's usual --fs-title
+ * heading scale, so "drawing" reads as the same lettering size printed on
+ * the plate this page was linked from. Flat px on purpose, matching that
+ * formula's own non-responsive base value. Centered via the .header grid. */
+.title {
+  grid-column: 3;
+  justify-self: end;
+  text-align: right;
+  margin: 0;
+  font-size: 42px;
+  font-weight: 300;
+  color: #000;
 }
 
 /* Matches CaseStudyKit.tsx's own sidebar Back button — text link, arrow +
- * label, uppercase, dimmed until hovered — so the two "back" affordances on
- * this site read as one convention. Plain inherited body font (Roboto), not
- * that component's decorative Instrument Serif accent font, which is scoped
- * to the case-study route only and has no reason to leak in here. */
+ * label, uppercase, same hand-drawn hover oval as the taskbar/hero nav
+ * (see .scribble below) — so the two "back" affordances on this site read
+ * as one convention. Plain inherited body font (Roboto), not that
+ * component's decorative Instrument Serif accent font, which is scoped to
+ * the case-study route only and has no reason to leak in here. No bottom
+ * margin — whatever space follows this before .stage is entirely owned by
+ * .stage's own margin-top: auto (see its comment), not a fixed gap here.
+ * position: relative anchors .scribble below. */
+/* Was a bare "← Back" text link with a hand-drawn scribble-oval hover ring
+ * (no fill/border at all) — replaced with a solid black circle + arrow per
+ * request, same treatment as the case-study pages' own Back button
+ * (CaseStudyKit.tsx), so "back" reads as one consistent, deliberate control
+ * everywhere on the site rather than a quiet text link on some pages and a
+ * solid circle on others. Hover is now the same opacity-fade convention
+ * used by .navArrow below (and ProjectCard/plateLink/ExtrasCard site-wide),
+ * not the old scribble reveal — a filled circle doesn't need a second hover
+ * affordance drawn around it. */
 .backButton {
+  justify-self: start;
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin: 0 0 20px;
+  gap: 8px;
+  margin: 0;
   padding: 0;
   border: none;
   background: none;
@@ -25,29 +101,66 @@
   text-transform: uppercase;
   color: rgba(0, 0, 0, 0.4);
   cursor: pointer;
-  transition: color 150ms ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .backButton {
+    transition: opacity 300ms ease-out;
+  }
 }
 
 .backButton:hover {
-  color: rgba(0, 0, 0, 0.7);
+  opacity: 0.615;
+}
+
+/* The circle itself — sized off the button's own text (roughly one line
+ * tall) rather than matching .navArrow's much bigger 50px carousel arrows,
+ * since this sits inline next to "BACK" instead of floating alone over the
+ * photo ring. */
+.backCircle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #000;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
 }
 
 /* ---------- stage: hosts the plate hub + arc, scaled to fit ---------- */
 
 /* Sized (height) by CategoryDetail.tsx itself — designHeight * scale, since
  * .hub/.hubEmpty below are absolutely positioned and a transform never
- * contributes to a parent's auto height. */
+ * contributes to a parent's auto height. margin-top: auto (not a fixed
+ * clamp() any more) is what pins this to the bottom of .content's flex
+ * column — see .section's own comment. Falls back to 0 (sitting right under
+ * the title, no gap) only if the composition is ever taller than the
+ * available space, same natural flex-auto-margin behavior as everywhere
+ * else on this site. */
 .stage {
   position: relative;
   width: 100%;
-  margin-top: clamp(32px, 4vw, 56px);
+  margin-top: auto;
 }
 
 .hub,
 .hubEmpty {
   position: absolute;
   left: 50%;
-  bottom: -15px;
+  /* Was a -15px overhang (pushing the plate/arc's own box 15px PAST .stage's
+   * bottom edge) — that was fine back when the footer immediately below
+   * still had its own padding-top as a buffer, but now that the footer
+   * renders flush (zero top padding, see Footer.module.css's own .flush)
+   * that overhang plus the composition's own bottom reach was landing
+   * visibly inside the footer's black panel instead of just touching it.
+   * A small positive value here lifts the whole hub just off .stage's
+   * bottom edge instead — a nudge, not a big repositioning (this is a pure
+   * position shift, doesn't touch the composition's own scale). */
+  bottom: 8px;
   transform-origin: bottom center;
 }
 
@@ -88,15 +201,30 @@
   flex-shrink: 0;
   border-radius: 999px;
   border: 1px solid rgba(0, 0, 0, 0.5);
-  background: #fff;
+  /* This is a plain <button> (CategoryDetail.tsx) — without an explicit
+   * transparent background + appearance reset, the browser's own UA button
+   * chrome fills it with a solid gray/white (ButtonFace), which is what was
+   * still reading as "white/gray fill" after just removing the old #fff
+   * background rule above. */
+  background: transparent;
+  appearance: none;
   color: rgba(0, 0, 0, 0.5);
   cursor: pointer;
-  transition: border-color 150ms ease, color 150ms ease;
+}
+
+/* Was a border/text color shift to blue (#2460a4) on hover — replaced with
+ * the same opacity-lighten treatment used everywhere else on the site
+ * (ProjectCard.module.css's .card:hover, the Playground plates' own
+ * .plateLink:hover, ExtrasCard's .trigger:hover), so every hoverable thing
+ * on the site reads as the same "fades toward the page" affordance. */
+@media (prefers-reduced-motion: no-preference) {
+  .navArrow {
+    transition: opacity 300ms ease-out;
+  }
 }
 
 .navArrow:hover {
-  border-color: #2460a4;
-  color: #2460a4;
+  opacity: 0.615;
 }
 
 /* Edge-faded mask on the item track itself (not an opaque overlay) —

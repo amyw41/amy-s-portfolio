@@ -12,7 +12,7 @@ import styles from "./PlateCircle.module.css";
  * Rendered both as a link (PlateView's overview grid, wrapped in a Link by
  * index.tsx) and standalone (CategoryDetail.tsx's own cropped hub, where
  * `label` is always ""), so unlike a plain presentational component this
- * DOES need hover styling for the linked case — see the label span's own
+ * DOES need hover styling for the linked case — see the root div's own
  * comment below for how that reaches in from the wrapping Link.
  */
 export default function PlateCircle({
@@ -25,7 +25,13 @@ export default function PlateCircle({
   size?: number;
 }) {
   return (
-    <div className={styles.plate} style={{ width: size, height: size }}>
+    // plateCircleRoot: a second, CSS-Modules-unscoped class name — lets
+    // Playground.module.css's .plateLink:hover rule reach in and lighten
+    // this whole plate from outside, since a plain CSS Modules class here
+    // couldn't be targeted by another file's stylesheet. Harmless when this
+    // isn't wrapped in a link (CategoryDetail.tsx's usage): nothing ever
+    // hovers a non-link ancestor to trigger it.
+    <div className={`${styles.plate} plateCircleRoot`} style={{ width: size, height: size }}>
       <Image
         src={src}
         alt=""

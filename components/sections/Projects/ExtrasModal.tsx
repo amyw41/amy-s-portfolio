@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useRef } from "react";
 import Image from "next/image";
+import { X } from "lucide-react";
 import styles from "./ExtrasModal.module.css";
 import { content } from "@/lib/content";
 import { EXTRAS_PHOTOS } from "@/lib/extras";
@@ -112,7 +113,7 @@ export default function ExtrasModal({ onClose }: ExtrasModalProps) {
               {copy.modalTitle}
             </h3>
             <button ref={closeButtonRef} type="button" className={styles.closeButton} onClick={onClose}>
-              <span aria-hidden="true">×</span>
+              <X size={16} strokeWidth={1.25} aria-hidden="true" />
               <span className={styles.srOnly}>{copy.closeLabel}</span>
             </button>
           </div>

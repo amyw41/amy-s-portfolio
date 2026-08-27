@@ -68,6 +68,15 @@
    * didn't share the same aspect ratio. Fixed value instead: all 3 project
    * items render with an identical radius no matter their own art. */
   --jar-item-radius: 12px;
+
+  /* Single source of truth for the taskbar PILL's own height (Taskbar.
+   * module.css's .pill) — was a literal clamp() duplicated inline there.
+   * Pulled out so CategoryDetail.module.css's viewport-fit math (.section's
+   * own min-height) can subtract the *exact* same value instead of a second
+   * copy of the same clamp() silently drifting out of sync with it. Doesn't
+   * include .pill's own 24px top margin — consumers add that separately,
+   * same as Taskbar.module.css itself does. */
+  --taskbar-height: clamp(48px, 4.5vw, 64px);
 }
 
 /* 14vw is far too much gutter once the viewport gets phone-narrow (e.g.

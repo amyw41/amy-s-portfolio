@@ -40,3 +40,26 @@ export function useElementWidth<T extends HTMLElement>() {
 
   return [ref, width] as const;
 }
+
+/**
+ * Same as useElementWidth but tracks BOTH width and height, for callers
+ * that need to scale-to-fit inside a constrained height budget (e.g.
+ * the detail page's 100dvh slot, where the composition must shrink
+ * on short viewports too).
+ */
+export function useElementSize<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+
+  useIsomorphicLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const update = () => setSize({ width: el.offsetWidth, height: el.offsetHeight });
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return [ref, size] as const;
+}

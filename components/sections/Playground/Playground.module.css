@@ -1,7 +1,8 @@
 .section {
-  /* Matches Projects.module.css's own section padding, so this reads as the
-   * same rhythm of section as the rest of the site. */
-  padding-block: clamp(64px, 8vw, 120px);
+  /* Reduced top padding so the gap under the taskbar is smaller, while keeping 
+   * the original bottom padding rhythm. */
+  padding-top: clamp(24px, 4vw, 48px);
+  padding-bottom: clamp(24px, 4vw, 48px);
 }
 
 .container {
@@ -88,21 +89,33 @@
 }
 
 /* The plate's own Link wrapper (index.tsx) — display:block so the anchor
- * sizes to its PlateCircle child instead of sitting inline. Hovering it
- * tints PlateCircle's label to #2460A4 (the same accent color
- * CaseStudyKit.tsx's own hover links use) as the affordance that a plate is
- * clickable — jar-portfolio's own group/group-hover treatment, adapted:
- * PlateCircle.tsx gives its label span a second, CSS-Modules-unscoped
- * class name (`plateCircleLabel`) specifically so this rule, defined here
- * in the *link's* stylesheet, can reach into PlateCircle's own scoped
- * markup from outside. */
+ * sizes to its PlateCircle child instead of sitting inline. Went through a
+ * few earlier hover treatments — tinting the label blue (#2460A4, matching
+ * CaseStudyKit.tsx's own hover links), then a scale-lift + darken-to-black,
+ * then a hand-drawn circle appearing around the plate (Hero/Taskbar's own
+ * nav-button ScribbleOval, adapted into a true circle) — before landing
+ * here: the whole plate lightens toward white on hover, same construction
+ * and same opacity (0.615) as ProjectCard.module.css's own .card:hover, so
+ * this reads as the same "hovering fades it toward the page" affordance
+ * used for project cards on the main page. Same jar-portfolio-style group/
+ * group-hover trick as the earlier circle version: PlateCircle.tsx gives
+ * its root div a second, CSS-Modules-unscoped class name
+ * (`plateCircleRoot`) specifically so this rule, defined here in the
+ * *link's* stylesheet, can reach into PlateCircle's own scoped markup from
+ * outside. */
 .plateLink {
   display: block;
   text-decoration: none;
 }
 
-.plateLink:hover :global(.plateCircleLabel) {
-  color: #2460a4;
+@media (prefers-reduced-motion: no-preference) {
+  .plateLink :global(.plateCircleRoot) {
+    transition: opacity 300ms ease-out;
+  }
+}
+
+.plateLink:hover :global(.plateCircleRoot) {
+  opacity: 0.615;
 }
 
 /* Photo slot: PhotoTile.tsx's own root element in plate mode — deliberately
@@ -122,7 +135,6 @@
   height: 100%;
   overflow: hidden;
   border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
 }
 
 .photoImage {

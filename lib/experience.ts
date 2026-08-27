@@ -22,18 +22,18 @@ export type ExperienceGroup = {
 
 export const EXPERIENCE: ExperienceGroup[] = [
   {
-    label: "Work",
+    label: "experience",
     entries: [
       {
         company: "RRC Companies",
         title: "APM Intern",
-        date: "May – Aug 2026",
+        date: "May - Aug 2026",
         logo: "/images/logos/rrc_companies_logo.jpg",
       },
     ],
   },
   {
-    label: "Community",
+    label: "community",
     entries: [
       {
         company: "UW Blueprint",

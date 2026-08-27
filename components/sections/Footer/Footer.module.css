@@ -1,5 +1,16 @@
 .footer {
-  padding-top: clamp(64px, 8vw, 120px);
+  padding-top: clamp(24px, 4vw, 60px);
+}
+
+/* Playground category detail page's own composition (CategoryDetail.
+ * module.css) is deliberately designed to land flush against this footer —
+ * its plate/arc scales to fit exactly the leftover viewport space, overhangs
+ * its own stage by 15px, and expects zero gap to immediately follow. The
+ * footer's normal padding-top above is tuned for pages that scroll down into
+ * it at their own pace; reintroducing any of it here would put back the
+ * exact gap that page's own layout was built to eliminate. */
+.flush {
+  padding-top: 0;
 }
 
 .container {

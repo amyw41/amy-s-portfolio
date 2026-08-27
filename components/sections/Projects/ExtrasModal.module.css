@@ -32,7 +32,15 @@
   align-self: flex-end;
   width: min(100% - (2 * var(--pad)) + 64px, calc(var(--content-max) + 64px));
   max-height: 85vh;
-  overflow-y: auto;
+  /* The scroll container used to be .sheet itself (overflow-y: auto right
+   * here), but a native (non-overlay) scrollbar draws as a flat rectangular
+   * track flush against this box's own edge — it doesn't get clipped to
+   * border-radius the way ordinary content does, so it squared off the top-
+   * right corner right where the curve should be. Scrolling now happens one
+   * level in, on .sheetInner below; this element just clips to its own
+   * rounded corners (overflow: hidden), which cuts the scrollbar's corner
+   * to match instead of the scrollbar overriding it. */
+  overflow: hidden;
   background: #fff;
   border-radius: 20px 20px 0 0;
   box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.2);
@@ -54,6 +62,13 @@
    * the page, not how much room its own content breathes inside it). */
   padding-inline: 32px;
   padding-block: 32px calc(32px + env(safe-area-inset-bottom, 0px));
+  /* Actual scroll container now (see .sheet's own comment on why it moved
+   * here) — same max-height as .sheet so this can grow to fill it exactly,
+   * box-sizing: border-box so that includes this element's own padding
+   * above rather than adding on top of it. */
+  box-sizing: border-box;
+  max-height: 85vh;
+  overflow-y: auto;
 }
 
 .header {
@@ -81,9 +96,8 @@
   border: 1px solid rgba(0, 0, 0, 0.2);
   background: none;
   cursor: pointer;
-  font-size: var(--fs-nav); /* 22px @1280 — same reference size this glyph was authored at */
   line-height: 1;
-  color: #000;
+  color: rgba(0, 0, 0, 0.7);
 }
 
 @media (prefers-reduced-motion: no-preference) {

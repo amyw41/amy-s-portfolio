@@ -22,7 +22,7 @@ import TextHighlight from "@/components/case-studies/TextHighlight";
 // every one of those spots is marked with a `// CHECK:` comment so they're
 // easy to find and fix.
 
-const HIGHLIGHT = "#e5eef7";
+const HIGHLIGHT = "#fde8eb";
 
 const SECTION_NAV: SectionNavItem[] = [
   { id: "initial-planning", label: "01 Initial Planning" },
@@ -242,11 +242,11 @@ export default function CyberSeaCaseStudy() {
             // Red, not the page's usual blue highlight — matches the same
             // #fbeded shade Spotify's own case study uses for its problem/
             // challenge callouts (see Spotify's "Challenge" boxes).
-            // px-5 py-7 + leading-relaxed — matches SkinSprout's own
-            // Problem Statement/WIP/Navigation-problem boxes, so this same
-            // highlight-box component reads identically across all 3 case
-            // studies, not just within this one page.
-            <div className="rounded-[8px] bg-[#fbeded] px-5 py-7">
+            // rounded-[5px] px-5 py-5 + leading-relaxed — matches
+            // SkinSprout's own Problem Statement/WIP/Navigation-problem
+            // boxes, so this same highlight-box component reads identically
+            // across all 3 case studies, not just within this one page.
+            <div className="rounded-[5px] bg-[#fbeded] px-5 py-5">
               <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
                 How might we close the gap between Arctic expertise and public
                 understanding?
@@ -293,9 +293,9 @@ export default function CyberSeaCaseStudy() {
           eyebrow="04 / Implementation"
           heading="Challenge"
           media={
-            // px-5 py-7 + leading-relaxed — same consistency pass as this
-            // page's own Problem Statement box above.
-            <div className="rounded-[8px] bg-[#fbeded] px-5 py-7">
+            // rounded-[5px] px-5 py-5 + leading-relaxed — same consistency
+            // pass as this page's own Problem Statement box above.
+            <div className="rounded-[5px] bg-[#fbeded] px-5 py-5">
               <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
                 How can we balance heavy branding with accessibility?
               </p>

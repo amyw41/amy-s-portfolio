@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { content } from "@/lib/content";
@@ -28,12 +29,14 @@ const FADE_DURATION = 0.35;
  *   at every width (see .photo's own clamp in About.module.css).
  */
 export default function Bio() {
+  const [imgLoaded, setImgLoaded] = useState(false);
+
   return (
     <section className={styles.bioSection}>
       <div className={`pageContainer ${styles.bioGrid}`}>
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          animate={{ opacity: imgLoaded ? 1 : 0 }}
           transition={{ duration: FADE_DURATION, ease: "easeOut" }}
           className={styles.photo}
         >
@@ -42,6 +45,8 @@ export default function Bio() {
             alt="Amy standing at a bus stop, framed"
             fill
             sizes="460px"
+            priority
+            onLoad={() => setImgLoaded(true)}
             unoptimized={process.env.NODE_ENV !== "production"}
             className={styles.photoImage}
             draggable={false}
@@ -50,7 +55,7 @@ export default function Bio() {
 
         <motion.div
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          animate={{ opacity: imgLoaded ? 1 : 0 }}
           transition={{ duration: FADE_DURATION, ease: "easeOut", delay: 0.05 }}
           className={styles.textBox}
         >
@@ -59,6 +64,7 @@ export default function Bio() {
             alt=""
             fill
             quality={95}
+            priority
             unoptimized={process.env.NODE_ENV !== "production"}
             className={styles.borderImage}
           />

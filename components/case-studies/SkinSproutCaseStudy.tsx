@@ -265,10 +265,11 @@ export default function SkinSproutCaseStudy() {
           competing for the same property — safer to just match their
           exact className than rely on Tailwind's generated stylesheet
           order to pick the right one. */}
-      {/* px-5 py-7, down a tiny bit from px-6 py-8 — per request. leading-
-          relaxed added so a 2-line wrap (see the two boxes below) gets more
-          room between its lines than the browser default. */}
-      <div className="mt-8 rounded-[8px] px-5 py-7" style={{ backgroundColor: HIGHLIGHT }}>
+      {/* rounded-[5px] (was rounded-[8px]) and px-5 py-5 (was px-5 py-6) —
+          per request, smaller corner radius and even padding on all sides.
+          leading-relaxed added so a 2-line wrap (see the two boxes below)
+          gets more room between its lines than the browser default. */}
+      <div className="mt-8 rounded-[5px] px-5 py-5" style={{ backgroundColor: HIGHLIGHT }}>
         <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
           THIS PAGE IS CURRENTLY A WIP!
         </p>
@@ -591,12 +592,12 @@ export default function SkinSproutCaseStudy() {
         <Row
           heading="Problem Statement:"
           media={
-            // py-8, not py-[14px] — per request, more top/bottom breathing
-            // room, matching the WIP/Navigation problem boxes. px-5 py-7,
-            // down a tiny bit from px-6 py-8 — per a later request. leading-
-            // relaxed added so its own 2-line wrap gets more room between
-            // lines than the browser default.
-            <div className="rounded-[8px] px-5 py-7" style={{ backgroundColor: HIGHLIGHT }}>
+            // rounded-[5px] (was rounded-[8px]) and px-5 py-5 (was px-5
+            // py-6) — per request, smaller corner radius and even padding
+            // on all sides, matching the WIP/Navigation problem boxes.
+            // leading-relaxed added so its own 2-line wrap gets more room
+            // between lines than the browser default.
+            <div className="rounded-[5px] px-5 py-5" style={{ backgroundColor: HIGHLIGHT }}>
               <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
                 How can we make skincare easier to purchase based on each user&apos;s
                 personalized skincare history?
@@ -727,12 +728,11 @@ export default function SkinSproutCaseStudy() {
                   match HIGHLIGHT (#faf1f6, this page's own accent color,
                   used by the WIP/Problem Statement boxes) — close enough to
                   read as "basically the same pink" but not pixel-identical.
-                  py-8, not py-[14px] — same padding bump as those two boxes,
-                  per request. px-5 py-7, down a tiny bit from px-6 py-8 —
-                  per a later request, same as those two boxes. leading-
+                  rounded-[5px] (was rounded-[8px]) and px-5 py-5 (was px-5
+                  py-6) — per request, same as those two boxes. leading-
                   relaxed added so its own 2-line wrap gets more room
                   between lines than the browser default. */}
-              <div className="rounded-[8px] px-5 py-7" style={{ backgroundColor: HIGHLIGHT }}>
+              <div className="rounded-[5px] px-5 py-5" style={{ backgroundColor: HIGHLIGHT }}>
                 <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
                   Navigation problem: Users needed a way to move between stat cards
                   without breaking the visual rhythm of the layout.

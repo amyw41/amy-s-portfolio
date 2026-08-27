@@ -31,7 +31,7 @@ function ExperienceRow({ entry }: { entry: ExperienceEntry }) {
         <div className={styles.rowText}>
           <p className={styles.rowLine}>
             <span className={styles.companyName}>{entry.company}</span>{" "}
-            <span className={styles.jobTitle}>— {entry.title}</span>
+            <span className={styles.jobTitle}>· {entry.title}</span>
           </p>
           <p className={styles.rowDateInline}>{entry.date}</p>
         </div>
@@ -52,6 +52,7 @@ export default function Experience() {
     <section className={styles.experienceSection}>
       <div className="pageContainer">
         <motion.div
+          className={styles.experienceInner}
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, amount: VIEWPORT_AMOUNT }}

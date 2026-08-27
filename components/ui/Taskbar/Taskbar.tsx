@@ -7,20 +7,21 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./Taskbar.module.css";
 import { content } from "@/lib/content";
-import { buildWobblyOvalPath, STROKE_COLOR, STROKE_WIDTH, VIEW_BOX } from "../../sections/Hero/wobblyOval";
+import {
+  buildWobblyPillPath,
+  PILL_STROKE_COLOR,
+  PILL_STROKE_WIDTH,
+  PILL_VIEW_BOX,
+} from "../../sections/Hero/wobblyOval";
 
 const copy = content.en.taskbar;
 
-// Same hand-sketched hover oval as the hero's nav buttons (see
-// components/sections/Hero/index.tsx and wobblyOval.ts for the full
-// explanation of the shape/overlap) — imported from there rather than
-// duplicated, reused with its own seeds (10/11/12) so the taskbar's ovals
-// are their own distinct variants, not copies of the hero's.
+// Same hand-sketched hover pill ring as the case study nav links
 function ScribbleOval({ seed }: { seed: number }) {
-  const path = useMemo(() => buildWobblyOvalPath(seed), [seed]);
+  const path = useMemo(() => buildWobblyPillPath(seed), [seed]);
   return (
-    <svg className={styles.scribble} viewBox={VIEW_BOX} fill="none" preserveAspectRatio="none" aria-hidden="true">
-      <path d={path} stroke={STROKE_COLOR} strokeWidth={STROKE_WIDTH} strokeLinecap="round" />
+    <svg className={styles.scribble} viewBox={PILL_VIEW_BOX} fill="none" preserveAspectRatio="none" aria-hidden="true">
+      <path d={path} stroke={PILL_STROKE_COLOR} strokeWidth={PILL_STROKE_WIDTH} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }

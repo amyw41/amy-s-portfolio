@@ -17,5 +17,9 @@
   font-family: inherit;
   font-weight: 300;
   color: #4b5563; /* matches jar-portfolio's text-gray-600 */
-  transition: color 150ms ease;
 }
+
+/* Went through a hand-drawn hover-circle treatment here (see this file's
+ * own git history / Playground.module.css's own comment on .plateLink) —
+ * replaced with a plain opacity fade on the whole plate, so there's no
+ * scribble overlay to size/position any more. */

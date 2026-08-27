@@ -276,10 +276,10 @@ export default function SpotifyCaseStudy() {
         <Row
           heading="Problem Statement:"
           media={
-            // px-5 py-7 + leading-relaxed — matches the same highlight-box
-            // treatment on SkinSprout/CyberSea, so it reads identically
-            // across all 3 case studies.
-            <div className="rounded-[8px] bg-[#f2f0f5] px-5 py-7">
+            // rounded-[5px] px-5 py-5 + leading-relaxed — matches the same
+            // highlight-box treatment on SkinSprout/CyberSea, so it reads
+            // identically across all 3 case studies.
+            <div className="rounded-[5px] bg-[#f2f0f5] px-5 py-5">
               <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
                 How might we extend the social excitement of Spotify Blend beyond the
                 first interaction?
@@ -295,9 +295,9 @@ export default function SpotifyCaseStudy() {
           eyebrow="03 / Design Process"
           heading="Challenge"
           media={
-            // px-5 py-7 + leading-relaxed — same consistency pass as this
-            // page's other highlight boxes.
-            <div className="rounded-[8px] bg-[#fbeded] px-5 py-7">
+            // rounded-[5px] px-5 py-5 + leading-relaxed — same consistency
+            // pass as this page's other highlight boxes.
+            <div className="rounded-[5px] bg-[#fbeded] px-5 py-5">
               <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
                 How do we make the product familiar to Spotify while also resembling its
                 own creation?
@@ -398,9 +398,9 @@ export default function SpotifyCaseStudy() {
           heading="Navigation Problem"
           media={
             <div className="space-y-[36px]">
-              {/* px-5 py-7 + leading-relaxed — same consistency pass as this
-                  page's other highlight boxes. */}
-              <div className="rounded-[8px] bg-[#fbeded] px-5 py-7">
+              {/* rounded-[5px] px-5 py-5 + leading-relaxed — same
+                  consistency pass as this page's other highlight boxes. */}
+              <div className="rounded-[5px] bg-[#fbeded] px-5 py-5">
                 <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
                   Users needed a way to move between stat cards without breaking the
                   visual rhythm of the layout.

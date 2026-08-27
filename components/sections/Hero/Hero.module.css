@@ -175,6 +175,12 @@
   color: rgba(0, 0, 0, 0.8);
 }
 
+.tagline em,
+.tagline i {
+  font-style: italic;
+  margin-right: 3px;
+}
+
 .nav {
   display: flex;
   flex-direction: column;
@@ -182,7 +188,7 @@
    * sake and partly to give the hover scribble (see .scribble below) room
    * to breathe without two adjacent buttons' ovals almost touching. */
   gap: 16px;
-  margin-top: 64px;
+  margin-top: 60px;
 }
 
 .navLink {
@@ -233,11 +239,12 @@
    * symmetric expand on every side) sidesteps that rule entirely, so the
    * oval actually grows to match the button's real text height and stays
    * centered on it, instead of being stuck at a fixed short height. */
-  --scribble-expand: 4px;
-  top: calc(-1 * var(--scribble-expand));
-  left: calc(-1 * var(--scribble-expand));
-  width: calc(100% + 2 * var(--scribble-expand));
-  height: calc(100% + 2 * var(--scribble-expand));
+  --scribble-expand-y: 6px;
+  --scribble-expand-x: 24px;
+  top: calc(-1 * var(--scribble-expand-y));
+  left: calc(-1 * var(--scribble-expand-x));
+  width: calc(100% + 2 * var(--scribble-expand-x));
+  height: calc(100% + 2 * var(--scribble-expand-y));
   color: inherit;
   opacity: 0;
   pointer-events: none;

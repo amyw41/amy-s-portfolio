@@ -12,7 +12,11 @@
 .pill {
   margin: 24px auto 0;
   width: min(100% - (2 * var(--pad)), var(--content-max));
-  height: clamp(48px, 4.5vw, 64px);
+  /* var(--taskbar-height) (lib/tokens.css) — single source of truth so
+   * CategoryDetail.module.css's own viewport-fit math can subtract the
+   * exact same value this pill actually occupies, instead of a second
+   * literal copy of this clamp() silently drifting out of sync with it. */
+  height: var(--taskbar-height);
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -102,11 +106,12 @@
  * centered on the text regardless of font-size. */
 .scribble {
   position: absolute;
-  --scribble-expand: 4px;
-  top: calc(-1 * var(--scribble-expand));
-  left: calc(-1 * var(--scribble-expand));
-  width: calc(100% + 2 * var(--scribble-expand));
-  height: calc(100% + 2 * var(--scribble-expand));
+  --scribble-expand-y: 4px;
+  --scribble-expand-x: 18px;
+  top: calc(-1 * var(--scribble-expand-y));
+  left: calc(-1 * var(--scribble-expand-x));
+  width: calc(100% + 2 * var(--scribble-expand-x));
+  height: calc(100% + 2 * var(--scribble-expand-y));
   color: inherit;
   opacity: 0;
   pointer-events: none;

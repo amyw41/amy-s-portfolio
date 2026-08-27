@@ -165,10 +165,12 @@ export default function Playground() {
                     >
                       {/* Each plate is a link into its own detail page (see
                           app/playground/[category]/page.tsx) — .plateLink's
-                          own :hover rule (Playground.module.css) tints
-                          PlateCircle's label as the affordance that it's
-                          clickable, the same hover treatment jar-portfolio's
-                          own group/group-hover version used. */}
+                          own :hover rule (Playground.module.css) lightens
+                          the whole plate as the affordance that it's
+                          clickable, same group/group-hover trick jar-
+                          portfolio's own version used (see
+                          Playground.module.css's own comment for the earlier
+                          hover treatments this replaced). */}
                       <Link
                         href={`/playground/${cat.slug}`}
                         aria-label={`View ${cat.label} photos`}
@@ -193,7 +195,11 @@ export default function Playground() {
                           exit={{ opacity: 0 }}
                           transition={SLIDE_UP_TRANSITION}
                         >
-                          <PlateCircle label={cat.label} src={cat.plateImage} size={PLATE_SIZE} />
+                          <PlateCircle
+                            label={cat.label}
+                            src={cat.plateImage}
+                            size={PLATE_SIZE}
+                          />
                         </motion.div>
                       </Link>
                     </div>

@@ -9,7 +9,15 @@ import { content } from "@/lib/content";
 
 const copy = content.en.footer;
 
-export default function Footer() {
+interface FooterProps {
+  /** Drops the footer's normal padding-top rhythm — for a page whose own
+   * layout (e.g. the Playground category detail page) is deliberately
+   * designed to land flush against this footer with zero gap. See
+   * Footer.module.css's own .flush comment. */
+  flush?: boolean;
+}
+
+export default function Footer({ flush = false }: FooterProps = {}) {
   // Stacking order for the image pile, back to front. Clicking/grabbing an
   // item moves its id to the end (front) permanently, until another item
   // is clicked — z-index below is derived straight from position in this
@@ -21,7 +29,7 @@ export default function Footer() {
   }
 
   return (
-    <footer className={styles.footer}>
+    <footer className={`${styles.footer} ${flush ? styles.flush : ""}`}>
       <div className={`pageContainer ${styles.container}`}>
         <div className={styles.panel}>
           {/* z-index fixed well above the highest possible item z-index

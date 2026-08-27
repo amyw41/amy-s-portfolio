@@ -4,9 +4,53 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { CSSProperties, ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAutoPlayInView } from "@/lib/useAutoPlayInView";
+import {
+  buildWobblyPillPath,
+  PILL_STROKE_COLOR,
+  PILL_STROKE_WIDTH,
+  PILL_VIEW_BOX,
+} from "@/components/sections/Hero/wobblyOval";
+
+// Hand-sketched hover ring for this Back button — the wobbly PILL variant
+// (wobblyOval.ts's buildWobblyPillPath), not the hero/taskbar's own wide
+// oval: an ellipse stretched over "← Back"'s much shorter, wider box reads
+// as a nearly flat, barely-visible line (see that function's own comment).
+// This route is Tailwind-based (see this file's own top comment), so unlike
+// the other two usages this is revealed via Tailwind's group/group-hover
+// rather than a CSS Module :hover rule, but it's the exact same underlying
+// mechanism. vectorEffect="non-scaling-stroke" keeps the line clearly
+// visible at this button's small font-size, where the oval's own thin
+// stroke would have all but disappeared. Was a bigger 12px expand + full
+// opacity on hover at first (to fix the oval's own near-invisibility) —
+// dialed back per request once the pill shape/thickness alone was already
+// legible: 20px expand gives "BACK" more breathing room inside the ring
+// (its K no longer touches the edge), 0.55 opacity reads as a lighter,
+// less-solid-black line instead.
+function ScribbleOval({ seed, active = false }: { seed: number; active?: boolean }) {
+  const path = useMemo(() => buildWobblyPillPath(seed), [seed]);
+  return (
+    <svg
+      className={`pointer-events-none absolute -left-6 -top-1.5 h-[calc(100%+12px)] w-[calc(100%+48px)] transition-opacity duration-150 ${
+        active ? "opacity-[0.55]" : "opacity-0 group-hover:opacity-[0.55]"
+      }`}
+      viewBox={PILL_VIEW_BOX}
+      fill="none"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
+      <path
+        d={path}
+        stroke={PILL_STROKE_COLOR}
+        strokeWidth={PILL_STROKE_WIDTH}
+        strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
+  );
+}
 
 // Shared building blocks behind every written case study on the site
 // (SkinSprout, Spotify Guessr, CyberSea) — extracted so the three don't
@@ -246,7 +290,7 @@ export function Row({
 // className onto each <section> tag by hand eventually did.
 export function Section({ id, children }: { id: string; children: ReactNode }) {
   return (
-    <section id={id} className="mt-[120px] scroll-mt-24 space-y-[72px]">
+    <section id={id} className="first-of-type:mt-[30px] md:first-of-type:mt-[64px] mt-[120px] scroll-mt-24 space-y-[72px]">
       {children}
     </section>
   );
@@ -346,24 +390,38 @@ function TableOfContents({
         <button
           type="button"
           onClick={() => router.back()}
-          // Was its own one-off text-[clamp(18px,1.7vw,20px)] — matched to
-          // var(--fs-small) per request, the same size used for every other
-          // "button"-style text on the site (footer links/credit, project
-          // category filters).
-          // font-extralight (200), not font-light (300) — a touch lighter
-          // per request.
-          className="mb-5 flex items-center gap-1.5 bg-transparent border-none p-0 cursor-pointer font-instrument leading-none text-[length:var(--fs-small)] font-extralight tracking-[-0.03em] uppercase text-black/40 hover:text-black/70 transition-colors"
+          // Was a bare "← Back" text link with a hand-drawn scribble-oval
+          // hover ring (see ScribbleOval above, still used by the section
+          // links below) — replaced with a solid black circle + arrow per
+          // request, same treatment as the Playground plate page's own Back
+          // button (CategoryDetail.module.css), so "back" reads as one
+          // consistent control everywhere on the site. Hover is now a plain
+          // opacity fade (matching this file's other CTA-style buttons)
+          // instead of the scribble reveal — no more need for `relative`/
+          // `group` now that there's no absolutely-positioned ring riding
+          // on top of this button. self-start still needed: TableOfContents'
+          // own flex-col container defaults to align-items: stretch, which
+          // would otherwise stretch this button to the sidebar's full width.
+          className="mb-5 flex w-fit items-center gap-2 self-start bg-transparent border-none p-0 cursor-pointer font-instrument leading-none text-[length:var(--fs-small)] font-extralight tracking-[-0.03em] uppercase text-black/40 transition-opacity duration-300 ease-out hover:opacity-[0.615]"
         >
-          <span aria-hidden="true">←</span>
+          <span
+            aria-hidden="true"
+            className="flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center rounded-full bg-black text-[12px] leading-none text-white"
+          >
+            ←
+          </span>
           Back
         </button>
       )}
-      {sectionNav.map((s) => (
+      {sectionNav.map((s, idx) => (
         <a
           key={s.id}
           href={`#${s.id}`}
-          className={`text-left transition-colors hover:text-[#2460A4] whitespace-nowrap ${activeId === s.id ? "text-[#2460A4]" : ""}`}
+          className={`group relative text-left transition-colors whitespace-nowrap w-fit self-start ${
+            activeId === s.id ? "text-[#2460A4]" : "text-black/60 hover:text-[#2460A4]"
+          }`}
         >
+          <ScribbleOval seed={idx + 10} active={activeId === s.id} />
           {s.label}
         </a>
       ))}
