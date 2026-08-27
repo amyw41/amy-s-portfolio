@@ -842,21 +842,39 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
 
       // Only Matter.Mouse, not MouseConstraint — Mouse still gives us
       // robust, already-battle-tested mouse *and* touch position/button
-      // tracking (mouse.position, mouse.button) relative to `container`,
-      // pixelRatio-corrected. What we don't want is MouseConstraint's own
-      // *picking*: it hit-tests against a body's actual collision geometry,
-      // which for every item here is BODY_SCALE (0.38) of the rendered
-      // image — deliberately small so the pile can overlap and pack down
-      // tightly (see BODY_SCALE's own comment). That's great for physics,
-      // but it means only the small dead-centre of an item was ever
-      // grabbable, which read as "the drag is only centered on a tiny spot"
-      // rather than the whole visible object. pickBodyAt below hit-tests
-      // against each item's full *visual* footprint (its alpha-bbox size,
-      // the same size the div actually renders at) instead, so grabbing
-      // anywhere on the object works — while the collision body driving the
-      // pile stays exactly as small as it was.
+      // tracking (mouse.position, mouse.button) relative to `container`.
+      // What we don't want is MouseConstraint's own *picking*: it hit-tests
+      // against a body's actual collision geometry, which for every item
+      // here is BODY_SCALE (0.38) of the rendered image — deliberately
+      // small so the pile can overlap and pack down tightly (see
+      // BODY_SCALE's own comment). That's great for physics, but it means
+      // only the small dead-centre of an item was ever grabbable, which
+      // read as "the drag is only centered on a tiny spot" rather than the
+      // whole visible object. pickBodyAt below hit-tests against each
+      // item's full *visual* footprint (its alpha-bbox size, the same size
+      // the div actually renders at) instead, so grabbing anywhere on the
+      // object works — while the collision body driving the pile stays
+      // exactly as small as it was.
       const mouse = Mouse.create(container);
-      mouse.pixelRatio = window.devicePixelRatio || 1;
+      // Deliberately NOT setting mouse.pixelRatio here (Matter's own
+      // default is 1, unless the element carries a data-pixel-ratio
+      // attribute, which `container` doesn't). This used to be set to
+      // window.devicePixelRatio, which sounds like the "HiDPI-correct"
+      // thing to do but is actually the root cause of a real device-
+      // dependent hit-test bug: Matter's own _getRelativeMousePosition only
+      // needs pixelRatio to correct for a <canvas>'s backing-buffer
+      // resolution differing from its CSS size — for `container` (a plain
+      // div, never a canvas), that internal ratio is already 1, so setting
+      // pixelRatio to devicePixelRatio just divided every reported click
+      // coordinate by an EXTRA 2 or 3 on any Retina/HiDPI screen, silently
+      // squishing every click toward the container's own top-left corner
+      // before it ever reached pickBodyAt. On a devicePixelRatio:1 display
+      // (an older monitor, some external displays) this was invisible; on
+      // a MacBook/phone/anything HiDPI it made items near the top-left
+      // grabbable from anywhere and items elsewhere barely grabbable at
+      // all — exactly the "works on my computer, wildly different on my
+      // friend's" report this fixes.
+      mouse.pixelRatio = 1;
 
       // Matter.Mouse's own setElement (called internally by Mouse.create)
       // always attaches a non-passive 'wheel' listener that unconditionally
