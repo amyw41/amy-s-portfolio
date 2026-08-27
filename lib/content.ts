@@ -42,7 +42,7 @@ export const content = {
         hackathon: "hackathon",
       },
       extras: {
-        title: "extras",
+        title: "Extras",
         description: "A few more things worth a look.",
         modalTitle: "Extras",
         galleryPlaceholder: "Gallery — coming soon.",

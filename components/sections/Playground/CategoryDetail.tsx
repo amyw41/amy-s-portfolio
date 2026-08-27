@@ -249,13 +249,17 @@ export default function CategoryDetail({ category }: { category: EtcCategory }) 
           transition={SLIDE_UP_TRANSITION}
         >
           <header className={styles.header}>
-            {/* Solid black circle + arrow, replacing the old scribble-oval
-             * hover ring — matches the same treatment now used on the case
-             * study pages' own Back button (CaseStudyKit.tsx), per request,
-             * so "back" reads as one consistent affordance app-wide instead
-             * of two different weights depending on the page. */}
-            <button type="button" onClick={() => router.push('/')} className={styles.backButton}>
-              <span aria-hidden="true" className={styles.backCircle}>←</span>
+            {/* Briefly tried a solid black circle around the arrow (matching
+             * a similar attempt on the case-study pages' own Back button,
+             * CaseStudyKit.tsx) — dropped per request ("i dont want the
+             * black circle around the arrows"). Plain "←" glyph again.
+             * router.push('/playground'), not router.back() — per request,
+             * this should always land on the top of the plates overview
+             * grid, not wherever you happened to scroll to on it before
+             * clicking into a category (router.push always scrolls to top
+             * by default, so no extra scroll-reset code is needed here). */}
+            <button type="button" onClick={() => router.push('/playground')} className={styles.backButton}>
+              <span aria-hidden="true">←</span>
               Back
             </button>
             <h1 className={styles.title}>{category.label}</h1>
@@ -314,7 +318,7 @@ export default function CategoryDetail({ category }: { category: EtcCategory }) 
                       </button>
                       <button
                         type="button"
-                        onClick={() => router.push('/')}
+                        onClick={() => advance(1)}
                         aria-label="Next photo"
                         className={styles.navArrow}
                         style={{

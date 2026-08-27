@@ -77,6 +77,30 @@
   transform-origin: top left;
 }
 
+/* Hosts ONLY the AnimatePresence-wrapped plates (index.tsx), as a sibling of
+ * .poster/.collage rather than a child of whichever one is currently active.
+ * Reason: .poster/.collage's own width/height/transform swap the INSTANT
+ * isPlateMode flips (same render as the state update, no transition of its
+ * own) — an exiting plate positioned inside that div would have its whole
+ * containing block (size + scale) yanked out from under it in that same
+ * frame, snapping its visual position/size to something nonsensical before
+ * its own opacity fade had rendered even one frame, which is what actually
+ * made plates look like they vanished instantly rather than faded, even
+ * though their exit animation was technically still running the whole time.
+ * This layer always carries the poster's own scale math (index.tsx passes
+ * the same width/height/transform it gives .poster), so a plate's
+ * containing block never changes shape mid-exit — only its own opacity
+ * (SLIDE_UP_TRANSITION) animates, which is what actually reads as a fade.
+ * pointer-events:none so it never blocks clicks into .collage underneath
+ * once empty; .plateSlot re-enables pointer-events for its own Link. */
+.plateLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  pointer-events: none;
+}
+
 /* Plate slot: absolute position at (left, top) — the CENTER of the plate,
  * in the poster's fixed design-space coordinates — recentered via
  * translate. Plain CSS transform is safe here (unlike .photoSlot below):
@@ -86,6 +110,9 @@
 .plateSlot {
   position: absolute;
   transform: translate(-50%, -50%);
+  /* Re-enable clicks/hover — .plateLayer above (its parent) is
+   * pointer-events:none so it never blocks the collage underneath. */
+  pointer-events: auto;
 }
 
 /* The plate's own Link wrapper (index.tsx) — display:block so the anchor
@@ -134,7 +161,11 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  border-radius: 4px;
+  /* Was 4px — brought down to match .collageImageBox's own 2px (below) per
+   * request, since this is the exact same photo (PhotoTile.tsx persists one
+   * element across both modes) just styled differently per mode; no reason
+   * for its corners to change along with everything else about it. */
+  border-radius: 2px;
 }
 
 .photoImage {
@@ -181,18 +212,25 @@
  * same "no stylesheet transform" reasoning as .photoSlot above (this is the
  * very same DOM element, just restyled — a `layout`-enabled element's FLIP
  * animation is driven by an inline transform Framer writes straight onto
- * the node, which a stylesheet transform would silently clobber). */
+ * the node, which a stylesheet transform would silently clobber). A flex
+ * column so the caption below just takes whatever's left under the image
+ * box's own (inline, per-tile) height, rather than needing its own absolute
+ * math — see .collageCaption's own comment for why it moved under the photo
+ * instead of overlaid on top of it. */
 .collageItem {
   position: absolute;
+  display: flex;
+  flex-direction: column;
 }
 
 .collageImageBox {
-  /* No fixed aspect-ratio here any more — the root .collageItem above is
-   * already sized to this exact photo's own natural ratio (see PhotoTile's
-   * own comment), so this box just fills it at 100%/100%. */
+  /* Height set inline per-tile (PhotoTile.tsx) to the box's own imageHeight
+   * — the photo's true aspect-ratio height, now distinct from .collageItem's
+   * own full height above (which also includes .collageCaption's row below
+   * it). flex-shrink:0 so the caption's own content never compresses it. */
   position: relative;
   width: 100%;
-  height: 100%;
+  flex-shrink: 0;
   overflow: hidden;
   border-radius: 2px;
   background: #f2f2f2;
@@ -202,31 +240,55 @@
   object-fit: cover;
 }
 
-/* Overlay instead of flowing below the image (see PhotoTile's own comment
- * on why: the box height above is load-bearing row-packing math now, not
- * free to grow for a caption). Sits at the bottom of the photo itself, on
- * a gradient scrim for legibility over any photo, hidden until hover so the
- * collage itself reads as a clean photo wall at rest. */
+/* Fills the rest of .collageItem's own height below the image — that
+ * height is now solved PER PHOTO (index.tsx's own estimateCaptionHeight
+ * call, see justifiedLayout.ts) from the caption's real wrapped line count
+ * at this exact column width, not a fixed one-size-fits-all row, so a
+ * longer caption that wraps to 3+ lines just gets a taller box (and the
+ * next photo in this column starts further down) instead of being
+ * clamped/truncated. align-items:flex-start (not center) anchors the
+ * caption to the TOP of this space — combined with .collageCaption's own
+ * padding-top below, that's GALLERY_CAPTION_PADDING_TOP (6px) above the
+ * text; whatever's left below it down to this band's own bottom edge
+ * comes out to exactly GALLERY_CAPTION_PADDING_BOTTOM (10px) by
+ * construction, since the band's total height already bakes both numbers
+ * in (justifiedLayout.ts's estimateCaptionHeight) — per request, slightly
+ * closer to its own photo than to the next one, not perfectly centered. */
+.collageCaptionBand {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+}
+
+/* Sits in its own dedicated row below the photo now — not overlaid on top
+ * of it — per request: no gradient scrim, no white-on-photo legibility
+ * problem to solve, just plain left-aligned text in the space
+ * computeJustifiedLayout reserved for it (captionHeight, see
+ * justifiedLayout.ts). Always visible, matching the Extras gallery's own
+ * caption convention (components/case-studies/ExtrasCaseStudy.tsx) — the
+ * point of moving it off the photo was to be able to leave it up
+ * permanently without ever obscuring the image. No line-clamp any more —
+ * the box below it is now sized to fit however many lines it actually
+ * wraps to (see .collageCaptionBand's own comment), so there's nothing to
+ * truncate. line-height is explicit (not the browser's own "normal") so
+ * index.tsx's own line-count estimate — which has to guess this same
+ * number ahead of the real DOM layout — matches what actually renders. */
 .collageCaption {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
   margin: 0;
-  padding: 20px 10px 8px;
-  font-size: var(--fs-small);
+  /* Was var(--fs-small) (clamp(14px, 1.25vw, 19px)), then a literal 13px,
+   * then 20px — now reads --gallery-caption-fs (lib/tokens.css) instead of
+   * its own literal value, per request, so this and the Extras gallery's
+   * own caption (ExtrasCaseStudy.tsx, via Tailwind's
+   * text-[length:var(...)]) stay connected to one shared size. */
+  font-size: var(--gallery-caption-fs);
   font-weight: 300;
-  color: #fff;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
-  opacity: 0;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .collageCaption {
-    transition: opacity 150ms ease;
-  }
-}
-
-.collageImageBox:hover .collageCaption {
-  opacity: 1;
+  line-height: 1.3;
+  color: rgba(0, 0, 0, 0.7);
+  text-align: left;
+  width: 100%;
+  /* Matches justifiedLayout.ts's own GALLERY_CAPTION_PADDING_TOP — see
+   * .collageCaptionBand's own comment for why this (plus align-items:
+   * flex-start there) is what actually produces the 6px-above/10px-below
+   * split. */
+  padding-top: 6px;
 }

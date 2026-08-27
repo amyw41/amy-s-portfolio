@@ -69,6 +69,19 @@
    * items render with an identical radius no matter their own art. */
   --jar-item-radius: 12px;
 
+  /* Single source of truth for gallery photo captions (Playground's own
+   * collage gallery AND the Extras case-study gallery) — both read this
+   * instead of each carrying its own copy, so a size change made in one
+   * place applies to both at once. Playground.module.css's .collageCaption
+   * reads it directly; ExtrasCaseStudy.tsx reads it via Tailwind's
+   * text-[length:var(...)] arbitrary-value syntax (same technique
+   * CaseStudyKit.tsx's own back button already uses for --fs-small). The
+   * matching reserved-row height each gallery's masonry packing math needs
+   * lives in code, not CSS — see GALLERY_CAPTION_HEIGHT in
+   * justifiedLayout.ts, which both galleries import instead of each
+   * declaring their own copy of that number either. */
+  --gallery-caption-fs: 16px;
+
   /* Single source of truth for the taskbar PILL's own height (Taskbar.
    * module.css's .pill) — was a literal clamp() duplicated inline there.
    * Pulled out so CategoryDetail.module.css's viewport-fit math (.section's

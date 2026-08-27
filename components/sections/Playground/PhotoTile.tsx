@@ -102,30 +102,55 @@ export default function PhotoTile({
         opacity: { duration: 0.35, ease: "easeOut" },
       }}
     >
-      {/* Collage mode: the root motion.div above is already sized to
-          `box.width` x `box.height` — index.tsx's own computeJustifiedLayout
-          solved that box to be exactly this photo's own natural aspect
-          ratio (width/height), never a shared/cropped shape. So this inner
-          box just fills the root at 100%/100%; object-fit:cover on the
-          image below is really a no-op in practice (the box and the image
-          already share the same ratio) and is only there as a safety net
-          against any rounding sliver. The caption lives INSIDE this box as
-          a bottom-overlay (see .collageCaption) rather than flowing below
-          it, since the root's height is now load-bearing layout math —
-          adding a caption's own height below would throw off every row
-          after it. */}
-      <div className={isPlateMode ? styles.photoFrame : styles.collageImageBox}>
-        <Image
-          src={photo.src}
-          alt=""
-          fill
-          sizes={isPlateMode ? `${Math.round(width)}px` : `${Math.round(box.width)}px`}
-          className={isPlateMode ? styles.photoImage : styles.collageImage}
-          draggable={false}
-          unoptimized={process.env.NODE_ENV !== "production"}
-        />
-        {!isPlateMode && <p className={styles.collageCaption}>{photo.caption}</p>}
-      </div>
+      {/* Collage mode: the root motion.div above is sized to `box.width` x
+          `box.height`, where `box.height` = the photo's own natural-ratio
+          image height PLUS a fixed caption row that
+          index.tsx's own computeJustifiedLayout call reserves for every
+          tile (see justifiedLayout.ts's `captionHeight` param) — the
+          packing math already accounts for the caption, so giving it that
+          space here doesn't throw off any row after it. .collageItem
+          (styles) is a flex column: the image box below is set to exactly
+          `box.imageHeight` (its own true aspect-ratio height, not the
+          fuller box height), and the caption takes up the rest. */}
+      {isPlateMode ? (
+        <div className={styles.photoFrame}>
+          <Image
+            src={photo.src}
+            alt=""
+            fill
+            sizes={`${Math.round(width)}px`}
+            className={styles.photoImage}
+            draggable={false}
+            unoptimized={process.env.NODE_ENV !== "production"}
+          />
+        </div>
+      ) : (
+        <>
+          <div className={styles.collageImageBox} style={{ height: box.imageHeight }}>
+            <Image
+              src={photo.src}
+              alt=""
+              fill
+              sizes={`${Math.round(box.width)}px`}
+              className={styles.collageImage}
+              draggable={false}
+              unoptimized={process.env.NODE_ENV !== "production"}
+            />
+          </div>
+          {/* .collageCaptionBand fills whatever's left of the box below the
+              image (flex:1) and vertically centers the caption inside it
+              (align-items:center) — so the space above the caption (band
+              top to caption top) and the space below it (caption bottom to
+              the box's own bottom edge) come out equal by construction,
+              regardless of whether the caption wraps to 1 or 2 lines. See
+              index.tsx's own computeJustifiedLayout call, which now passes
+              rowGap:0 so nothing pads that space back out asymmetrically
+              after the box ends. */}
+          <div className={styles.collageCaptionBand}>
+            <p className={styles.collageCaption}>{photo.caption}</p>
+          </div>
+        </>
+      )}
     </motion.div>
   );
 }

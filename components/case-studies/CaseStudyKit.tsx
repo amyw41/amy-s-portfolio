@@ -356,6 +356,7 @@ function TableOfContents({
   className,
   style,
   home = false,
+  extra,
 }: {
   sectionNav: SectionNavItem[];
   className: string;
@@ -364,6 +365,12 @@ function TableOfContents({
   // router.back() so the browser restores the user to their exact scroll
   // position on the previous page rather than jumping to the top.
   home?: boolean;
+  // Renders between the Back button and the numbered section links — for
+  // a page that wants something else "where the contents normally are"
+  // instead of (or alongside) plain section links, e.g. the Extras page's
+  // category-filter buttons (ExtrasCaseStudy.tsx). Plumbed through from
+  // CaseStudyLayout's own `sidebarExtra` prop below.
+  extra?: ReactNode;
 }) {
   const activeId = useActiveSection(sectionNav.map((s) => s.id));
   const router = useRouter();
@@ -392,31 +399,44 @@ function TableOfContents({
           onClick={() => router.back()}
           // Was a bare "← Back" text link with a hand-drawn scribble-oval
           // hover ring (see ScribbleOval above, still used by the section
-          // links below) — replaced with a solid black circle + arrow per
-          // request, same treatment as the Playground plate page's own Back
-          // button (CategoryDetail.module.css), so "back" reads as one
-          // consistent control everywhere on the site. Hover is now a plain
-          // opacity fade (matching this file's other CTA-style buttons)
-          // instead of the scribble reveal — no more need for `relative`/
-          // `group` now that there's no absolutely-positioned ring riding
-          // on top of this button. self-start still needed: TableOfContents'
-          // own flex-col container defaults to align-items: stretch, which
-          // would otherwise stretch this button to the sidebar's full width.
-          className="mb-5 flex w-fit items-center gap-2 self-start bg-transparent border-none p-0 cursor-pointer font-instrument leading-none text-[length:var(--fs-small)] font-extralight tracking-[-0.03em] uppercase text-black/40 transition-opacity duration-300 ease-out hover:opacity-[0.615]"
+          // links below) — briefly tried a solid black circle around the
+          // arrow, dropped per request ("i dont want the black circle
+          // around the arrows"). Back to a plain "←" glyph, no circle, no
+          // scribble ring. Hover still darkens the text toward solid black
+          // (kept from that same pass) instead of the old opacity-fade
+          // scribble-reveal — no more need for `relative`/`group` now that
+          // there's no absolutely-positioned ring riding on top of this
+          // button. self-start still needed: TableOfContents' own flex-col
+          // container defaults to align-items: stretch, which would
+          // otherwise stretch this button to the sidebar's full width.
+          className="mb-5 flex w-fit items-center gap-1.5 self-start bg-transparent border-none p-0 cursor-pointer font-instrument leading-none text-[length:var(--fs-small)] font-extralight tracking-[-0.03em] uppercase text-black/40 transition-colors duration-200 ease-out hover:text-black/85"
         >
-          <span
-            aria-hidden="true"
-            className="flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center rounded-full bg-black text-[12px] leading-none text-white"
-          >
-            ←
-          </span>
+          <span aria-hidden="true">←</span>
           Back
         </button>
       )}
+      {extra}
       {sectionNav.map((s, idx) => (
         <a
           key={s.id}
           href={`#${s.id}`}
+          // A plain hash link here pushes a new browser history entry every
+          // time it's clicked, so scrolling through 5-6 sections leaves 5-6
+          // entries behind it — the Back button above (router.back()) was
+          // then just undoing those one at a time instead of actually
+          // leaving the page, so it looked like it randomly landed on
+          // whichever section you'd last clicked instead of returning to
+          // the homepage. preventDefault + replaceState (not pushState)
+          // still updates the URL hash and still scrolls, it just doesn't
+          // add a history entry — so this page is always exactly one entry
+          // deep no matter how much in-page nav happens, and Back always
+          // goes straight to the real previous page at its real scroll
+          // position.
+          onClick={(e) => {
+            e.preventDefault();
+            document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth" });
+            history.replaceState(null, "", `#${s.id}`);
+          }}
           className={`group relative text-left transition-colors whitespace-nowrap w-fit self-start ${
             activeId === s.id ? "text-[#2460A4]" : "text-black/60 hover:text-[#2460A4]"
           }`}
@@ -528,7 +548,19 @@ export function CaseStudyHero({
 // matching jar-portfolio's own breakpoint, which this file was ported from)
 // the sidebar hides and the content falls back to an inline top-nav with a
 // Back button instead.
-export function CaseStudyLayout({ sectionNav, children }: { sectionNav: SectionNavItem[]; children: ReactNode }) {
+export function CaseStudyLayout({
+  sectionNav,
+  sidebarExtra,
+  children,
+}: {
+  sectionNav: SectionNavItem[];
+  // Rendered in the sidebar between the Back button and the numbered
+  // section links — see TableOfContents' own `extra` prop, which this is
+  // just plumbed through to. Optional: every existing case study omits it
+  // and gets the plain Back-button-then-links sidebar exactly as before.
+  sidebarExtra?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <div className="tw-scope min-h-screen bg-white">
       <div className="pageContainer flex w-full gap-10 lg:gap-16">
@@ -549,7 +581,7 @@ export function CaseStudyLayout({ sectionNav, children }: { sectionNav: SectionN
             to fill the space the taskbar leaves behind, then sits flush
             against the top for the rest of the page. */}
         <aside className="sticky top-0 hidden h-fit w-48 shrink-0 pb-24 pt-8 lg:block lg:pt-14">
-          <TableOfContents sectionNav={sectionNav} className="flex-col gap-3.5" home />
+          <TableOfContents sectionNav={sectionNav} className="flex-col gap-3.5" home extra={sidebarExtra} />
         </aside>
 
         {/* Main reading content: shrinks responsively with the container.

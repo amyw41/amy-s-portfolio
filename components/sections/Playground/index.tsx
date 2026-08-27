@@ -8,7 +8,7 @@ import CircleToggle from "@/components/ui/CircleToggle";
 import PlateCircle from "./PlateCircle";
 import PhotoTile from "./PhotoTile";
 import { useElementWidth } from "./useElementWidth";
-import { computeJustifiedLayout } from "./justifiedLayout";
+import { computeJustifiedLayout, estimateCaptionHeight, getCaptionFont, getColumnWidth } from "./justifiedLayout";
 import {
   DESIGN_WIDTH,
   MAX_SCALE,
@@ -81,16 +81,32 @@ export default function Playground() {
   // then, from the same ResizeObserver) so it's already correct the instant
   // you switch to collage view, never a stale/zero flash the way `scale`
   // above deliberately avoids for the poster.
-  const collageLayout = useMemo(
-    () =>
-      computeJustifiedLayout(
-        COLLAGE_PHOTOS.map((photo) => photo.width / photo.height),
-        availableWidth,
-        collageColumnCount(availableWidth),
-        COLLAGE_GAP,
-      ),
-    [availableWidth],
-  );
+  const collageLayout = useMemo(() => {
+    const columnCount = collageColumnCount(availableWidth);
+    const columnWidth = getColumnWidth(availableWidth, columnCount, COLLAGE_GAP);
+    // Per-photo, not one fixed row for all of them — a caption's real
+    // wrapped line count depends on both its own text AND this exact column
+    // width, so a photo with a long caption (lib/etc.ts has several) gets a
+    // taller reserved row than one with a short caption, instead of every
+    // tile paying for the longest one up front.
+    const { fontSizePx, fontFamily } = getCaptionFont();
+    const captionHeights = COLLAGE_PHOTOS.map((photo) => estimateCaptionHeight(photo.caption, columnWidth, fontSizePx, fontFamily));
+    return computeJustifiedLayout(
+      COLLAGE_PHOTOS.map((photo) => photo.width / photo.height),
+      availableWidth,
+      columnCount,
+      COLLAGE_GAP,
+      captionHeights,
+      // rowGap:0 — the caption band below each photo (see PhotoTile.tsx's
+      // own .collageCaptionBand) already centers the caption and so
+      // supplies its own symmetric breathing room; an extra vertical gap
+      // here on top of that would only pad the space below the caption,
+      // breaking the "equal distance above and below" the centering is
+      // meant to give. COLLAGE_GAP above still applies horizontally,
+      // between columns.
+      0,
+    );
+  }, [availableWidth]);
   const collageBoxBySrc = useMemo(() => {
     const map = new Map<string, (typeof collageLayout.boxes)[number]>();
     COLLAGE_PHOTOS.forEach((photo, i) => map.set(photo.src, collageLayout.boxes[i]));
@@ -140,13 +156,19 @@ export default function Playground() {
             `scale` is already correct the instant you switch back to plate
             view, never a stale/zero flash. */}
         <div ref={wrapRef} className={styles.stageWrap} style={isPlateMode ? { height: VISIBLE_STAGE_HEIGHT * scale } : undefined}>
+          {/* Plates live in their own layer, always sized/scaled exactly
+              like .poster below regardless of isPlateMode — see
+              .plateLayer's own comment (Playground.module.css) for why: a
+              plate previously lived inside the very div whose size/transform
+              swap instantly the moment you leave plate mode, so an exiting
+              plate's containing block was yanked out from under it in the
+              same frame its exit animation started, reading as an instant
+              disappearance instead of a fade even though `exit` was
+              genuinely still running. Decoupling this layer from that swap
+              is what lets the opacity fade actually show. */}
           <div
-            className={isPlateMode ? styles.poster : styles.collage}
-            style={
-              isPlateMode
-                ? { width: DESIGN_WIDTH, height: VISIBLE_STAGE_HEIGHT, transform: `scale(${scale})` }
-                : { height: collageLayout.totalHeight }
-            }
+            className={styles.plateLayer}
+            style={{ width: DESIGN_WIDTH, height: VISIBLE_STAGE_HEIGHT, transform: `scale(${scale})` }}
           >
             {/* Plates only ever exist in plate mode — unlike the photos
                 below, they don't morph into anything in collage view, they
@@ -206,7 +228,16 @@ export default function Playground() {
                   );
                 })}
             </AnimatePresence>
+          </div>
 
+          <div
+            className={isPlateMode ? styles.poster : styles.collage}
+            style={
+              isPlateMode
+                ? { width: DESIGN_WIDTH, height: VISIBLE_STAGE_HEIGHT, transform: `scale(${scale})` }
+                : { height: collageLayout.totalHeight }
+            }
+          >
             {/* One persistent wrapper per category, ALWAYS mounted in both
                 modes (never conditionally rendered like the plates above) —
                 that's what lets it just get restyled between modes instead

@@ -76,19 +76,17 @@
  * .stage's own margin-top: auto (see its comment), not a fixed gap here.
  * position: relative anchors .scribble below. */
 /* Was a bare "← Back" text link with a hand-drawn scribble-oval hover ring
- * (no fill/border at all) — replaced with a solid black circle + arrow per
- * request, same treatment as the case-study pages' own Back button
- * (CaseStudyKit.tsx), so "back" reads as one consistent, deliberate control
- * everywhere on the site rather than a quiet text link on some pages and a
- * solid circle on others. Hover is now the same opacity-fade convention
- * used by .navArrow below (and ProjectCard/plateLink/ExtrasCard site-wide),
- * not the old scribble reveal — a filled circle doesn't need a second hover
- * affordance drawn around it. */
+ * (no fill/border at all) — briefly tried a solid black circle around the
+ * arrow (matching a similar attempt on the case-study pages' own Back
+ * button, CaseStudyKit.tsx), dropped per request ("i dont want the black
+ * circle around the arrows"). Back to a plain "←" glyph, no circle, no
+ * scribble ring. Hover still darkens the text toward solid black (kept from
+ * that same pass) instead of the old opacity-fade scribble-reveal. */
 .backButton {
   justify-self: start;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin: 0;
   padding: 0;
   border: none;
@@ -105,30 +103,12 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .backButton {
-    transition: opacity 300ms ease-out;
+    transition: color 200ms ease-out;
   }
 }
 
 .backButton:hover {
-  opacity: 0.615;
-}
-
-/* The circle itself — sized off the button's own text (roughly one line
- * tall) rather than matching .navArrow's much bigger 50px carousel arrows,
- * since this sits inline next to "BACK" instead of floating alone over the
- * photo ring. */
-.backCircle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #000;
-  color: #fff;
-  font-size: 12px;
-  line-height: 1;
+  color: rgba(0, 0, 0, 0.85);
 }
 
 /* ---------- stage: hosts the plate hub + arc, scaled to fit ---------- */
