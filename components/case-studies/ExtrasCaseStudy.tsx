@@ -193,8 +193,12 @@ export default function ExtrasCaseStudy() {
                 // masonry gallery exactly (Playground.module.css's
                 // .collageImageBox), since this collage is built on that
                 // same layout technique and should read as the same kind of
-                // gallery, corners included.
-                className="relative w-full shrink-0 overflow-hidden rounded-[2px]"
+                // gallery, corners included. Same border too — same subtle
+                // gray as the homepage project cards (ProjectCard.module.css
+                // border: 1px solid rgba(0,0,0,0.12)), now also on
+                // .collageImageBox itself, so all 3 bordered-image spots
+                // agree.
+                className="relative w-full shrink-0 overflow-hidden rounded-[2px] border border-black/[0.12]"
                 style={{ height: box.imageHeight }}
               >
                 <Image
@@ -202,8 +206,19 @@ export default function ExtrasCaseStudy() {
                   alt={photo.caption}
                   fill
                   sizes={`${Math.round(box.width)}px`}
-                  className="object-cover"
+                  // opacity-0 + transition, flipped to opaque on this exact
+                  // <img>'s own load — same fix, same reasoning as
+                  // Playground's own PhotoTile.tsx (.photoImage/.collageImage
+                  // there): without it, each photo just pops in abruptly at
+                  // whatever moment its own request happens to finish,
+                  // instead of appearing together with the page's mount
+                  // fade — most visible on a first, uncached load, which is
+                  // exactly what was reported here.
+                  className="object-cover opacity-0 transition-opacity duration-[400ms] ease-out motion-reduce:opacity-100 motion-reduce:transition-none"
                   unoptimized={process.env.NODE_ENV !== "production"}
+                  onLoad={(e) => {
+                    e.currentTarget.style.opacity = "1";
+                  }}
                 />
                 {/* Same construction as ProjectCard.module.css's own
                     .dimOverlay/.dimActive (ported to Tailwind since this

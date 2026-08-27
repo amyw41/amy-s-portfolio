@@ -94,6 +94,21 @@ export const content = {
           after: "!",
         },
       },
+      // Copy for the About page's third section (components/sections/About/
+      // WhatsInside.tsx) — a carousel/gallery of the same PROJECTS shown on
+      // the homepage. `heading` is the exact same "what's inside?" string as
+      // projects.heading above (the homepage section this one mirrors),
+      // kept as its own literal rather than a shared reference so the two
+      // can't be accidentally coupled by a future edit to either. Toggle
+      // labels follow playground.toggles' own "<mode> view" naming
+      // convention below.
+      whatsInside: {
+        heading: "what's inside?",
+        toggles: {
+          carousel: "carousel view",
+          gallery: "gallery view",
+        },
+      },
     },
     playground: {
       title: "what's on my plate?",

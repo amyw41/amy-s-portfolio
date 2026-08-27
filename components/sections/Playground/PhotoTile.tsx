@@ -122,6 +122,16 @@ export default function PhotoTile({
             className={styles.photoImage}
             draggable={false}
             unoptimized={process.env.NODE_ENV !== "production"}
+            // Fades .photoImage in (see its own opacity/transition in
+            // Playground.module.css) the instant this exact <img> is
+            // actually ready to show — fires immediately for an
+            // already-cached image (indistinguishable from no transition
+            // at that speed) and whenever a fresh one finishes loading
+            // otherwise, instead of every photo popping in abruptly at
+            // its own, uncoordinated moment.
+            onLoad={(e) => {
+              e.currentTarget.style.opacity = "1";
+            }}
           />
         </div>
       ) : (
@@ -135,6 +145,10 @@ export default function PhotoTile({
               className={styles.collageImage}
               draggable={false}
               unoptimized={process.env.NODE_ENV !== "production"}
+              // Same fade-in-on-load as the plate-mode Image above.
+              onLoad={(e) => {
+                e.currentTarget.style.opacity = "1";
+              }}
             />
           </div>
           {/* .collageCaptionBand fills whatever's left of the box below the
