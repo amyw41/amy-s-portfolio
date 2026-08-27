@@ -136,10 +136,8 @@
 }
 
 /* Stacked (date under company/title) below 900px, date pushed to the row's
- * far right above it — see .rowDate/.rowDateInline below. position:relative
- * anchors .companyPreview below for rows that have one. */
+ * far right above it — see .rowDate/.rowDateInline below. */
 .row {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -152,88 +150,40 @@
    * in case other first-child styling is needed later. */
 }
 
-/* Rows with a known company url render as this instead of a plain .row div
- * (same class, plus this one) — an <a>, so needs its own reset since
- * anchors don't inherit block layout/decoration-none the way a div would.
- * No lighten/blacken hover color of its own (unlike the site's other two
- * hover families — big tiles that lighten, small gray controls that go
- * black) — the preview card below fading in is the row's whole hover
- * affordance. */
+/* Groups the logo + company name into one flex unit — same 9px gap
+ * .rowMain itself uses between its own children, so the spacing reads as
+ * continuous whether or not this particular company has a link. When it
+ * does (lib/experience.ts's own `url`), Experience.tsx renders this as a
+ * single <a> (plus .companyLink below) instead of a plain div, so the logo
+ * and name are ONE combined link/button, not two separate ones — per
+ * request. */
+.companyLinkGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+/* Lightens toward white on hover/focus — same opacity/treatment as the
+ * site's other big clickable tiles (ProjectCard's .card:hover, Playground's
+ * .plateLink:hover, ExtrasCard's .trigger:hover), per request, not the
+ * smaller gray controls' darken-to-black. Job title and date sit outside
+ * this group (see .rowText below) and stay plain text either way. */
 .companyLink {
-  width: 100%;
   color: inherit;
   text-decoration: none;
   cursor: pointer;
 }
 
-/* Hover/focus preview card — see Experience.tsx's own CompanyPreview
- * comment for why this shows the row's own logo rather than a live
- * screenshot of the destination site. Anchored to the row's own top-left
- * (near the logo) and floats above it rather than pushing surrounding rows
- * around; pointer-events:none while hidden so it can never intercept a
- * click meant for the row itself or a neighboring one. */
-.companyPreview {
-  position: absolute;
-  left: 0;
-  bottom: calc(100% + 8px);
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px 10px 10px;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(6px);
-  pointer-events: none;
-}
-
 @media (prefers-reduced-motion: no-preference) {
-  .companyPreview {
-    transition: opacity 200ms ease-out, transform 200ms ease-out, visibility 200ms;
+  .companyLink {
+    transition: opacity 300ms ease-out;
   }
 }
 
-.companyLink:hover .companyPreview,
-.companyLink:focus-visible .companyPreview {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.companyPreviewLogo {
-  position: relative;
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  overflow: hidden;
-  border-radius: 8px;
-  background: #fff;
-}
-
-.companyPreviewLogoImage {
-  object-fit: contain;
-}
-
-.companyPreviewText {
-  text-align: left;
-  white-space: nowrap;
-}
-
-.companyPreviewName {
-  margin: 0;
-  font-size: var(--fs-small);
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.85);
-}
-
-.companyPreviewUrl {
-  margin: 2px 0 0;
-  font-size: calc(var(--fs-small) * 0.85);
-  font-weight: 300;
-  color: rgba(0, 0, 0, 0.5);
+.companyLink:hover,
+.companyLink:focus-visible {
+  opacity: 0.615;
 }
 
 .rowMain {
@@ -248,6 +198,7 @@
  * wide wordmark), so object-contain inside a fixed box is what keeps every
  * one the same visual weight regardless of its native shape. */
 .logo {
+  display: block;
   position: relative;
   width: 42px;
   height: 42px;
@@ -272,6 +223,12 @@
 }
 
 .companyName {
+  /* Explicit now (was inherited from .rowLine's own font-size) — moved out
+   * of .rowLine into .companyLinkGroup (a sibling of .rowText) when the
+   * logo+name became one combined link, so it no longer picks up that
+   * font-size for free. Same var as .jobTitle below, so the two read as
+   * the same size again, per request. */
+  font-size: var(--fs-small);
   font-weight: 500;
   color: rgba(0, 0, 0, 0.7);
 }
