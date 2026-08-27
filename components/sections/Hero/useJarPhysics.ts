@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import Matter from "matter-js";
 import { JAR_INTERIOR_POINTS, JAR_WALL_THICKNESS, computeJarWallRects, createJarWallBodies, type JarWallRect } from "./jar-shape";
-import { computeAlphaBBox, ALPHA_THRESHOLD, type AlphaBBox } from "./alpha-bbox";
+import { computeAlphaBBox, dilateAlphaMask, ALPHA_THRESHOLD, type AlphaBBox } from "./alpha-bbox";
 import { getOutlineMask } from "@/lib/outline";
 import { PLACEMENT_ORDER, LAYER_ORDER, TARGET_X_FRACTION } from "./jar-layout";
 import type { JarItemDef } from "./items.manifest";
@@ -502,6 +502,40 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
           item.shape === "blob" ? computeDilationRadius(item, bboxes[item.id], outlineThicknessPx) : null,
         ]),
       ) as Record<string, number | null>;
+      // pickBodyAt's hit test grows each 'blob' item's alpha mask out by
+      // this exact same radius, so the clickable area reaches exactly as
+      // far as that item's own drawn outline ring does — no further, no
+      // less (requested directly: the old exact-alpha test felt like only
+      // the very center of the artwork registered a click, next to a
+      // clearly-visible ring the mouse should also count as "on the item"
+      // within). 'box' items (the 3 project cards) have no ring — border
+      // is a plain box-shadow, not a per-item raster — so they keep the
+      // tight, undilated mask, zero padding.
+      //
+      // The mask array itself has to grow by `radius` pixels on every side
+      // (not just have its existing pixels dilated in place) — the ring
+      // visually reaches BEYOND the tight alpha bbox on all sides, and a
+      // same-size dilation would just clip that growth at the original
+      // bbox's own edge, right where the ring actually starts.
+      const clickMasks = Object.fromEntries(
+        items.map((item) => {
+          const bbox = bboxes[item.id];
+          const radius = Math.round(dilationRadii[item.id] ?? 0);
+          if (radius <= 0) {
+            return [item.id, { mask: bbox.alphaMask, width: bbox.bboxW, height: bbox.bboxH, padR: 0 }];
+          }
+          const paddedW = bbox.bboxW + radius * 2;
+          const paddedH = bbox.bboxH + radius * 2;
+          const padded = new Uint8Array(paddedW * paddedH);
+          for (let y = 0; y < bbox.bboxH; y++) {
+            const srcOffset = y * bbox.bboxW;
+            const dstOffset = (y + radius) * paddedW + radius;
+            padded.set(bbox.alphaMask.subarray(srcOffset, srcOffset + bbox.bboxW), dstOffset);
+          }
+          const mask = dilateAlphaMask(padded, paddedW, paddedH, radius);
+          return [item.id, { mask, width: paddedW, height: paddedH, padR: radius }];
+        }),
+      ) as Record<string, { mask: Uint8Array; width: number; height: number; padR: number }>;
 
       for (const item of items) {
         const b = bboxes[item.id];
@@ -881,19 +915,25 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
           const sinA = Math.sin(angle);
           const localX = dx * cosA + dy * sinA;
           const localY = -dx * sinA + dy * cosA;
-          if (Math.abs(localX) > info.divW / 2 || Math.abs(localY) > info.divH / 2) continue;
 
           const bbox = bboxes[pi.id];
-          if (bbox && bbox.alphaMask.length > 0) {
+          const click = clickMasks[pi.id];
+          if (bbox && click && click.mask.length > 0) {
             // info.divW/divH is the bbox scaled up to its rendered size, so
             // this ratio maps a rendered-space offset back into the mask's
-            // own pixel-index space regardless of how big the item is drawn.
+            // own pixel-index space regardless of how big the item is drawn
+            // — same ratio computeRenderInfo used to size the ring itself
+            // (ringPad there, padPx here — same formula, same units).
             const pixelScale = info.divW / bbox.bboxW;
-            const px = Math.floor((localX + info.divW / 2) / pixelScale);
-            const py = Math.floor((localY + info.divH / 2) / pixelScale);
-            if (px < 0 || py < 0 || px >= bbox.bboxW || py >= bbox.bboxH) continue;
-            const alpha = bbox.alphaMask[py * bbox.bboxW + px];
+            const padPx = click.padR * pixelScale;
+            if (Math.abs(localX) > info.divW / 2 + padPx || Math.abs(localY) > info.divH / 2 + padPx) continue;
+            const px = Math.floor((localX + info.divW / 2) / pixelScale) + click.padR;
+            const py = Math.floor((localY + info.divH / 2) / pixelScale) + click.padR;
+            if (px < 0 || py < 0 || px >= click.width || py >= click.height) continue;
+            const alpha = click.mask[py * click.width + px];
             if (alpha <= ALPHA_THRESHOLD) continue;
+          } else if (Math.abs(localX) > info.divW / 2 || Math.abs(localY) > info.divH / 2) {
+            continue;
           }
 
           const z = zIndexRef.current.get(pi.id) ?? 0;
