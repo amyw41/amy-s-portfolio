@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import styles from "./Footer.module.css";
 import FooterItem from "./FooterItem";
@@ -9,15 +10,26 @@ import { content } from "@/lib/content";
 
 const copy = content.en.footer;
 
+// Matches exactly a playground category detail route (e.g. /playground/
+// drawing) — NOT the /playground overview grid itself, which scrolls at its
+// own pace like every other page and wants the footer's normal padding.
+const FLUSH_ROUTE = /^\/playground\/[^/]+$/;
+
 interface FooterProps {
   /** Drops the footer's normal padding-top rhythm — for a page whose own
-   * layout (e.g. the Playground category detail page) is deliberately
-   * designed to land flush against this footer with zero gap. See
-   * Footer.module.css's own .flush comment. */
+   * layout (the Playground category detail page) is deliberately designed
+   * to land flush against this footer with zero gap. See Footer.module.css's
+   * own .flush comment. Defaults to auto-detecting that one route (Footer is
+   * rendered once, globally, from the root layout — a Server Component that
+   * can't call usePathname itself, see Taskbar.tsx's own comment on the same
+   * constraint — so this is the one place that CAN actually gate it per
+   * route); pass explicitly only to override that default. */
   flush?: boolean;
 }
 
-export default function Footer({ flush = false }: FooterProps = {}) {
+export default function Footer({ flush: flushProp }: FooterProps = {}) {
+  const pathname = usePathname();
+  const flush = flushProp ?? FLUSH_ROUTE.test(pathname);
   // Stacking order for the image pile, back to front. Clicking/grabbing an
   // item moves its id to the end (front) permanently, until another item
   // is clicked — z-index below is derived straight from position in this

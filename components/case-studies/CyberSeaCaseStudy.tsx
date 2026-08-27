@@ -1,11 +1,14 @@
 "use client";
 
 import {
+  CaseStudyCta,
   CaseStudyHero,
   CaseStudyImage,
   CaseStudyLayout,
+  HighlightBox,
   Row,
   Section,
+  StatRow,
   TEXT,
   type SectionNavItem,
 } from "@/components/case-studies/CaseStudyKit";
@@ -164,26 +167,17 @@ export default function CyberSeaCaseStudy() {
         <Row
           heading="Why does this matter?"
           media={
-            <div className="grid grid-cols-1 gap-6 rounded-[10px] bg-[#dde7df] p-6 text-center sm:grid-cols-3 sm:p-8">
-              {/* CHECK: the three captions below are a best-effort read of
-                  very small text — the stat numbers themselves (12-15%,
-                  80%, 4x) were legible with confidence. */}
-              {[
+            // CHECK: the three captions below are a best-effort read of very
+            // small text — the stat numbers themselves (12-15%, 80%, 4x)
+            // were legible with confidence.
+            <StatRow
+              bg="#dde7df"
+              stats={[
                 { stat: "12-15%", caption: "of global shipping passes through Arctic waters" },
                 { stat: "80%", caption: "of Arctic data requires expert interpretation" },
                 { stat: "4x", caption: "more challenging to plan Arctic routes globally" },
-              ].map((s) => (
-                <div key={s.stat}>
-                  <p className="font-body text-[32px] font-medium text-black/90">{s.stat}</p>
-                  {/* Not TEXT.content directly — it bakes in text-left, which
-                      as a rule on this same element overrides the parent's
-                      text-center regardless of class order in the string. */}
-                  <p className="mt-1 font-body text-[18px] font-light leading-relaxed text-black/60 text-center">
-                    {s.caption}
-                  </p>
-                </div>
-              ))}
-            </div>
+              ]}
+            />
           }
         >
           <p>
@@ -241,17 +235,12 @@ export default function CyberSeaCaseStudy() {
           media={
             // Red, not the page's usual blue highlight — matches the same
             // #fbeded shade Spotify's own case study uses for its problem/
-            // challenge callouts (see Spotify's "Challenge" boxes).
-            // rounded-[5px] px-5 py-5 + leading-relaxed — matches
-            // SkinSprout's own Problem Statement/WIP/Navigation-problem
-            // boxes, so this same highlight-box component reads identically
-            // across all 3 case studies, not just within this one page.
-            <div className="rounded-[5px] bg-[#fbeded] px-5 py-5">
-              <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
-                How might we close the gap between Arctic expertise and public
-                understanding?
-              </p>
-            </div>
+            // challenge callouts (see Spotify's "Challenge" boxes). Now the
+            // same shared HighlightBox every case study's callouts use.
+            <HighlightBox bg="#fbeded">
+              How might we close the gap between Arctic expertise and public
+              understanding?
+            </HighlightBox>
           }
         />
       </Section>
@@ -293,13 +282,9 @@ export default function CyberSeaCaseStudy() {
           eyebrow="04 / Implementation"
           heading="Challenge"
           media={
-            // rounded-[5px] px-5 py-5 + leading-relaxed — same consistency
-            // pass as this page's own Problem Statement box above.
-            <div className="rounded-[5px] bg-[#fbeded] px-5 py-5">
-              <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
-                How can we balance heavy branding with accessibility?
-              </p>
-            </div>
+            // Same shared HighlightBox as this page's own Problem Statement
+            // box above.
+            <HighlightBox bg="#fbeded">How can we balance heavy branding with accessibility?</HighlightBox>
           }
         />
 
@@ -371,15 +356,9 @@ export default function CyberSeaCaseStudy() {
           }
           after={
             // CHECK: swap in the real repo URL — placeholder for now.
-            <a
-              href="https://github.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ backgroundColor: HIGHLIGHT }}
-              className={`block w-full rounded-[8px] px-6 py-[14px] !text-center transition-transform duration-200 hover:scale-[1.01] ${TEXT.frame}`}
-            >
+            <CaseStudyCta href="https://github.com/" highlightColor={HIGHLIGHT}>
               Check it out on GitHub!
-            </a>
+            </CaseStudyCta>
           }
         />
 

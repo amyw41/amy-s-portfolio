@@ -15,6 +15,7 @@ import {
 import { useFlipReorder } from "@/components/sections/Projects/useFlipReorder";
 import { EXTRAS_CATEGORIES, EXTRAS_PHOTOS, type ExtrasCategory } from "@/lib/extras";
 import { content } from "@/lib/content";
+import { FADE_IN_TRANSITION } from "@/lib/motion";
 
 const copy = content.en.projects.extras;
 
@@ -148,7 +149,7 @@ export default function ExtrasCaseStudy() {
         </div>
       }
     >
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.45, ease: "easeOut" }}>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={FADE_IN_TRANSITION}>
         <h1 className="font-instrument text-[clamp(2.75rem,7.5vw,4.5rem)] font-light leading-none tracking-[-0.04em] text-black/90">
           {copy.title}
         </h1>

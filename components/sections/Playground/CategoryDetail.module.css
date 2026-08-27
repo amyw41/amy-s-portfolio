@@ -7,18 +7,17 @@
   padding-top: clamp(24px, 4vw, 48px);
   display: flex;
   flex-direction: column;
-  /* Was overflow: hidden — removed so the plate crop (CategoryDetail.tsx's
-   * own PLATE_VISIBLE_RATIO vs. PLATE_LAYOUT_RATIO split) can bleed DOWN
-   * past this section's own bottom edge into the footer that immediately
-   * follows (which paints over it, being later in the DOM — see that
-   * component's own comment for why this reveals the plate without also
-   * shrinking the arc/arrows). NOTE: overflow-x: hidden + overflow-y:
-   * visible is NOT equivalent to removing overflow entirely — per spec,
-   * pairing visible with a non-visible value on the other axis computes
-   * visible to auto (a scrollable, still-clipped box), which would silently
-   * defeat this whole change. Leaving overflow unset on both axes instead;
-   * width never needs its own clipping guard here since `scale` (widthScale)
-   * already fits the composition's design width to whatever's available. */
+  /* Was briefly changed to overflow:visible so the plate crop
+   * (CategoryDetail.tsx's own PLATE_VISIBLE_RATIO vs. PLATE_LAYOUT_RATIO
+   * split) could bleed DOWN past this section's own bottom edge into the
+   * footer that immediately follows, on the theory that the footer (being
+   * later in the DOM) would always paint over the excess. In practice the
+   * bleed is taller than the footer's own box, so the tail end showed past
+   * the footer AND added real scroll height past it — restored to
+   * overflow:hidden, which clips the plate crop at this section's own fixed
+   * (viewport-based, not content-based) height instead, so nothing ever
+   * shows past the footer and nothing here can ever inflate page length. */
+  overflow: hidden;
 }
 
 /* Stretches this section's single child (the global .pageContainer div) to
@@ -139,8 +138,11 @@
    * visibly inside the footer's black panel instead of just touching it.
    * A small positive value here lifts the whole hub just off .stage's
    * bottom edge instead — a nudge, not a big repositioning (this is a pure
-   * position shift, doesn't touch the composition's own scale). */
-  bottom: 8px;
+   * position shift, doesn't touch the composition's own scale). Was 8px —
+   * with .section's overflow now clipping the plate crop exactly at its own
+   * bottom edge (see .section's own comment), 8px read as almost touching
+   * the footer's top edge; bumped up for a touch more breathing room. */
+  bottom: 48px;
   transform-origin: bottom center;
 }
 

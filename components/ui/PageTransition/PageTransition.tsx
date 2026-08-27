@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { FADE_IN_TRANSITION } from "@/lib/motion";
 
 // Wraps every route's content (rendered once, from the root layout, right
 // alongside Taskbar) so navigating between pages always fades the
@@ -32,8 +33,9 @@ export default function PageTransition({ children }: { children: ReactNode }) {
       // duration/ease matched to every other mount fade-in on the site
       // (Taskbar's own fade-in, and CaseStudyHero/TableOfContents in
       // CaseStudyKit.tsx) — was 0.35s, the one outlier at a different rate;
-      // now all four fade-ins run at the same 0.45s easeOut.
-      transition={{ duration: 0.45, ease: "easeOut" }}
+      // now all four fade-ins run at the same 0.45s easeOut, via the one
+      // shared constant (lib/motion.ts) instead of 5 independent copies.
+      transition={FADE_IN_TRANSITION}
     >
       {children}
     </motion.div>

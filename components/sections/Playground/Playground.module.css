@@ -70,11 +70,24 @@
 
 /* ---------- plate mode: fixed-design poster, scaled to fit ---------- */
 
+/* pointer-events:none — this div's own box spans the entire design-space
+ * area (its width/height are set inline, in index.tsx, to the full stage
+ * size), so even with no visible content of its own at a given pixel, an
+ * empty div still captures hit-testing across its whole box by default.
+ * Since .poster sits ON TOP of .plateLayer (it's the later sibling — see
+ * .plateLayer's own comment for why they're split apart), that silently ate
+ * every hover/click meant for a plate underneath, everywhere except where a
+ * .photoSlot child happened to sit (and those are already pointer-events:
+ * none themselves — see .photoSlot's own comment — so this was blocking
+ * things even in the gaps between photos). Nothing inside .poster needs to
+ * be interactive in plate mode (no photo is ever clickable), so disabling
+ * it here is safe. */
 .poster {
   position: absolute;
   top: 0;
   left: 0;
   transform-origin: top left;
+  pointer-events: none;
 }
 
 /* Hosts ONLY the AnimatePresence-wrapped plates (index.tsx), as a sibling of
@@ -151,9 +164,16 @@
  * translate(-50%,-50%) the way .plateSlot above does — this element also
  * carries Framer's `layout` prop, whose own FLIP animation is driven by an
  * inline `transform` written straight onto the DOM node, which would
- * silently override any stylesheet `transform` on the same element. */
+ * silently override any stylesheet `transform` on the same element.
+ * pointer-events:none — nothing in plate mode makes an individual photo
+ * itself clickable (only the plate underneath is a Link), but since
+ * .plateLayer now renders BEFORE .poster in the DOM (see .plateLayer's own
+ * comment above for why they were split apart), these invisible/faded-in
+ * photo boxes would otherwise sit visually on top of the plate's Link and
+ * silently swallow the click before it ever reached the plate. */
 .photoSlot {
   position: absolute;
+  pointer-events: none;
 }
 
 .photoFrame {

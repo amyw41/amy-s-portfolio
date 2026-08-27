@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./Taskbar.module.css";
 import { content } from "@/lib/content";
+import { FADE_IN_TRANSITION } from "@/lib/motion";
 import {
   buildWobblyPillPath,
   PILL_STROKE_COLOR,
@@ -94,7 +95,7 @@ export default function Taskbar() {
       className={`${styles.pill} ${hidden ? styles.pillHidden : ""}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.45, ease: "easeOut" }}
+      transition={FADE_IN_TRANSITION}
     >
       <Link href="/" className={styles.logoLink} aria-label="Home">
         <Image

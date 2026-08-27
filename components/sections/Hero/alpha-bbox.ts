@@ -5,9 +5,19 @@ export interface AlphaBBox {
   bboxY: number;
   bboxW: number;
   bboxH: number;
+  /** Raw alpha channel (0–255 per pixel), cropped to exactly the bbox above
+   * (row-major, length bboxW*bboxH) — lets a caller test "is THIS pixel
+   * actually part of the artwork" instead of just "is it inside the
+   * rectangular bbox," which a thin/irregular silhouette (a tube, a bag
+   * shot at an angle) leaves plenty of transparent room inside for. Falls
+   * back to an all-255 (fully opaque) mask on the same degenerate paths the
+   * bbox itself falls back on (tainted canvas, fully-transparent file) —
+   * without real pixel data there's nothing better to do than treat the
+   * whole rect as hittable, same as before this field existed. */
+  alphaMask: Uint8Array;
 }
 
-const ALPHA_THRESHOLD = 8;
+export const ALPHA_THRESHOLD = 8;
 
 // One offscreen canvas, reused (just resized) across every computeAlphaBBox
 // call instead of allocating a fresh <canvas> element per image — this runs
@@ -44,6 +54,10 @@ export interface ScanRegion {
 export function computeAlphaBBox(img: HTMLImageElement, scanRegion?: ScanRegion): AlphaBBox {
   const width = img.naturalWidth;
   const height = img.naturalHeight;
+  // Shared by every fallback path below — without real pixel data, an
+  // all-255 (fully opaque) mask makes the alpha-aware hit test behave
+  // exactly like the old rectangle-only test, rather than rejecting every
+  // pixel by accident.
   const fallback: AlphaBBox = {
     naturalWidth: width,
     naturalHeight: height,
@@ -51,6 +65,7 @@ export function computeAlphaBBox(img: HTMLImageElement, scanRegion?: ScanRegion)
     bboxY: 0,
     bboxW: width,
     bboxH: height,
+    alphaMask: new Uint8Array(Math.max(0, width * height)).fill(255),
   };
 
   if (!sharedCanvas) sharedCanvas = document.createElement("canvas");
@@ -102,6 +117,19 @@ export function computeAlphaBBox(img: HTMLImageElement, scanRegion?: ScanRegion)
   const bboxW = maxX - minX + 1;
   const bboxH = maxY - minY + 1;
 
+  // Second pass, cropped to the bbox we just found — reuses the same `data`
+  // already read above (no extra canvas draws/reads), just re-indexed into
+  // a row-major, bbox-sized array so a caller can look up "is pixel (px,py)
+  // relative to the bbox's own top-left actually opaque" in O(1).
+  const alphaMask = new Uint8Array(bboxW * bboxH);
+  for (let y = 0; y < bboxH; y++) {
+    const srcRowOffset = (bboxY + y) * width * 4;
+    const dstRowOffset = y * bboxW;
+    for (let x = 0; x < bboxW; x++) {
+      alphaMask[dstRowOffset + x] = data[srcRowOffset + (bboxX + x) * 4 + 3];
+    }
+  }
+
   return {
     naturalWidth: width,
     naturalHeight: height,
@@ -109,5 +137,6 @@ export function computeAlphaBBox(img: HTMLImageElement, scanRegion?: ScanRegion)
     bboxY,
     bboxW,
     bboxH,
+    alphaMask,
   };
 }

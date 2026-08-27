@@ -3,9 +3,11 @@
 import TextHighlight from "@/components/case-studies/TextHighlight";
 import {
   BulletList,
+  CaseStudyCta,
   CaseStudyHero,
   CaseStudyImage,
   CaseStudyLayout,
+  HighlightBox,
   PlaceholderBox,
   Row,
   Section,
@@ -276,15 +278,10 @@ export default function SpotifyCaseStudy() {
         <Row
           heading="Problem Statement:"
           media={
-            // rounded-[5px] px-5 py-5 + leading-relaxed — matches the same
-            // highlight-box treatment on SkinSprout/CyberSea, so it reads
-            // identically across all 3 case studies.
-            <div className="rounded-[5px] bg-[#f2f0f5] px-5 py-5">
-              <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
-                How might we extend the social excitement of Spotify Blend beyond the
-                first interaction?
-              </p>
-            </div>
+            <HighlightBox bg="#f2f0f5">
+              How might we extend the social excitement of Spotify Blend beyond the
+              first interaction?
+            </HighlightBox>
           }
         />
       </Section>
@@ -295,14 +292,10 @@ export default function SpotifyCaseStudy() {
           eyebrow="03 / Design Process"
           heading="Challenge"
           media={
-            // rounded-[5px] px-5 py-5 + leading-relaxed — same consistency
-            // pass as this page's other highlight boxes.
-            <div className="rounded-[5px] bg-[#fbeded] px-5 py-5">
-              <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
-                How do we make the product familiar to Spotify while also resembling its
-                own creation?
-              </p>
-            </div>
+            <HighlightBox bg="#fbeded">
+              How do we make the product familiar to Spotify while also resembling its
+              own creation?
+            </HighlightBox>
           }
         />
 
@@ -398,14 +391,10 @@ export default function SpotifyCaseStudy() {
           heading="Navigation Problem"
           media={
             <div className="space-y-[36px]">
-              {/* rounded-[5px] px-5 py-5 + leading-relaxed — same
-                  consistency pass as this page's other highlight boxes. */}
-              <div className="rounded-[5px] bg-[#fbeded] px-5 py-5">
-                <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
-                  Users needed a way to move between stat cards without breaking the
-                  visual rhythm of the layout.
-                </p>
-              </div>
+              <HighlightBox bg="#fbeded">
+                Users needed a way to move between stat cards without breaking the
+                visual rhythm of the layout.
+              </HighlightBox>
               <p className={TEXT.content}>
                 Currently, the cards are aligned vertically. Do users swipe, tap, or
                 should they click somewhere else on the screen?
@@ -453,15 +442,12 @@ export default function SpotifyCaseStudy() {
             </div>
           }
           after={
-            <a
+            <CaseStudyCta
               href="https://www.figma.com/proto/0i9bMQFOCCtSDtrcVcJqNO/spotify-game?node-id=66-264&starting-point-node-id=66%3A264"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ backgroundColor: HIGHLIGHT }}
-              className={`block w-full rounded-[8px] px-6 py-[14px] !text-center transition-transform duration-200 hover:scale-[1.01] ${TEXT.frame}`}
+              highlightColor={HIGHLIGHT}
             >
               Check out the Figma prototype!
-            </a>
+            </CaseStudyCta>
           }
         />
       </Section>

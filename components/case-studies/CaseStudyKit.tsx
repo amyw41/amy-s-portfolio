@@ -7,6 +7,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAutoPlayInView } from "@/lib/useAutoPlayInView";
+import { FADE_IN_TRANSITION } from "@/lib/motion";
 import {
   buildWobblyPillPath,
   PILL_STROKE_COLOR,
@@ -176,6 +177,93 @@ export function PlaceholderBox({
       className={`flex w-full items-center justify-center rounded-[8px] px-6 text-center ${TEXT.frame} ${ratio ? "" : "py-[14px]"} ${className}`}
     >
       {label}
+    </div>
+  );
+}
+
+// Rounded, tinted callout box for a single centered line (or two) of text —
+// a problem statement, a challenge, a WIP notice. Was independently
+// hand-copied at 8 sites across the 3 written case studies (CyberSea x2,
+// SkinSprout x3, Spotify x3) with an identical className string, which had
+// already drifted once (an earlier rounded-[8px]/px-5 py-6 version had to be
+// hand-corrected back to rounded-[5px]/px-5 py-5 at every single site — see
+// this repo's own git history) before landing here as one shared component.
+// `bg` isn't defaulted the way CaseStudyImage/PlaceholderBox default
+// `highlightColor` — every one of the 8 original sites picked its own tint
+// (SkinSprout's own HIGHLIGHT constant, or a one-off hex), so callers keep
+// choosing it explicitly rather than silently inheriting some new "default"
+// tint that never actually appeared in the original 8.
+export function HighlightBox({
+  children,
+  bg,
+  className = "",
+}: {
+  children: ReactNode;
+  bg: string;
+  className?: string;
+}) {
+  return (
+    <div className={`rounded-[5px] px-5 py-5 ${className}`} style={{ backgroundColor: bg }}>
+      <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">{children}</p>
+    </div>
+  );
+}
+
+// Outbound "Check it out on GitHub!" / "Check out the Figma prototype!"
+// button — identical className copy-pasted at 3 sites (CyberSea, SkinSprout,
+// Spotify), each just varying href/label/highlightColor.
+export function CaseStudyCta({
+  href,
+  highlightColor = DEFAULT_HIGHLIGHT,
+  children,
+}: {
+  href: string;
+  highlightColor?: string;
+  children: ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ backgroundColor: highlightColor }}
+      className={`block w-full rounded-[8px] px-6 py-[14px] !text-center transition-transform duration-200 hover:scale-[1.01] ${TEXT.frame}`}
+    >
+      {children}
+    </a>
+  );
+}
+
+// Small 3-column stat callout ("12-15% of global shipping...", "5/5
+// completed the flow...") — was defined locally inside SkinSproutCaseStudy
+// (for its own 2 uses) while CyberSea independently hand-copied the exact
+// same markup for its own "Why does this matter?" block instead of
+// importing SkinSprout's version, so a future tweak to one would silently
+// never reach the other. `bg` isn't defaulted for the same reason as
+// HighlightBox above — every original call site picked its own tint.
+export function StatRow({
+  stats,
+  bg,
+}: {
+  stats: { stat: string; caption: string }[];
+  bg: string;
+}) {
+  return (
+    <div
+      className="grid grid-cols-1 gap-6 rounded-[10px] p-6 text-center sm:grid-cols-3 sm:p-8"
+      style={{ backgroundColor: bg }}
+    >
+      {stats.map((s) => (
+        <div key={s.stat}>
+          <p className="font-body text-[32px] font-medium text-black/90">{s.stat}</p>
+          {/* Not TEXT.content directly — it bakes in text-left, which as a
+              rule on this same element overrides the parent's text-center
+              regardless of class order in the string. */}
+          <p className="mt-1 font-body text-[18px] font-light leading-relaxed text-black/60 text-center">
+            {s.caption}
+          </p>
+        </div>
+      ))}
     </div>
   );
 }
@@ -379,7 +467,7 @@ function TableOfContents({
     <motion.nav
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.45, ease: "easeOut", delay: TOC_DELAY }}
+      transition={{ ...FADE_IN_TRANSITION, delay: TOC_DELAY }}
       // Size matched exactly to TEXT.content (the case study's own body
       // copy) per request — was its own close-but-not-quite
       // clamp(16px,1.5vw,18px).
@@ -491,7 +579,7 @@ export function CaseStudyHero({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.45, ease: "easeOut" }}
+      transition={FADE_IN_TRANSITION}
     >
       {/* font-light (300), not the old font-normal (400) — matches the
           homepage's own h1 weight (Hero.module.css's .title), per request

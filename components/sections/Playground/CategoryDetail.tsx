@@ -12,6 +12,7 @@ import { deriveItemMetrics, getArcSlot, MAX_ITEM_SIZE } from "./arcLayout";
 import { SLIDE_UP_TRANSITION } from "./posterLayout";
 import PlateCircle from "./PlateCircle";
 import styles from "./CategoryDetail.module.css";
+import { ARC_SPRING } from "@/lib/motion";
 
 // The prev/next nav arrows on the photo ring itself — bigger than a plain
 // text back link, so the ring makes visible room for them (see
@@ -350,7 +351,7 @@ export default function CategoryDetail({ category }: { category: EtcCategory }) 
                       style={{ originX: 0.5, originY: 1 }}
                       initial={false}
                       animate={{ rotate: -step * angleStepDeg }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      transition={ARC_SPRING}
                     >
                       {photos.map((photo, i) => {
                         const offset = offsets.get(i)!;
@@ -408,7 +409,7 @@ export default function CategoryDetail({ category }: { category: EtcCategory }) 
                                     rotate: { duration: 0 },
                                     scale: { duration: 0 },
                                   }
-                                : { type: "spring", stiffness: 300, damping: 30 }
+                                : ARC_SPRING
                             }
                             style={{
                               zIndex: 10 - dist,
@@ -432,7 +433,7 @@ export default function CategoryDetail({ category }: { category: EtcCategory }) 
                           >
                             <motion.div
                               animate={{ opacity: imageOpacity }}
-                              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                              transition={ARC_SPRING}
                               className={styles.itemImageWrap}
                               style={{ width: imageSize, height: imageSize }}
                             >

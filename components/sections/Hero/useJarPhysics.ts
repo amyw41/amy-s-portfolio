@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import Matter from "matter-js";
 import { JAR_INTERIOR_POINTS, JAR_WALL_THICKNESS, computeJarWallRects, createJarWallBodies, type JarWallRect } from "./jar-shape";
-import { computeAlphaBBox, type AlphaBBox } from "./alpha-bbox";
+import { computeAlphaBBox, ALPHA_THRESHOLD, type AlphaBBox } from "./alpha-bbox";
 import { getOutlineMask } from "@/lib/outline";
 import { PLACEMENT_ORDER, LAYER_ORDER, TARGET_X_FRACTION } from "./jar-layout";
 import type { JarItemDef } from "./items.manifest";
@@ -571,6 +571,18 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       let pinReleaseYPx = 0;
 
       const physicsItems: PhysicsItem[] = [];
+      // What's actually PAINTED on screen right now for each item — kept in
+      // lockstep with every place below that writes `el.style.transform`
+      // (the instant/replay/live-loop paint paths all interpolate between
+      // two physics ticks for smoothness, see startLiveLoop's own comment).
+      // pickBodyAt hit-tests against THIS, not the live body.position/angle
+      // — those can already be a full tick (or, during replay, the item's
+      // entire final resting pose) ahead of what the user is actually
+      // looking at, so a fast-moving/still-falling item's raw physics
+      // position could sit on top of a click meant for whatever's visually
+      // underneath it. Falls back to body.position/angle for any item not
+      // yet painted (before the very first frame).
+      const renderedPose = new Map<string, { x: number; y: number; angle: number }>();
       const bodyIdToItemId = new Map<number, string>();
       // True once an item's centre has crossed below the mouth line —
       // a one-way latch (see stepPhysics): once true, never re-pinned,
@@ -835,6 +847,20 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       // that by -body.angle gives the same offset in the body's own
       // unrotated local frame, which is what both the rectangle test and
       // the drag constraint's pointB (below) need.
+      //
+      // The rectangle check alone was the click point landing inside an
+      // item's bounding box but on a fully-transparent pixel — fine for a
+      // roughly-rectangular item (the plate, most cards) but wrong for a
+      // thin/irregular silhouette (Laneige's tall thin tube, a bag of
+      // chips shot at an angle): plenty of the rectangle around those is
+      // empty space that visually belongs to whatever's stacked underneath,
+      // so clicking there should pick the item actually under the cursor,
+      // not silently "win" for the transparent one on top. The alpha check
+      // below re-maps that same local (rotated, centred) offset into the
+      // item's own cropped alpha mask — built once at load from the exact
+      // same pixel data the bbox itself was measured from (see
+      // alpha-bbox.ts) — and skips this candidate unless the specific pixel
+      // under the cursor is actually part of the artwork.
       function pickBodyAt(x: number, y: number): PhysicsItem | null {
         let best: PhysicsItem | null = null;
         let bestZ = -Infinity;
@@ -842,13 +868,34 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
           const info = currentRenderInfo[pi.id];
           if (!info) continue;
           const { body } = pi;
-          const dx = x - body.position.x;
-          const dy = y - body.position.y;
-          const cosA = Math.cos(body.angle);
-          const sinA = Math.sin(body.angle);
+          // Prefer the pose actually on screen right now over the live
+          // physics state — see renderedPose's own comment above for why
+          // those two can disagree, especially for a still-moving item.
+          const pose = renderedPose.get(pi.id);
+          const posX = pose ? pose.x : body.position.x;
+          const posY = pose ? pose.y : body.position.y;
+          const angle = pose ? pose.angle : body.angle;
+          const dx = x - posX;
+          const dy = y - posY;
+          const cosA = Math.cos(angle);
+          const sinA = Math.sin(angle);
           const localX = dx * cosA + dy * sinA;
           const localY = -dx * sinA + dy * cosA;
           if (Math.abs(localX) > info.divW / 2 || Math.abs(localY) > info.divH / 2) continue;
+
+          const bbox = bboxes[pi.id];
+          if (bbox && bbox.alphaMask.length > 0) {
+            // info.divW/divH is the bbox scaled up to its rendered size, so
+            // this ratio maps a rendered-space offset back into the mask's
+            // own pixel-index space regardless of how big the item is drawn.
+            const pixelScale = info.divW / bbox.bboxW;
+            const px = Math.floor((localX + info.divW / 2) / pixelScale);
+            const py = Math.floor((localY + info.divH / 2) / pixelScale);
+            if (px < 0 || py < 0 || px >= bbox.bboxW || py >= bbox.bboxH) continue;
+            const alpha = bbox.alphaMask[py * bbox.bboxW + px];
+            if (alpha <= ALPHA_THRESHOLD) continue;
+          }
+
           const z = zIndexRef.current.get(pi.id) ?? 0;
           if (z > bestZ) {
             bestZ = z;
@@ -1283,6 +1330,7 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
           const el = itemElsRef.current.get(id);
           if (!el) continue;
           el.style.transform = `translate3d(${body.position.x - halfWidth}px, ${body.position.y - halfHeight}px, 0) rotate(${body.angle}rad)`;
+          renderedPose.set(id, { x: body.position.x, y: body.position.y, angle: body.angle });
         }
       }
 
@@ -1408,6 +1456,7 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
             const y = p.y + (body.position.y - p.y) * alpha;
             const angle = p.angle + (body.angle - p.angle) * alpha;
             el.style.transform = `translate3d(${x - halfWidth}px, ${y - halfHeight}px, 0) rotate(${angle}rad)`;
+            renderedPose.set(id, { x, y, angle });
           }
         }
         function rafTick(now: number) {
@@ -1559,6 +1608,7 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
               const y = rec.y + (next.y - rec.y) * alpha;
               const angle = rec.angle + (next.angle - rec.angle) * alpha;
               el.style.transform = `translate3d(${x - halfWidth}px, ${y - halfHeight}px, 0) rotate(${angle}rad)`;
+              renderedPose.set(id, { x, y, angle });
             }
           }
           if (replayIndex >= history.length - 1) {

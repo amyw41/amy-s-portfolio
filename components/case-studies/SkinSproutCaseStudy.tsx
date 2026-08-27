@@ -2,12 +2,15 @@
 
 import type { ReactNode } from "react";
 import {
+  CaseStudyCta,
   CaseStudyHero,
   CaseStudyImage,
   CaseStudyLayout,
+  HighlightBox,
   PlaceholderBox,
   Row,
   Section,
+  StatRow,
   TEXT,
   type SectionNavItem,
 } from "@/components/case-studies/CaseStudyKit";
@@ -168,31 +171,6 @@ const INSIGHTS: { title: string; body: ReactNode }[] = [
   },
 ];
 
-// Small 3-column stat callout — same shape as CyberSea's "Why does this
-// matter?" block, reused here since SkinSprout's page has two of these
-// (the discovery-stats block in 01, the usability-testing block in 03).
-function StatRow({ stats }: { stats: { stat: string; caption: string }[] }) {
-  return (
-    <div
-      className="grid grid-cols-1 gap-6 rounded-[10px] p-6 text-center sm:grid-cols-3 sm:p-8"
-      style={{ backgroundColor: HIGHLIGHT }}
-    >
-      {stats.map((s) => (
-        <div key={s.stat}>
-          <p className="font-body text-[32px] font-medium text-black/90">{s.stat}</p>
-          {/* Not TEXT.content directly — it bakes in text-left, which as a
-              rule on this same element overrides the parent's text-center
-              regardless of class order in the string (same fix as
-              CyberSea's stat row). */}
-          <p className="mt-1 font-body text-[18px] font-light leading-relaxed text-black/60 text-center">
-            {s.caption}
-          </p>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 // Criteria-by-app comparison table for the Competitive Analysis row — same
 // visual language as Amy's reference table for Spotify Guessr's own
 // competitive analysis (ca_result.avif): no vertical grid lines, just a
@@ -265,15 +243,9 @@ export default function SkinSproutCaseStudy() {
           competing for the same property — safer to just match their
           exact className than rely on Tailwind's generated stylesheet
           order to pick the right one. */}
-      {/* rounded-[5px] (was rounded-[8px]) and px-5 py-5 (was px-5 py-6) —
-          per request, smaller corner radius and even padding on all sides.
-          leading-relaxed added so a 2-line wrap (see the two boxes below)
-          gets more room between its lines than the browser default. */}
-      <div className="mt-8 rounded-[5px] px-5 py-5" style={{ backgroundColor: HIGHLIGHT }}>
-        <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
-          THIS PAGE IS CURRENTLY A WIP!
-        </p>
-      </div>
+      <HighlightBox bg={HIGHLIGHT} className="mt-8">
+        THIS PAGE IS CURRENTLY A WIP!
+      </HighlightBox>
 
       {/* 01 / Initial Planning */}
       <Section id="initial-planning">
@@ -318,6 +290,7 @@ export default function SkinSproutCaseStudy() {
               </p>
               <div className="mt-[36px]">
                 <StatRow
+                  bg={HIGHLIGHT}
                   stats={[
                     { stat: "13/20", caption: "people discover products on social media." },
                     { stat: "10/13", caption: "find the products ineffective." },
@@ -592,17 +565,10 @@ export default function SkinSproutCaseStudy() {
         <Row
           heading="Problem Statement:"
           media={
-            // rounded-[5px] (was rounded-[8px]) and px-5 py-5 (was px-5
-            // py-6) — per request, smaller corner radius and even padding
-            // on all sides, matching the WIP/Navigation problem boxes.
-            // leading-relaxed added so its own 2-line wrap gets more room
-            // between lines than the browser default.
-            <div className="rounded-[5px] px-5 py-5" style={{ backgroundColor: HIGHLIGHT }}>
-              <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
-                How can we make skincare easier to purchase based on each user&apos;s
-                personalized skincare history?
-              </p>
-            </div>
+            <HighlightBox bg={HIGHLIGHT}>
+              How can we make skincare easier to purchase based on each user&apos;s
+              personalized skincare history?
+            </HighlightBox>
           }
         />
       </Section>
@@ -705,6 +671,7 @@ export default function SkinSproutCaseStudy() {
           heading="Testing"
           media={
             <StatRow
+              bg={HIGHLIGHT}
               stats={[
                 { stat: "5/5", caption: "Completed the flow without any help." },
                 { stat: "4/5", caption: "found the information easy to read." },
@@ -727,17 +694,11 @@ export default function SkinSproutCaseStudy() {
               {/* Was bg-[#fbeded] — a hardcoded hex that didn't actually
                   match HIGHLIGHT (#faf1f6, this page's own accent color,
                   used by the WIP/Problem Statement boxes) — close enough to
-                  read as "basically the same pink" but not pixel-identical.
-                  rounded-[5px] (was rounded-[8px]) and px-5 py-5 (was px-5
-                  py-6) — per request, same as those two boxes. leading-
-                  relaxed added so its own 2-line wrap gets more room
-                  between lines than the browser default. */}
-              <div className="rounded-[5px] px-5 py-5" style={{ backgroundColor: HIGHLIGHT }}>
-                <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">
-                  Navigation problem: Users needed a way to move between stat cards
-                  without breaking the visual rhythm of the layout.
-                </p>
-              </div>
+                  read as "basically the same pink" but not pixel-identical. */}
+              <HighlightBox bg={HIGHLIGHT}>
+                Navigation problem: Users needed a way to move between stat cards
+                without breaking the visual rhythm of the layout.
+              </HighlightBox>
               <p className={TEXT.content}>
                 Currently, the cards are aligned vertically. Do users swipe, tap, or
                 should they click somewhere else on the screen?
@@ -787,15 +748,12 @@ export default function SkinSproutCaseStudy() {
             // prototype link, carried over from that case study while this
             // page was being drafted. Swap in the real SkinSprout Figma URL
             // before this goes live.
-            <a
+            <CaseStudyCta
               href="https://www.figma.com/proto/0i9bMQFOCCtSDtrcVcJqNO/spotify-game?node-id=66-264&starting-point-node-id=66%3A264&t=hoMOqtYUHmmOuSGe-1"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ backgroundColor: HIGHLIGHT }}
-              className={`block w-full rounded-[8px] px-6 py-[14px] !text-center transition-transform duration-200 hover:scale-[1.01] ${TEXT.frame}`}
+              highlightColor={HIGHLIGHT}
             >
               Check out the Figma prototype!
-            </a>
+            </CaseStudyCta>
           }
         />
       </Section>
