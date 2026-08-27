@@ -452,7 +452,8 @@ function TableOfContents({
 // Every case study's hero box locks to 3/2 to match the homepage's project
 // thumbnail ratio. object-cover (inside CaseStudyImage) crops each source
 // video/image to this shape instead of showing it at its own native proportions.
-export const HERO_RATIO = "3/2";
+// Not exported — only CaseStudyHero below (in this same file) ever applies it.
+const HERO_RATIO = "3/2";
 
 // The hero block — title, subtitle, hero image, and the timeline/team/role/
 // skills meta box, rendered (and animated) as one unit: it fades in on

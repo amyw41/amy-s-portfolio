@@ -38,32 +38,6 @@
   gap: 24px;
 }
 
-.langToggle {
-  display: flex;
-  gap: 12px;
-}
-
-.langButton {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: var(--fs-small);
-  font-weight: 300;
-  color: rgba(0, 0, 0, 0.8);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .langButton {
-    transition: color 150ms ease;
-  }
-}
-
-.langButton:hover {
-  color: #9a9a9a;
-}
-
 .socialGroup {
   display: flex;
   border: 1px solid #000;
