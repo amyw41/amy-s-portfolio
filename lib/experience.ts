@@ -13,6 +13,13 @@ export type ExperienceEntry = {
   date: string;
   // Path under /public/images/logos.
   logo: string;
+  // Optional — when set, the whole row becomes a link to the company's own
+  // site (opens in a new tab) and shows a small hover/focus preview card
+  // (see Experience.tsx's own CompanyPreview). Omitted entirely (not just
+  // falsy) for an entry with no known site, same convention as Project's
+  // own optional `video` field — ExperienceRow renders those as a plain
+  // non-interactive row.
+  url?: string;
 };
 
 export type ExperienceGroup = {
@@ -29,6 +36,7 @@ export const EXPERIENCE: ExperienceGroup[] = [
         title: "APM Intern",
         date: "May - Aug 2026",
         logo: "/images/logos/rrc_companies_logo.jpg",
+        url: "https://rrccompanies.com/",
       },
     ],
   },
@@ -40,6 +48,7 @@ export const EXPERIENCE: ExperienceGroup[] = [
         title: "Product Designer",
         date: "Sep 2026",
         logo: "/images/logos/uw_blueprint_logo.jpg",
+        url: "https://uwblueprint.org/",
       },
       {
         company: "UW Cube",
@@ -52,6 +61,7 @@ export const EXPERIENCE: ExperienceGroup[] = [
         title: "Product Designer",
         date: "May – Aug 2026",
         logo: "/images/logos/technova_logo.jpg",
+        url: "https://itstechnova.org/",
       },
     ],
   },

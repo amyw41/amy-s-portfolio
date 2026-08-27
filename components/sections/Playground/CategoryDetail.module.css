@@ -107,7 +107,9 @@
 }
 
 .backButton:hover {
-  color: rgba(0, 0, 0, 0.85);
+  /* Was rgba(0,0,0,0.85) — bumped to solid black per request ("smaller
+   * gray buttons... become black" on hover). */
+  color: #000;
 }
 
 /* ---------- stage: hosts the plate hub + arc, scaled to fit ---------- */
@@ -194,19 +196,22 @@
   cursor: pointer;
 }
 
-/* Was a border/text color shift to blue (#2460a4) on hover — replaced with
- * the same opacity-lighten treatment used everywhere else on the site
- * (ProjectCard.module.css's .card:hover, the Playground plates' own
- * .plateLink:hover, ExtrasCard's .trigger:hover), so every hoverable thing
- * on the site reads as the same "fades toward the page" affordance. */
+/* Was a border/text color shift to blue (#2460a4) on hover, then briefly
+ * the same opacity-lighten treatment the site's big clickable tiles use
+ * (ProjectCard's .card:hover, Playground's own .plateLink:hover, ExtrasCard's
+ * .trigger:hover) — per request, that lighten-on-hover is now reserved for
+ * those big tiles specifically; this is one of the smaller gray controls
+ * (alongside .backButton above and the About page's profile links), which
+ * darken to solid black on hover instead. */
 @media (prefers-reduced-motion: no-preference) {
   .navArrow {
-    transition: opacity 300ms ease-out;
+    transition: color 300ms ease-out, border-color 300ms ease-out;
   }
 }
 
 .navArrow:hover {
-  opacity: 0.615;
+  color: #000;
+  border-color: #000;
 }
 
 /* Edge-faded mask on the item track itself (not an opaque overlay) —

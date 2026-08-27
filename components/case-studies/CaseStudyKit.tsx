@@ -497,7 +497,9 @@ function TableOfContents({
           // button. self-start still needed: TableOfContents' own flex-col
           // container defaults to align-items: stretch, which would
           // otherwise stretch this button to the sidebar's full width.
-          className="mb-5 flex w-fit items-center gap-1.5 self-start bg-transparent border-none p-0 cursor-pointer font-instrument leading-none text-[length:var(--fs-small)] font-extralight tracking-[-0.03em] uppercase text-black/40 transition-colors duration-200 ease-out hover:text-black/85"
+          // hover:text-black (was text-black/85) — bumped to solid black
+          // per request ("smaller gray buttons... become black" on hover).
+          className="mb-5 flex w-fit items-center gap-1.5 self-start bg-transparent border-none p-0 cursor-pointer font-instrument leading-none text-[length:var(--fs-small)] font-extralight tracking-[-0.03em] uppercase text-black/40 transition-colors duration-200 ease-out hover:text-black"
         >
           <span aria-hidden="true">←</span>
           Back
