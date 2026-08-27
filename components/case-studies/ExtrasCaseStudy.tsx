@@ -129,8 +129,14 @@ export default function ExtrasCaseStudy() {
   // positioned via its own box.x/box.y, so DOM order doesn't drive visual
   // order) — only the *target* position each one animates to changes, via
   // this same registerFlipRef/orderedPhotos pairing Projects/index.tsx uses
-  // for its own cards.
-  const registerFlipRef = useFlipReorder(orderedPhotos.map((p) => p.src));
+  // for its own cards. galleryWidth passed as layoutKey — this page's
+  // masonry, unlike Projects' own cards, is packed against a MEASURED
+  // width (useElementWidth, starts at 0 and self-corrects a moment after
+  // mount), so without this the very first real filter click was diffing
+  // against rects captured during that bogus zero-width layout instead of
+  // the real one — see useFlipReorder's own layoutKey doc comment for the
+  // full story (that was the "first click jolts instead of sliding" bug).
+  const registerFlipRef = useFlipReorder(orderedPhotos.map((p) => p.src), galleryWidth);
 
   return (
     <CaseStudyLayout

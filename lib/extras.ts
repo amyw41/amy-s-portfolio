@@ -42,12 +42,12 @@ export const EXTRAS_CATEGORIES: { id: ExtrasCategory; label: string; color: stri
 // Order matters here, not just content: the collage (ExtrasCaseStudy.tsx)
 // packs photos into 2 masonry columns in this exact order via
 // computeJustifiedLayout — After Hours (portrait, tall) lands alone in
-// column 1, then Relish (landscape, short) and Rust (portrait) pack into
-// column 2 one under the other, since Relish leaves column 2 shorter than
-// column 1 at that point and Rust — same shape as After Hours — is what the
-// greedy shortest-column algorithm drops in right underneath it. Rust
-// *after* Relish here is what makes that happen; swapping them changes
-// which column each photo lands in.
+// column 1, then Designathon (landscape, short) and Rust (portrait) pack
+// into column 2 one under the other, since Designathon leaves column 2
+// shorter than column 1 at that point and Rust — same shape as After
+// Hours — is what the greedy shortest-column algorithm drops in right
+// underneath it. Rust *after* Designathon here is what makes that happen;
+// swapping them changes which column each photo lands in.
 export const EXTRAS_PHOTOS: ExtrasPhoto[] = [
   {
     src: "/images/projects/extras/After Hours.png",
@@ -58,10 +58,10 @@ export const EXTRAS_PHOTOS: ExtrasPhoto[] = [
   },
   {
     src: "/images/projects/extras/relish.png",
-    caption: "Relish.",
+    caption: "Designathon.",
     width: 3348,
     height: 2324,
-    category: "other",
+    category: "designathon",
   },
   {
     src: "/images/projects/extras/rust.png",

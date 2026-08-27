@@ -37,10 +37,28 @@ interface FlipPoint {
   left: number;
 }
 
-export function useFlipReorder(order: string[]) {
+/**
+ * `layoutKey`: optional — pass this when the caller's own box positions can
+ * shift for a reason that has NOTHING to do with reordering (e.g.
+ * ExtrasCaseStudy's masonry is packed against a measured container width
+ * that starts at 0 and self-corrects a moment after mount — see
+ * useElementWidth's own comment — so its very first real reorder used to
+ * diff against rects captured during that bogus zero-width layout, which
+ * read as a big meaningless jump rather than a clean slide: "jolts into
+ * place" on the first click, fine after that once a real reorder had
+ * already re-baselined things by accident). A `layoutKey` change re-
+ * baselines silently (same no-animate path the very first run already
+ * takes) instead of animating it as if it were a reorder, so the NEXT
+ * genuine reorder always diffs against honest, current positions. Callers
+ * with a layout that never depends on a measured value (Projects/index.tsx)
+ * can simply omit it — omitted on every render, so it never appears to
+ * "change," and behaviour is identical to before this param existed.
+ */
+export function useFlipReorder(order: string[], layoutKey?: string | number) {
   const nodesRef = useRef<Map<string, HTMLElement>>(new Map());
   const prevRectsRef = useRef<Map<string, FlipPoint> | null>(null);
   const isFirstRunRef = useRef(true);
+  const prevLayoutKeyRef = useRef<string | number | undefined>(layoutKey);
 
   const registerRef = useMemo(() => {
     return (id: string) => (el: HTMLElement | null) => {
@@ -94,8 +112,11 @@ export function useFlipReorder(order: string[]) {
 
     const prevRects = prevRectsRef.current;
     const reducedMotion = typeof window !== "undefined" && window.matchMedia(REDUCED_MOTION).matches;
+    // See layoutKey's own doc comment above — a layout-driven position
+    // change is not a reorder, so it doesn't get the invert+play treatment.
+    const layoutChanged = prevLayoutKeyRef.current !== layoutKey;
 
-    if (!isFirstRunRef.current && prevRects && !reducedMotion) {
+    if (!isFirstRunRef.current && prevRects && !reducedMotion && !layoutChanged) {
       for (const [id, el] of nodes) {
         const oldRect = prevRects.get(id);
         const newRect = newRects.get(id);
@@ -117,9 +138,11 @@ export function useFlipReorder(order: string[]) {
     // the brief asks for — there's no jump to undo in the first place.
 
     isFirstRunRef.current = false;
+    prevLayoutKeyRef.current = layoutKey;
     prevRectsRef.current = newRects;
     // orderKey (not `order`) is the real dependency — see its own comment.
-  }, [orderKey]);
+    // layoutKey is deliberately also a dependency: see its own doc comment.
+  }, [orderKey, layoutKey]);
 
   return registerRef;
 }
