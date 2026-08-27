@@ -75,7 +75,7 @@ export default function PhotoTile({
   const width = plate?.width ?? FALLBACK_SIZE;
   const height = plate?.height ?? FALLBACK_SIZE;
   const z = plate?.z ?? 0;
-  const box = collageBox ?? { x: 0, y: 0, width: 0, height: 0 };
+  const box = collageBox ?? { x: 0, y: 0, width: 0, height: 0, imageHeight: 0 };
 
   return (
     <motion.div
