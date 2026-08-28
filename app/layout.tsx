@@ -6,9 +6,18 @@ import PageTransition from "@/components/ui/PageTransition/PageTransition";
 import Footer from "@/components/sections/Footer";
 import "./globals.css";
 
+// weight: added "500" — Roboto was only ever loading real 300/400 static
+// faces, so any element requesting font-weight:500 (About.module.css's
+// .heading/.whatsInsideHeading/.companyName included) had no matching
+// face and the browser silently substituted the nearest one it had (400),
+// meaning a "500" -> "400" CSS change on those elements was invisible:
+// both were already rendering the same actual 400 face. Loading 500 for
+// real means any future 500 (or between-300-and-400 style) request
+// actually renders distinctly instead of silently collapsing to whatever
+// was already loaded.
 const roboto = Roboto({
   subsets: ["latin"],
-  weight: ["300", "400"],
+  weight: ["300", "400", "500"],
   variable: "--font-roboto",
   display: "swap",
 });

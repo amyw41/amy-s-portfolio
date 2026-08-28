@@ -3,7 +3,10 @@
 .bioSection {
   box-sizing: border-box;
   padding-top: clamp(32px, 5vw, 64px);
-  padding-bottom: clamp(32px, 5vw, 60px);
+  /* Was clamp(32px, 5vw, 60px) — bumped along with .experienceSection's own
+   * top/bottom below, so the Bio -> Experience -> WhatsInside gaps are all
+   * noticeably bigger, per request. */
+  padding-bottom: clamp(40px, 5.5vw, 72px);
   padding-inline: clamp(16px, 5vw, 64px);
 }
 
@@ -78,12 +81,18 @@
  * "Community" group labels — the source renders both in Instrument Serif
  * (font-instrument), which doesn't exist outside the Tailwind-scoped
  * case-study route (see this repo's own Playground.module.css .title for
- * the same situation/fix). Weight 500 (not this site's usual 300) is what
- * gives these something to stand on as a heading now that they've lost the
- * serif's own built-in character. */
+ * the same situation/fix). Weight 300 (was requested as 500, then 400) —
+ * Roboto (see app/layout.tsx) was only actually loading real 300/400
+ * faces, so a request for 500 had nothing to match and silently fell back
+ * to the nearest one it had (400) — meaning the earlier 500 -> 400 change
+ * was invisible, both rendered the exact same real face. 300 is the only
+ * genuinely lighter face actually available, so it's the one that visibly
+ * lowers the weight; layout.tsx now also loads a real 500 face so that
+ * option renders correctly too if wanted later. Font-size still bumped
+ * +2px at both ends of the clamp, per the earlier request. */
 .heading {
   margin: 0;
-  font-size: clamp(18px, 1.8vw, 26px);
+  font-size: clamp(20px, 1.8vw, 28px);
   font-weight: 300;
   color: rgba(0, 0, 0, 0.9);
 }
@@ -112,9 +121,14 @@
 
 /* ---------- experience ---------- */
 
+/* Was clamp(2px, 1vw, 24px) top/bottom — nearly nothing, so almost the
+ * entire Bio -> Experience and Experience -> WhatsInside gaps were riding
+ * on .bioSection/.whatsInsideSection's own padding alone. Matches those
+ * two sections' own clamp(40px, 5.5vw, 72px) now so every section-to-
+ * section gap is bigger and even, per request. */
 .experienceSection {
-  padding-top: clamp(2px, 1vw, 24px);
-  padding-bottom: clamp(2px, 1vw, 24px);
+  padding-top: clamp(40px, 5.5vw, 72px);
+  padding-bottom: clamp(40px, 5.5vw, 72px);
 }
 
 .experienceInner {
@@ -229,7 +243,12 @@
    * font-size for free. Same var as .jobTitle below, so the two read as
    * the same size again, per request. */
   font-size: var(--fs-small);
-  font-weight: 500;
+  /* Was 500 — harmless while Roboto only loaded real 300/400 faces (500
+   * silently fell back to 400), but app/layout.tsx now loads a real 500
+   * face too (for .heading/.whatsInsideHeading's own sake), which made
+   * this suddenly render visibly bolder as an unintended side effect.
+   * Set explicitly to 400 to match how this actually looked before. */
+  font-weight: 400;
   color: rgba(0, 0, 0, 0.7);
 }
 
@@ -267,6 +286,7 @@
   }
 }
 
+
 /* ---------- what's inside (carousel/gallery of the jar's own items) ---------- */
 
 /* padding-top mirrors .bioSection's own padding-bottom above (same clamp
@@ -280,30 +300,41 @@
  * global Footer, same rhythm as Projects is before Extras/Footer on the
  * homepage. */
 .whatsInsideSection {
-  padding-top: clamp(32px, 5vw, 60px);
+  /* Was clamp(32px, 5vw, 60px) — see .experienceSection's own comment,
+   * matches its clamp(40px, 5.5vw, 72px) so the gap above this section is
+   * bigger too, per request. */
+  padding-top: clamp(40px, 5.5vw, 72px);
   padding-bottom: clamp(64px, 8vw, 120px);
 }
 
-/* Heading, then toggles centered underneath it — not side-by-side like
- * Projects' own .header — per request. text-align:center here (not on
- * .pageContainer) so it doesn't leak into Gallery/Carousel below, both of
- * which manage their own alignment. */
+/* Same extra inline padding as Experience's own .experienceInner, so this
+ * section's content sits at the same left/right edges as the
+ * experience/community rows above it, not flush with .pageContainer's own
+ * (smaller) edges — per request. */
+.whatsInsideInner {
+  width: 100%;
+  padding-inline: clamp(16px, 5vw, 64px);
+  box-sizing: border-box;
+}
+
+/* Left-aligned (was centered) — heading and toggles both read from the
+ * left edge now, per request. */
 .whatsInsideHeader {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 20px;
   margin-bottom: 48px;
-  text-align: center;
+  text-align: left;
 }
 
-/* Bigger than the shared .heading used by Bio/Experience's group labels
- * (clamp(18px,1.8vw,26px)) — its own size, per request ("what's inside? to
- * be slightly larger"), matching Projects.module.css's own .heading scale
- * instead. */
+/* Weight lowered to 300 to match .heading's own latest value/reasoning —
+ * see its comment (500 -> 400 was invisible since Roboto never actually
+ * loaded a 500 face; 300 is the one genuinely lighter face available).
+ * Font-size still +2px at both ends of the clamp, per request. */
 .whatsInsideHeading {
   margin: 0;
-  font-size: clamp(26px, 3.13vw, 48px);
+  font-size: clamp(20px, 1.8vw, 28px);
   font-weight: 300;
   color: rgba(0, 0, 0, 0.9);
 }
@@ -311,7 +342,7 @@
 .whatsInsideToggles {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 32px;
 }
 
@@ -320,7 +351,7 @@
 .galleryGrid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 8px;
+  gap: 32px 8px;
 }
 
 @media (min-width: 640px) {
@@ -329,31 +360,33 @@
   }
 }
 
+/* Fixed (smaller) column width + justify-content:space-between instead of
+ * repeat(3, 1fr) — was stretching each image to fill an equal third of the
+ * row (per the earlier "extend to the same edge" fix), which read as too
+ * big. Fixed narrower columns + space-between keeps the SAME edge-to-edge
+ * span (first column's left edge / last column's right edge still touch
+ * the container, middle one still centered) while letting the columns
+ * (and therefore .galleryImageWrap, which is still width:100% of its own
+ * column) shrink — per request. 246px (was 192px, then 160px) — set so
+ * .galleryImageWrap (100% of the column, minus .galleryCard's 12px
+ * padding each side) comes out to ~222px, matching the Carousel's own
+ * visible side-neighbor items' actual rendered size at a typical desktop
+ * width, per request ("i would like them to be equal"). Carousel's own
+ * sizing is solved dynamically against its measured container width
+ * (see whatsInsideLayout.ts), so this fixed px match only holds at
+ * roughly that same reference width, not at every viewport. */
 @media (min-width: 1024px) {
   .galleryGrid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 246px);
+    justify-content: space-between;
   }
 }
 
 .galleryCard {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 12px;
-  border-radius: 16px;
-}
-
-@media (min-width: 1280px) {
-  .galleryCard {
-    padding: 24px;
-  }
-}
-
-.galleryStarSlot {
-  position: absolute;
-  top: 18px;
-  right: 18px;
 }
 
 .galleryImageWrap {
@@ -369,17 +402,18 @@
   }
 }
 
+/* At the 3-column breakpoint, fill the grid column edge-to-edge (up to
+ * .galleryCard's own 12px padding) instead of a fixed 12.8rem — a fixed
+ * size left a wide strip of empty column space around every image, most
+ * visible in the last column, so the gallery as a whole read as stopping
+ * well short of the same right edge Experience's own row content (e.g. the
+ * date column) reaches. width:100% + aspect-ratio keeps it square without
+ * needing a matching explicit height. */
 @media (min-width: 1024px) {
   .galleryImageWrap {
-    width: 12.8rem;
-    height: 12.8rem;
-  }
-}
-
-@media (min-width: 1280px) {
-  .galleryImageWrap {
-    width: 14.4rem;
-    height: 14.4rem;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
   }
 }
 
@@ -389,19 +423,27 @@
 }
 
 .galleryCaption {
-  margin-top: 36px;
+  margin: 16px 0 0;
   text-align: center;
-}
-
-.galleryCaption p {
-  margin: 0;
-  max-width: 270px;
   font-size: var(--fs-small);
   font-weight: 300;
-  color: rgba(0, 0, 0, 0.6);
+  color: rgba(0, 0, 0, 0.7);
 }
 
 /* ---------- carousel ---------- */
+
+/* THE WIDTH FIX — see Carousel.tsx's own top comment for the full
+ * rationale. This is the element `useElementWidth`'s ref attaches to: a
+ * plain block box, width:100% explicit (not left to a flex/grid ancestor's
+ * shrink-to-fit), so its measured offsetWidth is .pageContainer's real
+ * rendered width. The flex-centered visual layout lives in the CHILD
+ * .carouselWrap below, not on this element itself — conflating the two
+ * (measuring an element that was ALSO `display:flex; align-items:center`
+ * with no explicit width) is exactly what made a previous attempt at this
+ * section solve its layout against the wrong, shrink-to-fit number. */
+.carouselWidthMeasure {
+  width: 100%;
+}
 
 .carouselWrap {
   display: flex;
@@ -411,7 +453,6 @@
 }
 
 .carouselRow {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -420,13 +461,7 @@
 
 /* 36px, fixed — must match whatsInsideLayout.ts's own ARROW_SIZE, since
  * that constant drives the row's own width-solve math; changing this size
- * without changing that constant would reintroduce the overflow/underflow
- * this section was just fixed for. Circle/border styling matches the rest
- * of the site's own small round icon buttons (e.g. CategoryDetail.module.
- * css's .navArrow) — the source's own hover:border-blue/hover:text-blue is
- * dropped in favour of the same opacity-fade hover every other hoverable
- * control on this site already uses, per request ("anything that is the
- * dark blue color from my old project can become a light gray"). */
+ * without changing that constant reintroduces overflow/underflow. */
 .navArrow {
   display: flex;
   flex-shrink: 0;
@@ -444,22 +479,17 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .navArrow {
-    transition: color 300ms ease-out, border-color 300ms ease-out;
+    transition: opacity 300ms ease-out;
   }
 }
 
-/* Darkens to solid black on hover — one of the site's smaller gray
- * controls (alongside CategoryDetail's own .navArrow/.backButton and the
- * profile links below), not a big clickable tile, so it doesn't get the
- * lighten-toward-white treatment those use. */
 .navArrow:hover {
-  color: #000;
-  border-color: #000;
+  opacity: 0.615;
 }
 
 /* Edge-faded mask, same construction as the /playground/[category] page's
- * own item track (CategoryDetail.module.css's .itemMask) so an item sliding
- * past the edge fades out instead of hard-clipping. */
+ * own item track (CategoryDetail.module.css's .itemMask) so an item
+ * sliding past the edge fades out instead of hard-clipping. */
 .carouselTrack {
   position: relative;
   overflow: hidden;
@@ -472,16 +502,26 @@
   inset: 0;
 }
 
+/* Centered via inset:0 + margin:auto, NOT left:50%/transform:translate(-50%,-50%)
+ * — Framer Motion's `animate={{ x, scale }}` on this element takes full
+ * ownership of its `transform` property the moment it's animating (it
+ * composes its own translateX/scale and drops whatever static `transform`
+ * the CSS class set), so a translate-based centering trick here gets
+ * silently discarded: every item ended up anchored by its top-left corner
+ * at the left:50%/top:50% point instead of centered on it — off by half
+ * its own size in both directions, which is why nothing lined up with the
+ * arrows. inset:0 + margin:auto centers a definite-width/height
+ * absolutely-positioned box without touching `transform` at all, so it
+ * can't be clobbered by Framer Motion's own transform animation. */
 .carouselItem {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  inset: 0;
+  margin: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transform: translate(-50%, -50%);
   cursor: pointer;
   user-select: none;
   padding: 0;
@@ -498,15 +538,6 @@
   object-fit: contain;
   user-select: none;
   pointer-events: none;
-}
-
-/* Anchored to the item's own outer box (bigger than its image box, by
- * design) rather than pinned tight to the artwork's own edge — see
- * Carousel.tsx's own comment. */
-.carouselStarSlot {
-  position: absolute;
-  top: 8px;
-  right: 8px;
 }
 
 .carouselItemCaption {
@@ -526,8 +557,6 @@
   gap: 12px;
 }
 
-/* Light gray, not the ported source's own #2460A4 (jar-portfolio's blue) —
- * per request. */
 .dot {
   width: 10px;
   height: 10px;
@@ -547,27 +576,4 @@
 .dotActive {
   border-color: rgba(0, 0, 0, 0.4);
   background: #c4c4c4;
-}
-
-/* ---------- star badge (shared by Gallery/Carousel) ---------- */
-
-/* Light gray circle — the ported source's own StarBadge used a solid
- * #2460A4 (jar-portfolio's blue) background; per request, every leftover
- * blue from that old project reads as a light gray here instead. */
-.starBadgeCircle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: none;
-  background: #c4c4c4;
-  color: #fff;
-  cursor: pointer;
-  padding: 0;
-}
-
-.starBadgeIconWrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }

@@ -95,15 +95,16 @@ export const content = {
         },
       },
       // Copy for the About page's third section (components/sections/About/
-      // WhatsInside.tsx) — a carousel/gallery of the same PROJECTS shown on
-      // the homepage. `heading` is the exact same "what's inside?" string as
-      // projects.heading above (the homepage section this one mirrors),
-      // kept as its own literal rather than a shared reference so the two
-      // can't be accidentally coupled by a future edit to either. Toggle
-      // labels follow playground.toggles' own "<mode> view" naming
-      // convention below.
+      // WhatsInside.tsx) — a carousel/gallery of the jar's own physical
+      // "favourite" items (lib/whatsInsideItems.ts). `heading` is the exact
+      // same "what's inside?" string as projects.heading above (the
+      // homepage section this one mirrors), kept as its own literal rather
+      // than a shared reference so the two can't be accidentally coupled by
+      // a future edit to either — this page's own key, separate from that
+      // one. Toggle labels follow playground.toggles' own "<mode> view"
+      // naming convention below.
       whatsInside: {
-        heading: "what's inside?",
+        heading: "what's inside my jar?",
         toggles: {
           carousel: "carousel view",
           gallery: "gallery view",

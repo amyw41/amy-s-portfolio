@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import CircleToggle from "@/components/ui/CircleToggle";
 import Carousel from "./Carousel";
 import Gallery from "./Gallery";
@@ -13,64 +13,66 @@ const copy = content.en.about.whatsInside;
 type ViewMode = "carousel" | "gallery";
 
 /**
- * Third section on the About page, below Experience — a carousel/gallery of
- * the jar's own physical items (see Carousel.tsx/Gallery.tsx, ported from
- * amy-wangs-jar's own WhatsInside components). Toggle wiring is Playground's
- * own single-select CircleToggle pattern (two toggles, red for one mode,
- * blue for the other, exactly one active at a time), placed centered below
- * the heading rather than beside it, per request. Gallery is the default
- * view.
- *
- * `litItems` (which items' star badges are toggled "lit"/yellow) lives here,
- * above both views, so starring an item in one view still shows it starred
- * after switching to the other — same lift-state-up amy-wangs-jar's own
- * index.tsx already did.
+ * Third section on the About page, below Experience — a carousel/gallery
+ * of the jar's own physical items (see Carousel.tsx/Gallery.tsx, ported
+ * from jar-portfolio's own WhatsInside components). Toggle wiring copied
+ * directly from Playground's own single-select CircleToggle pattern
+ * (components/sections/Playground/index.tsx: local `viewMode` state, two
+ * CircleToggles, red for one mode, blue for the other, exactly one active
+ * at a time) rather than reinvented. Carousel is the default/main view
+ * (per request), gallery is the secondary one.
  */
 export default function WhatsInside() {
-  const [viewMode, setViewMode] = useState<ViewMode>("gallery");
+  const [viewMode, setViewMode] = useState<ViewMode>("carousel");
   const isGalleryMode = viewMode === "gallery";
-
-  const [litItems, setLitItems] = useState<Set<string>>(new Set());
-  const toggleLit = (id: string) =>
-    setLitItems((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
 
   return (
     <section className={styles.whatsInsideSection}>
       <div className="pageContainer">
-        <motion.div
-          className={styles.whatsInsideHeader}
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, amount: 0.3 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
-        >
-          <h2 className={styles.whatsInsideHeading}>{copy.heading}</h2>
-          <div className={styles.whatsInsideToggles}>
-            <CircleToggle
-              label={copy.toggles.carousel}
-              color="var(--c-red)"
-              active={!isGalleryMode}
-              onToggle={() => setViewMode("carousel")}
-            />
-            <CircleToggle
-              label={copy.toggles.gallery}
-              color="var(--c-blue)"
-              active={isGalleryMode}
-              onToggle={() => setViewMode("gallery")}
-            />
-          </div>
-        </motion.div>
+        <div className={styles.whatsInsideInner}>
+          <motion.div
+            className={styles.whatsInsideHeader}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+          >
+            <h2 className={styles.whatsInsideHeading}>{copy.heading}</h2>
+            <div className={styles.whatsInsideToggles}>
+              <CircleToggle
+                label={copy.toggles.carousel}
+                color="var(--c-red)"
+                active={!isGalleryMode}
+                onToggle={() => setViewMode("carousel")}
+              />
+              <CircleToggle
+                label={copy.toggles.gallery}
+                color="var(--c-blue)"
+                active={isGalleryMode}
+                onToggle={() => setViewMode("gallery")}
+              />
+            </div>
+          </motion.div>
 
-        {isGalleryMode ? (
-          <Gallery litItems={litItems} onToggleLit={toggleLit} />
-        ) : (
-          <Carousel litItems={litItems} onToggleLit={toggleLit} />
-        )}
+          {/* Crossfade between views on toggle (was: an abrupt unmount/mount
+           * swap — Gallery's own per-card whileInView slide-up replayed on
+           * every mount, reading as "gallery moves up", while Carousel had
+           * no entrance animation of its own at all, reading as "no
+           * animation". AnimatePresence + a single keyed opacity fade here
+           * makes both directions the same simple fade in/out, regardless
+           * of what either view does internally.) */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={viewMode}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
+              {isGalleryMode ? <Gallery /> : <Carousel />}
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
     </section>
   );

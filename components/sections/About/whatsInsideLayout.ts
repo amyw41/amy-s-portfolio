@@ -1,26 +1,35 @@
-// Ported from amy-wangs-jar's components/WhatsInside/layout.ts (the source
-// for this section's carousel geometry), with one deliberate change: that
-// original solved itemSize against `useViewportWidth()` (raw
+// Ported from jar-portfolio's components/WhatsInside/layout.ts — the exact
+// arrow-to-arrow width-solve math for the carousel below. One deliberate
+// change from that source: it solved against `useViewportWidth()` (raw
 // window.innerWidth) minus a hardcoded PAGE_PADDING guess at the page's own
-// side padding — correct for amy-wangs-jar's own px-4 page, but this site's
-// .pageContainer has its own, viewport-dependent side padding (--pad in
-// lib/tokens.css, clamp(24px,7vw,150px) — nothing like a flat 32px), so
-// reusing that same guess is exactly what was making the carousel spill
-// past its container's edge. PAGE_PADDING is 0 here instead, and the width
-// this solves against is meant to be a *measured* element width (the
-// carousel's own wrapping div, via useElementWidth — see Carousel.tsx) that
-// already sits inside .pageContainer, not the raw viewport — so the
-// solved-for row can never exceed what .pageContainer actually leaves it,
-// at any viewport width, without needing to know that padding's own formula
-// at all.
+// side padding. This site's own .pageContainer has its own,
+// viewport-dependent side padding (--pad in lib/tokens.css, clamp(24px,
+// 7vw,150px) — nothing like a flat number), so reusing that guess would
+// reproduce the exact bug a previous attempt at this section shipped with
+// (the row solving against the wrong width and overflowing/stranding its
+// arrows). `computeLayout` here instead takes a *measured* container width
+// directly (via useElementWidth — see Carousel.tsx) — a width already
+// measured from an element that actually stretches to fill .pageContainer,
+// so this can never overflow it at any viewport width without needing to
+// know that padding's own formula at all.
 
 export const NEIGHBOR_SCALE = 0.72;
-// Must match the arrow buttons' own fixed size below (Carousel.tsx's
-// .navArrow — see About.module.css).
+// Must match the arrow buttons' own fixed size (Carousel.tsx's .navArrow —
+// see About.module.css).
 export const ARROW_SIZE = 36;
 
-const MIN_ITEM_SIZE = 100; // px — floor so items stay legible on the smallest phones
-export const MAX_ITEM_SIZE = 352; // px — amy-wangs-jar's own CAROUSEL_MAX_ITEM_SIZE (0.8x its shared 440px ceiling)
+// px — floor so items stay legible on the smallest phones. 70, not a
+// rounder-looking 100/120: verified by hand (solvedItemSize at a
+// 320px-wide phone's own available width, after .pageContainer's side
+// padding, computes to ~72px) that anything higher than this actually
+// forces the MIN_ITEM_SIZE clamp to kick in at realistic phone widths —
+// and once clamped, itemSize > what the width-solve actually allows, so
+// totalWidth exceeds the measured container and the row overflows
+// .pageContainer. 70 stays just under that solved value at 320px (and
+// every wider phone), so the floor is never actually reached in practice —
+// it only exists as a hard backstop past that.
+const MIN_ITEM_SIZE = 70;
+export const MAX_ITEM_SIZE = 320; // px — ceiling so a centered item never grows absurdly large on wide viewports
 const GAP_RATIO = 29 / 360; // preserves the original design's gap:itemSize ratio at any size
 const IMAGE_RATIO = 256 / 360; // preserves the original image:itemSize ratio at any size
 
