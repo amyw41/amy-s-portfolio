@@ -59,6 +59,13 @@ export function useFlipReorder(order: string[], layoutKey?: string | number) {
   const prevRectsRef = useRef<Map<string, FlipPoint> | null>(null);
   const isFirstRunRef = useRef(true);
   const prevLayoutKeyRef = useRef<string | number | undefined>(layoutKey);
+  // Per-element pending "clear the inline transition" timeout, keyed by the
+  // same element this hook already writes style.transition/transform onto.
+  // See flipOne's own comment for why this exists — without it, a card's
+  // hover opacity transition (owned by its CSS module, not this hook) stays
+  // permanently clobbered by the inline `transition: transform ...` this
+  // hook sets and never used to clean up.
+  const clearTimersRef = useRef<Map<HTMLElement, ReturnType<typeof setTimeout>>>(new Map());
 
   const registerRef = useMemo(() => {
     return (id: string) => (el: HTMLElement | null) => {
@@ -74,6 +81,14 @@ export function useFlipReorder(order: string[], layoutKey?: string | number) {
     // inlined in the loop below) purely for readability; it's still called
     // synchronously, in order, for every node that moved.
     function flipOne(el: HTMLElement, dx: number, dy: number) {
+      // A reorder mid-flight on this same card (rapid filter clicks) means
+      // there's already a stale "clear the inline transition" timer queued
+      // for it from the PREVIOUS flip — left to fire on its own schedule,
+      // it would wipe out the inline transition this call is about to set,
+      // partway through this new animation. Cancel it before proceeding.
+      const pendingClear = clearTimersRef.current.get(el);
+      if (pendingClear !== undefined) clearTimeout(pendingClear);
+
       // Invert: jump instantly to where it visually still is.
       el.style.transition = "none";
       el.style.transform = `translate(${dx}px, ${dy}px)`;
@@ -85,6 +100,24 @@ export function useFlipReorder(order: string[], layoutKey?: string | number) {
       // Play: animate the invert away, back down to the real position.
       el.style.transition = `transform ${FLIP_DURATION_MS}ms ${FLIP_EASING}`;
       el.style.transform = "";
+      // This inline `transition` completely REPLACES the card's own CSS
+      // transition (ProjectCard.module.css's `.card { transition: opacity
+      // 300ms ease-out }`) for as long as it's set — inline style always
+      // wins over a stylesheet rule for the same property. Previously
+      // nothing ever cleared it, so the instant any card had gone through
+      // one reorder, its hover-fade transition was gone for good: the
+      // opacity jumped straight to its hover value with no easing at all,
+      // which read as "too jarring / becomes white too quickly" (and,
+      // since a fresh page load has never reordered anything yet, "fixed
+      // when no buttons are pressed" — that card's CSS transition was
+      // still intact). Clearing the inline override once this flip's own
+      // transform animation is done hands hover control back to the CSS
+      // rule, exactly like the card had never been reordered.
+      const timer = setTimeout(() => {
+        el.style.transition = "";
+        clearTimersRef.current.delete(el);
+      }, FLIP_DURATION_MS);
+      clearTimersRef.current.set(el, timer);
     }
 
     const nodes = nodesRef.current;

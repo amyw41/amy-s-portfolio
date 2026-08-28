@@ -6,18 +6,23 @@ import PageTransition from "@/components/ui/PageTransition/PageTransition";
 import Footer from "@/components/sections/Footer";
 import "./globals.css";
 
-// weight: added "500" — Roboto was only ever loading real 300/400 static
-// faces, so any element requesting font-weight:500 (About.module.css's
-// .heading/.whatsInsideHeading/.companyName included) had no matching
-// face and the browser silently substituted the nearest one it had (400),
-// meaning a "500" -> "400" CSS change on those elements was invisible:
-// both were already rendering the same actual 400 face. Loading 500 for
-// real means any future 500 (or between-300-and-400 style) request
-// actually renders distinctly instead of silently collapsing to whatever
-// was already loaded.
+// weight: back to just 300/400 — briefly included "500" so About's
+// heading elements could genuinely render lighter than a phantom 500 (see
+// About.module.css's .heading comment for that whole story), but loading
+// a real 500 face changed the browser's fallback match for EVERY other
+// element on the site requesting a heavier weight it doesn't have too:
+// e.g. Tailwind's font-medium/font-semibold/font-bold on the case-study
+// pages (CaseStudyKit.tsx's meta labels included) used to fall back to
+// the nearest available real face, which was 400 — with 500 now loaded,
+// that same fallback search lands on 500 instead, silently making all of
+// that text render heavier than it used to ("something happened to the
+// weight of the headers"). Nothing in About actually needs a genuine 500
+// anymore (.heading/.whatsInsideHeading are 300, .companyName is 400), so
+// dropping it back to 300/400 undoes the site-wide side effect with no
+// loss.
 const roboto = Roboto({
   subsets: ["latin"],
-  weight: ["300", "400", "500"],
+  weight: ["300", "400"],
   variable: "--font-roboto",
   display: "swap",
 });

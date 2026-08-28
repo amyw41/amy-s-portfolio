@@ -615,7 +615,9 @@ export function CaseStudyHero({
             give the already-tallest columns more breathing room. */}
         {meta.map((m, i) => (
           <div key={m.label} className={`text-center ${i !== 0 ? "pb-3" : ""}`}>
-            <p className="font-instrument text-[clamp(20px,2.2vw,28px)] font-medium tracking-[-0.035em] text-black/80">{m.label}</p>
+            {/* Matches TEXT.subheader's own size (clamp(19px,2vw,24px), above) per
+                request — was clamp(15px,1.5vw,19px). */}
+            <p className="font-instrument text-[clamp(19px,2vw,24px)] font-medium tracking-[-0.035em] text-black/80">{m.label}</p>
             {m.values.map((v) => (
               <p key={v} className="mt-1 font-body text-[clamp(14px,1.3vw,17px)] font-light text-black/70">
                 {v}

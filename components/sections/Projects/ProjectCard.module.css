@@ -16,22 +16,6 @@
   text-decoration: none;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .card {
-    /* Was 150ms ease — that snap felt jarring on hover; slowed down and
-     * switched to ease-out (the same curve the dim/ring overlays elsewhere
-     * on this page already use) so it eases into place instead of jumping. */
-    transition: opacity 300ms ease-out;
-  }
-}
-
-.card:hover {
-  /* Was 0.65 — lightens the whole card toward the white page background
-   * behind it, same as the dim overlay's own white; bumped 10% whiter here
-   * too (0.35 of white showing through -> 0.385, i.e. opacity 0.615). */
-  opacity: 0.615;
-}
-
 .reveal {
   display: flex;
   align-items: flex-start;
@@ -145,17 +129,31 @@
   color: rgba(0, 0, 0, 0.8);
 }
 
-/* ---------- dim overlay — same construction as the jar's (see
+/* ---------- dim/hover overlay — same construction as the jar's (see
  * JarItem.module.css) — a composited white layer, not a raw opacity drop
  * on the card. Cards are already plain rectangles, so — like the jar's
  * 'box' items — no alpha mask is needed, just a plain white layer sized to
- * whichever block it's layered over (.media or .text). ---------- */
+ * whichever block it's layered over (.media or .text).
+ *
+ * Hovering also whitens a card, and it now uses this SAME overlay/property
+ * rather than a separate `.card:hover { opacity }` fade of the whole card.
+ * That older approach faded the whole card (image, text, and this overlay
+ * together) toward the page background by alpha COMPOSITING — stacking two
+ * composited fades (an already-dimmed card, then also hovered) doesn't add
+ * linearly, so a card that was already partway white jumped to "almost
+ * fully white" far faster than a fresh hover, reading as jarring. Per
+ * request, hover and dim now stack by an equal, predictable amount instead:
+ * both set a plain CSS custom property (--dim / --hover-white) and this
+ * overlay's own opacity is their sum via calc() — hovering an
+ * already-dimmed card lightens it by exactly the same amount hovering a
+ * normal card does, on top of whatever dim it already has. */
 
 .dimOverlay {
   position: absolute;
   inset: 0;
   background: #fff;
-  opacity: 0;
+  --hover-white: 0;
+  opacity: calc(var(--dim, 0) + var(--hover-white));
   pointer-events: none;
   border-radius: inherit;
 }
@@ -167,7 +165,15 @@
 }
 
 .dimActive {
-  opacity: var(--dim-white);
+  --dim: var(--dim-white);
+}
+
+/* Same increment whether the card was already dimmed or not — see this
+ * block's own comment above. Was 0.385 (matching the old opacity:0.615
+ * card fade) — dialed down per request, reads as a light touch now
+ * instead of a strong whiten. */
+.card:hover .dimOverlay {
+  --hover-white: 0.18;
 }
 
 /* ---------- responsive ---------- */

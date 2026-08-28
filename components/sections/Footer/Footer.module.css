@@ -141,13 +141,11 @@
 .item {
   position: absolute;
   overflow: visible;
-  touch-action: none;
-  cursor: grab;
   user-select: none;
-}
-
-.item:active {
-  cursor: grabbing;
+  /* Actual pointer handling (drag, hover-cursor) now lives on .hitLayer
+   * below, not this element — see that class's own comment and
+   * FooterItem.tsx's. */
+  pointer-events: none;
 }
 
 /* The full, uncropped source file, sized and offset (imgW/imgH/imgLeft/
@@ -161,6 +159,34 @@
   position: absolute;
   display: block;
   pointer-events: none;
+}
+
+/* Sized/positioned identically to .image (both read the same imgW/imgH/
+ * imgLeft/imgTop numbers) — covers the item's full rectangular footprint
+ * for pointer purposes, same as .item used to before it became
+ * pointer-events:none. A CSS mask used to sit here to restrict the actual
+ * hit region to the artwork's own opaque pixels, but that didn't reliably
+ * exclude the masked-out area from real hit-testing in practice — clicks
+ * on visibly-transparent padding still started a drag. FooterItem.tsx now
+ * does that check itself (reading the source file's real alpha value at
+ * the cursor position via an off-screen canvas) rather than leaning on the
+ * browser to honor the mask for hit-testing, so this box stays a plain
+ * unmasked rectangle; cursor is driven by isHoveringOpaque/isDragging
+ * (below), not a bare :hover, for the same reason — hovering the
+ * rectangle's transparent corners shouldn't invite a drag either. */
+.hitLayer {
+  position: absolute;
+  touch-action: none;
+  cursor: default;
+  pointer-events: auto;
+}
+
+.hitLayerHoverable {
+  cursor: grab;
+}
+
+.hitLayerDragging {
+  cursor: grabbing;
 }
 
 /* ---------- below the footer ---------- */
