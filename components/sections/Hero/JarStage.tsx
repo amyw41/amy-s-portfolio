@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, type RefObject } from "react";
 import Image from "next/image";
 import styles from "./JarStage.module.css";
 import JarItem from "./JarItem";
@@ -12,13 +12,18 @@ interface JarStageProps {
   items: JarItemDef[];
   projectsOn: boolean;
   favouritesOn: boolean;
+  /** Wraps the hero's title/tagline text — see its own comment in
+   * Hero/index.tsx. Optional so JarStage stays usable without it (a
+   * dragged item just falls straight past where a platform would be). */
+  textPlatformsRef?: RefObject<HTMLDivElement | null>;
 }
 
-export default function JarStage({ items, projectsOn, favouritesOn }: JarStageProps) {
+export default function JarStage({ items, projectsOn, favouritesOn, textPlatformsRef }: JarStageProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { ready, renderInfo, outlineMasks, registerItemEl, debugWalls, debugPhysicsEnabled } = useJarPhysics(
     containerRef,
     items,
+    textPlatformsRef,
   );
 
   return (

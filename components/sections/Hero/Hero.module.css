@@ -10,6 +10,12 @@
    * jar's height on short-but-wide viewports (see .jarWrapper below); being
    * a bit conservative there is harmless. */
   --available-height: calc(100dvh - 96px);
+  /* Nothing in the hero (title, tagline, nav labels, toggle labels) should
+   * be selectable — the title/tagline are also solid landing platforms for
+   * a dragged-out jar item now (see useJarPhysics.ts's textPlatformsRef),
+   * and a physics toy shouldn't highlight like a document either way. */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* The width/centring itself comes from the global .pageContainer class
