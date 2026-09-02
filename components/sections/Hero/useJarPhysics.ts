@@ -220,8 +220,8 @@ const BASE_SIZE = 160;
  * constant alone. */
 const BODY_SCALE = 0.54;
 
-/** Report (once, per item) when a PNG carries more than 15% untrimmed
- * transparent padding, so it can be cleaned up at the source file. */
+/** Warn (once per item) when a source file carries more than this much
+ * untrimmed transparent padding, so it can be cropped at source. */
 const PADDING_WARNING_THRESHOLD = 0.15;
 
 /** Fallback only, used if --outline-thickness (lib/tokens.css) can't be read
@@ -545,13 +545,24 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
 
       for (const item of items) {
         const b = bboxes[item.id];
-        const fileArea = b.naturalWidth * b.naturalHeight;
+        // Measured against the region actually scanned, not the whole file:
+        // a cropRegion item's bbox is deliberately restricted, so comparing
+        // it to full file area counts the excluded artwork as padding and
+        // warns however tightly the file is cropped.
+        const region = item.cropRegion;
+        const scannedArea = region
+          ? (region.right - region.left) * b.naturalWidth * ((region.bottom - region.top) * b.naturalHeight)
+          : b.naturalWidth * b.naturalHeight;
         const bboxArea = b.bboxW * b.bboxH;
-        if (fileArea > 0 && bboxArea < fileArea * (1 - PADDING_WARNING_THRESHOLD)) {
-          const pct = Math.round((1 - bboxArea / fileArea) * 100);
+        if (scannedArea > 0 && bboxArea < scannedArea * (1 - PADDING_WARNING_THRESHOLD)) {
+          const pct = Math.round((1 - bboxArea / scannedArea) * 100);
+          const filename = item.src.split("/").pop() ?? item.id;
+          const against = region
+            ? `its cropRegion (file ${b.naturalWidth}×${b.naturalHeight})`
+            : `file ${b.naturalWidth}×${b.naturalHeight}`;
           console.warn(
-            `[jar] ${item.id}.png has ~${pct}% untrimmed transparent padding ` +
-              `(alpha bbox ${b.bboxW}×${b.bboxH} vs file ${b.naturalWidth}×${b.naturalHeight}) — consider trimming at source.`,
+            `[jar] ${filename} has ~${pct}% untrimmed transparent padding ` +
+              `(alpha bbox ${b.bboxW}×${b.bboxH} vs ${against}) — consider trimming at source.`,
           );
         }
       }
