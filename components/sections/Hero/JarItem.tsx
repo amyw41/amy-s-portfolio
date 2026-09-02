@@ -97,7 +97,7 @@ const JarItem = forwardRef<HTMLDivElement, JarItemProps>(function JarItem(
   // would snap instead of the spec'd 250ms ease-out. var(--outline-
   // thickness) is the same single source of truth 'blob' items read (via
   // getOutlineThicknessPx in useJarPhysics.ts) to size their own ring.
-  const boxBorderShadow = isBox ? `0 0 0 ${bordered ? "var(--outline-thickness)" : "0px"} ${catColor}` : undefined;
+  const boxBorderShadow = isBox ? `0 0 0 ${bordered ? "calc(var(--outline-thickness) * 0.65)" : "0px"} ${catColor}` : undefined;
   // Only reached for a 'blob' item whose ring generation actually failed
   // (see lib/outline.ts's getOutlineMask) — stacked drop-shadows stand in
   // for the ring so a border still shows, just softer/rougher. Applied to
