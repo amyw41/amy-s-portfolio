@@ -79,32 +79,10 @@ const MAX_BODY_SPEED = 24;
  * time but doesn't stop a single frame's solver impulse from being huge. */
 const MAX_ANGULAR = 0.35;
 
-// The respawn boundary itself is computed live in stepPhysics from
-// window.innerHeight and the stage's own current offset from the viewport
-// top (stageRect.top, see its own comment) — i.e. the actual bottom edge of
-// the browser window, not a fraction of the jar's own small artwork box.
-// The jar's stage is only a fraction of the viewport's height (see
-// Hero.module.css's .jarWrapper sizing), so a boundary measured against the
-// stage box alone would trigger the respawn well before the item is
-// actually out of view — the point is for it to disappear off the bottom of
-// the page the user is looking at, then come back at the top, with no gap
-// in between where it's neither visible nor yet respawned.
-
-/** How far above the current top of the browser viewport a respawned item
- * reappears, real px at REFERENCE_WIDTH (scaled like every other px
- * constant here). Deliberately small, and the SAME for every item — unlike
- * spawnYById (used only for the initial load-in), which deliberately
- * staggers each item's height by its own place in PLACEMENT_ORDER so the
- * whole roster doesn't land in one simultaneous heap. Reusing that same
- * staggered point for a respawn was the actual cause of the reported
- * per-item delay: an item late in PLACEMENT_ORDER spawns much further above
- * the frame than one near the front, so sending it back to that same point
- * on respawn meant a multi-second fall before it was visible again, while
- * an early item reappeared almost immediately — the exact "kitty-mirror
- * takes a few seconds, pineapple is instant" report. A respawn isn't the
- * synchronized mass-drop the stagger exists for (items don't respawn all at
- * once), so it doesn't need it — every item gets the same short hop back
- * above the fold and the same short fall back into view. */
+/** How far above the current viewport top a respawned item reappears, real
+ * px at REFERENCE_WIDTH. Deliberately the same for every item, unlike
+ * spawnYById's load-in stagger — reusing that stagger for respawns was why
+ * some items took much longer than others to reappear. */
 const RESPAWN_LEAD_PX = 24;
 
 /** How hard a still-pinned body is nudged back toward its lane each tick —
@@ -676,14 +654,8 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       // see PIN_CORRECT_SMOOTHING's own comment (the constant above) for
       // why this replaced subtracting the body's own post-solver velocity.
       const pinVxById = new Map<string, number>();
-      // Ids teleported by the out-of-bounds respawn on the tick that just
-      // ran. The live loop paints by interpolating each body between its
-      // pre-tick and post-tick pose (see renderInterpolated), which is
-      // exactly the wrong thing to do across a teleport — it would draw one
-      // frame of the item somewhere along the line between "below the page"
-      // and "far above the jar", i.e. a flicker straight through the middle
-      // of the stage. rafTick drains this and collapses those items' pre-
-      // tick pose onto the new one so the jump isn't tweened at all.
+      // Ids teleported by the out-of-bounds respawn this tick — rafTick uses
+      // this to skip interpolating across the jump (see its own comment).
       const teleportedIds = new Set<string>();
       const fallIndexById = new Map<string, number>(orderedIds.map((id, i) => [id, i]));
 
@@ -877,19 +849,10 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
       // mousedown/mousemove/mouseup always wins.
       container.addEventListener("dragstart", (e) => e.preventDefault());
 
-      // A parallel problem to the drag-ghost above, but for TEXT selection
-      // rather than an image drag: a mousedown-then-move is also exactly
-      // the browser's own gesture for starting a text selection, and nudges
-      // the mousedown by even a pixel while grabbing an item and the page
-      // can start highlighting instead of (or as well as) Matter.Mouse
-      // picking the body up — most noticeable on a fast/diagonal grab, same
-      // trigger as the drag-ghost case. There's nothing in `.stage` worth
-      // selecting (it's the jar image plus item sprites, no text), so
-      // preventDefault on every mousedown here is never blocking anything a
-      // user actually wants. This only stops a selection from ever
-      // starting; it doesn't stop propagation, so Matter's own mousedown
-      // listener (registered by Mouse.create below) still sees the event
-      // and still starts tracking mouse.button normally.
+      // Same drag-ghost problem, but for text selection: a mousedown-then-
+      // move is also the browser's own gesture for starting a selection.
+      // There's no text in `.stage` to select, and this doesn't stop
+      // propagation, so Matter's own mousedown handling still runs normally.
       container.addEventListener("mousedown", (e) => e.preventDefault());
 
       // Only Matter.Mouse, not MouseConstraint — Mouse still gives us
@@ -1074,15 +1037,9 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
         });
         Composite.add(world, dragConstraint);
         setCursor("grabbing");
-        // The mousedown preventDefault above (see its own comment) already
-        // stops a selection from ever starting, but a drag can now carry
-        // the cursor anywhere on the page — over the nav text, the tagline,
-        // and so on — while the mouse button is held (see cursorRef's own
-        // comment on why tracking is window-scoped). Suppressing selection
-        // page-wide for the duration of the drag is a second, independent
-        // guard against a stray selection starting from whatever the
-        // browser does with a held button moving over ordinary text,
-        // restored the instant the drag ends.
+        // Belt-and-braces alongside the mousedown preventDefault: a drag can
+        // now carry the cursor anywhere on the page while held, so suppress
+        // selection page-wide for the duration, restored in endDrag.
         document.body.style.userSelect = "none";
       }
 
@@ -1120,40 +1077,19 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
         window.removeEventListener("mouseup", forceReleaseDrag);
         window.removeEventListener("touchend", forceReleaseDrag);
         window.removeEventListener("touchcancel", forceReleaseDrag);
-        // In case the component unmounts mid-drag — endDrag's own reset
-        // (above) never gets a chance to run otherwise, and the whole page
-        // would be stuck unselectable.
+        // In case the component unmounts mid-drag, so the page isn't left unselectable.
         document.body.style.userSelect = "";
       });
 
-      // Pointer position in container-local px, tracked on `window` rather
-      // than on `container`. Two things read it: the rustle force below,
-      // and — the reason it's window-scoped — the drag constraint's own
-      // target point.
-      //
-      // Matter.Mouse's listeners are element-scoped, so mouse.position
-      // simply stops updating the moment the cursor leaves the jar's box.
-      // That was invisible while the mouth was clamped shut (an item could
-      // never get near the stage's edge anyway), but now that items can be
-      // pulled out of the jar it would pin a dragged item to the container's
-      // rim and refuse to follow the cursor any further. mouse.position is
-      // still what *starts* a drag (a press necessarily happens over the
-      // stage, and Matter's button tracking is worth keeping); this is what
-      // steers it afterward.
-      //
-      // Registered unconditionally, not gated on reducedMotion like the old
-      // container listeners were — dragging works under reduced motion too,
-      // and it's the rustle *force* that should be suppressed there, not
-      // pointer tracking itself. See the rustle block in stepPhysics for
-      // that gate.
+      // Pointer position in container-local px, tracked on `window` (not
+      // `container`) since Matter.Mouse stops updating mouse.position once
+      // the cursor leaves the stage — needed for a drag pulled out of the
+      // jar to keep following the cursor. Also drives the rustle force.
+      // Registered unconditionally (not gated on reducedMotion) since
+      // dragging still works there; only the rustle force is suppressed.
       const cursorRef = { current: null as { x: number; y: number; prevX: number; prevY: number } | null };
-      // The stage's viewport rect, cached rather than measured per event.
-      // This listener now fires for pointer movement anywhere on the page,
-      // not just over the jar, and getBoundingClientRect is a synchronous
-      // layout read — doing one per mousemove while the rAF loop is busy
-      // rewriting every item's transform is exactly the pattern that forces
-      // repeated layout flushes. The stage can only move relative to the
-      // viewport on scroll or resize, so recompute on those instead.
+      // Cached rather than measured per mousemove (a layout read on every
+      // event); recomputed on scroll/resize instead, when it can change.
       let stageRect = container.getBoundingClientRect();
       const refreshStageRect = () => {
         stageRect = container.getBoundingClientRect();
@@ -1170,9 +1106,7 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
         const y = clientY - stageRect.top;
         const prev = cursorRef.current;
         cursorRef.current = { x, y, prevX: prev ? prev.x : x, prevY: prev ? prev.y : y };
-        // The grab/grabbing affordance only means anything while the cursor
-        // is actually over the stage — outside it, leave the page's own
-        // cursor alone. (updateHoverCursor no-ops mid-drag on its own.)
+        // Only update the grab/grabbing cursor while actually over the stage.
         if (x >= 0 && x <= stageRect.width && y >= 0 && y <= stageRect.height) updateHoverCursor(x, y);
         else if (!dragConstraint) setCursor("");
       };
@@ -1208,10 +1142,7 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
           endDrag();
         }
         if (dragConstraint) {
-          // cursorRef first, mouse.position only as a fallback — see
-          // cursorRef's own comment: Matter stops updating its position
-          // once the pointer leaves the stage, which is precisely when a
-          // drag out of the jar needs to keep tracking.
+          // cursorRef first (see its own comment); mouse.position as fallback.
           const c = cursorRef.current;
           dragConstraint.pointA = c ? { x: c.x, y: c.y } : { x: mouse.position.x, y: mouse.position.y };
         }
@@ -1302,36 +1233,13 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
         }
 
         // Hard containment: belt-and-braces on top of the wall bodies
-        // above. Rare fast-impact solver frames can still push a body
-        // through a wall — this clamps a body back inside the walls' own
-        // combined bounding envelope no matter what the solver did.
-        //
-        // The mouth (top) used to be clamped too, for any body that had
-        // already entered the jar — that clamp WAS the lid, and it's what
-        // made an item impossible to pull up and out. It's gone now, on
-        // purpose. Nothing about loading the jar depended on it: every item
-        // is column-pinned for its entire descent (see the pin block above)
-        // and lands inside on its own. The lid only ever stopped a settled
-        // item being knocked back out, which is an accepted trade for being
-        // able to lift one out by hand.
-        //
-        // With no lid, the left/right/floor clamps can't stay unconditional
-        // either. They describe the jar's *interior*, and an item held above
-        // the rim (or carried off to one side of it) isn't in the interior.
-        // Left as-is they'd snap a lifted item back over the jar the moment
-        // it crossed the rim line, and would stop anything dropped beside
-        // the jar from ever falling past the base — which is the exact
-        // motion the respawn below is waiting on. So containment now only
-        // applies to a body that's actually in the jar: below the rim, and
-        // horizontally between the walls.
-        //
-        // The out-of-bounds respawn lives in this same loop because it needs
-        // the same left/right test. It deliberately keys off whether the
-        // body is beside the jar rather than off depth alone: an item
-        // settled in the pile already sits well past the base level as far
-        // as raw y goes (collision bodies are BODY_SCALE of the artwork, so
-        // the visible item legitimately pokes below the drawn base), and a
-        // depth-only check would fire on the entire pile.
+        // above, clamping a body back inside their combined envelope.
+        // The mouth (top) is no longer clamped — that clamp was the old lid,
+        // and removing it is what lets an item be pulled out. Left/right/
+        // floor now only apply to a body actually inside the jar (between
+        // the walls, below the rim); a body beside the jar has left it and
+        // is handled by the out-of-bounds respawn below instead, which
+        // shares this same left/right test.
         if (wallBodies.length > 0) {
           let leftBound = Infinity;
           let rightBound = -Infinity;
@@ -1345,12 +1253,7 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
           // POINTS[0] and its last entry, jar-shape.ts) — i.e. exactly where
           // the drawn rim is, not some separate invented boundary.
           const mouthY = JAR_INTERIOR_POINTS[0].y * height;
-          // window.innerHeight, converted into the stage's own local
-          // coordinate space via stageRect.top (continuously kept current
-          // on scroll/resize — see its own comment): the y at which an
-          // item's centre lines up with the actual bottom edge of the
-          // browser window, wherever the page happens to be scrolled to
-          // right now.
+          // Local-coordinate y of the browser window's actual bottom edge.
           const respawnY = window.innerHeight - stageRect.top;
 
           for (const { id, body, halfWidth, halfHeight } of physicsItems) {
@@ -1358,37 +1261,25 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
             const hh = halfHeight * BODY_SCALE;
             let { x, y } = body.position;
 
-            // Clear of the jar to one side — it's been lifted out and
-            // carried off, and there's nothing out here to contain it
-            // against or land on. A body in the pile always has its centre a
-            // full half-width inside these bounds, so it never reaches this
-            // branch. The moment it drops below the stage's own bottom edge,
-            // send it back to the top — no extra fall time first.
+            // Beside the jar, i.e. lifted out and carried off — a body in
+            // the pile always has its centre inside these bounds, so it
+            // never reaches this branch. Respawn once it drops out of view.
             if (x <= leftBound || x >= rightBound) {
               if (y < respawnY) continue;
-              // Let go first if it's still being held as it crosses the
-              // line — otherwise the constraint would immediately haul it
-              // straight back down out of the sky to wherever the cursor is.
+              // Let go first, or the constraint would haul it back down.
               if (dragBody === body) endDrag();
               const item = itemsById.get(id);
               Body.setPosition(body, {
                 x: (TARGET_X_FRACTION[id] ?? 0.5) * width,
-                // Just above the CURRENT viewport top (window-relative, via
-                // stageRect.top — not spawnYById's original load-in point,
-                // see RESPAWN_LEAD_PX's own comment for why), so every item
-                // reappears after the same short beat regardless of where
-                // it originally fell from on load.
+                // Just above the current viewport top, not spawnYById's
+                // original load-in point (see RESPAWN_LEAD_PX).
                 y: -stageRect.top - hh - RESPAWN_LEAD_PX * scale,
               });
-              // Back to the pose it originally fell in at (items.manifest
-              // .ts's own `rotate`), not whatever tumble it happened to be
-              // in on the way down.
+              // Back to the pose it originally fell in at.
               Body.setAngle(body, ((item?.rotate ?? 0) * Math.PI) / 180);
               Body.setVelocity(body, { x: 0, y: 0 });
               Body.setAngularVelocity(body, 0);
               Sleeping.set(body, false);
-              // Hands it back to the same controlled, column-pinned descent
-              // every item makes on load — see the pin block above.
               hasEnteredJar.set(id, false);
               landedIds.delete(id);
               pinVxById.set(id, 0);
@@ -1396,8 +1287,7 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
               continue;
             }
 
-            // Above the rim: open air, on its way out of the jar or
-            // dropping back into it.
+            // Above the rim: open air, entering or exiting the jar.
             if (y < mouthY) continue;
 
             let vx = body.velocity.x;
@@ -1425,9 +1315,8 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
           }
         }
 
-        // Gated on !reducedMotion here rather than by simply not tracking
-        // the pointer at all — cursorRef is now populated either way,
-        // because dragging needs it (see its own comment above).
+        // cursorRef is populated even under reduced motion (dragging needs
+        // it), so gate the rustle force itself here instead.
         const cursor = reducedMotion ? null : cursorRef.current;
         if (cursor) {
           const radius = RUSTLE_RADIUS * scale;
@@ -1615,10 +1504,7 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
         buildWalls(width, height, scale);
         currentRenderInfo = computeRenderInfo(scale);
         setRenderInfo({ ...currentRenderInfo });
-        // The stage just changed size, so the cached rect that pointer
-        // tracking reads is stale — a container-only resize (a layout shift
-        // that doesn't resize the window) never fires the window `resize`
-        // this otherwise listens to.
+        // A container-only resize doesn't fire the window `resize` event.
         refreshStageRect();
 
         for (const snap of snapshot) {
@@ -1704,10 +1590,7 @@ export function useJarPhysics(containerRef: RefObject<HTMLDivElement | null>, it
             // most recent tick" endpoint interpolation renders from.
             prev = physicsItems.map(({ body }) => ({ x: body.position.x, y: body.position.y, angle: body.angle }));
             stepPhysics();
-            // Collapse the pre-tick pose onto the post-tick one for anything
-            // the respawn just teleported, so the jump from below the page
-            // back up to the spawn point isn't tweened through the middle of
-            // the stage — see teleportedIds' own comment.
+            // Skip interpolating across a respawn teleport (see teleportedIds).
             if (teleportedIds.size > 0) {
               for (let i = 0; i < physicsItems.length; i++) {
                 if (!teleportedIds.has(physicsItems[i].id)) continue;
