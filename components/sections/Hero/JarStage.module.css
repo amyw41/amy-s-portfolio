@@ -3,6 +3,10 @@
   width: 100%;
   /* public/images/drawings/jar.png is 1600x2257 */
   aspect-ratio: 1600 / 2257;
+  /* Alongside useJarPhysics.ts's mousedown preventDefault: stops a fast
+   * grab-and-drag from being read as the start of a text selection. */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .jarImage {
