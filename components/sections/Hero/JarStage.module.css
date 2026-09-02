@@ -3,6 +3,12 @@
   width: 100%;
   /* public/images/drawings/jar.png is 1600x2257 */
   aspect-ratio: 1600 / 2257;
+  /* Belt-and-braces alongside useJarPhysics.ts's own mousedown-
+   * preventDefault: stops a fast/diagonal grab-and-drag gesture here from
+   * being read as the start of a text selection instead of (or as well as)
+   * a Matter.Mouse pick. There's no text inside .stage to select anyway. */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .jarImage {
