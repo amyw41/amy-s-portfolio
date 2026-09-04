@@ -81,8 +81,7 @@ export default function Experience() {
         <motion.div
           className={styles.experienceInner}
           initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, amount: VIEWPORT_AMOUNT }}
+          animate={{ opacity: 1 }}
           transition={{ duration: FADE_DURATION, ease: "easeOut" }}
         >
           {EXPERIENCE.map((group) => (

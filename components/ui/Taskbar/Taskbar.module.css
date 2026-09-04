@@ -119,7 +119,13 @@
 
 /* Dialed back from full opacity — the taskbar is a more utilitarian
  * wayfinding element than the hero, so the oval reads as a lighter-touch
- * hint here rather than the hero's full-strength expression. */
-.navLink:hover .scribble {
+ * hint here rather than the hero's full-strength expression. Active link
+ * keeps the circle visible continuously. */
+.navLink:hover .scribble,
+.scribbleActive {
   opacity: 0.55;
+}
+
+.navLinkActive {
+  color: #000;
 }

@@ -304,7 +304,7 @@
    * matches its clamp(40px, 5.5vw, 72px) so the gap above this section is
    * bigger too, per request. */
   padding-top: clamp(40px, 5.5vw, 72px);
-  padding-bottom: clamp(64px, 8vw, 120px);
+  padding-bottom: clamp(32px, 5vw, 64px);
 }
 
 /* Same extra inline padding as Experience's own .experienceInner, so this
@@ -479,12 +479,13 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .navArrow {
-    transition: opacity 300ms ease-out;
+    transition: color 300ms ease-out, border-color 300ms ease-out;
   }
 }
 
 .navArrow:hover {
-  opacity: 0.615;
+  color: #000;
+  border-color: #000;
 }
 
 /* Edge-faded mask, same construction as the /playground/[category] page's
@@ -528,6 +529,7 @@
   border: none;
   background: none;
   appearance: none;
+  font-family: inherit;
 }
 
 .carouselItemImageWrap {
@@ -546,8 +548,9 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-align: center;
+  font-size: var(--fs-small);
   font-weight: 300;
-  color: rgba(0, 0, 0, 0.55);
+  color: rgba(0, 0, 0, 0.7);
 }
 
 .dots {

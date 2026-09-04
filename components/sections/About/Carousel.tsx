@@ -14,9 +14,9 @@ const ITEM_COUNT = WHATS_INSIDE_ITEMS.length;
 // 360px) — kept constant (even though CENTER_SCALE below is now smaller
 // than the 1.3 it was tuned for) so there's still headroom to spare rather
 // than cutting it exactly to size.
-const TRACK_HEIGHT_RATIO = 448 / 360;
+const TRACK_HEIGHT_RATIO = 1;
 // Was 1.3 — the featured/center item read as too large, per request.
-const CENTER_SCALE = 1.1;
+const CENTER_SCALE = 1.0;
 const FAR_SCALE = 0.55;
 
 /**
@@ -163,17 +163,12 @@ export default function Carousel() {
                     </motion.div>
 
                     <motion.span
-                      animate={{ opacity: nameOpacity, scale: isCenter ? 0.85 : 1 }}
+                      animate={{ opacity: nameOpacity }}
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      // Floored at 11px — the itemSize-relative ratio alone
-                      // (16/360) reads fine near MAX_ITEM_SIZE but shrinks
-                      // to a couple of illegible px at the small end of the
-                      // width-solve (narrow phones, MIN_ITEM_SIZE); this
-                      // keeps the caption readable at every itemSize the
-                      // solve can actually produce.
+                      // Removed inline font-size scaling per request — now statically
+                      // uses var(--fs-small) in CSS to match the Gallery.
                       style={{
                         maxWidth: Math.max(itemSize * (270 / 360), 90),
-                        fontSize: Math.max(itemSize * (16 / 360), 11),
                       }}
                       className={styles.carouselItemCaption}
                     >

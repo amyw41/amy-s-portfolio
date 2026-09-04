@@ -14,10 +14,10 @@ import {
   MAX_SCALE,
   PLATE_SIZE,
   SLIDE_UP_TRANSITION,
-  VIEWPORT_AMOUNT,
   VISIBLE_STAGE_HEIGHT,
   toPx,
 } from "./posterLayout";
+
 import { ETC_CATEGORIES } from "@/lib/etc";
 import styles from "./Playground.module.css";
 import { content } from "@/lib/content";
@@ -55,8 +55,8 @@ function collageColumnCount(containerWidth: number): number {
 export default function Playground() {
   const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>("plate");
-  const [revealedCats, setRevealedCats] = useState<Set<string>>(new Set());
   const [wrapRef, availableWidth] = useElementWidth<HTMLDivElement>();
+
 
   // Kicks off compiling each category's detail route in the background as
   // soon as this page mounts, rather than waiting on a plate's own Link to
@@ -112,10 +112,6 @@ export default function Playground() {
     COLLAGE_PHOTOS.forEach((photo, i) => map.set(photo.src, collageLayout.boxes[i]));
     return map;
   }, [collageLayout]);
-
-  function markRevealed(slug: string) {
-    setRevealedCats((prev) => (prev.has(slug) ? prev : new Set(prev).add(slug)));
-  }
 
   return (
     <section className={styles.section}>
@@ -178,7 +174,6 @@ export default function Playground() {
             <AnimatePresence>
               {isPlateMode &&
                 ETC_CATEGORIES.map((cat) => {
-                  const revealed = revealedCats.has(cat.slug);
                   return (
                     <div
                       key={cat.slug}
@@ -199,21 +194,8 @@ export default function Playground() {
                         className={styles.plateLink}
                       >
                         <motion.div
-                          // `initial` always starts hidden — what changes is
-                          // which prop actually animates it to visible. Once
-                          // a category has been revealed once, `animate`
-                          // fires immediately on every future (re)mount
-                          // (i.e. every time you switch back to plate view —
-                          // AnimatePresence above fully unmounts these on
-                          // exit, so this really is a fresh mount each
-                          // time), rather than waiting on `whileInView`
-                          // again, which only matters for the genuine first
-                          // scroll-reveal below.
                           initial={{ opacity: 0 }}
-                          animate={revealed ? { opacity: 1 } : undefined}
-                          whileInView={!revealed ? { opacity: 1 } : undefined}
-                          viewport={{ once: true, amount: VIEWPORT_AMOUNT }}
-                          onViewportEnter={() => markRevealed(cat.slug)}
+                          animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
                           transition={SLIDE_UP_TRANSITION}
                         >
@@ -265,7 +247,6 @@ export default function Playground() {
                     key={photo.src}
                     photo={photo}
                     mode={viewMode}
-                    visible={revealedCats.has(cat.slug)}
                     fallback={{ xPct: cat.plateXPct, yPct: cat.plateYPct }}
                     collageBox={collageBoxBySrc.get(photo.src)}
                   />

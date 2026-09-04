@@ -17,11 +17,17 @@ import {
 
 const copy = content.en.taskbar;
 
-// Same hand-sketched hover pill ring as the case study nav links
-function ScribbleOval({ seed }: { seed: number }) {
+// Same hand-sketched hover/active pill ring as the case study nav links
+function ScribbleOval({ seed, active = false }: { seed: number; active?: boolean }) {
   const path = useMemo(() => buildWobblyPillPath(seed), [seed]);
   return (
-    <svg className={styles.scribble} viewBox={PILL_VIEW_BOX} fill="none" preserveAspectRatio="none" aria-hidden="true">
+    <svg
+      className={`${styles.scribble} ${active ? styles.scribbleActive : ""}`}
+      viewBox={PILL_VIEW_BOX}
+      fill="none"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
       <path d={path} stroke={PILL_STROKE_COLOR} strokeWidth={PILL_STROKE_WIDTH} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
     </svg>
   );
@@ -90,6 +96,10 @@ export default function Taskbar() {
 
   if (pathname === "/") return null;
 
+  const isWorkActive = pathname.startsWith("/projects") || pathname === "/work";
+  const isAboutActive = pathname === "/about" || pathname.startsWith("/about/");
+  const isPlaygroundActive = pathname === "/playground" || pathname.startsWith("/playground/");
+
   return (
     <motion.div
       className={`${styles.pill} ${hidden ? styles.pillHidden : ""}`}
@@ -109,16 +119,28 @@ export default function Taskbar() {
         />
       </Link>
       <nav className={styles.nav}>
-        <Link href="/#projects" className={styles.navLink}>
-          <ScribbleOval seed={10} />
+        <Link
+          href="/#projects"
+          className={`${styles.navLink} ${isWorkActive ? styles.navLinkActive : ""}`}
+          aria-current={isWorkActive ? "page" : undefined}
+        >
+          <ScribbleOval seed={10} active={isWorkActive} />
           {copy.work}
         </Link>
-        <Link href="/about" className={styles.navLink}>
-          <ScribbleOval seed={11} />
+        <Link
+          href="/about"
+          className={`${styles.navLink} ${isAboutActive ? styles.navLinkActive : ""}`}
+          aria-current={isAboutActive ? "page" : undefined}
+        >
+          <ScribbleOval seed={11} active={isAboutActive} />
           {copy.about}
         </Link>
-        <Link href="/playground" className={styles.navLink}>
-          <ScribbleOval seed={12} />
+        <Link
+          href="/playground"
+          className={`${styles.navLink} ${isPlaygroundActive ? styles.navLinkActive : ""}`}
+          aria-current={isPlaygroundActive ? "page" : undefined}
+        >
+          <ScribbleOval seed={12} active={isPlaygroundActive} />
           {copy.playground}
         </Link>
       </nav>

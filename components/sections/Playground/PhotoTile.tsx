@@ -43,19 +43,11 @@ const FALLBACK_SIZE = 48;
 export default function PhotoTile({
   photo,
   mode,
-  visible,
   fallback,
   collageBox,
 }: {
   photo: EtcPhoto;
   mode: "plate" | "collage";
-  /** Plate mode only: has this photo's category been scrolled into view
-   * yet? Drives this photo's own opacity fade directly — same trigger, same
-   * transition, no per-photo delay of its own any more, so every photo
-   * fades in at the exact same moment as its own plate rather than
-   * cascading in afterward (see this component's own transition below).
-   * Ignored in collage mode, which always shows everything. */
-  visible: boolean;
   /** Plate-view anchor to use when `photo.plate` itself is absent (nails)
    * — its own category's plate center, so a photo with no real scatter
    * position still has somewhere sensible to (invisibly) sit in plate mode
@@ -86,17 +78,8 @@ export default function PhotoTile({
           ? { left: slotLeft(xPct, width), top: slotTop(yPct, height), width, height, zIndex: z }
           : { left: box.x, top: box.y, width: box.width, height: box.height }
       }
-      // initial={false}: this element is never actually mounting fresh (see
-      // the component's own comment above) — its very first real appearance
-      // is handled by the opacity animate below (gated on `visible`), not a
-      // mount transition.
-      initial={false}
-      animate={{ opacity: isPlateMode ? (plate && visible ? 1 : 0) : 1 }}
-      // opacity split out from `layout` (rather than one shared transition)
-      // so a mode switch's position/size FLIP never wants for a delay of
-      // its own — unrelated to the plate-view opacity fade itself, which
-      // now carries no delay either (both photo and plate fade in on this
-      // exact same transition, starting the instant `visible` flips true).
+      initial={{ opacity: 0 }}
+      animate={{ opacity: isPlateMode ? (plate ? 1 : 0) : 1 }}
       transition={{
         layout: { duration: 0.35, ease: "easeOut" },
         opacity: { duration: 0.35, ease: "easeOut" },
@@ -121,17 +104,8 @@ export default function PhotoTile({
             sizes={`${Math.round(width)}px`}
             className={styles.photoImage}
             draggable={false}
+            priority
             unoptimized={process.env.NODE_ENV !== "production"}
-            // Fades .photoImage in (see its own opacity/transition in
-            // Playground.module.css) the instant this exact <img> is
-            // actually ready to show — fires immediately for an
-            // already-cached image (indistinguishable from no transition
-            // at that speed) and whenever a fresh one finishes loading
-            // otherwise, instead of every photo popping in abruptly at
-            // its own, uncoordinated moment.
-            onLoad={(e) => {
-              e.currentTarget.style.opacity = "1";
-            }}
           />
         </div>
       ) : (

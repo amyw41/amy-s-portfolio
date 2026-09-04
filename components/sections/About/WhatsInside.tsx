@@ -33,8 +33,7 @@ export default function WhatsInside() {
           <motion.div
             className={styles.whatsInsideHeader}
             initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true, amount: 0.3 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: 0.35, ease: "easeOut" }}
           >
             <h2 className={styles.whatsInsideHeading}>{copy.heading}</h2>

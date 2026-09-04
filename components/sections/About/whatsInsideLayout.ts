@@ -13,7 +13,7 @@
 // so this can never overflow it at any viewport width without needing to
 // know that padding's own formula at all.
 
-export const NEIGHBOR_SCALE = 0.72;
+export const NEIGHBOR_SCALE = 0.85;
 // Must match the arrow buttons' own fixed size (Carousel.tsx's .navArrow —
 // see About.module.css).
 export const ARROW_SIZE = 36;

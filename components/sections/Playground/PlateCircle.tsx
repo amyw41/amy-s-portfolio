@@ -44,11 +44,13 @@ export default function PlateCircle({
         // enough that this fine hand-drawn linework doesn't pixelate once
         // stretched back out at a real DPR.
         quality={95}
+        priority
         // Turbopack's dev-mode image-optimization cache doesn't bust when a
         // file is replaced at the same path — same workaround already used
         // in CaseStudyKit.tsx's CaseStudyImage. Production still gets
         // normal next/image optimization.
         unoptimized={process.env.NODE_ENV !== "production"}
+
         // Rotated 180° — matches jar-portfolio's own PlateCircle (its own
         // comment: the plate art's pen strokes don't fully close near the
         // top, while the bottom is clean, so this moves the gap to the

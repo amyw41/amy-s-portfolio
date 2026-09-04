@@ -190,30 +190,8 @@
 
 .photoImage {
   object-fit: cover;
-  /* Starts hidden and fades in once its own onLoad fires (PhotoTile.tsx) —
-   * without this, a photo that hasn't finished downloading/decoding yet
-   * just pops into place abruptly, at whatever moment its own request
-   * happens to finish, instead of appearing together with everything
-   * else's clean mount fade (most visible on a first, uncached load). */
-  opacity: 0;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .photoImage {
-    transition: opacity 400ms ease-out;
-  }
-}
-
-/* Reduced motion: skip the hide-until-load fade entirely rather than just
- * dropping the animation — an un-transitioned opacity:0 would still leave
- * the photo invisible until onLoad happens to fire, which reads as a hard
- * pop-in (the exact thing being fixed here), not the "no motion" this
- * media query is supposed to produce. */
-@media (prefers-reduced-motion: reduce) {
-  .photoImage {
-    opacity: 1;
-  }
-}
 
 /* ---------- collage mode: justified photo wall, grouped by category ---------- */
 

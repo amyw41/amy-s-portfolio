@@ -25,7 +25,7 @@ import TextHighlight from "@/components/case-studies/TextHighlight";
 // every one of those spots is marked with a `// CHECK:` comment so they're
 // easy to find and fix.
 
-const HIGHLIGHT = "#fde8eb";
+const HIGHLIGHT = "#dde7df";
 
 const SECTION_NAV: SectionNavItem[] = [
   { id: "initial-planning", label: "01 Initial Planning" },
@@ -171,7 +171,7 @@ export default function CyberSeaCaseStudy() {
             // small text — the stat numbers themselves (12-15%, 80%, 4x)
             // were legible with confidence.
             <StatRow
-              bg="#dde7df"
+              bg={HIGHLIGHT}
               stats={[
                 { stat: "12-15%", caption: "of global shipping passes through Arctic waters" },
                 { stat: "80%", caption: "of Arctic data requires expert interpretation" },
@@ -233,11 +233,7 @@ export default function CyberSeaCaseStudy() {
         <Row
           heading="Problem Statement:"
           media={
-            // Red, not the page's usual blue highlight — matches the same
-            // #fbeded shade Spotify's own case study uses for its problem/
-            // challenge callouts (see Spotify's "Challenge" boxes). Now the
-            // same shared HighlightBox every case study's callouts use.
-            <HighlightBox bg="#fbeded">
+            <HighlightBox bg={HIGHLIGHT}>
               How might we close the gap between Arctic expertise and public
               understanding?
             </HighlightBox>
@@ -282,9 +278,7 @@ export default function CyberSeaCaseStudy() {
           eyebrow="04 / Implementation"
           heading="Challenge"
           media={
-            // Same shared HighlightBox as this page's own Problem Statement
-            // box above.
-            <HighlightBox bg="#fbeded">How can we balance heavy branding with accessibility?</HighlightBox>
+            <HighlightBox bg={HIGHLIGHT}>How can we balance heavy branding with accessibility?</HighlightBox>
           }
         />
 
