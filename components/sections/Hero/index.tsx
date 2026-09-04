@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import styles from "./Hero.module.css";
@@ -37,6 +37,10 @@ function scrollToProjects() {
 export default function Hero() {
   const [projectsOn, setProjectsOn] = useState(false);
   const [favouritesOn, setFavouritesOn] = useState(false);
+  // Wraps the title and tagline (not the logo image or the nav links) —
+  // JarStage queries text elements inside this box to turn them into solid
+  // ground a dragged-out jar item can land and rest on.
+  const textPlatformsRef = useRef<HTMLDivElement>(null);
 
   return (
     <section
@@ -99,7 +103,7 @@ export default function Hero() {
         </div>
 
         <div className={styles.columns}>
-          <div className={styles.left}>
+          <div className={styles.left} ref={textPlatformsRef}>
             <div className={styles.identity}>
               <Image
                 src="/images/logos/black-star.png"
@@ -135,7 +139,12 @@ export default function Hero() {
 
           <div className={styles.right}>
             <div className={styles.jarWrapper}>
-              <JarStage items={JAR_ITEMS} projectsOn={projectsOn} favouritesOn={favouritesOn} />
+              <JarStage
+                items={JAR_ITEMS}
+                projectsOn={projectsOn}
+                favouritesOn={favouritesOn}
+                textPlatformsRef={textPlatformsRef}
+              />
             </div>
             <div className={styles.toggles}>
               <CircleToggle

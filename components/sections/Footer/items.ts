@@ -1,30 +1,20 @@
 export interface FooterItemDef {
   id: string;
   src: string;
-  /** Percentage coordinates (of the panel's own box) for the item's
-   * center point. Percentage, not px, so the arrangement holds together
-   * while the panel scales with the viewport. */
+  /** Centre point as a percentage of the panel's own box, so the
+   * arrangement holds together as the panel scales. */
   left: number;
   top: number;
-  /** Degrees, positive = clockwise. Fixed per item (not randomised at
-   * runtime) so the pile is stable across reloads instead of reshuffling
-   * every time the page loads. bottle/rabbit lie on their side (90°),
-   * matching how they actually rest in the jar (see items.manifest.ts) —
-   * everything else is a smaller freehand tilt for the "chaotic" look. */
+  /** Degrees, positive = clockwise. Fixed per item rather than randomised,
+   * so the pile is stable across reloads. */
   rotate: number;
-  /** Everything below is this item's own geometry, in px, at this file's
-   * ITEM_SCALE (see that constant's own comment) — clipW/clipH is the
-   * outer (visible) box, matching the jar's own alpha-bbox-derived
-   * on-screen footprint (see useJarPhysics.ts's RenderInfo/computeRenderInfo
-   * and JarItem.tsx's .clip); imgW/imgH/imgLeft/imgTop position the FULL
-   * source file behind that clip at the same scale, so the same fraction
-   * of transparent padding gets cropped away here as in the jar. Together
-   * these reproduce the jar's exact per-item proportions rather than a
-   * freehand guess per item (which is what this file had before) — every
-   * number below came from actually alpha-scanning the PNG in
-   * public/images/items/ against items.manifest.ts's own sizeScale/
-   * cropRegion, the same way useJarPhysics.ts's computeRenderInfo does,
-   * then scaling the whole roster by one shared ITEM_SCALE. */
+  /** Two-layer crop, same technique as the jar's JarItem.tsx: clipW/clipH is
+   * the visible box (the artwork's alpha bounding box), and imgW/imgH/
+   * imgLeft/imgTop place the full source file behind it so the artwork lands
+   * inside that box. All six are px at ITEM_SCALE.
+   *
+   * imgW/imgH/imgLeft/imgTop describe the source file, so re-cropping a file
+   * invalidates them and they have to be re-derived. */
   clipW: number;
   clipH: number;
   imgW: number;
@@ -33,178 +23,136 @@ export interface FooterItemDef {
   imgTop: number;
 }
 
-/**
- * Every number in FOOTER_ITEMS below is BASE_SIZE(160, useJarPhysics.ts) ×
- * this item's own sizeScale (items.manifest.ts) × ITEM_SCALE — i.e. exactly
- * the jar's own itemDisplayScale formula, just evaluated at a fixed
- * "container width" (ITEM_SCALE stands in for the jar's `s = width /
- * REFERENCE_WIDTH`) instead of the jar's own live, responsive one. Same
- * formula, same relative sizes between items as the jar — just a different
- * (fixed, footer-appropriate) scale applied to it, since the footer panel
- * and the jar are two differently-sized boxes, not the same element. 0.8
- * (was 0.62 at first pass — read too sparse/empty against the panel; "make
- * overlap, not just correct relative sizes) was picked by eye once real
- * geometry was in.
- */
+/** Stands in for the jar's live `s = width / REFERENCE_WIDTH`, so the footer
+ * reuses the jar's sizing formula at a fixed, footer-appropriate scale and
+ * keeps the same relative sizes between items. */
 const ITEM_SCALE = 2;
 
 /**
- * Items from public/images/items/, the same 10 favourites in the jar's own
- * roster (see items.manifest.ts), plus the 3 project tiles (cybersea/
- * skinsprout/spotify) added per a later request — those three sit on the
- * very left of the panel, away from the favourites pile.
+ * Array order is the initial back-to-front stacking (Footer/index.tsx's
+ * `order` state takes over once an item is clicked). The order below encodes
+ * the layering the design calls for:
+ * - laneige behind everything
+ * - chips < ballet < bottle
+ * - bottle < bear-hirono < skullpanda
+ * - pineapple, cam < kitty-mirror < rabbit
  *
- * Left-to-right order and layering both per brief:
- * pineapple, rabbit, cam, kitty-mirror, hirono, skullpanda, bottle, chips,
- * ballet each get their own horizontal slot in that order; laneige has no
- * slot of its own — it sits spatially above the cam/kitty-mirror pair
- * (overlapping their x-range, higher up the panel) rather than beside them.
- * cybersea/skinsprout/spotify are stacked along the very left edge (left
- * 5–9%), to the left of everything above.
+ * The three project tiles have no layering rule and sit alone at the far
+ * left, so they are simply placed last.
  *
- * z-order (FOOTER_ITEMS' own array order = initial back-to-front stacking,
- * same convention as Footer/index.tsx's `order` state) satisfies every
- * layering constraint from the brief:
- * - laneige below everything → placed first (backmost)
- * - chips < ballet < bottle (chips under bottle; ballet under bottle, over
- *   chips)
- * - bottle < bear-hirono < skullpanda (skullpanda - hirono - bottle, front
- *   to back)
- * - pineapple, cam < kitty-mirror < rabbit (rabbit on top of pineapple, cam,
- *   and kitty-mirror; kitty-mirror on top of cam)
- * The 3 project tiles weren't given a layering rule, so they're placed last
- * (frontmost) — they sit off on their own at the far left, clear of the
- * pile, so stacking order among them barely matters.
- * Clicking an item re-derives its own z-index from its position in
- * Footer/index.tsx's `order` state, same as before — this array order is
- * only the starting point, same as the old file.
- *
- * No per-item `alt` here (the old file had one): these images are
- * decorative, same as their jar counterparts (see JarItem.tsx) — the
- * whole item is aria-hidden at render (FooterItem.tsx) rather than given
- * descriptive alt text, so there's nothing for an `alt` field to feed here
- * any more.
+ * No per-item `alt`: these are decorative and the whole item is aria-hidden
+ * in FooterItem.tsx.
  */
 export const FOOTER_ITEMS: FooterItemDef[] = [
   {
     id: "laneige",
-    src: "/images/items/laneige.png",
+    src: "/images/items/laneige.webp",
     left: 59,
     top: 52,
     rotate: 6,
     clipW: 156.2,
     clipH: 65.7,
-    imgW: 232.6,
-    imgH: 223.3,
-    imgLeft: -29.5,
-    imgTop: -64.8,
+    imgW: 170.9,
+    imgH: 72.4,
+    imgLeft: 2.9,
+    imgTop: 6.3,
   },
   {
     id: "chips",
-    src: "/images/items/chips.png",
+    src: "/images/items/chips.webp",
     left: 89,
     top: 80,
     rotate: -12,
     clipW: 185.4,
     clipH: 219.7,
-    imgW: 286.0,
-    imgH: 294.2,
-    imgLeft: -34.7,
-    imgTop: -21.8,
+    imgW: 206.9,
+    imgH: 244.7,
+    imgLeft: 4.2,
+    imgTop: 2.5,
   },
   {
     id: "ballet",
-    src: "/images/items/ballet.png",
-    // Re-measured against the replacement asset (the old ballet.png was the
-    // wrong shoes entirely, swapped out directly on disk) — bbox geometry
-    // here is specific to one file's own alpha content, so a new file needs
-    // its own numbers, not just a new src path.
+    src: "/images/items/ballet.webp",
     left: 95,
     top: 35,
     rotate: 70,
     clipW: 120.4,
     clipH: 156.2,
-    imgW: 161.2,
-    imgH: 196.6,
-    imgLeft: -0.6,
+    imgW: 160.2,
+    imgH: 196.0,
+    imgLeft: 0.2,
     imgTop: 0.0,
   },
 
   {
     id: "skullpanda",
-    src: "/images/items/skullpanda.png",
+    src: "/images/items/skullpanda.webp",
     left: 68,
     top: 35,
     rotate: -20,
     clipW: 125.6,
     clipH: 171.5,
-    imgW: 195.3,
-    imgH: 207.0,
-    imgLeft: -23.8,
-    imgTop: -9.1,
+    imgW: 139.8,
+    imgH: 190.0,
+    imgLeft: 2.8,
+    imgTop: 0.8,
   },
 
   {
     id: "cam",
-    src: "/images/items/cam.png",
+    src: "/images/items/cam.webp",
     left: 40,
     top: 52,
     rotate: -10,
     clipW: 128.0,
     clipH: 69.2,
-    imgW: 166.2,
-    imgH: 135.5,
+    imgW: 163.7,
+    imgH: 131.9,
     imgLeft: -21.0,
-    imgTop: -2.2,
+    imgTop: 0.2,
   },
   {
     id: "kitty-mirror",
-    src: "/images/items/kitty-mirror.png",
+    src: "/images/items/kitty-mirror.webp",
     left: 50,
     top: 80,
     rotate: 9,
     clipW: 130.0,
     clipH: 157.4,
-    imgW: 153.1,
-    imgH: 177.7,
-    imgLeft: -2.5,
-    imgTop: -0.3,
+    imgW: 149.6,
+    imgH: 177.4,
+    imgLeft: 0.4,
+    imgTop: 0.0,
   },
   {
     id: "bottle",
-    src: "/images/items/bottle.png",
+    src: "/images/items/bottle.webp",
     left: 75,
     top: 60,
     rotate: -20,
     clipW: 161.7,
     clipH: 179.2,
-    imgW: 347.7,
-    imgH: 350.4,
-    imgLeft: -69.6,
-    imgTop: -60.2,
+    imgW: 188.5,
+    imgH: 208.6,
+    imgLeft: 11.7,
+    imgTop: 10.2,
   },
   {
     id: "bear-hirono",
-    src: "/images/items/bear-hirono.png",
+    src: "/images/items/bear-hirono.webp",
     left: 65,
     top: 82,
     rotate: 30,
     clipW: 91.3,
     clipH: 172.8,
-    imgW: 121.7,
-    imgH: 193.6,
-    imgLeft: -0.4,
-    imgTop: -0.3,
+    imgW: 121.3,
+    imgH: 192.7,
+    imgLeft: 0.0,
+    imgTop: 0.1,
   },
-  // Project tiles, added per a later request ("add the 3 project tiles to
-  // the footer on the very left"). Same PNGs as items.manifest.ts's
-  // "project" category (opaque rectangular covers, no transparent padding
-  // — the alpha scan comes back as the full file, unlike the favourites
-  // above), sized with the same BASE_SIZE(160) * sizeScale(0.9, from
-  // items.manifest.ts) * ITEM_SCALE(0.8) formula as everything else here.
   {
     id: "cybersea",
-    src: "/images/items/cybersea.png",
+    src: "/images/items/cybersea.webp",
     left: 20,
     top: 60,
     rotate: 10,
@@ -217,33 +165,33 @@ export const FOOTER_ITEMS: FooterItemDef[] = [
   },
   {
     id: "pineapple",
-    src: "/images/items/pineapple.png",
+    src: "/images/items/pineapple.webp",
     left: 20,
     top: 90,
     rotate: -20,
     clipW: 83.9,
     clipH: 148.5,
-    imgW: 186.1,
-    imgH: 197.8,
-    imgLeft: -47.5,
-    imgTop: -18.3,
+    imgW: 88.8,
+    imgH: 156.6,
+    imgLeft: 2.7,
+    imgTop: 0.9,
   },
   {
     id: "rabbit",
-    src: "/images/items/rabbit.png",
+    src: "/images/items/rabbit.webp",
     left: 33,
     top: 88,
     rotate: 70,
     clipW: 82.5,
     clipH: 192.0,
-    imgW: 83.0,
-    imgH: 192.5,
-    imgLeft: -0.2,
-    imgTop: -0.3,
+    imgW: 82.5,
+    imgH: 192.0,
+    imgLeft: 0.0,
+    imgTop: 0.0,
   },
   {
     id: "skinsprout",
-    src: "/images/items/skinsprout.png",
+    src: "/images/items/skinsprout.webp",
     left: 3,
     top: 88,
     rotate: 4,
@@ -256,7 +204,7 @@ export const FOOTER_ITEMS: FooterItemDef[] = [
   },
   {
     id: "spotify",
-    src: "/images/items/spotify.png",
+    src: "/images/items/spotify.webp",
     left: 2,
     top: 52,
     rotate: -10,
