@@ -12,55 +12,15 @@ import {
   getCaptionFont,
   getColumnWidth,
 } from "@/components/sections/Playground/justifiedLayout";
-import { useFlipReorder } from "@/components/sections/Projects/useFlipReorder";
 import { EXTRAS_CATEGORIES, EXTRAS_PHOTOS, type ExtrasCategory } from "@/lib/extras";
 import { content } from "@/lib/content";
 import { FADE_IN_TRANSITION } from "@/lib/motion";
 
 const copy = content.en.projects.extras;
 
-// 2 columns per request ("2 in a row") — see lib/extras.ts's own comment on
-// EXTRAS_PHOTOS' authoring order for why that order (not this column count)
-// is what actually determines which photo lands in which column.
 const GALLERY_COLUMNS = 2;
-// Matches Playground's own COLLAGE_GAP (components/sections/Playground/
-// index.tsx) — same masonry technique, same gap, so the two collages on
-// this site read as one system.
 const GALLERY_GAP = 8;
 
-// Was a bottom-sheet modal (ExtrasCard.tsx opened ExtrasModal on click) —
-// per request, promoted to its own page using the same case-study shell
-// (CaseStudyKit.tsx) every other project already uses, so "extras" gets the
-// same taskbar/title/Back button treatment as Spotify Guessr/CyberSea/
-// SkinSprout instead of a one-off popup. ExtrasCard.tsx now just links here
-// (`/projects/extras`) like any other project card.
-//
-// No CaseStudyHero here (that's the big video/meta-grid block the other 3
-// case studies use) — per request this page is just title + back button +
-// the photo collage itself, not a full written case study. The title/
-// subtitle below are copied verbatim from CaseStudyHero's own styling so
-// this still reads as the same typographic system, just without the extra
-// hero media block underneath it.
-//
-// The category buttons (CaseStudyLayout's `sidebarExtra`, below) render
-// where the numbered section links normally go in every other case study —
-// this page has no written sections to link to, so that slot holds real
-// category filters instead, reusing the homepage's own CircleToggle
-// component (see lib/extras.ts's EXTRAS_CATEGORIES for the color mapping).
-//
-// Filtering behavior matches the homepage's own project filters EXACTLY
-// (components/sections/Projects/index.tsx), not a plain array .filter():
-// every photo stays mounted at all times; toggling a category
-// stable-partitions the photos (matching ones first, in their original
-// relative order — same "sort by matches, then original index" technique
-// that file uses for its own `displayIds`), animates the reorder with the
-// same useFlipReorder hook, and dims non-matching photos with the site's
-// standard translucent-white overlay (--dim-white — see
-// ProjectCard.module.css's own .dimOverlay/.dimActive for the source of
-// that pattern, reproduced here with Tailwind since this page is Tailwind-
-// based). The masonry layout below is recomputed against this same
-// matches-first order each time, so the reorder and the packing always
-// agree on where each photo actually sits.
 export default function ExtrasCaseStudy() {
   const [activeCategories, setActiveCategories] = useState<Set<ExtrasCategory>>(() => new Set());
   const [galleryRef, galleryWidth] = useElementWidth<HTMLDivElement>();
@@ -74,69 +34,34 @@ export default function ExtrasCaseStudy() {
     });
   }
 
-  // Stable partition, exactly like Projects/index.tsx's own `displayIds` —
-  // matching photos keep their original relative order and come first;
-  // non-matching ones follow, also in their original relative order. With
-  // no categories active every photo "matches", which is what collapses
-  // this straight back to EXTRAS_PHOTOS' own authoring order.
-  const orderedPhotos = useMemo(() => {
-    return EXTRAS_PHOTOS.map((photo, index) => ({
-      photo,
-      index,
-      matches: activeCategories.size === 0 || activeCategories.has(photo.category),
-    }))
-      .sort((a, b) => Number(b.matches) - Number(a.matches) || a.index - b.index)
-      .map((entry) => entry.photo);
-  }, [activeCategories]);
-
   const dimmedSrcs = useMemo(() => {
     if (activeCategories.size === 0) return new Set<string>();
     return new Set(EXTRAS_PHOTOS.filter((photo) => !activeCategories.has(photo.category)).map((p) => p.src));
   }, [activeCategories]);
 
-  // Solved against `orderedPhotos` (not EXTRAS_PHOTOS' own fixed order) so
-  // toggling a category re-packs the masonry around whichever photos are
-  // now "first" — same idea as Playground's own collageLayout, just
-  // recomputed on every filter change instead of only on width change.
+  // Static masonry layout based purely on width — photos never shift or reorder
+  // when toggling categories; only opacity changes.
   const galleryLayout = useMemo(() => {
     const columnWidth = getColumnWidth(galleryWidth, GALLERY_COLUMNS, GALLERY_GAP);
-    // Per-photo, not one fixed row for all of them — matches Playground's
-    // own collageLayout (index.tsx): a caption's real wrapped line count
-    // depends on both its own text and this exact column width.
     const { fontSizePx, fontFamily } = getCaptionFont();
-    const captionHeights = orderedPhotos.map((photo) => estimateCaptionHeight(photo.caption, columnWidth, fontSizePx, fontFamily));
+    const captionHeights = EXTRAS_PHOTOS.map((photo) =>
+      estimateCaptionHeight(photo.caption, columnWidth, fontSizePx, fontFamily),
+    );
     return computeJustifiedLayout(
-      orderedPhotos.map((photo) => photo.width / photo.height),
+      EXTRAS_PHOTOS.map((photo) => photo.width / photo.height),
       galleryWidth,
       GALLERY_COLUMNS,
       GALLERY_GAP,
       captionHeights,
-      // rowGap:0 — matches Playground's own call (index.tsx): the caption
-      // band below each photo centers the caption itself, so this stays
-      // symmetric above/below without an extra vertical gap stacked on
-      // top. GALLERY_GAP above still applies horizontally, between
-      // columns.
       0,
     );
-  }, [orderedPhotos, galleryWidth]);
+  }, [galleryWidth]);
+
   const boxBySrc = useMemo(() => {
     const map = new Map<string, (typeof galleryLayout.boxes)[number]>();
-    orderedPhotos.forEach((photo, i) => map.set(photo.src, galleryLayout.boxes[i]));
+    EXTRAS_PHOTOS.forEach((photo, i) => map.set(photo.src, galleryLayout.boxes[i]));
     return map;
-  }, [orderedPhotos, galleryLayout]);
-
-  // Photos never unmount/reorder in the DOM (every box below is absolutely
-  // positioned via its own box.x/box.y, so DOM order doesn't drive visual
-  // order) — only the *target* position each one animates to changes, via
-  // this same registerFlipRef/orderedPhotos pairing Projects/index.tsx uses
-  // for its own cards. galleryWidth passed as layoutKey — this page's
-  // masonry, unlike Projects' own cards, is packed against a MEASURED
-  // width (useElementWidth, starts at 0 and self-corrects a moment after
-  // mount), so without this the very first real filter click was diffing
-  // against rects captured during that bogus zero-width layout instead of
-  // the real one — see useFlipReorder's own layoutKey doc comment for the
-  // full story (that was the "first click jolts instead of sliding" bug).
-  const registerFlipRef = useFlipReorder(orderedPhotos.map((p) => p.src), galleryWidth);
+  }, [galleryLayout]);
 
   return (
     <CaseStudyLayout
@@ -162,13 +87,6 @@ export default function ExtrasCaseStudy() {
         <p className="mt-3 font-body text-[clamp(16px,1.56vw,20px)] font-light text-black/70">{copy.description}</p>
       </motion.div>
 
-      {/* mt-8 — matches CaseStudyHero's own subtitle-to-hero-image gap
-          (the other 3 case studies' closest equivalent to "subtitle to
-          first real visual content"), not the numbered-Section first-of-
-          type margin (64px) this used before: that value was tuned for a
-          heading that follows a whole hero-video-plus-meta-grid block,
-          which reads as way too much space directly under two lines of
-          text with nothing else above it. */}
       <div ref={galleryRef} className="relative mt-8" style={{ height: galleryLayout.totalHeight }}>
         {EXTRAS_PHOTOS.map((photo) => {
           const box = boxBySrc.get(photo.src);
@@ -177,27 +95,16 @@ export default function ExtrasCaseStudy() {
           return (
             <div
               key={photo.src}
-              ref={registerFlipRef(photo.src)}
-              // Flex column: the image wrapper below is sized to
-              // box.imageHeight (the photo's own true aspect-ratio height),
-              // and the caption takes the GALLERY_CAPTION_HEIGHT row left
-              // over below it — computeJustifiedLayout already reserved
-              // that space (see its own captionHeight param), so this
-              // doesn't throw off any photo packed underneath.
-              className="absolute flex flex-col"
-              style={{ left: box.x, top: box.y, width: box.width, height: box.height }}
+              className="absolute flex flex-col transition-opacity duration-300 ease-out"
+              style={{
+                left: box.x,
+                top: box.y,
+                width: box.width,
+                height: box.height,
+                opacity: dimmed ? 0.3 : 1,
+              }}
             >
               <div
-                // rounded-[2px], not the case-study convention's
-                // rounded-[8px] — per request, matches Playground's own
-                // masonry gallery exactly (Playground.module.css's
-                // .collageImageBox), since this collage is built on that
-                // same layout technique and should read as the same kind of
-                // gallery, corners included. Same border too — same subtle
-                // gray as the homepage project cards (ProjectCard.module.css
-                // border: 1px solid rgba(0,0,0,0.12)), now also on
-                // .collageImageBox itself, so all 3 bordered-image spots
-                // agree.
                 className="relative w-full shrink-0 overflow-hidden rounded-[2px] border border-black/[0.12]"
                 style={{ height: box.imageHeight }}
               >
@@ -206,29 +113,11 @@ export default function ExtrasCaseStudy() {
                   alt={photo.caption}
                   fill
                   sizes={`${Math.round(box.width)}px`}
-                  // opacity-0 + transition, flipped to opaque on this exact
-                  // <img>'s own load — same fix, same reasoning as
-                  // Playground's own PhotoTile.tsx (.photoImage/.collageImage
-                  // there): without it, each photo just pops in abruptly at
-                  // whatever moment its own request happens to finish,
-                  // instead of appearing together with the page's mount
-                  // fade — most visible on a first, uncached load, which is
-                  // exactly what was reported here.
                   className="object-cover opacity-0 transition-opacity duration-[400ms] ease-out motion-reduce:opacity-100 motion-reduce:transition-none"
                   unoptimized={process.env.NODE_ENV !== "production"}
                   onLoad={(e) => {
                     e.currentTarget.style.opacity = "1";
                   }}
-                />
-                {/* Same construction as ProjectCard.module.css's own
-                    .dimOverlay/.dimActive (ported to Tailwind since this
-                    page is Tailwind-based) — a plain white layer over the
-                    photo itself (not the caption below it), opacity 0 at
-                    rest, var(--dim-white) once any category filter is
-                    active and this photo doesn't match it. */}
-                <div
-                  className="pointer-events-none absolute inset-0 bg-white transition-opacity duration-[250ms] ease-out"
-                  style={{ opacity: dimmed ? "var(--dim-white)" : 0 }}
                 />
               </div>
               {/* flex-1 + items-start: fills the rest of the box below the

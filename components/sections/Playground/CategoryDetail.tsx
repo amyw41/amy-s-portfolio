@@ -412,7 +412,10 @@ export default function CategoryDetail({ category }: { category: EtcCategory }) 
                                 : ARC_SPRING
                             }
                             style={{
-                              zIndex: 10 - dist,
+                              // Fully transparent items (dist ≥ 2) get z-index
+                              // 0 so they spring back into view from behind the
+                              // center and neighbor items, not on top of them.
+                              zIndex: imageOpacity === 0 ? 0 : 10 - dist,
                               pointerEvents: clickable ? "auto" : "none",
                               cursor: clickable ? "pointer" : undefined,
                               width: itemSize,

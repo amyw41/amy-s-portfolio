@@ -328,30 +328,9 @@ export function Row({
   const mediaGap = children ? "mt-[36px]" : "mt-2";
   return (
     <div>
-      {/* eyebrow rendered as its own full-width block ABOVE the grid, not
-          as a second stacked <p> inside the grid's left column alongside
-          heading (the old structure — see git blame if curious). That old
-          layout needed heading pulled up with a hand-tuned -mt-0.5 to sit
-          close to eyebrow, AND meant `children` (the right column below,
-          via childrenGap's md:mt-0) started level with the TOP of the left
-          column — i.e. flush with eyebrow's own line, spanning down past
-          heading too, when it should read as aligned with heading/subheader
-          alone. Both problems were really one problem: eyebrow living
-          inside the same grid row as heading. Pulling it out fixes both at
-          once — heading is now the only thing at the top of the grid's left
-          column, so children (right column, same grid row) naturally lines
-          up with heading, not eyebrow. mb-2 below is the actual, real gap
-          between eyebrow and heading (not a line-height-overlap
-          compensation hack) — the exact same class every standalone
-          "group label" header elsewhere in these case studies
-          (SkinSprout's "03 / Design Process", CyberSea's "06 / Learnings",
-          Spotify's "Spotify's Design System"/"Branding") now also uses
-          above ITS own next block, so every header-to-subheader gap on
-          these pages reads as the same distance, whichever of the two ways
-          it's built. */}
-      {eyebrow && <p className={`${TEXT.header} mb-2`}>{eyebrow}</p>}
       <div className="grid grid-cols-1 md:grid-cols-[14rem_1fr] lg:grid-cols-[16rem_1fr] md:gap-x-8 lg:gap-x-12">
         <div className="md:col-start-1">
+          {eyebrow && <p className={`${TEXT.header} mb-2`}>{eyebrow}</p>}
           <p className={headingClassName ?? TEXT.subheader}>{heading}</p>
         </div>
         {children && (

@@ -119,7 +119,24 @@ export default function PhotoTile({
               className={styles.collageImage}
               draggable={false}
               unoptimized={process.env.NODE_ENV !== "production"}
-              // Same fade-in-on-load as the plate-mode Image above.
+              // Same fade-in-on-load as the plate-mode Image above, PLUS a
+              // ref check `onLoad` alone can't cover: this exact src was
+              // almost always just showing in plate mode's own <img> a
+              // moment ago (every photo renders there first), so switching
+              // to collage remounts a BRAND NEW <img> pointing at a src the
+              // browser already has fully decoded/cached. In that case the
+              // browser can resolve `complete` before this element's own
+              // 'load' event ever fires (a real race — see the stackoverflow
+              // link in next/image's own image-component.js, whose internal
+              // img.complete guard is subject to the exact same race and
+              // doesn't reliably win it either), so nothing would otherwise
+              // ever flip this photo's opacity back on — it'd stay invisible
+              // forever. Checking `complete` the moment the ref attaches
+              // catches that case; onLoad below still covers the genuine
+              // first-time (uncached) load.
+              ref={(img) => {
+                if (img?.complete) img.style.opacity = "1";
+              }}
               onLoad={(e) => {
                 e.currentTarget.style.opacity = "1";
               }}
