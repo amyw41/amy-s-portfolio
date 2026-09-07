@@ -77,7 +77,7 @@ export const ETC_CATEGORIES: EtcCategory[] = [
   {
     slug: "drawing",
     label: "drawing",
-    plateImage: "/images/drawings/plate-drawing.png",
+    plateImage: "/images/drawings/plate-drawing.svg",
     plateXPct: 18.79,
     plateYPct: 9.7,
     photos: [
@@ -114,7 +114,7 @@ export const ETC_CATEGORIES: EtcCategory[] = [
   {
     slug: "dancing",
     label: "dancing",
-    plateImage: "/images/drawings/plate-dance.png",
+    plateImage: "/images/drawings/plate-dance.svg",
     plateXPct: 81.21,
     plateYPct: 36.8,
     photos: [
@@ -165,7 +165,7 @@ export const ETC_CATEGORIES: EtcCategory[] = [
   {
     slug: "nails",
     label: "nails",
-    plateImage: "/images/drawings/plate-nails.png",
+    plateImage: "/images/drawings/plate-nails.svg",
     plateXPct: 18.79,
     plateYPct: 63.9,
     // Scattered to the right of the plate, same spirit as drawing's own

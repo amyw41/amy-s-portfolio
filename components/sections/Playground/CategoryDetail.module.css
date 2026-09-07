@@ -47,6 +47,15 @@
   align-items: center;
   width: 100%;
   margin-bottom: 12px;
+  /* Forces this above the plate/arc composition below (.stage/.hub), which
+   * can render tall enough on short viewports to visually bleed under the
+   * header despite coming later in normal flow — without this, that box
+   * (even where visually transparent) can sit on top in paint order and
+   * swallow clicks meant for the Back button. position + z-index create a
+   * real stacking context here so .header always wins regardless of DOM
+   * order below it. */
+  position: relative;
+  z-index: 20;
 }
 
 /* Same nominal font-size as PlateCircle's own label (see PlateCircle.tsx's

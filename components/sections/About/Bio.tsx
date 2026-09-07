@@ -60,11 +60,15 @@ export default function Bio() {
           className={styles.textBox}
         >
           <Image
-            src="/images/drawings/border.png"
+            src="/images/drawings/border.svg"
             alt=""
             fill
-            quality={95}
             priority
+            // Traced from the original border.png to SVG (see
+            // public/images/drawings/border.svg) so this fine hand-drawn
+            // linework renders crisply at any zoom/display size instead of
+            // pixelating like a raster image does once you exceed its
+            // native resolution.
             unoptimized={process.env.NODE_ENV !== "production"}
             className={styles.borderImage}
           />

@@ -40,21 +40,23 @@ export const EXTRAS_CATEGORIES: { id: ExtrasCategory; label: string; color: stri
 ];
 
 // Order matters here, not just content: the collage (ExtrasCaseStudy.tsx)
-// packs photos into 2 masonry columns in this exact order via
-// computeJustifiedLayout — After Hours (portrait, tall) lands alone in
-// column 1, then Relish (landscape, short) and Rust (portrait) pack into
-// column 2 one under the other, since Relish leaves column 2 shorter than
-// column 1 at that point and Rust — same shape as After Hours — is what the
-// greedy shortest-column algorithm drops in right underneath it. Rust
-// *after* Relish here is what makes that happen; swapping them changes
-// which column each photo lands in. IISE Conference 2026 Logo appended
-// last (landscape, short like Relish) — it packs into whichever column is
-// shortest once the first 3 have landed, without disturbing that existing
-// arrangement.
+// packs photos into 2 masonry columns via computeJustifiedLayout.
+// 1. After Hours lands in column 1 (left) at the top.
+// 2. Rust lands in column 2 (right) at the top.
+// 3. Relish lands in column 1 under After Hours.
+// 4. Nina lands in column 2 underneath Rust.
+// 5. IISE lands in column 1 underneath Relish.
 export const EXTRAS_PHOTOS: ExtrasPhoto[] = [
   {
     src: "/images/projects/extras/After Hours.png",
     caption: "After Hours Poster @ UWCS Club",
+    width: 2488,
+    height: 3208,
+    category: "graphic-design",
+  },
+  {
+    src: "/images/projects/extras/rust.png",
+    caption: "Rust Poster @ UWCS Club",
     width: 2488,
     height: 3208,
     category: "graphic-design",
@@ -67,11 +69,11 @@ export const EXTRAS_PHOTOS: ExtrasPhoto[] = [
     category: "designathon",
   },
   {
-    src: "/images/projects/extras/rust.png",
-    caption: "Rust Poster @ UWCS Club",
-    width: 2488,
-    height: 3208,
-    category: "graphic-design",
+    src: "/images/projects/extras/nina.png",
+    caption: "Nina Café & Fleurs",
+    width: 1440,
+    height: 3707,
+    category: "other",
   },
   {
     src: "/images/projects/extras/iise.png",

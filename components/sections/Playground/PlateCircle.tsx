@@ -38,12 +38,9 @@ export default function PlateCircle({
         fill
         // No `sizes` — this renders at very different sizes across
         // breakpoints (the whole poster is scaled as a unit, see
-        // PlateView.tsx), and matches jar.png's own accidental-but-correct
-        // treatment on the homepage: omitting `sizes` makes next/image
-        // assume full-viewport width, so it always fetches a source large
-        // enough that this fine hand-drawn linework doesn't pixelate once
-        // stretched back out at a real DPR.
-        quality={95}
+        // PlateView.tsx). These plate drawings are traced SVGs (see
+        // public/images/drawings/plate-*.svg), so they render crisply at
+        // any size/DPR instead of pixelating like a raster image would.
         priority
         // Turbopack's dev-mode image-optimization cache doesn't bust when a
         // file is replaced at the same path — same workaround already used

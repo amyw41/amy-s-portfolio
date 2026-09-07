@@ -20,6 +20,20 @@ const copy = content.en.projects.extras;
 
 const GALLERY_COLUMNS = 2;
 const GALLERY_GAP = 8;
+// Width the category dot + its gap eat out of the caption row (10px
+// dot + 6px gap, matching the row's own className below) — subtracted
+// from the column width before estimateCaptionHeight measures wrapping,
+// so the predicted box height still matches what the text actually wraps
+// to now that it starts 16px later than the row's own left edge.
+const CAPTION_DOT_RESERVED_WIDTH = 16;
+
+// Same "one color, one place" lookup ProjectCard.tsx builds from
+// PROJECT_CATEGORY_COLOR, but derived from EXTRAS_CATEGORIES itself
+// (which already pairs each category with its color for the sidebar
+// toggles) rather than a second, parallel color map.
+const EXTRAS_CATEGORY_COLOR: Record<ExtrasCategory, string> = Object.fromEntries(
+  EXTRAS_CATEGORIES.map((c) => [c.id, c.color]),
+) as Record<ExtrasCategory, string>;
 
 export default function ExtrasCaseStudy() {
   const [activeCategories, setActiveCategories] = useState<Set<ExtrasCategory>>(() => new Set());
@@ -45,7 +59,7 @@ export default function ExtrasCaseStudy() {
     const columnWidth = getColumnWidth(galleryWidth, GALLERY_COLUMNS, GALLERY_GAP);
     const { fontSizePx, fontFamily } = getCaptionFont();
     const captionHeights = EXTRAS_PHOTOS.map((photo) =>
-      estimateCaptionHeight(photo.caption, columnWidth, fontSizePx, fontFamily),
+      estimateCaptionHeight(photo.caption, columnWidth - CAPTION_DOT_RESERVED_WIDTH, fontSizePx, fontFamily),
     );
     return computeJustifiedLayout(
       EXTRAS_PHOTOS.map((photo) => photo.width / photo.height),
@@ -133,7 +147,26 @@ export default function ExtrasCaseStudy() {
                   baked both numbers into this box's total height — per
                   request, slightly closer to its own photo than to the next
                   one. */}
-              <div className="flex flex-1 items-start">
+              <div className="flex flex-1 items-start gap-[6px] pt-1.5">
+                {/* Category dot — same idea as ProjectCard.tsx's own .dot
+                    beside each project title (a solid circle in that
+                    category's color, EXTRAS_CATEGORY_COLOR above reusing
+                    the exact colors already assigned in EXTRAS_CATEGORIES
+                    for the sidebar toggles), just sized down to sit
+                    comfortably next to this much smaller caption text
+                    instead of a title. mt-[5px] nudges it down from the
+                    row's own top edge to roughly center on the first
+                    line's cap-height (16px text, 1.3 line-height) — the
+                    same visual alignment .titleRow gets "for free" via
+                    align-items:center on a single-line title; captions
+                    here can wrap to multiple lines, so this row uses
+                    items-start instead and the dot gets its own small
+                    offset rather than being centered against the whole
+                    (possibly multi-line) block. */}
+                <span
+                  className="mt-[5px] h-[10px] w-[10px] shrink-0 box-border rounded-full border-[1.5px]"
+                  style={{ borderColor: EXTRAS_CATEGORY_COLOR[photo.category], backgroundColor: EXTRAS_CATEGORY_COLOR[photo.category] }}
+                />
                 {/* Sits in its own row below the photo now, not overlaid on
                     top of it — per request: no gradient scrim, left-aligned,
                     always visible (matches Playground's own .collageCaption
@@ -150,8 +183,11 @@ export default function ExtrasCaseStudy() {
                     .collageCaption, including its explicit leading-[1.3]
                     (not Tailwind's default), since estimateCaptionHeight
                     has to predict this same line-height ahead of the real
-                    DOM layout. pt-1.5 (6px) — see this div's own comment. */}
-                <p className="w-full pt-1.5 text-left font-body text-[length:var(--gallery-caption-fs)] font-light leading-[1.3] text-black/70">
+                    DOM layout. pt-1.5 (6px) now lives on the row itself
+                    (see this div's own className) so the dot and the text
+                    share the same top offset instead of only the text
+                    having it. */}
+                <p className="w-full text-left font-body text-[length:var(--gallery-caption-fs)] font-light leading-[1.3] text-black/70">
                   {photo.caption}
                 </p>
               </div>

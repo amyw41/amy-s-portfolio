@@ -29,7 +29,7 @@ export default function JarStage({ items, projectsOn, favouritesOn, textPlatform
   return (
     <div ref={containerRef} className={styles.stage}>
       <Image
-        src="/images/drawings/jar.png"
+        src="/images/drawings/jar.svg"
         alt=""
         aria-hidden="true"
         className={styles.jarImage}
@@ -37,6 +37,11 @@ export default function JarStage({ items, projectsOn, favouritesOn, textPlatform
         width={1600}
         height={2257}
         priority
+        // Traced from the original jar.png to SVG (see
+        // public/images/drawings/jar.svg) so this fine hand-drawn linework
+        // renders crisply at any zoom/display size instead of pixelating
+        // like a raster image does once you exceed its native resolution.
+        unoptimized={process.env.NODE_ENV !== "production"}
       />
 
       {ready && (
