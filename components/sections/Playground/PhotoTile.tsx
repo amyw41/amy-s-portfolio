@@ -135,7 +135,19 @@ export default function PhotoTile({
               // catches that case; onLoad below still covers the genuine
               // first-time (uncached) load.
               ref={(img) => {
-                if (img?.complete) img.style.opacity = "1";
+                if (!img) return;
+                // If already decoded/complete (cached image - load event may
+                // never fire), show immediately. Otherwise the onLoad below
+                // covers the normal first-load path.
+                if (img.complete && img.naturalWidth > 0) {
+                  img.style.opacity = "1";
+                } else {
+                  // Attach a one-shot listener as a belt-and-suspenders
+                  // fallback for browsers where img.complete races with
+                  // the ref callback.
+                  const handler = () => { img.style.opacity = "1"; img.removeEventListener("load", handler); };
+                  img.addEventListener("load", handler);
+                }
               }}
               onLoad={(e) => {
                 e.currentTarget.style.opacity = "1";

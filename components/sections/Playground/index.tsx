@@ -138,7 +138,7 @@ export default function Playground() {
               label={copy.toggles.collage}
               color="var(--c-blue)"
               active={!isPlateMode}
-              onToggle={() => setViewMode("collage")}
+              onToggle={() => { if (availableWidth > 0) setViewMode("collage"); }}
             />
           </div>
         </motion.div>
