@@ -479,26 +479,10 @@ export function useJarPhysics(
       // physics world's frame via stageRect, which holds as long as neither
       // box has moved since stageRect was measured; rebuildTextPlatforms
       // covers the one case where it can, a resize.
+      // Text platforms disabled — dragged items fall through the title/tagline
+      // text naturally instead of resting on it.
       function buildTextPlatformBodies(): Matter.Body[] {
-        const root = textPlatformsRef?.current;
-        if (!root) return [];
-        const bodies: Matter.Body[] = [];
-        root.querySelectorAll<HTMLElement>("h1, p").forEach((el) => {
-          const r = el.getBoundingClientRect();
-          if (r.width <= 0 || r.height <= 0) return;
-          bodies.push(
-            Bodies.rectangle(
-              r.left - stageRect.left + r.width / 2,
-              r.top - stageRect.top + r.height / 2,
-              r.width,
-              r.height,
-              // Matches the jar floor (jar-shape.ts) so an item settles here
-              // the same way it settles in the pile.
-              { isStatic: true, friction: 0.8, restitution: 0.02, label: "text-platform" },
-            ),
-          );
-        });
-        return bodies;
+        return [];
       }
 
       function rebuildTextPlatforms() {
