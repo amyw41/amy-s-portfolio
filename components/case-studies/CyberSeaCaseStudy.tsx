@@ -25,7 +25,7 @@ import TextHighlight from "@/components/case-studies/TextHighlight";
 // every one of those spots is marked with a `// CHECK:` comment so they're
 // easy to find and fix.
 
-const HIGHLIGHT = "#dde7df";
+const HIGHLIGHT = "#e7ecf3";
 
 const SECTION_NAV: SectionNavItem[] = [
   { id: "initial-planning", label: "01 Initial Planning" },
@@ -89,18 +89,18 @@ const ROUTE_VIEWS = [
 // clips in public/images/projects/cybersea/.
 const FEATURES = [
   {
-    label: "Visual · Live Map",
+    label: "Visual - Live Map",
     // CHECK: caption is a best-effort read of a very small line of text.
     caption: "See live route conditions across the Arctic on one interactive map.",
     src: "/images/projects/cybersea/live%20map.mp4",
   },
   {
-    label: "Mental · Dashboard",
+    label: "Mental - Dashboard",
     caption: "Get route data at a glance on a clean, focused dashboard.",
     src: "/images/projects/cybersea/dashboard.mp4",
   },
   {
-    label: "Physical · Interactive 3D Models",
+    label: "Physical - Interactive 3D Models",
     caption: "Explore real 3D models to understand terrain and routes hands-on.",
     src: "/images/projects/cybersea/3d%20mesh.mp4",
   },
@@ -393,32 +393,31 @@ export default function CyberSeaCaseStudy() {
             element that would just make the interface feel cluttered.
           </p>
           <p className="mt-[36px]">
-            {/* CHECK: paraphrased from a partially-legible paragraph. */}
-            That meant my job wasn&apos;t just deciding how things looked — spacing and
-            content aren&apos;t just visual choices, they shape how usable the whole
-            experience is. It taught me that a huge part of design isn&apos;t just
-            creating solutions, but{" "}
-            <TextHighlight color={HIGHLIGHT}>communicating effectively to others</TextHighlight> why those
-            solutions matter.
+            This was my first time having to explain how decisions like
+            hierarchy, spacing, and restraint weren&apos;t just visual choices,
+            but improvements to the experience. And it taught me that a big part
+            of design is not just creating solutions, but{" "}
+            <TextHighlight color={HIGHLIGHT}>communicating effectively to others</TextHighlight>. (And
+            I was able to spread design propaganda about our importance! :)
           </p>
         </Row>
 
         <Row heading="The Hackathon Mindset">
-          {/* CHECK: this section was legible but paraphrased in places —
-              worth a read-through against the original page. */}
           <p>
-            Unlike traditional projects, hackathons push you to turn quick concepts into
-            something polished, fast. Our short timeframe forced us to reach clarity in
-            our decisions without overthinking or wasting time.
+            Unlike traditional projects, hackathons prioritize unique concepts
+            and rapid execution over something polished. The short timeframe
+            forced us to work efficiently, make quick decisions, and
+            continuously re-evaluate our direction.
           </p>
           <p className="mt-[36px]">
-            Through this experience, I learned the importance of iterating quickly and
-            refining ideas as a team, rather than perfecting every part in isolation.
-            That said, the end result was more impactful than I ever expected.
+            Through this experience, I learned the importance of iterating
+            frequently and refining ideas as development progressed. And to let
+            go of my perfectionist mindset. Sometimes, the end result was more
+            important than how you got there.
           </p>
           <p className="mt-[36px]">
-            Overall, I&apos;m extremely proud of what we accomplished in the 36-hour
-            timeframe.
+            Though if I could go back, I would definitely want to focus more on
+            the UX rather than the UI!
           </p>
         </Row>
       </Section>

@@ -127,7 +127,7 @@ export function CaseStudyImage({
       // Border removed per request — every case-study image (screenshots,
       // phone mockups, videos alike) went through this one component, so
       // dropping it here removes it everywhere at once.
-      className={`relative w-full overflow-hidden rounded-[8px] ${className}`}
+      className={`relative w-full overflow-hidden rounded-[4px] ${className}`}
     >
       {video ? (
         // No `autoPlay` — see useAutoPlayInView, starts fresh from the

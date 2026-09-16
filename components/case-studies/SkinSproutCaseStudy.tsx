@@ -102,32 +102,101 @@ const PERSONAS: {
 // renders as an actual comparison table via ComparisonTable, in the same
 // criteria-by-app style as Amy's reference table for Spotify Guessr's own
 // competitive analysis (ca_result.avif).
-const COMPARISON_ROWS: { criteria: string; skinBliss: string; acloset: string; incidecoder: string }[] = [
+//
+// Each app cell now carries an explicit `rating` alongside its `text` so
+// ComparisonTable can render a strong/medium/weak dot (same filled-circle
+// language as the homepage's category dots — ProjectCard.module.css's
+// .dot / CircleToggle.tsx — just re-colored per rating instead of per
+// project category) rather than leaving the reader to infer strength from
+// the copy alone. Ratings below read directly off Amy's own copy where a
+// cell already names its strength ("Strong", "Weak", "Low", "None", etc.);
+// the two rows that don't grade themselves in the copy —
+// "Effort to reach value" (low/high effort is a tradeoff, not itself
+// strong/weak) and ACloset's "Not applicable" trust cell — are judgment
+// calls, called out inline below, worth Amy's own sanity check.
+type Rating = "strong" | "medium" | "weak";
+type Cell = { text: string; rating: Rating };
+const COMPARISON_ROWS: { criteria: string; skinBliss: Cell; acloset: Cell; incidecoder: Cell }[] = [
   {
     criteria: "Information hierarchy",
-    skinBliss: "Weak; competing signals, hard to scan",
-    acloset: "Strong; clean and easy to read",
-    incidecoder: "Strong; but dense with raw data",
+    skinBliss: { text: "Weak; competing signals, hard to scan", rating: "weak" },
+    acloset: { text: "Strong; clean and easy to read", rating: "strong" },
+    incidecoder: { text: "Strong; but dense with raw data", rating: "strong" },
   },
   {
     criteria: "Effort to reach value",
-    skinBliss: "Low effort; but the payoff isn't credible",
-    acloset: "High effort; long intake before any payoff",
-    incidecoder: "Low effort; but the payoff isn't personal",
+    // Judgment call: low effort is the win this criteria is grading for,
+    // but each cell's own "but/isn't" clause undercuts it, so these land
+    // medium rather than strong — flag if that doesn't match your intent.
+    skinBliss: { text: "Low effort; but the payoff isn't credible", rating: "medium" },
+    acloset: { text: "High effort; long intake before any payoff", rating: "weak" },
+    incidecoder: { text: "Low effort; but the payoff isn't personal", rating: "medium" },
   },
   {
     criteria: "Personalization",
-    skinBliss: "Claims personalization; doesn't show why",
-    acloset: "Personalizes via upfront form",
-    incidecoder: "None; same content for every user",
+    skinBliss: { text: "Claims personalization; doesn't show why", rating: "weak" },
+    acloset: { text: "Personalizes via upfront form", rating: "strong" },
+    incidecoder: { text: "None; same content for every user", rating: "weak" },
   },
   {
     criteria: "Trust / transparency",
-    skinBliss: "Low; no reasoning behind match scores",
-    acloset: "Not applicable; not a rec engine",
-    incidecoder: "High on ingredients; low on relevance",
+    skinBliss: { text: "Low; no reasoning behind match scores", rating: "weak" },
+    // Judgment call: "not applicable" isn't itself weak, so this lands
+    // medium rather than weak — flag if you'd rather it read as weak.
+    acloset: { text: "Not applicable; not a rec engine", rating: "medium" },
+    incidecoder: { text: "High on ingredients; low on relevance", rating: "medium" },
   },
 ];
+
+// Rating → the same saturated-color-on-mostly-grayscale-page accent
+// language the homepage's category dots use (--c-red/--c-blue/--c-magenta
+// in lib/tokens.css), just mapped to strong/medium/weak instead of
+// project category.
+const RATING_COLOR: Record<Rating, string> = {
+  strong: "var(--c-green)",
+  medium: "var(--c-amber)",
+  weak: "var(--c-red)",
+};
+const RATING_LABEL: Record<Rating, string> = {
+  strong: "Strong",
+  medium: "Medium",
+  weak: "Weak",
+};
+
+// One legend dot + label, reused for both the table legend and each cell's
+// own dot. Filled circle with a matching border — same construction as
+// ProjectCard.module.css's .dot (border: 2px solid var(--dot-color);
+// background-color: var(--dot-color)) and CircleToggle.tsx's "active"
+// state — just sized down to sit inline with table copy instead of beside
+// a project title.
+function RatingDot({ rating, size = 10 }: { rating: Rating; size?: number }) {
+  return (
+    <span
+      className="inline-block shrink-0 rounded-full border-2"
+      style={{
+        width: size,
+        height: size,
+        borderColor: RATING_COLOR[rating],
+        backgroundColor: RATING_COLOR[rating],
+      }}
+      aria-hidden="true"
+    />
+  );
+}
+
+function RatingLegend() {
+  const ratings: Rating[] = ["strong", "medium", "weak"];
+  return (
+    <div className="mb-2 flex flex-wrap items-center gap-x-8 gap-y-2">
+      {ratings.map((r) => (
+        <div key={r} className="inline-flex items-center gap-[10px]">
+          <RatingDot rating={r} size={14} />
+          <span className="font-body text-[14px] font-light text-black/60">{RATING_LABEL[r]}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // `body` is a ReactNode (not a plain string) so the 3 insights Amy flagged
 // as highlighted can wrap their closing clause in <TextHighlight> — the
@@ -188,6 +257,7 @@ function ComparisonTable({ rows }: { rows: typeof COMPARISON_ROWS }) {
   const valueCell = "py-5 pr-6 align-top font-body text-[16px] font-light leading-relaxed text-black/60 text-left";
   return (
     <div className="overflow-x-auto">
+      <RatingLegend />
       <table className="w-full min-w-[560px] border-collapse text-left">
         <thead>
           <tr className="border-b border-black/30">
@@ -203,9 +273,30 @@ function ComparisonTable({ rows }: { rows: typeof COMPARISON_ROWS }) {
               <td className="w-[180px] py-5 pr-6 align-top font-body text-[16px] font-medium text-black/80">
                 {r.criteria}
               </td>
-              <td className={valueCell}>{r.skinBliss}</td>
-              <td className={valueCell}>{r.acloset}</td>
-              <td className={`${valueCell} pr-0`}>{r.incidecoder}</td>
+              <td className={valueCell}>
+                <span className="inline-flex items-start gap-[10px]">
+                  <span className="mt-[6px]">
+                    <RatingDot rating={r.skinBliss.rating} />
+                  </span>
+                  {r.skinBliss.text}
+                </span>
+              </td>
+              <td className={valueCell}>
+                <span className="inline-flex items-start gap-[10px]">
+                  <span className="mt-[6px]">
+                    <RatingDot rating={r.acloset.rating} />
+                  </span>
+                  {r.acloset.text}
+                </span>
+              </td>
+              <td className={`${valueCell} pr-0`}>
+                <span className="inline-flex items-start gap-[10px]">
+                  <span className="mt-[6px]">
+                    <RatingDot rating={r.incidecoder.rating} />
+                  </span>
+                  {r.incidecoder.text}
+                </span>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -688,27 +779,130 @@ export default function SkinSproutCaseStudy() {
         </Row>
 
         <Row
-          heading="Design Choices"
+          heading="Design Decisions"
           media={
-            <div className="space-y-[36px]">
-              {/* Was bg-[#fbeded] — a hardcoded hex that didn't actually
-                  match HIGHLIGHT (#faf1f6, this page's own accent color,
-                  used by the WIP/Problem Statement boxes) — close enough to
-                  read as "basically the same pink" but not pixel-identical. */}
-              <HighlightBox bg={HIGHLIGHT}>
-                Navigation problem: Users needed a way to move between stat cards
-                without breaking the visual rhythm of the layout.
-              </HighlightBox>
-              <p className={TEXT.content}>
-                Currently, the cards are aligned vertically. Do users swipe, tap, or
-                should they click somewhere else on the screen?
-              </p>
-              {/* CHECK: no real comparison-mockup image yet. */}
-              <PlaceholderBox
-                ratio="16/9"
-                label="Navigation options compared: vertical arrows vs. no arrows"
-                highlightColor={HIGHLIGHT}
-              />
+            <div className="!mt-2 space-y-16">
+              {/* Before */}
+              <div>
+                <p className="font-body text-[clamp(20px,2.1vw,24px)] font-medium text-black/30 text-left">
+                  Before
+                </p>
+                <div className="mt-3 grid grid-cols-1 items-start md:grid-cols-[14rem_1fr] lg:grid-cols-[16rem_1fr] md:gap-x-8 lg:gap-x-12">
+                  <div className="w-full md:w-[220px] flex-shrink-0">
+                    <CaseStudyImage
+                      src="/images/projects/skinsprout/before-shelf.png"
+                      alt="Pop-up screen wireframe before redesign"
+                      ratio="453/912"
+                      bg={false}
+                    />
+                  </div>
+                  <div className="space-y-3.5 mt-8 md:mt-0">
+                    <h3 className="font-body text-[20px] font-normal leading-tight text-black md:text-[22px]">
+                      Pop-up Screen
+                    </h3>
+                    <ul className="space-y-2.5">
+                      {[
+                        "Busy and dense",
+                        "Difficult to navigate (how will scroll look?)",
+                        "Poor information architecture (where do I look first?)",
+                      ].map((text) => (
+                        <li key={text} className="flex items-start gap-2.5">
+                          <span
+                            className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-[#d65b5b] text-white"
+                            aria-hidden="true"
+                          >
+                            <svg
+                              width="8"
+                              height="8"
+                              viewBox="0 0 12 12"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.2"
+                              strokeLinecap="round"
+                            >
+                              <path d="M2.5 2.5L9.5 9.5M9.5 2.5L2.5 9.5" />
+                            </svg>
+                          </span>
+                          <span className="font-body text-[16px] font-light leading-snug text-black/80 md:text-[17px]">
+                            {text}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* After */}
+              <div>
+                <p className="font-body text-[clamp(20px,2.1vw,24px)] font-medium text-black/30 text-left">
+                  After
+                </p>
+                <div className="mt-3 space-y-12">
+                  {/* Iteration 1: After Shelf 1 */}
+                  <div className="grid grid-cols-1 items-start md:grid-cols-[14rem_1fr] lg:grid-cols-[16rem_1fr] md:gap-x-8 lg:gap-x-12">
+                    <div className="w-full md:w-[220px] flex-shrink-0">
+                      <CaseStudyImage
+                        src="/images/projects/skinsprout/after-shelf1.png"
+                        alt="Slide-up tab wireframe partially open"
+                        ratio="453/912"
+                        bg={false}
+                      />
+                    </div>
+                    <div className="mt-8 md:mt-0">
+                      <p className="font-body text-[16px] font-light leading-relaxed text-black/80 md:text-[17px]">
+                        Tap/slide up to bring the full tab up.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Iteration 2: After Shelf 2 (Slide-up Tab) */}
+                  <div className="grid grid-cols-1 items-start md:grid-cols-[14rem_1fr] lg:grid-cols-[16rem_1fr] md:gap-x-8 lg:gap-x-12">
+                    <div className="w-full md:w-[220px] flex-shrink-0">
+                      <CaseStudyImage
+                        src="/images/projects/skinsprout/after-shelf2.png"
+                        alt="Slide-up tab wireframe fully opened"
+                        ratio="453/912"
+                        bg={false}
+                      />
+                    </div>
+                    <div className="space-y-3.5 mt-8 md:mt-0">
+                      <h3 className="font-body text-[20px] font-normal leading-tight text-black md:text-[22px]">
+                        Slide-up Tab
+                      </h3>
+                      <ul className="space-y-2.5">
+                        {[
+                          "Easy to navigate",
+                          "Important info shown at once",
+                        ].map((text) => (
+                          <li key={text} className="flex items-start gap-2.5">
+                            <span
+                              className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-[#3b9a5f] text-white"
+                              aria-hidden="true"
+                            >
+                              <svg
+                                width="9"
+                                height="9"
+                                viewBox="0 0 12 12"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2.2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M2.5 6.5L5 9L9.5 3" />
+                              </svg>
+                            </span>
+                            <span className="font-body text-[16px] font-light leading-snug text-black/80 md:text-[17px]">
+                              {text}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           }
         />

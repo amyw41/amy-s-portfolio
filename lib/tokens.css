@@ -46,6 +46,13 @@
   --c-red: #ff2841;
   --c-blue: #42b4fa;
   --c-magenta: #fb28ff;
+  /* Strong/medium/weak rating dots — SkinSprout's competitive-analysis
+   * table (SkinSproutCaseStudy.tsx's ComparisonTable). Matched to the same
+   * saturation/lightness as the 3 colors above so they read as one family
+   * rather than a mismatched semantic-color set dropped into an otherwise
+   * grayscale case study. */
+  --c-green: #29cc6a;
+  --c-amber: #ffb020;
   /* Was 0.4 — bumped 10% (per request) for every place this drives a white
    * overlay/lighten effect: the jar's own dimmed items (JarItem.module.css)
    * and a project card that's filtered out of the active category
