@@ -683,6 +683,15 @@ export function useJarPhysics(
         const target = pickBodyAt(x, y);
         if (!target) return false;
         const { body } = target;
+        // A settled item falls asleep (enableSleeping above) and Matter
+        // doesn't integrate a sleeping body's position even once a
+        // constraint is attached to it — the drag would silently do
+        // nothing until something else (a collision, or the respawn
+        // code's own Sleeping.set) woke it back up, at which point the
+        // built-up constraint tension resolves all at once as a snap
+        // instead of a smooth follow. Wake it here, before the
+        // constraint is created, so every drag starts from an awake body.
+        if (body.isSleeping) Sleeping.set(body, false);
         const dx = x - body.position.x;
         const dy = y - body.position.y;
         const cosA = Math.cos(body.angle);
