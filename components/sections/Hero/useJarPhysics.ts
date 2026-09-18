@@ -1129,6 +1129,28 @@ export function useJarPhysics(
       // engine, so there's no state to hand off.
       let rafId = 0;
       function startLiveLoop() {
+        // Generate blob ring rasters now, after the fall animation is done.
+        // This canvas work (24 drawImage calls + composite + PNG encode per
+        // blob item) was the main cause of frame drops during the fall: each
+        // call blocks the main thread for ~10-50 ms and triggers a React
+        // re-render via setOutlineMasks. Deferring it here means the main
+        // thread is free during replay and the work only competes with the
+        // live (mostly-sleeping) loop once items are settled.
+        // Yields between items so a burst of encodes can't monopolise a tick.
+        (async () => {
+          for (const item of items) {
+            if (cancelled || item.shape !== "blob") continue;
+            const img = imgsById.get(item.id);
+            const bbox = bboxes[item.id];
+            if (!img || !bbox) continue;
+            const dilationRadius = dilationRadii[item.id] ?? 0;
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            if (cancelled) return;
+            const outlineMask = getOutlineMask(item.src, img, dilationRadius, OUTLINE_SAMPLES);
+            if (cancelled) return;
+            setOutlineMasks((prev) => ({ ...prev, [item.id]: outlineMask }));
+          }
+        })();
         let accumulator = 0;
         let lastTime = performance.now();
         // Physics advances in fixed STEP_MS increments, but painting happens
@@ -1315,26 +1337,6 @@ export function useJarPhysics(
 
       setRenderInfo(currentRenderInfo);
       setReady(true);
-
-      // --- deferred: generate 'blob' ring rasters in the background ------
-      // Fire-and-forget, after the fall is already underway: rings aren't
-      // needed to spawn a body or paint an item, only the bbox is. Yields
-      // between items so this synchronous canvas work can't stutter the
-      // fall. A ring arriving a beat after its image is already handled by
-      // JarItem.tsx's useDropShadowFallback.
-      (async () => {
-        for (const item of items) {
-          if (cancelled || item.shape !== "blob") continue;
-          const img = imgsById.get(item.id);
-          const bbox = bboxes[item.id];
-          if (!img || !bbox) continue;
-          const dilationRadius = dilationRadii[item.id] ?? 0;
-          const outlineMask = getOutlineMask(item.src, img, dilationRadius, OUTLINE_SAMPLES);
-          if (cancelled) return;
-          setOutlineMasks((prev) => ({ ...prev, [item.id]: outlineMask }));
-          await new Promise((resolve) => setTimeout(resolve, 0));
-        }
-      })();
     }
 
     setup();
