@@ -778,134 +778,137 @@ export default function SkinSproutCaseStudy() {
           </p>
         </Row>
 
-        <Row
-          heading="Design Decisions"
-          media={
-            <div className="!mt-2 space-y-16">
-              {/* Before */}
-              <div>
-                <p className="font-body text-[clamp(20px,2.1vw,24px)] font-medium text-black/30 text-left">
-                  Before
-                </p>
-                <div className="mt-3 grid grid-cols-1 items-start md:grid-cols-[14rem_1fr] lg:grid-cols-[16rem_1fr] md:gap-x-8 lg:gap-x-12">
-                  <div className="w-full md:w-[220px] flex-shrink-0">
-                    <CaseStudyImage
-                      src="/images/projects/skinsprout/before-shelf.png"
-                      alt="Pop-up screen wireframe before redesign"
-                      ratio="453/912"
-                      bg={false}
-                    />
-                  </div>
-                  <div className="space-y-3.5 mt-8 md:mt-0">
-                    <h3 className="font-body text-[20px] font-normal leading-tight text-black md:text-[22px]">
-                      Pop-up Screen
-                    </h3>
-                    <ul className="space-y-2.5">
-                      {[
-                        "Busy and dense",
-                        "Difficult to navigate (how will scroll look?)",
-                        "Poor information architecture (where do I look first?)",
-                      ].map((text) => (
-                        <li key={text} className="flex items-start gap-2.5">
-                          <span
-                            className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-[#d65b5b] text-white"
-                            aria-hidden="true"
-                          >
-                            <svg
-                              width="8"
-                              height="8"
-                              viewBox="0 0 12 12"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.2"
-                              strokeLinecap="round"
-                            >
-                              <path d="M2.5 2.5L9.5 9.5M9.5 2.5L2.5 9.5" />
-                            </svg>
-                          </span>
-                          <span className="font-body text-[16px] font-light leading-snug text-black/80 md:text-[17px]">
-                            {text}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+        <div className="space-y-10">
+          <Row
+            eyebrow="Design Decisions"
+            heading="Challenge"
+            media={
+              <HighlightBox bg="#fbeded">
+                How might we surface user-entered data (ratings, notes, purchase history) without overwhelming the screen?
+              </HighlightBox>
+            }
+          />
+
+          <div className="space-y-10">
+          {/* Before */}
+          <div>
+            <p className="font-body text-[22px] font-medium leading-tight text-black/35 text-left">
+              Before
+            </p>
+            <div className="mt-2.5 grid grid-cols-1 items-start md:grid-cols-[28rem_1fr] lg:grid-cols-[30rem_1fr] md:gap-x-8 lg:gap-x-12">
+              <div className="w-full md:w-[220px] flex-shrink-0">
+                <CaseStudyImage
+                  src="/images/projects/skinsprout/before-shelf.png"
+                  alt="Pop-up screen wireframe before redesign"
+                  ratio="453/912"
+                  bg={false}
+                />
               </div>
-
-              {/* After */}
-              <div>
-                <p className="font-body text-[clamp(20px,2.1vw,24px)] font-medium text-black/30 text-left">
-                  After
-                </p>
-                <div className="mt-3 space-y-12">
-                  {/* Iteration 1: After Shelf 1 */}
-                  <div className="grid grid-cols-1 items-start md:grid-cols-[14rem_1fr] lg:grid-cols-[16rem_1fr] md:gap-x-8 lg:gap-x-12">
-                    <div className="w-full md:w-[220px] flex-shrink-0">
-                      <CaseStudyImage
-                        src="/images/projects/skinsprout/after-shelf1.png"
-                        alt="Slide-up tab wireframe partially open"
-                        ratio="453/912"
-                        bg={false}
-                      />
-                    </div>
-                    <div className="mt-8 md:mt-0">
-                      <p className="font-body text-[16px] font-light leading-relaxed text-black/80 md:text-[17px]">
-                        Tap/slide up to bring the full tab up.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Iteration 2: After Shelf 2 (Slide-up Tab) */}
-                  <div className="grid grid-cols-1 items-start md:grid-cols-[14rem_1fr] lg:grid-cols-[16rem_1fr] md:gap-x-8 lg:gap-x-12">
-                    <div className="w-full md:w-[220px] flex-shrink-0">
-                      <CaseStudyImage
-                        src="/images/projects/skinsprout/after-shelf2.png"
-                        alt="Slide-up tab wireframe fully opened"
-                        ratio="453/912"
-                        bg={false}
-                      />
-                    </div>
-                    <div className="space-y-3.5 mt-8 md:mt-0">
-                      <h3 className="font-body text-[20px] font-normal leading-tight text-black md:text-[22px]">
-                        Slide-up Tab
-                      </h3>
-                      <ul className="space-y-2.5">
-                        {[
-                          "Easy to navigate",
-                          "Important info shown at once",
-                        ].map((text) => (
-                          <li key={text} className="flex items-start gap-2.5">
-                            <span
-                              className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-[#3b9a5f] text-white"
-                              aria-hidden="true"
-                            >
-                              <svg
-                                width="9"
-                                height="9"
-                                viewBox="0 0 12 12"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M2.5 6.5L5 9L9.5 3" />
-                              </svg>
-                            </span>
-                            <span className="font-body text-[16px] font-light leading-snug text-black/80 md:text-[17px]">
-                              {text}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
+              <div className="space-y-3.5 mt-8 md:mt-0">
+                <h3 className="font-body text-[20px] font-normal leading-tight text-black md:text-[22px]">
+                  Pop-up Screen
+                </h3>
+                <ul className="space-y-2.5">
+                  {[
+                    "Busy and dense",
+                    "Difficult to navigate (how will scroll look?)",
+                    "Poor information architecture (where do I look first?)",
+                    "3/5 users flagged this as unclear",
+                  ].map((text) => (
+                    <li key={text} className="flex items-start gap-2.5">
+                      <span
+                        className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-[#d65b5b] text-white"
+                        aria-hidden="true"
+                      >
+                        <svg
+                          width="8"
+                          height="8"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                        >
+                          <path d="M2.5 2.5L9.5 9.5M9.5 2.5L2.5 9.5" />
+                        </svg>
+                      </span>
+                      <span className="font-body text-[16px] font-light leading-snug text-black/80 md:text-[17px]">
+                        {text}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
-          }
-        />
+          </div>
+
+          {/* After */}
+          <div>
+            <p className="font-body text-[22px] font-medium leading-tight text-black/35 text-left">
+              After
+            </p>
+            <div className="mt-2.5 grid grid-cols-1 items-start md:grid-cols-[28rem_1fr] lg:grid-cols-[30rem_1fr] md:gap-x-8 lg:gap-x-12">
+              {/* The 2 wireframes side-by-side */}
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full md:w-[440px] lg:w-[460px] flex-shrink-0">
+                <div className="w-full">
+                  <CaseStudyImage
+                    src="/images/projects/skinsprout/after-shelf1.png"
+                    alt="Slide-up tab wireframe partially open"
+                    ratio="453/912"
+                    bg={false}
+                  />
+                </div>
+                <div className="w-full">
+                  <CaseStudyImage
+                    src="/images/projects/skinsprout/after-shelf2.png"
+                    alt="Slide-up tab wireframe fully opened"
+                    ratio="453/912"
+                    bg={false}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3.5 mt-8 md:mt-0">
+                <h3 className="font-body text-[20px] font-normal leading-tight text-black md:text-[22px]">
+                  Slide-up Tab
+                </h3>
+                <p className="font-body text-[16px] font-light leading-relaxed text-black/80 md:text-[17px]">
+                  Tap/slide up to bring the full tab up.
+                </p>
+                <ul className="space-y-2.5 pt-1">
+                  {[
+                    "Easy to navigate",
+                    "Important info shown at once",
+                  ].map((text) => (
+                    <li key={text} className="flex items-start gap-2.5">
+                      <span
+                        className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-[#3b9a5f] text-white"
+                        aria-hidden="true"
+                      >
+                        <svg
+                          width="9"
+                          height="9"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M2.5 6.5L5 9L9.5 3" />
+                        </svg>
+                      </span>
+                      <span className="font-body text-[16px] font-light leading-snug text-black/80 md:text-[17px]">
+                        {text}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+          </div>{/* end space-y-10 Before/After */}
+        </div>{/* end outer space-y-10 wrapping Challenge + Before/After */}
 
         <Row heading="Decision">
           <p>
