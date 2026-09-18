@@ -10,7 +10,7 @@
    * --content-max was meant to guarantee. Trimmed so --content-max takes
    * over — and the hero title reliably has room for its one line (see
    * --fs-title below) — starting around ~1220px instead. */
-  --pad: clamp(24px, 7vw, 150px);
+  --pad: clamp(22px, 6.3vw, 135px);
   /* Caps every section's inner content box so text and the jar (or any
    * other section content) read as one composition instead of drifting to
    * opposite edges on wide screens. Below ~1220px --pad is still the
@@ -21,27 +21,27 @@
    * case-study route keeps its own narrower 820px via its own scoped
    * override in app/projects/[slug]/case-study.css, independent of this
    * sitewide value.) */
-  --content-max: 1050px;
+  --content-max: 945px;
 
   /* Was 5.08vw/78px, scaling off the raw viewport with no ceiling tied to
    * --content-max — past ~1250px wide the font kept growing while the
    * container itself stopped (content-max binds), so "amy wang's jar"
    * outgrew .left's 46%-of-content-max column and wrapped to two lines.
    * Lowered so it stays comfortably inside that column at every width. */
-  --fs-title: clamp(32px, 4vw, 56px);
-  /* 51px @1280 */
-  --fs-section: clamp(32px, 3.91vw, 60px);
-  /* 50px @1280 */
-  --fs-footer-h: clamp(28px, 3.13vw, 48px);
-  /* 40px @1280 */
-  --fs-nav: clamp(18px, 1.72vw, 26px);
-  /* 22px @1280 */
-  --fs-taskbar: clamp(18px, 1.72vw, 24px);
-  /* 22px @1280 — matches hero nav size */
-  --fs-tagline: clamp(16px, 1.56vw, 24px);
+  --fs-title: clamp(29px, 3.6vw, 51px);
+  /* 46px @1280 */
+  --fs-section: clamp(29px, 3.52vw, 54px);
+  /* 45px @1280 */
+  --fs-footer-h: clamp(25px, 2.81vw, 43px);
+  /* 36px @1280 */
+  --fs-nav: clamp(16px, 1.55vw, 23px);
   /* 20px @1280 */
-  --fs-small: clamp(14px, 1.25vw, 19px);
-  /* 16px @1280 */
+  --fs-taskbar: clamp(16px, 1.55vw, 22px);
+  /* 20px @1280 — matches hero nav size */
+  --fs-tagline: clamp(14px, 1.41vw, 22px);
+  /* 18px @1280 */
+  --fs-small: clamp(12px, 1.13vw, 17px);
+  /* 14px @1280 */
 
   --c-red: #ff2841;
   --c-blue: #42b4fa;
@@ -96,7 +96,7 @@
    * copy of the same clamp() silently drifting out of sync with it. Doesn't
    * include .pill's own 24px top margin — consumers add that separately,
    * same as Taskbar.module.css itself does. */
-  --taskbar-height: clamp(48px, 4.5vw, 64px);
+  --taskbar-height: clamp(43px, 4.05vw, 57px);
 }
 
 /* 14vw is far too much gutter once the viewport gets phone-narrow (e.g.
@@ -104,6 +104,6 @@
  * the gutter is fixed instead of viewport-relative. */
 @media (max-width: 768px) {
   :root {
-    --pad: 24px;
+    --pad: 22px;
   }
 }

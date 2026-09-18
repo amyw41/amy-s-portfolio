@@ -34,9 +34,8 @@ function ScribbleOval({ seed, active = false }: { seed: number; active?: boolean
   const path = useMemo(() => buildWobblyPillPath(seed), [seed]);
   return (
     <svg
-      className={`pointer-events-none absolute -left-6 -top-1.5 h-[calc(100%+12px)] w-[calc(100%+48px)] transition-opacity duration-150 ${
-        active ? "opacity-[0.55]" : "opacity-0 group-hover:opacity-[0.55]"
-      }`}
+      className={`pointer-events-none absolute -left-6 -top-1.5 h-[calc(100%+12px)] w-[calc(100%+48px)] transition-opacity duration-150 ${active ? "opacity-[0.55]" : "opacity-0 group-hover:opacity-[0.55]"
+        }`}
       viewBox={PILL_VIEW_BOX}
       fill="none"
       preserveAspectRatio="none"
@@ -506,9 +505,8 @@ function TableOfContents({
             document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth" });
             history.replaceState(null, "", `#${s.id}`);
           }}
-          className={`group relative text-left transition-colors whitespace-nowrap w-fit self-start ${
-            activeId === s.id ? "text-[#2460A4]" : "text-black/60 hover:text-[#2460A4]"
-          }`}
+          className={`group relative text-left transition-colors whitespace-nowrap w-fit self-start ${activeId === s.id ? "text-[#2460A4]" : "text-black/60 hover:text-[#2460A4]"
+            }`}
         >
           <ScribbleOval seed={idx + 10} active={activeId === s.id} />
           {s.label}
@@ -635,7 +633,7 @@ export function CaseStudyLayout({
 }) {
   return (
     <div className="tw-scope min-h-screen bg-white">
-      <div className="pageContainer flex w-full gap-10 lg:gap-16">
+      <div className="pageContainer flex w-full gap-5 lg:gap-9">
         {/* h-fit — sticks to its own content height, not stretched to match
             <main>'s (flex's default align-items:stretch would otherwise
             make it tall enough to overlap the footer while sticky).

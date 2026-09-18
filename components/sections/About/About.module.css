@@ -61,6 +61,11 @@
 .textBox {
   position: relative;
   padding: clamp(24px, 4vw, 48px);
+  /* Flat, not clamp() — the hand-drawn border (see .borderImage) closes a
+   * bit short of this box's real bottom edge, so the last line of text
+   * was spilling past it. A fixed 140px buffer, not one that scales down
+   * with the viewport, so it can't shrink back below the gap at any size. */
+  padding-bottom: 140px;
   text-align: left;
 }
 
