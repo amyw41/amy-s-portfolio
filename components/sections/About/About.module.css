@@ -2,12 +2,13 @@
 
 .bioSection {
   box-sizing: border-box;
-  padding-top: clamp(32px, 5vw, 64px);
-  /* Was clamp(32px, 5vw, 60px) — bumped along with .experienceSection's own
-   * top/bottom below, so the Bio -> Experience -> WhatsInside gaps are all
-   * noticeably bigger, per request. */
-  padding-bottom: clamp(40px, 5.5vw, 72px);
-  padding-inline: clamp(16px, 5vw, 64px);
+  min-height: calc(100dvh - var(--taskbar-height));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: clamp(20px, 3vw, 40px);
+  padding-bottom: clamp(20px, 3vw, 40px);
+  padding-inline: clamp(16px, 4vw, 48px);
 }
 
 /* Stacked (photo above text) below 900px, side-by-side above it — same
@@ -23,8 +24,9 @@
 
 @media (min-width: 900px) {
   .bioGrid {
-    grid-template-columns: minmax(0, 460px) minmax(400px, 1fr);
-    gap: 24px;
+    grid-template-columns: 380px 1fr;
+    align-items: stretch;
+    gap: 20px;
   }
 }
 
@@ -44,14 +46,15 @@
 
 @media (min-width: 900px) {
   .photo {
-    max-width: 460px;
-    max-height: min(70dvh, 560px);
+    max-width: 380px;
+    max-height: none;
     margin: 0;
   }
 }
 
 .photoImage {
   object-fit: contain;
+  object-position: center;
 }
 
 /* border.png is stretched (object-fit: fill, see .borderImage) to exactly
@@ -60,12 +63,10 @@
  * fixed-ratio frame like the photo. */
 .textBox {
   position: relative;
-  padding: clamp(24px, 4vw, 48px);
-  /* Flat, not clamp() — the hand-drawn border (see .borderImage) closes a
-   * bit short of this box's real bottom edge, so the last line of text
-   * was spilling past it. A fixed 140px buffer, not one that scales down
-   * with the viewport, so it can't shrink back below the gap at any size. */
-  padding-bottom: 140px;
+  display: flex;
+  align-items: center;
+  padding: clamp(20px, 3vw, 36px);
+  padding-bottom: 36px;
   text-align: left;
 }
 
@@ -97,16 +98,16 @@
  * +2px at both ends of the clamp, per the earlier request. */
 .heading {
   margin: 0;
-  font-size: clamp(20px, 1.8vw, 28px);
+  font-size: clamp(18px, 1.6vw, 24px);
   font-weight: 300;
   color: rgba(0, 0, 0, 0.9);
 }
 
 .paragraph {
-  margin: clamp(8px, 1.2vw, 12px) 0 0;
-  font-size: clamp(13px, 1.1vw, 17px);
+  margin: clamp(7px, 1vw, 11px) 0 0;
+  font-size: clamp(13px, 1.1vw, 16px);
   font-weight: 300;
-  line-height: 1.6;
+  line-height: 1.55;
   color: rgba(0, 0, 0, 0.7);
 }
 
