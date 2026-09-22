@@ -106,7 +106,7 @@ export default function SpotifyCaseStudy() {
     <CaseStudyLayout sectionNav={SECTION_NAV}>
       <CaseStudyHero
         title="Spotify Guessr"
-        subtitle="Turn your Spotify Blend into a multiplayer guessing game."
+        subtitle="Turning a Spotify Blend into a party game"
         heroSrc="/images/projects/spotify/spotify.webp"
         heroAlt="Spotify Guessr app screens"
         highlightColor={HIGHLIGHT}

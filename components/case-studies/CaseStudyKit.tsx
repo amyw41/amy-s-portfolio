@@ -69,7 +69,7 @@ function ScribbleOval({ seed, active = false }: { seed: number; active?: boolean
 // Text system every case study page uses:
 //   header    — section number/title (e.g. "01 / Initial Planning"): black, medium, 28px
 //   subheader — the sub-label (e.g. "The Problem"): black/60, regular, 24px
-//   content   — body copy: black/60, light, 18px
+//   content   — body copy: black/70, light, 18px
 //   frame     — text sitting inside a colorful/placeholder box: black/60, light, 24px
 //   groupHeader — mid-section group labels above a cluster of Rows, one
 //     notch bolder than subheader so it reads as a grouping label, not just
@@ -77,7 +77,9 @@ function ScribbleOval({ seed, active = false }: { seed: number; active?: boolean
 export const TEXT = {
   header: "font-body text-[clamp(22px,2.4vw,28px)] font-medium text-black text-left",
   subheader: "font-body text-[clamp(19px,2vw,24px)] font-normal text-black/60 text-left",
-  content: "font-body text-[clamp(16px,1.45vw,18px)] font-light leading-relaxed text-black/60 text-left",
+  // Was black/60 — darkened a notch per request ("make the body text a bit
+  // darker"); still lighter than the black subheader/header above it.
+  content: "font-body text-[clamp(16px,1.45vw,18px)] font-light leading-relaxed text-black/70 text-left",
   frame: "font-body text-[clamp(18px,1.75vw,22px)] font-light text-black/60 text-left",
   groupHeader: "font-body text-[clamp(20px,2.1vw,24px)] font-medium text-black/80 text-left",
 };

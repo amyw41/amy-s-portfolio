@@ -5,6 +5,9 @@ export interface Project {
   title: string;
   description: string;
   category: ProjectCategory;
+  /** Displayed next to the title as "<title>; <year>" (ProjectCard.tsx) —
+   * not derived from anything, just each project's own year. */
+  year: number;
   /** /images/projects/<slug>/cover.webp — always derived from slug (see
    * coverPath below), never authored per-entry. */
   cover: string;
@@ -32,6 +35,7 @@ interface ProjectSeed {
   description: string;
   category: ProjectCategory;
   hasVideo: boolean;
+  year: number;
 }
 
 /**
@@ -47,18 +51,12 @@ interface ProjectSeed {
  */
 const PROJECT_SEEDS: ProjectSeed[] = [
   {
-    slug: "skinsprout",
-    title: "SkinSprout",
-    description: "Track your skincare history to get personalized product recommendations.",
-    category: "personal",
-    hasVideo: true,
-  },
-  {
     slug: "cybersea",
     title: "CyberSea",
-    description: "Plan and understand Arctic routes with live data and interactive 3D maps.",
+    description: "Making Arctic shipping routes readable.",
     category: "hackathon",
     hasVideo: true,
+    year: 2026,
   },
   {
     // Was "spotify-guessr" — coverPath/videoPath derive their path from
@@ -69,9 +67,18 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     // a special case to coverPath/videoPath.
     slug: "spotify",
     title: "Spotify Guessr",
-    description: "Turn your Spotify Blend into a multiplayer guessing game.",
+    description: "Turning a Spotify Blend into a party game.",
     category: "personal",
     hasVideo: false,
+    year: 2026,
+  },
+  {
+    slug: "skinsprout",
+    title: "SkinSprout",
+    description: "Helping people learn what works on their skin.",
+    category: "personal",
+    hasVideo: true,
+    year: 2026,
   },
 ];
 
@@ -80,6 +87,7 @@ export const PROJECTS: Project[] = PROJECT_SEEDS.map((seed) => ({
   title: seed.title,
   description: seed.description,
   category: seed.category,
+  year: seed.year,
   cover: coverPath(seed.slug),
   video: seed.hasVideo ? videoPath(seed.slug) : undefined,
   gallery: [], // TODO: case-study gallery assets

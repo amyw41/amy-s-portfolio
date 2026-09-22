@@ -313,7 +313,7 @@ export default function SkinSproutCaseStudy() {
         // A bit smaller than the shared default clamp() — per request, this
         // page's own title read too large. CyberSea/Spotify are untouched.
         titleClassName="text-[clamp(2.5rem,6.75vw,4rem)]"
-        subtitle="Track your skincare history to get personalized product recommendations."
+        subtitle="Helping people learn what works on their skin."
         heroSrc="/images/projects/skinsprout/skinsprout.mp4"
         heroAlt="SkinSprout app preview"
         heroVideo

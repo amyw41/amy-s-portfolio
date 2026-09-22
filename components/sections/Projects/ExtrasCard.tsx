@@ -21,13 +21,17 @@ interface ExtrasCardProps {
 
 /**
  * Same card shape as ProjectCard (reuses its module's .card/.reveal/.media/
- * .text/.dimOverlay classes directly) but: no category dot, a placeholder
- * media block instead of a real cover (there's no case-study asset for this
- * one). Was a button that opened a bottom-sheet modal (ExtrasModal) — per
- * request, "extras" is now its own case-study-style page
- * (ExtrasCaseStudy.tsx, same shell as Spotify/CyberSea/SkinSprout), so this
- * is now a plain Link like every other project card, not a button + local
- * open/close state.
+ * .text/.dimOverlay classes directly) but: no category dot. Was a button
+ * that opened a bottom-sheet modal (ExtrasModal) — per request, "extras" is
+ * now its own case-study-style page (ExtrasCaseStudy.tsx, same shell as
+ * Spotify/CyberSea/SkinSprout), so this is now a plain Link like every
+ * other project card, not a button + local open/close state.
+ *
+ * Media is a plain looping video (public/images/projects/extras/
+ * thumbnail.mp4) — no poster fade-in like ProjectCard's AutoplayVideo since
+ * there's no separate poster image for this one, just the same object-fit:
+ * cover sizing (borrowed from cardStyles.poster) applied straight to the
+ * <video> element.
  */
 const ExtrasCard = forwardRef<HTMLAnchorElement, ExtrasCardProps>(function ExtrasCard(
   { dimmed, revealed, revealDelayMs },
@@ -43,9 +47,15 @@ const ExtrasCard = forwardRef<HTMLAnchorElement, ExtrasCardProps>(function Extra
         style={{ transitionDelay: `${revealDelayMs}ms` } as CSSProperties}
       >
         <div className={cardStyles.media}>
-          <div className={styles.placeholder} aria-hidden="true">
-            +
-          </div>
+          <video
+            className={cardStyles.poster}
+            src="/images/projects/extras/thumbnail.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            aria-hidden="true"
+          />
           <div className={`${cardStyles.dimOverlay} ${dimClass}`} />
         </div>
 

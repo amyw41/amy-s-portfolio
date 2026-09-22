@@ -111,7 +111,7 @@ export default function CyberSeaCaseStudy() {
     <CaseStudyLayout sectionNav={SECTION_NAV}>
       <CaseStudyHero
         title="CyberSea"
-        subtitle="Plan and understand Arctic routes with live data and interactive 3D maps."
+        subtitle="Making Arctic shipping routes readable."
         heroSrc="/images/projects/cybersea/cybersea.mp4"
         heroAlt="CyberSea app preview"
         heroVideo
