@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { content } from "@/lib/content";
 import Taskbar from "@/components/ui/Taskbar/Taskbar";
 import PageTransition from "@/components/ui/PageTransition/PageTransition";
@@ -65,6 +66,10 @@ export default function RootLayout({
           {children}
           <Footer />
         </PageTransition>
+        {/* Vercel Analytics — tracks pageviews on the deployed site only; a
+         * no-op locally and on any host other than Vercel, so it's safe to
+         * leave mounted everywhere rather than gating it by environment. */}
+        <Analytics />
       </body>
     </html>
   );
