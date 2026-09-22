@@ -24,6 +24,10 @@ function GalleryCard({ item }: { item: WhatsInsideItem }) {
           draggable={false}
           unoptimized={process.env.NODE_ENV !== "production"}
           className={styles.galleryImage}
+          // Was lazy (the next/image default) — same late pop-in-on-scroll
+          // issue as the project cards had. Small, fixed-size grid, so
+          // eager-loading all of it costs little.
+          loading="eager"
         />
       </div>
       <p className={styles.galleryCaption}>{item.name}</p>

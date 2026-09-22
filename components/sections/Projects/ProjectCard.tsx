@@ -47,6 +47,11 @@ const ProjectCard = forwardRef<HTMLAnchorElement, ProjectCardProps>(function Pro
               sizes="(max-width: 900px) 100vw, 624px"
               className={styles.poster}
               draggable={false}
+              // Was lazy (the next/image default) — with only a few project
+              // cards on the page, eager-loading every cover costs little and
+              // means it's already decoded by the time a normal scroll
+              // reaches it, instead of visibly popping in a beat late.
+              loading="eager"
             />
           )}
           <div className={`${styles.dimOverlay} ${dimClass}`} />

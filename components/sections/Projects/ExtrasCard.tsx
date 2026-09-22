@@ -54,6 +54,10 @@ const ExtrasCard = forwardRef<HTMLAnchorElement, ExtrasCardProps>(function Extra
             muted
             loop
             playsInline
+            // Explicit "auto" (the browser's own default is looser, "metadata"
+            // in some browsers) so it starts buffering the actual video data
+            // right away instead of waiting until it's scrolled near.
+            preload="auto"
             aria-hidden="true"
           />
           <div className={`${cardStyles.dimOverlay} ${dimClass}`} />

@@ -159,6 +159,12 @@ export default function Carousel() {
                         draggable={false}
                         unoptimized={process.env.NODE_ENV !== "production"}
                         className={styles.carouselItemImage}
+                        // Was lazy (the next/image default) — every item here
+                        // is already mounted at once (just moved offscreen via
+                        // transform, not unmounted), so lazy-loading only
+                        // delayed the ones that start out of view, popping in
+                        // late the moment you swipe to them.
+                        loading="eager"
                       />
                     </motion.div>
 

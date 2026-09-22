@@ -11,8 +11,14 @@ interface AutoplayVideoProps {
 
 /** How close to the viewport (in px) a card must be before its video's
  * `src` is ever set — before that, preload="none" plus no src means zero
- * bytes fetched, even though the video plays on its own once it's near. */
-const LOAD_ROOT_MARGIN = "200px";
+ * bytes fetched, even though the video plays on its own once it's near.
+ * Was 200px — with only a handful of project cards on the page, that lead
+ * wasn't enough to finish fetching before a normal scroll speed reached the
+ * card, so the video would visibly pop in a beat after the poster (per
+ * request: "images and vids don't load in time... it ruins the
+ * experience"). Bumped way up so loading effectively starts as soon as the
+ * card is anywhere near the page, not just near the viewport. */
+const LOAD_ROOT_MARGIN = "1500px";
 /** How much of the card must be on-screen before its video actually plays —
  * deliberately a *different*, stricter condition than the load margin
  * above, hence two separate observers rather than one doing double duty. */
@@ -150,6 +156,12 @@ export default function AutoplayVideo({ src, poster }: AutoplayVideoProps) {
         sizes="(max-width: 900px) 100vw, 624px"
         className={styles.poster}
         draggable={false}
+        // Was lazy (the next/image default) — same pop-in-on-scroll issue as
+        // the video src above, just for the poster frame itself. There are
+        // only a few project cards on this page, so eager-loading every
+        // poster costs little and means it's already decoded by the time a
+        // normal scroll reaches it.
+        loading="eager"
       />
       {!reducedMotion && (
         <video
