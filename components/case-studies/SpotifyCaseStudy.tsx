@@ -111,6 +111,7 @@ export default function SpotifyCaseStudy() {
         heroAlt="Spotify Guessr app screens"
         highlightColor={HIGHLIGHT}
         meta={META}
+        tldr="Spotify Blends lose their spark over time — shared songs crowd out real taste, and once the social hook fades, so does the reason to open them. Spotify Guessr turns a Blend into a multiplayer guessing game instead, keeping the social payoff front and center."
       />
 
       {/* 01 / Initial Planning */}

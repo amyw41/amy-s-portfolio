@@ -542,6 +542,7 @@ export function CaseStudyHero({
   heroVideo = false,
   highlightColor,
   meta,
+  tldr,
 }: {
   title: string;
   // Overrides the default title size below — for SkinSprout, whose own
@@ -555,6 +556,11 @@ export function CaseStudyHero({
   heroVideo?: boolean;
   highlightColor?: string;
   meta: { label: string; values: string[] }[];
+  // Short summary shown as its own full-width, standout block right below
+  // the meta grid — a skim-friendly "here's the whole thing in one breath"
+  // for anyone who won't read all the way down through 01–06. Optional so a
+  // page can still opt out, though every current case study passes one.
+  tldr?: string;
 }) {
   return (
     <motion.div
@@ -605,6 +611,21 @@ export function CaseStudyHero({
           </div>
         ))}
       </div>
+
+      {/* TL;DR — deliberately its own block below the meta grid, not folded
+          into it: meta is scannable facts (timeline, team, role), this is a
+          plain-English summary, so they read as two different kinds of
+          "skim this first" content rather than competing for the same box.
+          No box/border/fill (per request, that read too heavy) — stands out
+          through the bold "TL;DR" label alone; the summary text itself is
+          plain TEXT.content, matching every other paragraph on the page
+          rather than its own separate size/color (per request). */}
+      {tldr && (
+        <div className="mt-6 text-left">
+          <p className={`${TEXT.header} mb-2`}>TL;DR</p>
+          <p className={TEXT.content}>{tldr}</p>
+        </div>
+      )}
     </motion.div>
   );
 }

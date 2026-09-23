@@ -319,6 +319,7 @@ export default function SkinSproutCaseStudy() {
         heroVideo
         highlightColor={HIGHLIGHT}
         meta={META}
+        tldr="SkinSprout helps people track their skincare history and get product recommendations that actually fit their skin — built for everyone from beginners overwhelmed by choice to routine-trackers who forget what they've already tried."
       />
 
       {/* Amy's source page still carries this literal banner — keeping it
@@ -917,7 +918,7 @@ export default function SkinSproutCaseStudy() {
 
         <Row heading="Decision">
           <p>
-            A slide-up tab made much more sense as the important info was immediatly displayed. This way, users had significantly more control over what they wanted to view.
+            A slide-up tab made much more sense as the important info was immediately displayed. This way, users had significantly more control over what they wanted to view.
           </p>
         </Row>
       </Section>

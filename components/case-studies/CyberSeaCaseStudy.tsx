@@ -117,6 +117,7 @@ export default function CyberSeaCaseStudy() {
         heroVideo
         highlightColor={HIGHLIGHT}
         meta={META}
+        tldr="CyberSea is a route-planning dashboard built in 36 hours for uOttaHacks, tackling the Thales Challenge: helping mariners plan safer Arctic shipping routes with live conditions, a clean data dashboard, and interactive 3D terrain. It placed 2nd for the Thales Challenge & 1st overall!"
       />
 
       {/* 01 / Initial Planning */}

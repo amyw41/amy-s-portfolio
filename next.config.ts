@@ -12,6 +12,21 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
+  // Project pages moved from /projects/[slug] to just /[slug] (per request,
+  // "amyz.wang/name" instead of "amyz.wang/projects/name") — this permanent
+  // redirect means any old /projects/* link (bookmarked, shared, indexed by
+  // search engines) still lands on the right page instead of 404ing. Next
+  // resolves redirects before matching filesystem routes, so this fires even
+  // though app/projects/[slug]/ itself still physically exists on disk.
+  async redirects() {
+    return [
+      {
+        source: "/projects/:slug",
+        destination: "/:slug",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

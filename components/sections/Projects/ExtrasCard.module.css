@@ -13,19 +13,6 @@
   width: 100%;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .trigger {
-    /* Matches ProjectCard.module.css's own .card transition (same hover
-     * lighten effect, same fix for the same jarring snap). */
-    transition: opacity 300ms ease-out;
-  }
-}
-
-.trigger:hover {
-  /* Matches ProjectCard.module.css's own .card:hover — see its comment. */
-  opacity: 0.615;
-}
-
 .placeholder {
   position: absolute;
   inset: 0;

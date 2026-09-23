@@ -41,7 +41,7 @@ const ExtrasCard = forwardRef<HTMLAnchorElement, ExtrasCardProps>(function Extra
   const revealClass = revealed ? cardStyles.revealVisible : "";
 
   return (
-    <Link ref={ref} href="/projects/extras" className={`${cardStyles.card} ${styles.trigger}`}>
+    <Link ref={ref} href="/extras" className={`${cardStyles.card} ${styles.trigger}`}>
       <div
         className={`${cardStyles.reveal} ${revealClass}`}
         style={{ transitionDelay: `${revealDelayMs}ms` } as CSSProperties}
