@@ -117,7 +117,7 @@ export default function Hero() {
               />
               <h1 className={styles.title}>{copy.title}</h1>
               <p className={styles.tagline}>
-                is a design engineer who makes products that are well-thought-out.
+                a design engineer who makes products that are well-thought-out.
               </p>
             </div>
 
