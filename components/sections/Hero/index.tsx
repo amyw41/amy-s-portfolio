@@ -117,7 +117,7 @@ export default function Hero() {
               />
               <h1 className={styles.title}>{copy.title}</h1>
               <p className={styles.tagline}>
-                adding a little <i>whimsy</i>{" "}to every intuitive design.
+                design engineer who adds <i>whimsy</i> to<br />intuitive products.
               </p>
             </div>
 

@@ -8,7 +8,7 @@ export const content = {
   en: {
     hero: {
       title: "amy wang's jar",
-      tagline: "adding a little whimsy to every intuitive design.",
+      tagline: "design engineer who adds whimsy to intuitive products.",
       social: {
         linkedin: { label: "LinkedIn", href: "https://linkedin.com/in/amyw41" },
         gmail: { label: "Email", href: "mailto:amy.wang1@uwaterloo.ca" },

@@ -39,7 +39,7 @@
 .filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 32px;
+  gap: 24px;
 }
 
 /* ---------- card list ---------- */
@@ -47,9 +47,8 @@
 .list {
   display: flex;
   flex-direction: column;
-  /* "Generous spacing" — noticeably more than the filters/heading gaps
-   * above, so the list itself reads as a series of distinct entries. */
-  gap: 60px;
+  /* Condensed slightly per user request from 60px to 40px */
+  gap: 30px;
   /* Filtering actually reorders these children in the real DOM (see
    * index.tsx — displayIds.map, then useFlipReorder papers over the
    * resulting visual jump with a transform). That real DOM mutation is

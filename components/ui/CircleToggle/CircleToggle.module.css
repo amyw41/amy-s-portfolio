@@ -75,7 +75,7 @@
 }
 
 .label {
-  font-size: var(--fs-small);
+  font-size: calc(var(--fs-small) + 1px);
   font-weight: 300;
   color: rgba(0, 0, 0, 0.8);
 }

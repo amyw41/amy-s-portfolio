@@ -329,7 +329,7 @@ export function Row({
   const mediaGap = children ? "mt-[36px]" : "mt-2";
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-[14rem_1fr] lg:grid-cols-[16rem_1fr] md:gap-x-8 lg:gap-x-12">
+      <div className="grid grid-cols-1 md:grid-cols-[14rem_1fr] lg:grid-cols-[13rem_1fr] md:gap-x-8 lg:gap-x-8">
         <div className="md:col-start-1">
           {eyebrow && <p className={`${TEXT.header} mb-2`}>{eyebrow}</p>}
           <p className={headingClassName ?? TEXT.subheader}>{heading}</p>
@@ -656,7 +656,7 @@ export function CaseStudyLayout({
 }) {
   return (
     <div className="tw-scope min-h-screen bg-white">
-      <div className="pageContainer flex w-full gap-5 lg:gap-9">
+      <div className="pageContainer flex w-full gap-10 lg:gap-8">
         {/* h-fit — sticks to its own content height, not stretched to match
             <main>'s (flex's default align-items:stretch would otherwise
             make it tall enough to overlap the footer while sticky).
@@ -673,7 +673,7 @@ export function CaseStudyLayout({
             moment the taskbar has fully scrolled out of view — so it rises
             to fill the space the taskbar leaves behind, then sits flush
             against the top for the rest of the page. */}
-        <aside className="sticky top-0 hidden h-fit w-48 shrink-0 pb-24 pt-8 lg:block lg:pt-14">
+        <aside className="sticky top-0 hidden h-fit w-44 shrink-0 pb-24 pt-8 lg:block lg:pt-14">
           <TableOfContents sectionNav={sectionNav} className="flex-col gap-3.5" home extra={sidebarExtra} />
         </aside>
 

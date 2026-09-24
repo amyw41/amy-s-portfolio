@@ -121,9 +121,8 @@
 
 .description {
   margin: 0;
-  /* Was --fs-tagline — matched to the category filter buttons' own label
-   * size (CircleToggle.module.css's .label) per request. */
-  font-size: var(--fs-small);
+  /* Matched to the category filter buttons' own label size (CircleToggle.module.css's .label) */
+  font-size: calc(var(--fs-small) + 1px);
   font-weight: 300;
   line-height: 1.5;
   color: rgba(0, 0, 0, 0.8);

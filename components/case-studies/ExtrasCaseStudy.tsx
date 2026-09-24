@@ -20,12 +20,12 @@ const copy = content.en.projects.extras;
 
 const GALLERY_COLUMNS = 2;
 const GALLERY_GAP = 8;
-// Width the category dot + its gap eat out of the caption row (10px
+// Width the category dot + its gap eat out of the caption row (16px
 // dot + 6px gap, matching the row's own className below) — subtracted
 // from the column width before estimateCaptionHeight measures wrapping,
 // so the predicted box height still matches what the text actually wraps
-// to now that it starts 16px later than the row's own left edge.
-const CAPTION_DOT_RESERVED_WIDTH = 16;
+// to now that it starts 22px later than the row's own left edge.
+const CAPTION_DOT_RESERVED_WIDTH = 22;
 
 // Same "one color, one place" lookup ProjectCard.tsx builds from
 // PROJECT_CATEGORY_COLOR, but derived from EXTRAS_CATEGORIES itself
@@ -181,7 +181,7 @@ export default function ExtrasCaseStudy() {
                     offset rather than being centered against the whole
                     (possibly multi-line) block. */}
                 <span
-                  className="mt-[5px] h-[10px] w-[10px] shrink-0 box-border rounded-full border-[1.5px]"
+                  className="mt-[2px] h-[16px] w-[16px] shrink-0 box-border rounded-full border-[2px]"
                   style={{ borderColor: EXTRAS_CATEGORY_COLOR[photo.category], backgroundColor: EXTRAS_CATEGORY_COLOR[photo.category] }}
                 />
                 {/* Sits in its own row below the photo now, not overlaid on

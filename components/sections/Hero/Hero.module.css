@@ -146,6 +146,7 @@
   font-size: clamp(15px, 1.48vw, 23px);
   /* 19px @1280 */
   font-weight: 300;
+  line-height: 1.45;
   color: rgba(0, 0, 0, 0.8);
 }
 
