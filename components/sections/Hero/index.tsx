@@ -117,7 +117,7 @@ export default function Hero() {
               />
               <h1 className={styles.title}>{copy.title}</h1>
               <p className={styles.tagline}>
-                design engineer who adds <i>whimsy</i> to<br />intuitive products.
+                is a design engineer who makes products that are well-thought-out.
               </p>
             </div>
 

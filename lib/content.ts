@@ -7,7 +7,7 @@
 export const content = {
   en: {
     hero: {
-      title: "amy wang's jar",
+      title: "amy wang",
       tagline: "design engineer who adds whimsy to intuitive products.",
       social: {
         linkedin: { label: "LinkedIn", href: "https://linkedin.com/in/amyw41" },
