@@ -18,10 +18,16 @@ export interface ExtrasPhoto {
   src: string;
   caption: string;
   /** Intrinsic pixel size — drives the gallery's own natural-aspect-ratio
-   * box, same as EtcPhoto's own width/height. */
+   * box, same as EtcPhoto's own width/height. For a video, this is its
+   * actual frame size (ffprobe), not a guess — same role as it plays for a
+   * photo, just read off a different kind of file. */
   width: number;
   height: number;
   category: ExtrasCategory;
+  /** True for an .mp4 entry — ExtrasCaseStudy.tsx renders it as an
+   * autoplaying/looping/muted <video> instead of next/image's <Image>, same
+   * box/caption treatment either way. Omitted (falsy) for every photo. */
+  isVideo?: boolean;
 }
 
 /** Drives both the sidebar's category-filter buttons (ExtrasCaseStudy.tsx)
@@ -40,13 +46,27 @@ export const EXTRAS_CATEGORIES: { id: ExtrasCategory; label: string; color: stri
 ];
 
 // Order matters here, not just content: the collage (ExtrasCaseStudy.tsx)
-// packs photos into 2 masonry columns via computeJustifiedLayout.
-// 1. After Hours lands in column 1 (left) at the top.
-// 2. Rust lands in column 2 (right) at the top.
-// 3. Relish lands in column 1 under After Hours.
-// 4. Nina lands in column 2 underneath Rust.
-// 5. IISE lands in column 1 underneath Relish.
+// packs photos into 2 masonry columns via computeJustifiedLayout, greedily
+// placing each item into whichever column is currently shortest (ties go to
+// column 1/left). With every column starting at height 0, the very first
+// entry in this array is always what lands top-left — that's why the new
+// video below was added at the front, not appended, per request ("add it to
+// the top left of the extras page").
+// 1. bday.mp4 lands in column 1 (left) at the top.
+// 2. After Hours lands in column 2 (right) at the top.
+// 3. Rust lands in column 1 or 2, whichever is shorter after step 1/2.
+// 4. Relish, Nina, IISE keep filling in by shortest-column from there.
 export const EXTRAS_PHOTOS: ExtrasPhoto[] = [
+  {
+    src: "/images/projects/extras/bday.mp4",
+    // CHECK: guessed from the filename — say the word and I'll swap it for
+    // whatever this video actually is.
+    caption: "Birthday website",
+    width: 1800,
+    height: 1002,
+    category: "other",
+    isVideo: true,
+  },
   {
     src: "/images/projects/extras/After Hours.png",
     caption: "After Hours Poster @ UWCS Club",

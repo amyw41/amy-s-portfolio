@@ -122,17 +122,34 @@ export default function ExtrasCaseStudy() {
                 className="relative w-full shrink-0 overflow-hidden rounded-[2px] border border-black/[0.12]"
                 style={{ height: box.imageHeight }}
               >
-                <Image
-                  src={photo.src}
-                  alt={photo.caption}
-                  fill
-                  sizes={`${Math.round(box.width)}px`}
-                  className="object-cover opacity-0 transition-opacity duration-[400ms] ease-out motion-reduce:opacity-100 motion-reduce:transition-none"
-                  unoptimized={process.env.NODE_ENV !== "production"}
-                  onLoad={(e) => {
-                    e.currentTarget.style.opacity = "1";
-                  }}
-                />
+                {photo.isVideo ? (
+                  // Same fade-in-on-ready treatment as the Image branch below
+                  // (opacity-0 -> 1 via the analogous event), just video's own
+                  // "onLoadedData" instead of onLoad.
+                  <video
+                    src={photo.src}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-[400ms] ease-out motion-reduce:opacity-100 motion-reduce:transition-none"
+                    onLoadedData={(e) => {
+                      e.currentTarget.style.opacity = "1";
+                    }}
+                  />
+                ) : (
+                  <Image
+                    src={photo.src}
+                    alt={photo.caption}
+                    fill
+                    sizes={`${Math.round(box.width)}px`}
+                    className="object-cover opacity-0 transition-opacity duration-[400ms] ease-out motion-reduce:opacity-100 motion-reduce:transition-none"
+                    unoptimized={process.env.NODE_ENV !== "production"}
+                    onLoad={(e) => {
+                      e.currentTarget.style.opacity = "1";
+                    }}
+                  />
+                )}
               </div>
               {/* flex-1 + items-start: fills the rest of the box below the
                   image and anchors the caption to the TOP of it (not
