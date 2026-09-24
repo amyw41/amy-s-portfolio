@@ -329,7 +329,7 @@ export function Row({
   const mediaGap = children ? "mt-[36px]" : "mt-2";
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-[14rem_1fr] lg:grid-cols-[13rem_1fr] md:gap-x-8 lg:gap-x-8">
+      <div className="grid grid-cols-1 md:grid-cols-[17.5rem_1fr] md:gap-x-6">
         <div className="md:col-start-1">
           {eyebrow && <p className={`${TEXT.header} mb-2`}>{eyebrow}</p>}
           <p className={headingClassName ?? TEXT.subheader}>{heading}</p>
