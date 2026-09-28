@@ -44,6 +44,13 @@ export const EXPERIENCE: ExperienceGroup[] = [
     label: "community",
     entries: [
       {
+        company: "Notion",
+        title: "Campus Leader",
+        date: "Sep 2026 – Present",
+        logo: "/images/logos/notion.webp",
+        url: "https://www.notion.so",
+      },
+      {
         company: "UW Blueprint",
         title: "Product Designer",
         date: "Sep 2026",
