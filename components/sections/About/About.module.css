@@ -116,13 +116,14 @@
  * these darken to solid black on hover instead of the blue-accent or
  * lighten-toward-white treatments other hoverable things on the site use. */
 .link {
-  color: inherit;
+  color: #000;
+  font-weight: 500;
   text-decoration: none;
   transition: color 150ms ease;
 }
 
 .link:hover {
-  color: #000;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 /* ---------- experience ---------- */
