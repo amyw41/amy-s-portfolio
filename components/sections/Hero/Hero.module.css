@@ -8,8 +8,12 @@
    * not a live measurement (there's no ResizeObserver on the top bar), so
    * treat it as an approximation. It only matters as a ceiling for the
    * jar's height on short-but-wide viewports (see .jarWrapper below); being
-   * a bit conservative there is harmless. */
-  --available-height: calc(100dvh - 96px);
+   * a bit conservative there is harmless.
+   *
+   * Capped at 600px (what a ~696px-tall laptop window gives) so the
+   * laptop-sized hero is the largest it ever gets: on a taller monitor the
+   * jar stays that size instead of growing with the extra height. */
+  --available-height: min(calc(100dvh - 96px), 600px);
 }
 
 /* The width/centring itself comes from the global .pageContainer class
@@ -144,7 +148,7 @@
   margin: 5px 0 0 0;
   /* Back to its own explicit clamp (1.48vw) per request, rather than
    * matching .navLink's size. */
-  font-size: clamp(15px, 1.48vw, 23px);
+  font-size: clamp(15px, 1.48vw, 22.73px);
   /* 19px @1280 */
   font-weight: 300;
   line-height: 1.45;
