@@ -31,6 +31,21 @@ const roboto = Roboto({
 export const metadata: Metadata = {
   title: content.en.hero.title,
   description: content.en.hero.tagline,
+  metadataBase: new URL("https://amyz.wang"),
+  openGraph: {
+    title: content.en.hero.title,
+    description: content.en.hero.tagline,
+    url: "https://amyz.wang",
+    siteName: content.en.hero.title,
+    type: "website",
+    images: [{ url: "/og.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: content.en.hero.title,
+    description: content.en.hero.tagline,
+    images: ["/og.png"],
+  },
 };
 
 export default function RootLayout({
