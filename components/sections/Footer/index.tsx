@@ -40,6 +40,11 @@ export default function Footer({ flush: flushProp }: FooterProps = {}) {
     setOrder((prev) => (prev[prev.length - 1] === id ? prev : [...prev.filter((x) => x !== id), id]));
   }
 
+  // The rebrand v2 home page is one fixed screen with the contact links in
+  // its own sidebar — no footer there. Every other route keeps it. After
+  // the hooks above so they still run in the same order on every render.
+  if (pathname === "/") return null;
+
   return (
     <footer className={`${styles.footer} ${flush ? styles.flush : ""}`}>
       <div className={`pageContainer ${styles.container}`}>

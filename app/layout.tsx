@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { content } from "@/lib/content";
 import Taskbar from "@/components/ui/Taskbar/Taskbar";
 import PageTransition from "@/components/ui/PageTransition/PageTransition";
+import MotionDebug from "@/components/ui/MotionDebug/MotionDebug";
 import Footer from "@/components/sections/Footer";
 import "./globals.css";
 
@@ -67,6 +68,8 @@ export default function RootLayout({
     // would still surface normally.
     <html lang="en" className={roboto.variable} suppressHydrationWarning>
       <body suppressHydrationWarning>
+        {/* ?slow / ?intro debug params — see lib/motion.ts. */}
+        <MotionDebug />
         {/* Rendered once here (not per-page) so every route except "/" gets
          * it automatically — see Taskbar.tsx's own comment for why this
          * can't just be a `usePathname` check inline in this (Server

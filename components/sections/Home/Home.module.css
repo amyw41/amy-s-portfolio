@@ -1,0 +1,111 @@
+/* The whole home page is this one frame (brief Part 1's size rule): never
+ * wider than the 1536px laptop layout, centred on bigger screens, exactly
+ * one screen tall, no side padding — the sidebar sits flush left and the
+ * stage runs to the right edge. */
+.frame {
+  --sidebar-width: clamp(260px, 20vw, 320px);
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1px minmax(0, 1fr);
+  width: min(100vw, 1536px);
+  height: 100dvh;
+  margin-inline: auto;
+  overflow: hidden;
+}
+
+/* Plain for now; step 2 swaps in the squiggly buzzing line. Inset from the
+ * top and bottom so it never touches either edge. */
+.divider {
+  margin-block: 32px;
+  background: #000;
+}
+
+/* ---------- stage ---------- */
+
+.stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Lets .jarWrapper size itself off the stage's own height/width (cqh/
+   * cqw) instead of the viewport, so it stays right whatever the sidebar
+   * takes. */
+  container-type: size;
+}
+
+.jarWrapper {
+  /* ~85% of the stage's height (brief Part 2.3), capped at what that is
+   * on the 696px-tall laptop layout (0.85 * 696 ≈ 592px) so the jar never
+   * grows past its laptop size on a taller monitor. Width is derived from
+   * that height via jar.svg's own 1600x2257 ratio (JarStage.module.css's
+   * aspect-ratio) — JarStage sizes from its width, so only width is set
+   * here. The 70cqw term only binds on a narrow stage. */
+  width: min(calc(min(85cqh, 592px) * 1600 / 2257), 70cqw);
+  flex: 0 0 auto;
+}
+
+/* Highlight toggles, stacked on the stage's right side. */
+.toggles {
+  position: absolute;
+  top: 40px;
+  right: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---------- work mode placeholder ---------- */
+
+.work {
+  position: absolute;
+  inset: 0;
+  padding: 32px 40px;
+}
+
+.workHeading {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 300;
+  color: #000;
+}
+
+/* ---------- mobile: sidebar stacks on top ---------- */
+
+@media (max-width: 767px) {
+  .frame {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    /* Has to be a definite height (not min-height) — otherwise the stage's
+     * flex:1 height isn't definite either, and .jarWrapper's cqh resolves to
+     * 0 under the stage's size containment. The 620px floor (header + a
+     * usable stage) lets a very short phone scroll instead of crushing the
+     * jar. */
+    height: max(100dvh, 620px);
+    overflow: visible;
+  }
+
+  .divider {
+    height: 1px;
+    margin: 0 16px;
+  }
+
+  .stage {
+    flex: 1;
+  }
+
+  .toggles {
+    top: auto;
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .work {
+    padding: 20px 16px;
+  }
+
+  .workHeading {
+    font-size: 24px;
+  }
+}

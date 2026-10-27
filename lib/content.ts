@@ -24,6 +24,40 @@ export const content = {
         favourites: "favourites",
       },
     },
+    // Rebrand v2 home page sidebar (components/sections/Home/Sidebar.tsx).
+    // Its own block rather than reusing hero.* — hero/ is kept around but
+    // no longer rendered on home, and these labels deliberately differ
+    // ("play" not "playground", lowercase contact labels). Contact hrefs
+    // aren't repeated here: Sidebar.tsx reads them from footer.links below.
+    sidebar: {
+      name: "amy wang",
+      // Placeholder until the real intro copy is written (brief Part 7.5) —
+      // same line as hero.tagline above.
+      intro: "design engineer who adds whimsy to intuitive products.",
+      nav: {
+        work: "work",
+        about: "about",
+        play: "play",
+      },
+      extras: "Extras",
+      contact: {
+        heading: "contact",
+        twitter: "twitter",
+        linkedin: "linkedin",
+        email: "email",
+      },
+      modes: {
+        label: "view",
+        jar: "jar",
+        work: "work",
+      },
+      toggles: {
+        projects: "projects",
+        items: "items",
+      },
+      // Work-mode stage heading — the grid itself arrives in step 4.
+      workHeading: "what's inside?",
+    },
     // Separate from hero.nav above on purpose — same three destinations,
     // deliberately shorter labels ("work" not "my work", "about" not
     // "about me") to fit the taskbar's smaller pill. Not derived from one
