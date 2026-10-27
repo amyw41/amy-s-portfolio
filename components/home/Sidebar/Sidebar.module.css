@@ -1,0 +1,105 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  /* ~28px left / 32px top, matching the reference (rebrand-brief.md 2.1).
+   * Right padding is smaller so the +/x icons sit near the divider. */
+  padding: 32px 20px 32px 28px;
+  min-width: 0;
+}
+
+/* ---------- identity ---------- */
+
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.name {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.2;
+  color: #000;
+}
+
+.description,
+.meta {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.45;
+}
+
+.description {
+  color: rgba(0, 0, 0, 0.8);
+  margin-bottom: 10px;
+}
+
+.meta {
+  color: #000;
+}
+
+/* ---------- menus ---------- */
+
+.menus {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 40px;
+}
+
+.sectionLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: inherit;
+  font-size: 15px;
+  font-weight: 400;
+  color: #000;
+  text-align: left;
+}
+
+.icon {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+}
+
+/* + becomes x. Instant for now; Phase 2 adds the 250ms rotate. */
+.iconOpen {
+  transform: rotate(45deg);
+}
+
+.subList {
+  list-style: none;
+  margin: 8px 0 4px;
+  /* Indented ~14px further than the reference, per rebrand-brief.md 2.3. */
+  padding: 0 0 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.subList[hidden] {
+  display: none;
+}
+
+.subItem {
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.45;
+  text-decoration: none;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.subItem:hover,
+.subItem:focus-visible {
+  color: #000;
+}

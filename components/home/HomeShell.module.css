@@ -1,0 +1,24 @@
+/* The laptop layout (~1536 x 696) is the biggest the home page gets; past
+ * that the frame stays centered. No horizontal padding: unlike every other
+ * page, home doesn't use .pageContainer / --pad / --content-max, so the
+ * sidebar sits flush left and the stage runs to the right edge. */
+.frame {
+  width: min(100vw, 1536px);
+  margin-inline: auto;
+  height: 100dvh;
+  display: grid;
+  grid-template-columns: clamp(260px, 20vw, 320px) 1px 1fr;
+}
+
+.divider {
+  background: #000;
+}
+
+@media (max-width: 767px) {
+  .frame {
+    height: auto;
+    min-height: 100dvh;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1px 1fr;
+  }
+}

@@ -36,6 +36,11 @@ export default function Footer({ flush: flushProp }: FooterProps = {}) {
   // array, so "front of stack" and "highest z-index" are the same thing.
   const [order, setOrder] = useState<string[]>(() => FOOTER_ITEMS.map((item) => item.id));
 
+  // The rebranded home page is one screen with no scrolling, so the footer
+  // goes away there (rebrand-brief.md, open question 1). After the hooks
+  // above so their order never changes between routes.
+  if (pathname === "/") return null;
+
   function bringToFront(id: string) {
     setOrder((prev) => (prev[prev.length - 1] === id ? prev : [...prev.filter((x) => x !== id), id]));
   }

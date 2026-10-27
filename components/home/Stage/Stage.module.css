@@ -1,0 +1,79 @@
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  padding-block: 20px 24px;
+  /* Same 600px ceiling as Hero.module.css's --available-height: the
+   * laptop-sized jar is the biggest it gets, so it doesn't grow on tall
+   * monitors. 120px budgets for the view toggle and the category toggles
+   * above and below it. */
+  --available-height: min(calc(100dvh - 120px), 600px);
+}
+
+/* ---------- jar / gallery toggle ---------- */
+
+.viewToggle {
+  display: flex;
+  gap: 18px;
+}
+
+.viewButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: inherit;
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.viewButton:hover,
+.viewActive {
+  color: #000;
+}
+
+/* ---------- jar ---------- */
+
+.body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 0;
+}
+
+.jarWrapper {
+  /* Height-bound like the old hero (0.6 ≈ 0.88 * jar.png's 1600/2257, see
+   * Hero.module.css's .jarWrapper for the derivation), plus the same 0.8x
+   * "jar + items as one entity" scale. 100% is safe here (unlike the old
+   * hero's shrink-to-fit column) because .body always has a definite width. */
+  width: calc(0.8 * min(100%, calc(var(--available-height) * 0.6)));
+  flex: 0 0 auto;
+}
+
+.galleryPlaceholder {
+  margin: 0;
+  font-size: 15px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+/* ---------- category toggles ---------- */
+
+.toggles {
+  display: flex;
+  gap: 24px;
+}
+
+/* Stacked under the sidebar the stage is no longer one fixed-height
+ * screen, so let the jar take its full size instead of shrinking into the
+ * toggles below it. */
+@media (max-width: 767px) {
+  .body {
+    flex: none;
+    padding-block: 16px;
+  }
+}

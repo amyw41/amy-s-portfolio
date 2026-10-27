@@ -24,6 +24,35 @@ export const content = {
         favourites: "favourites",
       },
     },
+    // Copy for the rebranded home page's left sidebar (components/home/
+    // Sidebar). `description` repeats hero.tagline's string rather than
+    // referencing it so the old Hero can be deleted later without touching
+    // this block. Contact links aren't repeated here: the Contact menu reads
+    // footer.links below, same as Bio.tsx does.
+    sidebar: {
+      name: "amy wang",
+      description: "design engineer who adds whimsy to intuitive products.",
+      school: "eng @ uwaterloo",
+      // Placeholder until the "prev …" line is decided (rebrand-brief.md,
+      // open question 2).
+      prev: "prev apm intern @ rrc companies",
+      menus: {
+        work: "Work",
+        other: "Other",
+        contact: "Contact",
+      },
+      other: {
+        about: "About me",
+        playground: "Playground",
+      },
+      extras: "Extras",
+      views: {
+        label: "View",
+        jar: "jar",
+        gallery: "gallery",
+      },
+      galleryPlaceholder: "gallery — coming soon.",
+    },
     // Separate from hero.nav above on purpose — same three destinations,
     // deliberately shorter labels ("work" not "my work", "about" not
     // "about me") to fit the taskbar's smaller pill. Not derived from one
