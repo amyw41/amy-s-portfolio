@@ -8,6 +8,10 @@
   --box-pad-block: 64px;
   /* Regular text size — everything but the name. */
   --fs-body: 14px;
+  /* Space between the bottom section's headings (Works → About → Play,
+   * including after Works's open list), and above each list item. */
+  --heading-gap: 24px;
+  --item-gap: 4px;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -78,13 +82,17 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
-  margin-top: 48px;
+  gap: var(--heading-gap);
+  margin-top: 40px;
 }
 
 /* ---------- headings and their items ---------- */
 
+/* Stretches to the sidebar's width (its heading stays shrink-wrapped) so a
+ * case-study row has a width to truncate its description against. */
 .group {
+  align-self: stretch;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -117,6 +125,7 @@
 /* Same left edge as the heading — no indent, no dash. overflow:hidden
  * clips the items while the height animates (Sidebar.tsx). */
 .items {
+  align-self: stretch;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -124,23 +133,33 @@
 }
 
 .item {
-  padding-top: 4px;
+  max-width: 100%;
+  padding-top: var(--item-gap);
   font-size: var(--fs-body);
   font-weight: 300;
   line-height: 1.45;
   color: #000;
 }
 
-/* Case-study names go bold on hover. The invisible bold copy in ::after
- * reserves the bold width up front, so going bold doesn't nudge anything. */
+/* A case-study row: name, then " - description" on the same line. */
 .itemLink {
-  display: inline-flex;
-  flex-direction: column;
+  display: flex;
+  min-width: 0;
+  white-space: nowrap;
   color: inherit;
   text-decoration: none;
 }
 
-.itemLink::after {
+/* The name goes bold on hover. The invisible bold copy in ::after reserves
+ * the bold width up front, so going bold doesn't nudge anything. Never
+ * shrinks — the description gives way instead. */
+.itemName {
+  display: inline-flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.itemName::after {
   content: attr(data-text);
   height: 0;
   overflow: hidden;
@@ -150,9 +169,18 @@
   pointer-events: none;
 }
 
-.itemLink:hover,
-.itemLink:focus-visible {
+.itemLink:hover .itemName,
+.itemLink:focus-visible .itemName {
   font-weight: 500;
+}
+
+/* Same size and weight as the name, much lighter; truncates with an
+ * ellipsis when the row runs out of width. */
+.itemDescription {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: rgba(0, 0, 0, 0.3);
 }
 
 /* Hand-drawn oval around a hovered heading (DrawnOval in Sidebar.tsx), in a
@@ -180,7 +208,7 @@
   display: flex;
   gap: 16px;
   margin-top: auto;
-  padding-top: 32px;
+  padding-top: 16px;
 }
 
 .modeButton {

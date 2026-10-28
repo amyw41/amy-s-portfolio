@@ -66,8 +66,8 @@ const SOCIAL_LINKS = [
 // Extras last (it isn't a Project, see ExtrasCard.tsx, but has its own case
 // study at /extras).
 const WORK_LINKS = [
-  ...PROJECTS.map((project) => ({ href: `/${project.slug}`, label: project.title })),
-  { href: "/extras", label: copy.extras },
+  ...PROJECTS.map((project) => ({ href: `/${project.slug}`, label: project.title, description: project.description })),
+  { href: "/extras", label: copy.extras, description: content.en.projects.extras.description },
 ];
 
 /** Hover/keyboard-focus tracking for a heading — drives its DrawnOval.
@@ -254,10 +254,15 @@ export default function Sidebar({ mode, onModeChange }: SidebarProps) {
           title={copy.nav.works}
           seed={21}
           items={WORK_LINKS.map((link) => (
+            // One line: the name never shrinks, the description truncates
+            // with an ellipsis when the sidebar is too narrow for it.
             // data-text feeds the invisible bold copy that reserves the
-            // hover-bold width (Sidebar.module.css .itemLink::after).
-            <Link key={link.href} href={link.href} className={styles.itemLink} data-text={link.label}>
-              {link.label}
+            // hover-bold width (Sidebar.module.css .itemName::after).
+            <Link key={link.href} href={link.href} className={styles.itemLink}>
+              <span className={styles.itemName} data-text={link.label}>
+                {link.label}
+              </span>
+              <span className={styles.itemDescription}>&nbsp;- {link.description}</span>
             </Link>
           ))}
         />
