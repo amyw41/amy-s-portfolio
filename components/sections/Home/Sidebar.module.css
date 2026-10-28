@@ -1,21 +1,18 @@
-/* The sidebar "box": inset from the page by Home.module.css's --frame-gap
- * on top/bottom (the frame's own padding-left covers the left), with the
- * divider as its right edge. --box-pad is the text's own padding inside it,
- * from the box edges and the line. */
+/* The sidebar "box": flush with the frame's top, left and bottom, with the
+ * divider as its right edge. All of its spacing is this inner --box-pad,
+ * from the screen edges and the line. */
 .sidebar {
   /* One tab stop (brief Part 2.2): case studies sit this much further right
    * than "work", contact links further right than "contact". */
   --indent: 14px;
-  --box-pad: 24px;
+  --box-pad: 32px;
   /* Regular text size — the intro, work/about/play and the mode toggle all
    * share it; only the name is bigger. */
-  --fs-body: 16px;
+  --fs-body: 14px;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  margin-block: var(--frame-gap);
   padding: var(--box-pad);
-  padding-top: 4px;
   overflow-y: auto;
 }
 
@@ -27,7 +24,7 @@
 
 .name {
   margin: 0;
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 400;
   line-height: 1.15;
   color: #000;
@@ -87,7 +84,7 @@
 /* Small items: case-study names and contact links. Not 55% black at rest —
  * that's their hover colour (step 3), so rest has to sit clearly darker. */
 .smallItem {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 400;
   line-height: 1.45;
   color: rgba(0, 0, 0, 0.7);
@@ -161,7 +158,6 @@
       "nav nav"
       "contact contact";
     row-gap: 14px;
-    margin-block: 0;
     padding: 20px 16px 16px;
     overflow: visible;
   }
@@ -172,11 +168,11 @@
   }
 
   .name {
-    font-size: 24px;
+    font-size: 22px;
   }
 
   .intro {
-    font-size: 14px;
+    font-size: 12px;
   }
 
   .modeToggle {

@@ -31,41 +31,39 @@ Sketches: `02-home-jar.png` (jar mode), `03-home-grid.png` (work mode).
 
 ```
 ┌──────────────── frame: min(100vw, 1536px) × 100dvh, centered ────────────────┐
-│                                                                               │
-│   ┌─ sidebar box ──┐                                              ○ projects  │
-│   │ amy wang       ⌇                                              ○ items     │
-│   │ short intro…   ⌇                  ╭──────────╮                            │
-│   │                ⌇                  │          │                            │
-│   │ work           ⌇                  │   jar    │                            │
-│   │ about          ⌇                  │  items   │                            │
-│   │ play           ⌇                  ╰──────────╯                            │
-│   │                ⌇                                                          │
-│   │ jar   work     ⌇  ← mode toggle                                           │
-│   │                ⌇                                                          │
-│   │ contact        ⌇                                                          │
-│   │   twitter      ⌇                                                          │
-│   │   linkedin     ⌇                                                          │
-│   │   email        ⌇                                                          │
-│   └────────────────┘                                                          │
-│                                                                               │
+│                    │                                                          │
+│    amy wang        ⌇                                              ○ projects  │
+│    short intro…    ⌇                                              ○ items     │
+│                    ⌇                  ╭──────────╮                            │
+│    work            ⌇                  │   jar    │                            │
+│    about           ⌇                  │  items   │                            │
+│    play            ⌇                  ╰──────────╯                            │
+│                    ⌇                                                          │
+│    jar   work      ⌇  ← mode toggle                                           │
+│                    ⌇                                                          │
+│    contact         ⌇                                                          │
+│      twitter       ⌇                                                          │
+│      linkedin      ⌇                                                          │
+│      email         ⌇                                                          │
+│                    │                                                          │
 └───────────────────────────────────────────────────────────────────────────────┘
 ```
 
-(The box outline is only for explanation; nothing is drawn except the divider line on its right edge.)
+(The sidebar box is flush with the frame's top, left and bottom; nothing is drawn except the divider line on its right edge.)
 
 ### 2.1 The divider line
 
 - A vertical hand-drawn line between the sidebar and the stage.
 - It's **a bit squiggly**: a gentle wobble, not a ruler-straight line.
-- It's the **right edge of the sidebar box** (see 2.2) and runs that box's full height. The box is inset from the page by about 32px top and bottom, so the line never touches the top or bottom of the screen.
+- It sits on the **right edge of the sidebar box** (see 2.2). It **doesn't touch the top or bottom**: it's inset about 32px from each.
 - It buzzes gently (see 4.1), like every other drawn line.
 - It's the same line the intro creates, so the intro ends exactly where this line sits.
 
 ### 2.2 Sidebar
 
-**The box.** The sidebar is a box inset from the page by about **32px on the top, left and bottom**. The divider line is its right edge. Inside the box, the text has its own padding (about 24px) from the box edges and the line. The stage isn't inset: it runs to the frame's right edge and full height.
+**The box.** The sidebar is a box **flush with the frame's top, left and bottom**: no padding outside it. The divider line is its right edge. All the spacing is **inside** the box: the text sits about **32px** from the screen edges and the line. The stage runs to the frame's right edge and full height.
 
-Width about `clamp(260px, 20vw, 320px)`. **Font: Figtree** (for the home page). Top to bottom:
+Width about `clamp(260px, 20vw, 320px)`. **Font: Geist** for the home page, letter-spacing **-0.6px**. **Sizes:** name 28px, regular text 14px, case-study names and contact links 13px. Top to bottom:
 
 1. **amy wang**, the name. The only large text in the sidebar.
 2. **Short intro**, one or two lines, at regular text size. Copy to be written. Placeholder: the current tagline in `lib/content.ts`.

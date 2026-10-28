@@ -1,28 +1,26 @@
 /* The whole home page is this one frame (brief Part 1's size rule): never
  * wider than the 1536px laptop layout, centred on bigger screens, exactly
- * one screen tall. The sidebar is a "box" inset from the page by
- * --frame-gap on its top, left and bottom; the divider is that box's right
- * edge, so it runs the box's full height and inherits the same gap from the
- * top and bottom of the screen. The stage isn't inset — it still runs to
- * the right edge and the full height. */
+ * one screen tall, no padding of its own — the sidebar sits flush left (all
+ * its spacing is inside it, see Sidebar.module.css) and the stage runs to
+ * the right edge. */
 .frame {
   --frame-gap: 32px;
+  /* Home page tracking for Geist — one place to tune it. */
+  --home-tracking: -0.6px;
   --sidebar-width: clamp(260px, 20vw, 320px);
   display: grid;
   grid-template-columns: var(--sidebar-width) 1px minmax(0, 1fr);
   width: min(100vw, 1536px);
   height: 100dvh;
   margin-inline: auto;
-  padding-left: var(--frame-gap);
   overflow: hidden;
-  font-family: var(--font-figtree), system-ui, sans-serif;
-  /* body's -0.03em is tuned for Roboto; Figtree is already fairly tight. */
-  letter-spacing: -0.01em;
+  font-family: var(--font-geist), system-ui, sans-serif;
+  letter-spacing: var(--home-tracking);
 }
 
-/* Plain for now; step 2 swaps in the squiggly buzzing line. Same vertical
- * inset as the sidebar box (Sidebar.module.css), so it's exactly the box's
- * right edge. */
+/* Plain for now; step 2 swaps in the squiggly buzzing line. Sits on the
+ * sidebar's right edge, inset --frame-gap from the top and bottom so it
+ * never touches either edge of the screen. */
 .divider {
   margin-block: var(--frame-gap);
   background: #000;
@@ -62,6 +60,9 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  /* CircleToggle's label is calc(var(--fs-small) + 1px); home text runs
+   * 2px smaller than the rest of the site. */
+  --fs-small: calc(clamp(12px, 1.13vw, 17px) - 2px);
 }
 
 /* ---------- work mode placeholder ---------- */
@@ -74,7 +75,7 @@
 
 .workHeading {
   margin: 0;
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 300;
   color: #000;
 }
@@ -86,7 +87,6 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    padding-left: 0;
     /* Has to be a definite height (not min-height) — otherwise the stage's
      * flex:1 height isn't definite either, and .jarWrapper's cqh resolves to
      * 0 under the stage's size containment. The 620px floor (header + a
@@ -116,6 +116,6 @@
   }
 
   .workHeading {
-    font-size: 24px;
+    font-size: 22px;
   }
 }
