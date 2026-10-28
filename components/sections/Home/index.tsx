@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import styles from "./Home.module.css";
 import Sidebar, { type HomeMode } from "./Sidebar";
+import WorkGrid from "./WorkGrid";
 import CircleToggle from "@/components/ui/CircleToggle";
 import BuzzPath from "@/components/ui/BuzzPath";
 import JarStage from "@/components/sections/Hero/JarStage";
@@ -61,39 +63,41 @@ export default function Home() {
       </div>
 
       <section className={styles.stage}>
-        {mode === "jar" ? (
-          <>
-            <div className={styles.jarWrapper}>
-              {/* Unmounted (not hidden) in work mode: useJarPhysics sizes
-               * everything off this box's measured width, and a hidden
-               * (display:none) box measures 0 — remounting rebuilds the
-               * world cleanly and the items fall in again, which is what
-               * work → jar should look like anyway (brief Part 2.4). */}
-              <JarStage items={JAR_ITEMS} projectsOn={projectsOn} favouritesOn={itemsOn} />
-              {/* Inside the jar's box so they sit beside it and follow it as
-               * it resizes. */}
-              <div className={styles.toggles}>
-                <CircleToggle
-                  label={copy.toggles.projects}
-                  color="var(--c-red)"
-                  active={projectsOn}
-                  onToggle={() => setProjectsOn((v) => !v)}
-                />
-                <CircleToggle
-                  label={copy.toggles.items}
-                  color="var(--c-blue)"
-                  active={itemsOn}
-                  onToggle={() => setItemsOn((v) => !v)}
-                />
+        {/* mode="wait": leaving work mode, the grid slides up and fades out
+         * first (WorkGrid's exit), then the jar shows. The jar itself has no
+         * exit yet — its cartoon drop is step 5. */}
+        <AnimatePresence mode="wait" initial={false}>
+          {mode === "jar" ? (
+            <motion.div key="jar" className={styles.jarView} exit={{ opacity: 0, transition: { duration: 0 } }}>
+              <div className={styles.jarWrapper}>
+                {/* Unmounted (not hidden) in work mode: useJarPhysics sizes
+                 * everything off this box's measured width, and a hidden
+                 * (display:none) box measures 0 — remounting rebuilds the
+                 * world cleanly and the items fall in again, which is what
+                 * work → jar should look like anyway (brief Part 2.4). */}
+                <JarStage items={JAR_ITEMS} projectsOn={projectsOn} favouritesOn={itemsOn} />
+                {/* Inside the jar's box so they sit beside it and follow it as
+                 * it resizes. */}
+                <div className={styles.toggles}>
+                  <CircleToggle
+                    label={copy.toggles.projects}
+                    color="var(--c-red)"
+                    active={projectsOn}
+                    onToggle={() => setProjectsOn((v) => !v)}
+                  />
+                  <CircleToggle
+                    label={copy.toggles.items}
+                    color="var(--c-blue)"
+                    active={itemsOn}
+                    onToggle={() => setItemsOn((v) => !v)}
+                  />
+                </div>
               </div>
-            </div>
-          </>
-        ) : (
-          // Placeholder — the project grid and filters come in step 4.
-          <div className={styles.work}>
-            <h2 className={styles.workHeading}>{copy.workHeading}</h2>
-          </div>
-        )}
+            </motion.div>
+          ) : (
+            <WorkGrid key="work" />
+          )}
+        </AnimatePresence>
       </section>
     </main>
   );

@@ -80,19 +80,13 @@
   --fs-small: calc(clamp(12px, 1.13vw, 17px) - 2px);
 }
 
-/* ---------- work mode placeholder ---------- */
-
-.work {
+/* Jar mode's view: fills the stage and centres the jar in it. */
+.jarView {
   position: absolute;
   inset: 0;
-  padding: 32px 40px;
-}
-
-.workHeading {
-  margin: 0;
-  font-size: 28px;
-  font-weight: 300;
-  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ---------- mobile: sidebar stacks on top ---------- */
@@ -131,13 +125,5 @@
     transform: translateX(-50%);
     flex-direction: row;
     gap: 20px;
-  }
-
-  .work {
-    padding: 20px 16px;
-  }
-
-  .workHeading {
-    font-size: 22px;
   }
 }

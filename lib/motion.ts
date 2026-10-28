@@ -45,6 +45,18 @@ export const PREVIEW_SPRING = { type: "spring", stiffness: 220, damping: 26 } as
 export const SIDEBAR_STAGGER = 0.07;
 export const GRID_STAGGER = 0.04;
 
+// Work-mode grid (Home/WorkGrid.tsx): each tile rises GRID_TILE_RISE_PX and
+// scales up from GRID_TILE_SCALE over GRID_TILE_S, GRID_STAGGER apart.
+// Leaving work mode, the heading and grid slide up WORK_EXIT_RISE_PX and
+// fade out together over WORK_EXIT_S, then the jar shows. Filtering slides
+// tiles to their new places over GRID_REORDER_S.
+export const GRID_TILE_S = 0.3;
+export const GRID_TILE_RISE_PX = 12;
+export const GRID_TILE_SCALE = 0.97;
+export const WORK_EXIT_S = 0.2;
+export const WORK_EXIT_RISE_PX = 12;
+export const GRID_REORDER_S = 0.35;
+
 // Hover-intent leave delay: the sidebar's case-study rows (below) and the
 // project hover preview (step 6, brief Part 3.1) — the brief's own name.
 export const HOVER_CLOSE_DELAY_MS = 150;

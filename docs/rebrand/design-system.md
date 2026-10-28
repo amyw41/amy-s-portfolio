@@ -70,6 +70,15 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 - **Buzz: currently OFF** (`BUZZ_ENABLED = false` in `lib/motion.ts`); lines hold still on their first drawing until Amy retunes it. When on: 3 frames of the *same* drawing, like tracing over one line again by hand: frames 2 and 3 stray at most ~0.3px from frame 1. Shown in turn 1 → 2 → 3 at 10 per second (`BUZZ_FPS`). Held still under reduced motion and when the tab is hidden.
 - **Pen reveal:** lines draw on with `pathLength` 0 → 1.
 
+## Work mode (stage)
+
+- **Padding:** 48px (heading lines up with the name across the divider); 24px 16px on mobile.
+- **Heading** "what's inside?": 24px, weight 400 (22px on mobile).
+- **Filters:** the circle toggles (work / personal project / hackathon), 14px from the heading, 20px apart.
+- **Grid:** 32px below the filters; 4 across with 24px column / 32px row gaps (2 across once the stage is under 720px wide).
+- **Tile:** 3:2 cover, 8px corners; 10px gap to the caption. Caption: title 14px weight 400 black, year 14px weight 300 at 55% black, on one line.
+- **Filtered-out tile:** white wash over the cover (`--dim-white`, 44%) and caption at 45% opacity.
+
 ## Motion
 
 | Token | Value |
@@ -83,4 +92,7 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 | Buzz | 10 drawings per second, cycling 3 |
 | Stop-motion moves (intro, jar) | 12 fps |
 | Easing | out [0.22, 1, 0.36, 1]; in [0.55, 0, 1, 0.45]; in-out [0.65, 0, 0.35, 1] |
+| Grid tiles in | each 300ms ease-out: rise 12px, scale 0.97 → 1, fade in; 40ms apart, top left first |
+| Grid reorder (filters) | tiles slide to new places, 350ms ease-out |
+| Leaving work mode | heading + grid slide up 12px and fade out together, 200ms ease-in; then the jar shows |
 | Reduced motion | no animation, things just appear (case-study rows open and close without animating) |
