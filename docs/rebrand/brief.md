@@ -196,10 +196,10 @@ Sketch: `01-intro-spill.png`, and the top left of `00-full-reference.png`. Total
 | 0.0 – 0.4 | The jar appears in the middle of the screen, already buzzing. |
 | 0.4 – 1.4 | Liquid rises inside it: a pale fill clipped to the jar's inside, with a wobbly surface line. |
 | 1.4 – 2.0 | It overflows: **two strands** run down the outside, one left and one right. They draw on with the pen reveal, accelerating like falling liquid. |
-| 2.0 – 3.4 | **The unravel.** The tip of the right strand is the needle. It travels **down toward the bottom of the page, near the left side**, then turns and goes **up**, tracing where the divider will be. Behind it, the line gets pulled out of the drawing: the jar visibly unwinds from the far end, like a thread pulled through a needle, until nothing is left but the line. The liquid fill fades as the jar unravels. |
-| 3.3 – 3.6 | The line settles into the squiggly divider, with padding top and bottom, and starts buzzing. |
-| 3.4 – 3.9 | The sidebar loads top to bottom: name, intro, links, Experience, Works / About / Play, mode toggle. Each one fades and rises 8px, 70ms apart. |
-| 3.6 → | The real jar drops into the stage with its landing squash, then the items fall in (existing physics). |
+| 2.0 – 3.0 | **The unravel.** The tip of the right strand is the needle. It travels **down toward the bottom of the page, near the left side**, tracing the start of its route. Behind it, the line gets pulled out of the drawing: the jar visibly unwinds from the far end, like a thread pulled through a needle, until nothing is left but the line. The liquid fill fades as the jar unravels. |
+| ~3.0 | **The split.** At a fork point the pulled line splits into **two strands**. |
+| 3.0 – 3.8 | **Strand A** turns and goes **up**, becoming the sidebar divider: it settles into the squiggly line, with padding top and bottom, and starts buzzing. **Strand B** travels into the stage and **draws the real jar's outline** with the pen-stroke reveal, so the jar is literally drawn by the same thread. Both strands finish together at about 3.8s. |
+| 3.8 → | Strand B's outline **cross-fades into the real jar art**, then the items fall in (existing physics). At the same time the sidebar loads top to bottom: name, intro, links, Experience, Works / About / Play, mode toggle. Each one fades and rises 8px, 70ms apart. |
 
 **How the unravel works.** Put this in the step 8 prompt word for word.
 
@@ -212,6 +212,13 @@ Sketch: `01-intro-spill.png`, and the top left of `00-full-reference.png`. Total
 - If the jar line is longer than the route, speed up the unravel of the last 20% (a zip), or trim the tail. Either way, the line ends exactly on the divider.
 - Measure with `getTotalLength()` and `getPointAtLength()` on hidden SVG paths. Sample about 300 points, and write the path's `d` directly each frame (not through React state).
 - Render on the 12fps stop-motion clock (4.1) so it feels hand-animated.
+
+**How the split works.**
+
+- The fork is **two paths that share a start point** (the fork point). Strand A's path runs from the fork up the divider; strand B's path runs from the fork into the stage and then along the jar's outline.
+- Each strand's visible length grows from the fork, using `pathLength` (or `getPointAtLength()` when building `d` by hand, as for the unravel).
+- Strand B's path ends on `jar-outline.svg` (Part 5): one continuous stroke matching `jar.svg`'s silhouette, scaled and placed exactly over where the real jar sits in the stage. When it's fully drawn, cross-fade it into the real jar image.
+- If `jar-outline.svg` doesn't exist yet, approximate the outline from the jar's traced shape as a fallback.
 
 ### 4.3 Timings in one place
 
@@ -251,8 +258,9 @@ Below 768px wide, the sidebar stacks on top as a compact header, and the menus b
    - If it's easier, draw it in Figma with the pen tool, as one path.
 2. **Intro jar's inside**, a filled shape of the jar's interior, so the liquid fill only shows inside.
 3. *(Optional)* **3 traced versions of the main jar** for its buzz. Otherwise the code fakes it with a wobble filter.
-4. **Logo**, the "Amy 王 → monogram" idea. Not needed until step 7.
-5. **Short intro copy** for the sidebar.
+4. **Main jar outline, one continuous line** (`jar-outline.svg`). The main jar's silhouette as **one unbroken stroke** that matches `jar.svg`, so the intro's second strand can draw it (4.2, "How the split works"). Same export rules as item 1. Needed for step 8; the code can approximate it from the traced jar as a fallback.
+5. **Logo**, the "Amy 王 → monogram" idea. Not needed until step 7.
+6. **Short intro copy** for the sidebar.
 
 ---
 
@@ -342,9 +350,9 @@ Each step works on its own and can be checked before moving on. Copy the prompt,
 
 **Step 8: The intro**
 
-*Sketches: 01-intro-spill.png, 00-full-reference.png. Needs the one-line jar SVG from Part 5.*
+*Sketches: 01-intro-spill.png, 00-full-reference.png. Needs the one-line jar SVG and the jar outline SVG from Part 5.*
 
-> Read brief Part 4.2 carefully, especially "How the unravel works", and 4.1's stop-motion timing. The intro jar is public/images/drawings/intro-jar.svg (one stroked path from the left strand tip to the right strand tip) and intro-jar-inside.svg (the interior fill). Build the intro as a single timeline: the jar appears, liquid rises clipped to the inside, two strands overflow, then the right strand tip becomes the needle and pulls the whole line out (fixed thread length, consumed from the far end as the needle travels down-left then up the divider route), ending exactly on the divider BuzzPath. Then the sidebar loads top to bottom and the real jar drops in and its items fall. Render on the 12fps clock. Click or any key skips. Full version once per session, 1s short version otherwise, none for reduced motion. Write the path's d directly each frame, not through React state. Check with ?slow=4 and ?intro=1. Commit.
+> Read brief Part 4.2 carefully, especially "How the unravel works", and 4.1's stop-motion timing. The intro jar is public/images/drawings/intro-jar.svg (one stroked path from the left strand tip to the right strand tip) and intro-jar-inside.svg (the interior fill). Build the intro as a single timeline: the jar appears, liquid rises clipped to the inside, two strands overflow, then the right strand tip becomes the needle and pulls the whole line out (fixed thread length, consumed from the far end as the needle travels down-left). Around 3.0s the pulled line splits at a fork point into two strands (two paths sharing a start point, each growing from the fork): strand A goes up the divider route and ends exactly on the divider BuzzPath; strand B travels into the stage and draws the jar's outline from public/images/drawings/jar-outline.svg (one stroked path matching jar.svg, placed exactly over the real jar). Both finish together around 3.8s. Then strand B's outline cross-fades into the real jar art and its items fall, while the sidebar loads top to bottom. Read "How the split works" too. Render on the 12fps clock. Click or any key skips. Full version once per session, 1s short version otherwise, none for reduced motion. Write the path's d directly each frame, not through React state. Check with ?slow=4 and ?intro=1. Commit.
 
 **Step 9: Polish**
 
