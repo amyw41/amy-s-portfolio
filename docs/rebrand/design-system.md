@@ -67,7 +67,7 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 
 - Every code-drawn line (divider, hover circles, later underlines and outlines) comes from `lib/wobbly.ts` and is drawn with `BuzzPath`.
 - **Line weight:** 0.6px (`LINE_STROKE_WIDTH`), matching the jar drawing's ink.
-- **Buzz:** 3 frames of the *same* drawing, like tracing over one line again by hand: frames 2 and 3 stray at most ~0.3px from frame 1. Shown in turn 1 → 2 → 3 at 10 per second (`BUZZ_FPS`). Held still under reduced motion and when the tab is hidden.
+- **Buzz:** 3 frames of the *same* drawing, like tracing over one line again by hand: frames 2 and 3 stray at most ~0.8px from frame 1, and each frame presses a little differently (0.6 / 0.5 / 0.7px). Shown in turn 1 → 2 → 3 at 10 per second (`BUZZ_FPS`). Held still under reduced motion and when the tab is hidden.
 - **Pen reveal:** lines draw on with `pathLength` 0 → 1.
 
 ## Motion

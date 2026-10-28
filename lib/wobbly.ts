@@ -29,6 +29,12 @@ const STEPS = 160;
  * the 1536×696 laptop size (measured ~0.5-0.75px). */
 export const LINE_STROKE_WIDTH = 0.6;
 
+/** Per-frame stroke-width change for a buzzing line (BuzzPath), as a
+ * fraction of its width — frame 1 at the base width, frames 2 and 3 a touch
+ * lighter and heavier, like pen pressure varying between retraces
+ * (0.6px → 0.5 / 0.7px). */
+export const BUZZ_PRESSURE = [0, -0.17, 0.17];
+
 export const STROKE_COLOR = "currentColor";
 export const STROKE_WIDTH = 0.75;
 export const VIEW_BOX = "-12 -10 138 40";
@@ -51,8 +57,8 @@ function wobble(angleDeg: number, phaseShift: number, freq1: number, freq2: numb
  * buzz variant may stray from variant 0. Ovals/pills are drawn in a ~140
  * unit box shown about 100px wide, so theirs is a little bigger in units
  * for the same on-screen size. */
-const TRACE_JITTER_PX = 0.3;
-const TRACE_JITTER_OVAL_UNITS = 0.45;
+const TRACE_JITTER_PX = 0.8;
+const TRACE_JITTER_OVAL_UNITS = 1.2;
 
 /** The per-variant retrace deviation at position `t` (0..1) along a shape:
  * zero for variant 0, otherwise a slow, smooth wobble of at most `max`. */
