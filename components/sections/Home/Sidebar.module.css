@@ -10,7 +10,7 @@
   --fs-body: 14px;
   /* Space between the bottom section's headings (Works → About → Play,
    * including after Works's open list), and above each list item. */
-  --heading-gap: 24px;
+  --heading-gap: 14px;
   --item-gap: 4px;
   display: flex;
   flex-direction: column;
@@ -111,7 +111,7 @@
   cursor: pointer;
   font-family: inherit;
   font-size: var(--fs-body);
-  font-weight: 400;
+  font-weight: 500;
   line-height: 1.45;
   letter-spacing: inherit;
   color: #000;

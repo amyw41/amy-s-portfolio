@@ -12,7 +12,8 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 | Letter spacing | -0.6px |
 | Name size | 24px, line-height 1.15 |
 | Body size (everything else) | 14px, line-height 1.45 |
-| Heading weight (Experience, Works, About, Play, jar/work) | 400 |
+| Heading weight (Experience, Works, About, Play) | 500 |
+| jar/work toggle weight | 400 |
 | Body weight (intro, list items) | 300 |
 | Hover-bold weight (case-study names) | 500 |
 
@@ -50,7 +51,7 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 | Heading → its chevron | 4px |
 | Heading → first item, item → item | 4px |
 | Experience list → Works | 40px |
-| Works → About → Play | 24px |
+| Works → About → Play | 14px |
 | Play → jar/work toggle | fills the leftover space, at least 16px |
 | jar ↔ work | 16px |
 
