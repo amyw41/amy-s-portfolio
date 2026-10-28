@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
 import { ChevronDown, Mail } from "lucide-react";
@@ -8,16 +8,18 @@ import styles from "./Sidebar.module.css";
 import { content } from "@/lib/content";
 import { PROJECTS } from "@/lib/projects";
 import {
-  CASE_ROW_COLLAPSE_S,
-  CASE_ROW_EXPAND_S,
+  CASE_ROW_GROW_S,
   CHEVRON_OPEN_DEG,
   CHEVRON_TURN_S,
   DROPDOWN_CLOSE_S,
   DROPDOWN_ITEM_DROP_PX,
   DROPDOWN_ITEM_STAGGER_S,
   DROPDOWN_OPEN_S,
+  ERASE_CHAR_MS,
   OVAL_DRAW_S,
+  slowMs,
   slowTransition,
+  TYPE_CHAR_MS,
 } from "@/lib/motion";
 import {
   buildWobblyPillPath,
@@ -210,74 +212,73 @@ function DropdownGroup({ title, seed, items }: { title: string; seed: number; it
   );
 }
 
-/** A case study under Works: "Name - description" on one line, the
- * description truncated with an ellipsis. Hovering (or keyboard-focusing)
- * the row grows it to the full description, wrapped onto extra lines under
- * the name, and shrinks it back on leave.
+/** A case study under Works. At rest it's just the name. Hovering (or
+ * keyboard-focusing) the row types " - description" out after it, one
+ * character every TYPE_CHAR_MS with a blinking caret, wrapping onto extra
+ * lines; leaving erases it backwards, faster. Moving from one row to the
+ * next erases the old one while the new one types. Under reduced motion the
+ * description just appears and disappears.
  *
- * The height animates between two measured numbers (Framer can't animate
- * between two "auto"s): the one-line row as it is, and a hidden, always-
- * wrapped copy of it. Both are read in the hover handler, so nothing is
- * measured during render. The visible row only switches back to one line
- * once the collapse has finished, so the text doesn't jump mid-animation. */
+ * The row's height follows its content through a ResizeObserver and eases
+ * to each new height (CASE_ROW_GROW_S), so a new line pushes the rows below
+ * down gently instead of in one-line jumps. */
 function CaseStudyRow({ href, label, description }: { href: string; label: string; description: string }) {
   const reduced = useReducedMotion();
-  const rowRef = useRef<HTMLDivElement>(null);
-  const measureRef = useRef<HTMLSpanElement>(null);
-  const [open, setOpen] = useState(false);
-  const [wrapped, setWrapped] = useState(false);
-  const [heights, setHeights] = useState<{ line: number; full: number } | null>(null);
+  const full = ` - ${description}`;
+  const [active, setActive] = useState(false);
+  const [count, setCount] = useState(0);
+  const [height, setHeight] = useState<number | null>(null);
+  const contentRef = useRef<HTMLSpanElement>(null);
 
-  const expand = () => {
-    if (!wrapped && rowRef.current && measureRef.current) {
-      setHeights({ line: rowRef.current.offsetHeight, full: measureRef.current.offsetHeight });
-    }
-    setWrapped(true);
-    setOpen(true);
-  };
-  const collapse = () => setOpen(false);
+  // Steps `count` one character at a time toward the target (all of it
+  // while active, none otherwise). setState only ever runs in the timer
+  // callback, never in the effect body.
+  useEffect(() => {
+    const target = active ? full.length : 0;
+    if (count === target) return;
+    const delay = reduced ? 0 : slowMs(active ? TYPE_CHAR_MS : ERASE_CHAR_MS);
+    const timer = window.setTimeout(() => {
+      setCount((c) => (reduced ? target : c + Math.sign(target - c)));
+    }, delay);
+    return () => window.clearTimeout(timer);
+  }, [active, count, full.length, reduced]);
 
-  const transition = reduced
-    ? { duration: 0 }
-    : slowTransition(
-        open
-          ? { duration: CASE_ROW_EXPAND_S, ease: "easeOut" as const }
-          : { duration: CASE_ROW_COLLAPSE_S, ease: "easeIn" as const },
-      );
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => setHeight(el.offsetHeight));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
-  const text = (
-    <>
-      <span className={styles.itemName}>{label}</span>
-      <span className={styles.itemDescription}>&nbsp;- {description}</span>
-    </>
-  );
+  const typing = active && count < full.length;
 
   return (
     <motion.div
-      ref={rowRef}
       className={styles.caseRow}
       initial={false}
-      animate={heights ? { height: open ? heights.full : heights.line } : undefined}
-      transition={transition}
-      onAnimationComplete={() => {
-        if (!open) setWrapped(false);
-      }}
-      onPointerEnter={expand}
-      onPointerLeave={collapse}
+      animate={height === null ? undefined : { height }}
+      transition={reduced ? { duration: 0 } : slowTransition({ duration: CASE_ROW_GROW_S, ease: "easeOut" as const })}
+      onPointerEnter={() => setActive(true)}
+      onPointerLeave={() => setActive(false)}
     >
-      <Link
-        href={href}
-        className={`${styles.itemLink} ${wrapped ? styles.itemLinkWrapped : ""} ${open ? styles.itemLinkOpen : ""}`}
-        onFocus={(e) => {
-          if (e.currentTarget.matches(":focus-visible")) expand();
-        }}
-        onBlur={collapse}
-      >
-        {text}
-      </Link>
-      {/* Hidden full-width, always-wrapped copy, only here to be measured. */}
-      <span ref={measureRef} className={`${styles.itemLink} ${styles.itemLinkWrapped} ${styles.measure}`} aria-hidden="true">
-        {text}
+      <span ref={contentRef} className={styles.caseRowContent}>
+        <Link
+          href={href}
+          className={styles.itemLink}
+          // The typed text is decoration; screen readers get it whole.
+          aria-label={`${label}${full}`}
+          onFocus={(e) => {
+            if (e.currentTarget.matches(":focus-visible")) setActive(true);
+          }}
+          onBlur={() => setActive(false)}
+        >
+          {label}
+          <span className={styles.itemDescription} aria-hidden="true">
+            {full.slice(0, count)}
+          </span>
+          {typing && <span className={styles.caret} aria-hidden="true" />}
+        </Link>
       </span>
     </motion.div>
   );

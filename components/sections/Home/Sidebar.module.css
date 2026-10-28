@@ -1,20 +1,21 @@
 /* The sidebar "box": flush with the frame's top, left and bottom, with the
  * divider as its right edge. The divider belongs to that outer box (inset
- * --frame-gap, Home.module.css); the text has its own inner padding, equal
- * on every side and deeper than the divider's inset, so the line starts
- * above the name and ends below the mode toggle. */
+ * --frame-gap, Home.module.css); the text has its own, deeper inner
+ * padding, so the line starts clearly above the name and ends clearly
+ * below the mode toggle. */
 .sidebar {
-  --box-pad: 48px;
+  --box-pad: 32px;
+  --box-pad-block: 64px;
   /* Regular text size — everything but the name. */
   --fs-body: 14px;
   /* Space between the bottom section's headings (Works → About → Play,
    * including after Works's open list), and above each list item. */
-  --heading-gap: 14px;
+  --heading-gap: 8px;
   --item-gap: 4px;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: var(--box-pad);
+  padding: var(--box-pad-block) var(--box-pad);
   overflow-y: auto;
 }
 
@@ -140,65 +141,46 @@
   color: #000;
 }
 
-/* A case-study row (CaseStudyRow in Sidebar.tsx). position:relative
- * anchors the hidden measuring copy; overflow:hidden clips the text while
- * the row's height animates. */
+/* A case-study row (CaseStudyRow in Sidebar.tsx). overflow:hidden clips
+ * a freshly wrapped line while the row's height eases open to fit it. */
 .caseRow {
-  position: relative;
   overflow: hidden;
 }
 
-/* At rest: name, then " - description", on one line. The name never
- * shrinks; the description truncates with an ellipsis instead. */
+.caseRowContent {
+  display: block;
+}
+
 .itemLink {
-  display: flex;
-  min-width: 0;
-  white-space: nowrap;
   color: inherit;
   text-decoration: none;
 }
 
-.itemName {
-  flex-shrink: 0;
-}
-
+/* The typed-out " - description". */
 .itemDescription {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   color: rgba(0, 0, 0, 0.3);
 }
 
-/* Hovered: the same text as one wrapping paragraph, so the description
- * flows onto extra lines under the name. */
-.itemLinkWrapped {
-  display: block;
-  white-space: normal;
-}
-
-.itemLinkWrapped .itemDescription {
-  overflow: visible;
-}
-
-.itemLinkOpen .itemDescription {
-  color: rgba(0, 0, 0, 0.55);
+/* Thin blinking caret at the end of the text while it types. */
+.caret {
+  display: inline-block;
+  width: 1px;
+  height: 1em;
+  margin-left: 1px;
+  vertical-align: -0.12em;
+  background: rgba(0, 0, 0, 0.55);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .itemDescription {
-    transition: color calc(160ms * var(--slow, 1)) ease;
+  .caret {
+    animation: caretBlink calc(900ms * var(--slow, 1)) steps(1) infinite;
   }
 }
 
-/* The hidden always-wrapped copy CaseStudyRow measures its open height
- * from. Same width as the row, out of flow, invisible. */
-.measure {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  visibility: hidden;
-  pointer-events: none;
+@keyframes caretBlink {
+  50% {
+    opacity: 0;
+  }
 }
 
 /* Hand-drawn oval around a hovered heading (DrawnOval in Sidebar.tsx), in a
