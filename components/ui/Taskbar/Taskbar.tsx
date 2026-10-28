@@ -13,7 +13,7 @@ import {
   PILL_STROKE_COLOR,
   PILL_STROKE_WIDTH,
   PILL_VIEW_BOX,
-} from "../../sections/Hero/wobblyOval";
+} from "@/lib/wobbly";
 
 const copy = content.en.taskbar;
 

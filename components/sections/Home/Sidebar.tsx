@@ -22,12 +22,8 @@ import {
   slowMs,
   slowTransition,
 } from "@/lib/motion";
-import {
-  buildWobblyPillPath,
-  PILL_STROKE_COLOR,
-  PILL_STROKE_WIDTH,
-  PILL_VIEW_BOX,
-} from "@/components/sections/Hero/wobblyOval";
+import { buildWobblyPillPath, PILL_STROKE_WIDTH, PILL_VIEW_BOX } from "@/lib/wobbly";
+import BuzzPath from "@/components/ui/BuzzPath";
 
 const copy = content.en.sidebar;
 const links = content.en.footer.links;
@@ -92,33 +88,21 @@ function useHoverOval() {
   };
 }
 
-/** The hand-drawn oval around a hovered heading, pen-drawn on (pathLength
- * 0 → 1) when `drawn` turns true and un-drawn when it turns false. Opacity
- * rides along so a zero-length path's round cap doesn't leave a dot behind.
- * Instant under reduced motion. */
+/** The hand-drawn oval around a hovered heading: buzzes while it's
+ * visible, pen-drawn on (pathLength 0 → 1) when `drawn` turns true and
+ * un-drawn when it turns false. Instant under reduced motion (BuzzPath). */
 function DrawnOval({ seed, drawn }: { seed: number; drawn: boolean }) {
-  const path = useMemo(() => buildWobblyPillPath(seed), [seed]);
-  const reduced = useReducedMotion();
+  const variants = useMemo(() => [0, 1, 2].map((v) => buildWobblyPillPath(seed, 1, v)), [seed]);
   return (
-    <svg className={styles.oval} viewBox={PILL_VIEW_BOX} fill="none" preserveAspectRatio="none" aria-hidden="true">
-      <motion.path
-        d={path}
-        stroke={PILL_STROKE_COLOR}
-        strokeWidth={PILL_STROKE_WIDTH}
-        strokeLinecap="round"
-        vectorEffect="non-scaling-stroke"
-        initial={false}
-        animate={{ pathLength: drawn ? 1 : 0, opacity: drawn ? 1 : 0 }}
-        transition={
-          reduced
-            ? { duration: 0 }
-            : {
-                pathLength: slowTransition({ duration: OVAL_DRAW_S, ease: "easeOut" as const }),
-                opacity: slowTransition({ duration: 0.01, delay: drawn ? 0 : OVAL_DRAW_S }),
-              }
-        }
-      />
-    </svg>
+    <BuzzPath
+      className={styles.oval}
+      variants={variants}
+      viewBox={PILL_VIEW_BOX}
+      preserveAspectRatio="none"
+      strokeWidth={PILL_STROKE_WIDTH}
+      drawn={drawn}
+      drawDuration={OVAL_DRAW_S}
+    />
   );
 }
 

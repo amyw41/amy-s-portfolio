@@ -35,7 +35,7 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 |---|---|
 | Frame | min(100vw, 1536px) wide, 100dvh tall, centred, no outer padding |
 | Sidebar width | clamp(260px, 20vw, 320px) (~307px) |
-| Divider | 1px, inset 32px from the top and bottom of the screen |
+| Divider | hand-drawn 1px black line, gently wobbling up to ~1.4px either side of straight, buzzing; inset 32px from the top and bottom of the screen (a plain 1px rule on mobile) |
 | Sidebar padding, left/right | 32px |
 | Sidebar padding, top/bottom | 64px (the divider starts 32px above the name) |
 | Mobile breakpoint | below 768px the sidebar stacks above the stage |
@@ -63,6 +63,12 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 - **Hover circle:** hand-drawn wiggly oval, drawn on like a pen when hovering a heading, un-drawn on leave. 16px past the word left/right, 8px above/below.
 - **Highlight toggles:** stacked on the stage's right, 40px from its top and right edges, 10px apart.
 
+## Hand-drawn lines
+
+- Every code-drawn line (divider, hover circles, later underlines and outlines) comes from `lib/wobbly.ts` and is drawn with `BuzzPath`.
+- **Buzz:** 3 variants of the same drawing, differing by about a pixel, shown in turn 1 → 2 → 3 at 10 per second (`BUZZ_FPS`). Held still under reduced motion and when the tab is hidden.
+- **Pen reveal:** lines draw on with `pathLength` 0 → 1.
+
 ## Motion
 
 | Token | Value |
@@ -73,4 +79,7 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 | Dropdown close | 180ms ease-in, all at once |
 | Case-study row open | after 100ms of hovering; expands 200ms ease-out |
 | Case-study row close | 150ms after the pointer leaves the row; collapses 160ms ease-in |
+| Buzz | 10 drawings per second, cycling 3 |
+| Stop-motion moves (intro, jar) | 12 fps |
+| Easing | out [0.22, 1, 0.36, 1]; in [0.55, 0, 1, 0.45]; in-out [0.65, 0, 0.35, 1] |
 | Reduced motion | no animation, things just appear (case-study rows open and close without animating) |

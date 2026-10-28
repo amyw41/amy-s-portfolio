@@ -4,12 +4,27 @@ import { useEffect, useState } from "react";
 import styles from "./Home.module.css";
 import Sidebar, { type HomeMode } from "./Sidebar";
 import CircleToggle from "@/components/ui/CircleToggle";
+import BuzzPath from "@/components/ui/BuzzPath";
 import JarStage from "@/components/sections/Hero/JarStage";
 import { JAR_ITEMS } from "@/components/sections/Hero/items.manifest";
 import { content } from "@/lib/content";
 import { geist } from "@/lib/fonts";
+import { buildWobblyLinePath } from "@/lib/wobbly";
 
 const copy = content.en.sidebar;
+
+// The squiggly divider (brief Part 2.1): a gently wobbling vertical line,
+// buzzing. Drawn in a box DIVIDER_BOX_H tall (the line's height on the
+// 1536×696 laptop layout) and stretched to the real height, so its wobble
+// is laid out at true scale there. DIVIDER_AMPLITUDE is how far, in px, it
+// strays either side of straight.
+const DIVIDER_BOX_W = 12;
+const DIVIDER_BOX_H = 632;
+const DIVIDER_AMPLITUDE = 1.4;
+const DIVIDER_STROKE_WIDTH = 1;
+const DIVIDER_VARIANTS = [0, 1, 2].map((v) =>
+  buildWobblyLinePath(7, [DIVIDER_BOX_W / 2, 0], [DIVIDER_BOX_W / 2, DIVIDER_BOX_H], DIVIDER_AMPLITUDE, v),
+);
 
 // Rebrand v2 home page (brief Part 2): one fixed screen — sidebar, divider,
 // stage. Replaces Hero + Projects on "/" (both kept in components/sections/
@@ -35,7 +50,15 @@ export default function Home() {
     <main className={`${geist.variable} ${styles.frame}`}>
       <Sidebar mode={mode} onModeChange={setMode} />
 
-      <div className={styles.divider} aria-hidden="true" />
+      <div className={styles.divider} aria-hidden="true">
+        <BuzzPath
+          className={styles.dividerLine}
+          variants={DIVIDER_VARIANTS}
+          viewBox={`0 0 ${DIVIDER_BOX_W} ${DIVIDER_BOX_H}`}
+          preserveAspectRatio="none"
+          strokeWidth={DIVIDER_STROKE_WIDTH}
+        />
+      </div>
 
       <section className={styles.stage}>
         {mode === "jar" ? (

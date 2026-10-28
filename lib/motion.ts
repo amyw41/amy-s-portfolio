@@ -20,7 +20,28 @@ export const FADE_IN_TRANSITION = { duration: 0.45, ease: "easeOut" as const };
 export const ARC_SPRING = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 // ---------- rebrand v2 timings (brief Part 4.3) ----------
-//
+
+// Hand-drawn look (brief Part 4.1). Every code-drawn line cycles through 3
+// slightly different drawings BUZZ_FPS times a second (BuzzPath); the
+// intro and the jar's cartoon moves update STOP_MOTION_FPS times a second.
+// Both follow ?slow (BuzzPath reads it through the --slow custom property).
+export const BUZZ_FPS = 10;
+export const STOP_MOTION_FPS = 12;
+
+// Easing curves: landings and reveals; falling and exits; zooms and pulls.
+export const EASE_OUT = [0.22, 1, 0.36, 1] as const;
+export const EASE_IN = [0.55, 0, 1, 0.45] as const;
+export const EASE_IN_OUT = [0.65, 0, 0.35, 1] as const;
+
+// Project hover preview slide-up (step 6). A spring has no duration to
+// scale, so ?slow doesn't touch it.
+export const PREVIEW_SPRING = { type: "spring", stiffness: 220, damping: 26 } as const;
+
+// Intro sidebar load-in and the work-mode grid sweep (steps 8 and 4),
+// seconds between items. Run them through slowTransition() where used.
+export const SIDEBAR_STAGGER = 0.07;
+export const GRID_STAGGER = 0.04;
+
 // Hover-intent leave delay: the sidebar's case-study rows (below) and the
 // project hover preview (step 6, brief Part 3.1) — the brief's own name.
 export const HOVER_CLOSE_DELAY_MS = 150;

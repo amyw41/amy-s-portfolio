@@ -13,10 +13,10 @@ import {
   PILL_STROKE_COLOR,
   PILL_STROKE_WIDTH,
   PILL_VIEW_BOX,
-} from "@/components/sections/Hero/wobblyOval";
+} from "@/lib/wobbly";
 
 // Hand-sketched hover ring for this Back button — the wobbly PILL variant
-// (wobblyOval.ts's buildWobblyPillPath), not the hero/taskbar's own wide
+// (lib/wobbly.ts's buildWobblyPillPath), not the hero/taskbar's own wide
 // oval: an ellipse stretched over "← Back"'s much shorter, wider box reads
 // as a nearly flat, barely-visible line (see that function's own comment).
 // This route is Tailwind-based (see this file's own top comment), so unlike

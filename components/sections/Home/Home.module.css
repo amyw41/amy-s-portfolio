@@ -18,12 +18,22 @@
   letter-spacing: var(--home-tracking);
 }
 
-/* Plain for now; step 2 swaps in the squiggly buzzing line. Sits on the
- * sidebar's right edge, inset --frame-gap from the top and bottom so it
- * never touches either edge of the screen. */
+/* The divider's 1px grid column, on the sidebar's right edge, inset
+ * --frame-gap from the top and bottom so it never touches either edge of
+ * the screen. The line itself is .dividerLine, overflowing this column a
+ * little either side so its wobble isn't clipped. */
 .divider {
+  position: relative;
   margin-block: var(--frame-gap);
-  background: #000;
+}
+
+.dividerLine {
+  position: absolute;
+  top: 0;
+  left: -5.5px;
+  width: 12px;
+  height: 100%;
+  color: #000;
 }
 
 /* ---------- stage ---------- */
@@ -94,9 +104,15 @@
     overflow: visible;
   }
 
+  /* Horizontal under the stacked header: a plain rule for now. */
   .divider {
     height: 1px;
     margin: 0 16px;
+    background: #000;
+  }
+
+  .dividerLine {
+    display: none;
   }
 
   .stage {
