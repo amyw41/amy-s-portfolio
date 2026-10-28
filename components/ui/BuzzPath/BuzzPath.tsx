@@ -4,7 +4,6 @@ import { useSyncExternalStore, type CSSProperties } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import styles from "./BuzzPath.module.css";
 import { BUZZ_FPS, slowTransition } from "@/lib/motion";
-import { BUZZ_PRESSURE } from "@/lib/wobbly";
 
 interface BuzzPathProps {
   /** The drawings to cycle through, in order — usually 3 variants of one
@@ -75,8 +74,7 @@ export default function BuzzPath({
           <motion.path
             d={d}
             stroke="currentColor"
-            // Each retrace pressed a little lighter or harder.
-            strokeWidth={strokeWidth * (1 + (BUZZ_PRESSURE[i % BUZZ_PRESSURE.length] ?? 0))}
+            strokeWidth={strokeWidth}
             strokeLinecap="round"
             vectorEffect="non-scaling-stroke"
             initial={reveal ? false : undefined}
