@@ -5,7 +5,7 @@
  * below the mode toggle. */
 .sidebar {
   --box-pad: 32px;
-  --box-pad-block: 64px;
+  --box-pad-block: 48px;
   /* Regular text size — everything but the name. */
   --fs-body: 14px;
   /* Space between the bottom section's headings (Works → About → Play,

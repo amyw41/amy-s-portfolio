@@ -4,10 +4,10 @@
 // cycles through to make a line "buzz". `amplitude` scales the wobble:
 // 1 is each shape's normal hand-drawn look, smaller is calmer.
 //
-// `variant` (0, 1, 2…) is for buzzing: it nudges the wobble's phases by
-// BUZZ_PHASE_STEP each, so variants of one seed differ by only a pixel or
-// so — the line breathes rather than being redrawn from scratch. (A new
-// seed would move the seam, size and whole wobble, far more than 1-2px.)
+// `variant` (0, 1, 2…) is for buzzing: every variant of one seed is the
+// SAME drawing, and variants 1+ add only a tiny "retrace" deviation on top
+// (traceJitter, a fraction of a pixel) — like tracing over the same line
+// again by hand, not drawing a new one.
 
 const OVAL_RX = 58;
 const OVAL_RY = 13;
@@ -24,11 +24,14 @@ const OVERLAP_SWEEP_DEG = 385;
 const SEAM_DRIFT_PX = 2.6;
 const STEPS = 160;
 
+/** Stroke width for the rebrand's code-drawn lines (divider, hover
+ * circles), in px — matches the jar drawing's own ink line as rendered at
+ * the 1536×696 laptop size (measured ~0.5-0.75px). */
+export const LINE_STROKE_WIDTH = 0.6;
+
 export const STROKE_COLOR = "currentColor";
 export const STROKE_WIDTH = 0.75;
 export const VIEW_BOX = "-12 -10 138 40";
-
-const BUZZ_PHASE_STEP = 0.6;
 
 function hash(seed: number, salt: number): number {
   const x = Math.sin(seed * 127.1 + salt * 311.7) * 43758.5453123;
@@ -42,6 +45,22 @@ function wobble(angleDeg: number, phaseShift: number, freq1: number, freq2: numb
     (WOBBLE_AMOUNT_1 * Math.sin(rad * freq1 + phaseShift) +
       WOBBLE_AMOUNT_2 * Math.sin(rad * freq2 + phaseShift * 1.7 + 1.3))
   );
+}
+
+/** How far (in the shape's own units — px for lines and rectangles) a
+ * buzz variant may stray from variant 0. Ovals/pills are drawn in a ~140
+ * unit box shown about 100px wide, so theirs is a little bigger in units
+ * for the same on-screen size. */
+const TRACE_JITTER_PX = 0.3;
+const TRACE_JITTER_OVAL_UNITS = 0.45;
+
+/** The per-variant retrace deviation at position `t` (0..1) along a shape:
+ * zero for variant 0, otherwise a slow, smooth wobble of at most `max`. */
+function traceJitter(seed: number, variant: number, t: number, max: number): number {
+  if (variant === 0) return 0;
+  const a = hash(seed, 700 + variant * 2) * Math.PI * 2;
+  const b = hash(seed, 701 + variant * 2) * Math.PI * 2;
+  return max * (0.6 * Math.sin(t * Math.PI * 2 * 2 + a) + 0.4 * Math.sin(t * Math.PI * 2 * 5 + b));
 }
 
 function smoothPathFromPoints(points: [number, number][]): string {
@@ -62,8 +81,8 @@ export function buildWobblyOvalPath(seed = 0, amplitude = 1, variant = 0): strin
   const seamAngle = SEAM_ANGLE_DEG + (hash(seed, 1) - 0.5) * 20;
   const overlapSweep = OVERLAP_SWEEP_DEG + (hash(seed, 2) - 0.5) * 16;
   const drift = SEAM_DRIFT_PX * (0.8 + hash(seed, 3) * 0.5);
-  const phaseA = hash(seed, 4) * Math.PI * 2 + variant * BUZZ_PHASE_STEP;
-  const phaseB = hash(seed, 5) * Math.PI * 2 + variant * BUZZ_PHASE_STEP;
+  const phaseA = hash(seed, 4) * Math.PI * 2;
+  const phaseB = hash(seed, 5) * Math.PI * 2;
   const freq1 = WOBBLE_FREQ_1 + (hash(seed, 6) - 0.5) * 0.6;
   const freq2 = WOBBLE_FREQ_2 + (hash(seed, 7) - 0.5) * 0.6;
   const rx = OVAL_RX + (hash(seed, 8) - 0.5) * 4;
@@ -76,8 +95,9 @@ export function buildWobblyOvalPath(seed = 0, amplitude = 1, variant = 0): strin
     const angleDeg = seamAngle + overlapSweep * t;
     const rad = (angleDeg * Math.PI) / 180;
     const d = drift * t;
-    const rCurrentX = rx + wobble(angleDeg, phaseA, freq1, freq2, amplitude) + d;
-    const rCurrentY = ry + wobble(angleDeg, phaseB, freq1, freq2, amplitude) + d * (ry / rx);
+    const jitter = traceJitter(seed, variant, t, TRACE_JITTER_OVAL_UNITS);
+    const rCurrentX = rx + wobble(angleDeg, phaseA, freq1, freq2, amplitude) + d + jitter;
+    const rCurrentY = ry + wobble(angleDeg, phaseB, freq1, freq2, amplitude) + d * (ry / rx) + jitter * (ry / rx);
     const x = CENTER_X + rCurrentX * Math.cos(rad);
     const y = CENTER_Y + rCurrentY * Math.sin(rad);
     points.push([x, y]);
@@ -110,7 +130,7 @@ export function buildWobblyPillPath(seed = 0, amplitude = 1, variant = 0): strin
   const seamAngle = SQUIRCLE_SEAM_ANGLE_DEG + (hash(seed, 201) - 0.5) * 20;
   const overlapSweep = SQUIRCLE_OVERLAP_SWEEP_DEG + (hash(seed, 202) - 0.5) * 16;
   const drift = SQUIRCLE_SEAM_DRIFT_PX * (0.8 + hash(seed, 203) * 0.5);
-  const phaseA = hash(seed, 204) * Math.PI * 2 + variant * BUZZ_PHASE_STEP;
+  const phaseA = hash(seed, 204) * Math.PI * 2;
   const freq1 = WOBBLE_FREQ_1 + (hash(seed, 206) - 0.5) * 0.6;
   const freq2 = WOBBLE_FREQ_2 + (hash(seed, 207) - 0.5) * 0.6;
   const rBase = SQUIRCLE_HALF + (hash(seed, 208) - 0.5) * 4;
@@ -122,7 +142,8 @@ export function buildWobblyPillPath(seed = 0, amplitude = 1, variant = 0): strin
     const angleDeg = seamAngle + overlapSweep * t;
     const rad = (angleDeg * Math.PI) / 180;
     const d = drift * t;
-    const rCurrent = rBase + wobble(angleDeg, phaseA, freq1, freq2, amplitude) + d;
+    const rCurrent =
+      rBase + wobble(angleDeg, phaseA, freq1, freq2, amplitude) + d + traceJitter(seed, variant, t, TRACE_JITTER_OVAL_UNITS);
     const [ux, uy] = superellipseUnit(rad, SQUIRCLE_EXPONENT);
     const x = SQUIRCLE_CENTER + ux * rCurrent;
     const y = SQUIRCLE_CENTER + uy * rCurrent;
@@ -159,8 +180,8 @@ export function buildWobblyLinePath(
   // Unit normal: the direction the wobble pushes the line.
   const nx = -(y1 - y0) / length;
   const ny = (x1 - x0) / length;
-  const phaseA = hash(seed, 401) * Math.PI * 2 + variant * BUZZ_PHASE_STEP;
-  const phaseB = hash(seed, 402) * Math.PI * 2 + variant * BUZZ_PHASE_STEP;
+  const phaseA = hash(seed, 401) * Math.PI * 2;
+  const phaseB = hash(seed, 402) * Math.PI * 2;
   const wave1 = LINE_WAVELENGTH_1 * (0.85 + hash(seed, 403) * 0.3);
   const wave2 = LINE_WAVELENGTH_2 * (0.85 + hash(seed, 404) * 0.3);
   const steps = Math.max(2, Math.ceil(length / LINE_SAMPLE_PX));
@@ -173,7 +194,8 @@ export function buildWobblyLinePath(
     const offset =
       amplitude *
       taper *
-      (0.7 * Math.sin((s / wave1) * Math.PI * 2 + phaseA) + 0.3 * Math.sin((s / wave2) * Math.PI * 2 + phaseB));
+        (0.7 * Math.sin((s / wave1) * Math.PI * 2 + phaseA) + 0.3 * Math.sin((s / wave2) * Math.PI * 2 + phaseB)) +
+      taper * traceJitter(seed, variant, t, TRACE_JITTER_PX);
     points.push([x0 + (x1 - x0) * t + nx * offset, y0 + (y1 - y0) * t + ny * offset]);
   }
   return smoothPathFromPoints(points);
@@ -233,8 +255,8 @@ export function buildWobblyRectPath(
   const r = Math.min(radius, width / 2, height / 2);
   const perimeter = 2 * (width - 2 * r) + 2 * (height - 2 * r) + 2 * Math.PI * r;
   const total = perimeter * (1 + RECT_OVERSHOOT);
-  const phaseA = hash(seed, 501) * Math.PI * 2 + variant * BUZZ_PHASE_STEP;
-  const phaseB = hash(seed, 502) * Math.PI * 2 + variant * BUZZ_PHASE_STEP;
+  const phaseA = hash(seed, 501) * Math.PI * 2;
+  const phaseB = hash(seed, 502) * Math.PI * 2;
   const steps = Math.ceil(total / RECT_SAMPLE_PX);
 
   const points: [number, number][] = [];
@@ -244,7 +266,9 @@ export function buildWobblyRectPath(
     const t = s / perimeter;
     const drift = Math.max(0, t - 1) / RECT_OVERSHOOT * RECT_OVERSHOOT_DRIFT_PX;
     const offset =
-      amplitude * (1.2 * Math.sin(t * Math.PI * 2 * 3 + phaseA) + 0.5 * Math.sin(t * Math.PI * 2 * 7 + phaseB)) + drift;
+      amplitude * (1.2 * Math.sin(t * Math.PI * 2 * 3 + phaseA) + 0.5 * Math.sin(t * Math.PI * 2 * 7 + phaseB)) +
+      drift +
+      traceJitter(seed, variant, t, TRACE_JITTER_PX);
     points.push([p[0] + n[0] * offset, p[1] + n[1] * offset]);
   }
   return smoothPathFromPoints(points);

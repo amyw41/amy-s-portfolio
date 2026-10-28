@@ -4,7 +4,7 @@
  * its spacing is inside it, see Sidebar.module.css) and the stage runs to
  * the right edge. */
 .frame {
-  --frame-gap: 32px;
+  --frame-gap: 16px;
   /* Home page tracking for Geist — one place to tune it. */
   --home-tracking: -0.6px;
   --sidebar-width: clamp(260px, 20vw, 320px);

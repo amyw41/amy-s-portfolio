@@ -35,9 +35,9 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 |---|---|
 | Frame | min(100vw, 1536px) wide, 100dvh tall, centred, no outer padding |
 | Sidebar width | clamp(260px, 20vw, 320px) (~307px) |
-| Divider | hand-drawn 1px black line, gently wobbling up to ~1.4px either side of straight, buzzing; inset 32px from the top and bottom of the screen (a plain 1px rule on mobile) |
+| Divider | hand-drawn black line, 0.6px (the jar's ink weight), gently wobbling up to ~1.4px either side of straight, buzzing; inset 16px from the top and bottom of the screen (a plain 1px rule on mobile) |
 | Sidebar padding, left/right | 32px |
-| Sidebar padding, top/bottom | 64px (the divider starts 32px above the name) |
+| Sidebar padding, top/bottom | 48px (the divider starts 32px above the name) |
 | Mobile breakpoint | below 768px the sidebar stacks above the stage |
 
 ## Sidebar spacing (top to bottom)
@@ -66,7 +66,8 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 ## Hand-drawn lines
 
 - Every code-drawn line (divider, hover circles, later underlines and outlines) comes from `lib/wobbly.ts` and is drawn with `BuzzPath`.
-- **Buzz:** 3 variants of the same drawing, differing by about a pixel, shown in turn 1 → 2 → 3 at 10 per second (`BUZZ_FPS`). Held still under reduced motion and when the tab is hidden.
+- **Line weight:** 0.6px (`LINE_STROKE_WIDTH`), matching the jar drawing's ink.
+- **Buzz:** 3 frames of the *same* drawing, like tracing over one line again by hand: frames 2 and 3 stray at most ~0.3px from frame 1. Shown in turn 1 → 2 → 3 at 10 per second (`BUZZ_FPS`). Held still under reduced motion and when the tab is hidden.
 - **Pen reveal:** lines draw on with `pathLength` 0 → 1.
 
 ## Motion

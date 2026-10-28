@@ -9,7 +9,7 @@ import JarStage from "@/components/sections/Hero/JarStage";
 import { JAR_ITEMS } from "@/components/sections/Hero/items.manifest";
 import { content } from "@/lib/content";
 import { geist } from "@/lib/fonts";
-import { buildWobblyLinePath } from "@/lib/wobbly";
+import { buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
 
 const copy = content.en.sidebar;
 
@@ -17,11 +17,11 @@ const copy = content.en.sidebar;
 // buzzing. Drawn in a box DIVIDER_BOX_H tall (the line's height on the
 // 1536×696 laptop layout) and stretched to the real height, so its wobble
 // is laid out at true scale there. DIVIDER_AMPLITUDE is how far, in px, it
-// strays either side of straight.
+// strays either side of straight. LINE_STROKE_WIDTH matches the jar
+// drawing's own ink (~0.5-0.75px on screen at that size).
 const DIVIDER_BOX_W = 12;
-const DIVIDER_BOX_H = 632;
+const DIVIDER_BOX_H = 664;
 const DIVIDER_AMPLITUDE = 1.4;
-const DIVIDER_STROKE_WIDTH = 1;
 const DIVIDER_VARIANTS = [0, 1, 2].map((v) =>
   buildWobblyLinePath(7, [DIVIDER_BOX_W / 2, 0], [DIVIDER_BOX_W / 2, DIVIDER_BOX_H], DIVIDER_AMPLITUDE, v),
 );
@@ -56,7 +56,7 @@ export default function Home() {
           variants={DIVIDER_VARIANTS}
           viewBox={`0 0 ${DIVIDER_BOX_W} ${DIVIDER_BOX_H}`}
           preserveAspectRatio="none"
-          strokeWidth={DIVIDER_STROKE_WIDTH}
+          strokeWidth={LINE_STROKE_WIDTH}
         />
       </div>
 

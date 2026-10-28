@@ -22,7 +22,7 @@ import {
   slowMs,
   slowTransition,
 } from "@/lib/motion";
-import { buildWobblyPillPath, PILL_STROKE_WIDTH, PILL_VIEW_BOX } from "@/lib/wobbly";
+import { buildWobblyPillPath, LINE_STROKE_WIDTH, PILL_VIEW_BOX } from "@/lib/wobbly";
 import BuzzPath from "@/components/ui/BuzzPath";
 
 const copy = content.en.sidebar;
@@ -99,7 +99,7 @@ function DrawnOval({ seed, drawn }: { seed: number; drawn: boolean }) {
       variants={variants}
       viewBox={PILL_VIEW_BOX}
       preserveAspectRatio="none"
-      strokeWidth={PILL_STROKE_WIDTH}
+      strokeWidth={LINE_STROKE_WIDTH}
       drawn={drawn}
       drawDuration={OVAL_DRAW_S}
     />
