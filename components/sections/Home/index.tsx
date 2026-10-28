@@ -70,20 +70,22 @@ export default function Home() {
                * world cleanly and the items fall in again, which is what
                * work → jar should look like anyway (brief Part 2.4). */}
               <JarStage items={JAR_ITEMS} projectsOn={projectsOn} favouritesOn={itemsOn} />
-            </div>
-            <div className={styles.toggles}>
-              <CircleToggle
-                label={copy.toggles.projects}
-                color="var(--c-red)"
-                active={projectsOn}
-                onToggle={() => setProjectsOn((v) => !v)}
-              />
-              <CircleToggle
-                label={copy.toggles.items}
-                color="var(--c-blue)"
-                active={itemsOn}
-                onToggle={() => setItemsOn((v) => !v)}
-              />
+              {/* Inside the jar's box so they sit beside it and follow it as
+               * it resizes. */}
+              <div className={styles.toggles}>
+                <CircleToggle
+                  label={copy.toggles.projects}
+                  color="var(--c-red)"
+                  active={projectsOn}
+                  onToggle={() => setProjectsOn((v) => !v)}
+                />
+                <CircleToggle
+                  label={copy.toggles.items}
+                  color="var(--c-blue)"
+                  active={itemsOn}
+                  onToggle={() => setItemsOn((v) => !v)}
+                />
+              </div>
             </div>
           </>
         ) : (

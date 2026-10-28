@@ -60,13 +60,18 @@
    * here. The 70cqw term only binds on a narrow stage. */
   width: min(calc(min(85cqh, 592px) * 1600 / 2257), 70cqw);
   flex: 0 0 auto;
+  /* Anchors .toggles beside the jar. */
+  position: relative;
 }
 
-/* Highlight toggles, stacked on the stage's right side. */
+/* Highlight toggles, stacked just right of the jar, vertically centred on
+ * it. Positioned off the jar's own box, so they move with it. */
 .toggles {
   position: absolute;
-  top: 40px;
-  right: 40px;
+  top: 50%;
+  left: calc(100% + 28px);
+  transform: translateY(-50%);
+  white-space: nowrap;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -119,10 +124,13 @@
     height: max(75svh, 460px);
   }
 
+  /* No room beside the jar on a phone: a centred row just under it. */
   .toggles {
-    top: auto;
-    bottom: 16px;
-    right: 16px;
+    top: calc(100% + 16px);
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: row;
+    gap: 20px;
   }
 
   .work {

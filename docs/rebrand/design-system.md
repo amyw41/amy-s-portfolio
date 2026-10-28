@@ -61,7 +61,7 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 - **List items:** same left edge as the heading, no indent, no dash.
 - **Case-study row:** name, then " - description" on one line; the description truncates with "…". Hovering it (or keyboard focus) expands it to the full description, wrapped onto extra lines under the name. The hover area is the whole row, expanded lines and the gap above included; only one row is open at a time.
 - **Hover circle:** hand-drawn wiggly oval, drawn on like a pen when hovering a heading, un-drawn on leave. 16px past the word left/right, 8px above/below.
-- **Highlight toggles:** stacked on the stage's right, 40px from its top and right edges, 10px apart.
+- **Highlight toggles:** stacked 10px apart just right of the jar, 28px from its right edge, vertically centred on it, moving with it. On mobile: a centred row 16px under the jar.
 
 ## Hand-drawn lines
 
