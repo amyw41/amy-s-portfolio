@@ -26,6 +26,9 @@ export const ARC_SPRING = { type: "spring" as const, stiffness: 300, damping: 30
 // intro and the jar's cartoon moves update STOP_MOTION_FPS times a second.
 // Both follow ?slow (BuzzPath reads it through the --slow custom property).
 export const BUZZ_FPS = 10;
+// Off for now (Amy will retune it later): every BuzzPath holds still on
+// its first drawing. Flip back to true to bring the buzz back.
+export const BUZZ_ENABLED = false;
 export const STOP_MOTION_FPS = 12;
 
 // Easing curves: landings and reveals; falling and exits; zooms and pulls.

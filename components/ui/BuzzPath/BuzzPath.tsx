@@ -3,7 +3,7 @@
 import { useSyncExternalStore, type CSSProperties } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import styles from "./BuzzPath.module.css";
-import { BUZZ_FPS, slowTransition } from "@/lib/motion";
+import { BUZZ_ENABLED, BUZZ_FPS, slowTransition } from "@/lib/motion";
 
 interface BuzzPathProps {
   /** The drawings to cycle through, in order — usually 3 variants of one
@@ -31,7 +31,7 @@ function subscribeVisibility(onChange: () => void) {
  * variant is in the SVG at once, and a CSS steps() animation shows exactly
  * one of them at a time, swapping BUZZ_FPS times a second in order
  * 1 → 2 → 3 → 1. No per-frame JS. The buzz holds on the first drawing under
- * reduced motion and while the tab is hidden.
+ * reduced motion, while the tab is hidden, and while BUZZ_ENABLED is off.
  *
  * Stroke colour is currentColor — set `color` on the SVG (className/style).
  */
@@ -56,7 +56,7 @@ export default function BuzzPath({
 
   return (
     <svg
-      className={`${styles.buzz} ${hidden ? styles.held : ""} ${className ?? ""}`}
+      className={`${styles.buzz} ${hidden || !BUZZ_ENABLED ? styles.held : ""} ${className ?? ""}`}
       style={{ ...style, "--buzz-frames": variants.length, "--buzz-fps": BUZZ_FPS } as CSSProperties}
       viewBox={viewBox}
       preserveAspectRatio={preserveAspectRatio}
