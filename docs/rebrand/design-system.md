@@ -22,7 +22,7 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 |---|---|
 | Text | #000 |
 | Intro text | 75% black |
-| Case-study description | 30% black (55% while its row is open) |
+| Case-study description | 55% black |
 | Hover circle | 45% black |
 | Inactive mode button (jar/work) | 40% black (70% on hover) |
 | Divider line | #000 |
@@ -59,7 +59,7 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 - **Icons:** X, LinkedIn, mail. Plain black, ~18–20px, no border.
 - **Headings with a dropdown** (Experience, Works): text + chevron (14px). Start open. Closed points down, open points up.
 - **List items:** same left edge as the heading, no indent, no dash.
-- **Case-study row:** name, then " - description" on one line; the description truncates with "…". Hovering it (or keyboard focus) expands it to the full description, wrapped onto extra lines under the name. The hover area is the whole row, expanded lines and the gap above included; only one row is open at a time.
+- **Case-study row:** the name, then " - description" in full whenever Works is open, wrapping onto extra lines under the name. No hover behaviour.
 - **Hover circle:** hand-drawn wiggly oval, drawn on like a pen when hovering a heading, un-drawn on leave. 16px past the word left/right, 8px above/below.
 - **Highlight toggles:** stacked 10px apart just right of the jar, 28px from its right edge, vertically centred on it, moving with it. On mobile: a centred row 16px under the jar.
 
@@ -87,12 +87,10 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 | Chevron turn | 200ms, 180° |
 | Dropdown open | 280ms ease-out; items fade down from 6px above, 35ms apart |
 | Dropdown close | 180ms ease-in, all at once |
-| Case-study row open | after 100ms of hovering; expands 200ms ease-out |
-| Case-study row close | 150ms after the pointer leaves the row; collapses 160ms ease-in |
 | Buzz | 10 drawings per second, cycling 3 |
 | Stop-motion moves (intro, jar) | 12 fps |
 | Easing | out [0.22, 1, 0.36, 1]; in [0.55, 0, 1, 0.45]; in-out [0.65, 0, 0.35, 1] |
 | Grid tiles in | each 300ms ease-out: rise 12px, scale 0.97 → 1, fade in; 40ms apart, top left first |
 | Grid reorder (filters) | tiles slide to new places, 350ms ease-out |
 | Leaving work mode | heading + grid slide up 12px and fade out together, 200ms ease-in; then the jar shows |
-| Reduced motion | no animation, things just appear (case-study rows open and close without animating) |
+| Reduced motion | no animation, things just appear  |

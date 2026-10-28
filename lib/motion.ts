@@ -57,8 +57,8 @@ export const WORK_EXIT_S = 0.2;
 export const WORK_EXIT_RISE_PX = 12;
 export const GRID_REORDER_S = 0.35;
 
-// Hover-intent leave delay: the sidebar's case-study rows (below) and the
-// project hover preview (step 6, brief Part 3.1) — the brief's own name.
+// Hover-intent leave delay for the project hover preview (step 6, brief
+// Part 3.1) — the brief's own name for it.
 export const HOVER_CLOSE_DELAY_MS = 150;
 
 // Sidebar (Home/Sidebar.tsx): the hand-drawn oval pen-draws on around a
@@ -74,14 +74,6 @@ export const DROPDOWN_OPEN_S = 0.28;
 export const DROPDOWN_CLOSE_S = 0.18;
 export const DROPDOWN_ITEM_STAGGER_S = 0.035;
 export const DROPDOWN_ITEM_DROP_PX = 6;
-
-// Case-study rows under Works: resting on one for CASE_ROW_OPEN_DELAY_MS
-// grows it from its one-line, truncated description to the full wrapped
-// text over CASE_ROW_EXPAND_S; it shrinks back over CASE_ROW_COLLAPSE_S,
-// HOVER_CLOSE_DELAY_MS after the pointer leaves the row.
-export const CASE_ROW_OPEN_DELAY_MS = 100;
-export const CASE_ROW_EXPAND_S = 0.2;
-export const CASE_ROW_COLLAPSE_S = 0.16;
 
 // ---------- debug params (rebrand v2) ----------
 //

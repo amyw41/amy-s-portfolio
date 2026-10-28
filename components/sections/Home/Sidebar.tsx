@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
+import { useId, useMemo, useState, type FocusEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
 import { ChevronDown, Mail } from "lucide-react";
@@ -8,18 +8,13 @@ import styles from "./Sidebar.module.css";
 import { content } from "@/lib/content";
 import { PROJECTS } from "@/lib/projects";
 import {
-  CASE_ROW_COLLAPSE_S,
-  CASE_ROW_EXPAND_S,
-  CASE_ROW_OPEN_DELAY_MS,
   CHEVRON_OPEN_DEG,
   CHEVRON_TURN_S,
   DROPDOWN_CLOSE_S,
   DROPDOWN_ITEM_DROP_PX,
   DROPDOWN_ITEM_STAGGER_S,
   DROPDOWN_OPEN_S,
-  HOVER_CLOSE_DELAY_MS,
   OVAL_DRAW_S,
-  slowMs,
   slowTransition,
 } from "@/lib/motion";
 import { buildWobblyPillPath, LINE_STROKE_WIDTH, PILL_VIEW_BOX } from "@/lib/wobbly";
@@ -197,139 +192,14 @@ function DropdownGroup({ title, seed, items }: { title: string; seed: number; it
   );
 }
 
-/** Which case-study row under Works is open — one at a time, with hover
- * intent:
- * - A row opens after the pointer has been moving over it for
- *   CASE_ROW_OPEN_DELAY_MS, so sweeping down the list doesn't pop every row
- *   open on the way.
- * - Opening is driven by pointer *movement* (pointermove), not pointerenter:
- *   an opening row pushes the rows below down, which can slide a different
- *   row under a cursor that hasn't moved, and that alone mustn't switch
- *   rows or make the open one flicker.
- * - It closes HOVER_CLOSE_DELAY_MS after the pointer leaves the whole row
- *   (expanded description included), or straight away on moving to another
- *   row once that one opens.
- * - Keyboard focus opens/closes immediately. */
-function useCaseRowHover() {
-  const [openHref, setOpenHref] = useState<string | null>(null);
-  const hoveredRef = useRef<string | null>(null);
-  const timerRef = useRef<number | null>(null);
-
-  const clearTimer = () => {
-    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
-    timerRef.current = null;
-  };
-  useEffect(() => clearTimer, []);
-
-  return {
-    openHref,
-    rowProps: (href: string) => ({
-      onPointerMove: () => {
-        if (hoveredRef.current === href) return;
-        hoveredRef.current = href;
-        clearTimer();
-        if (openHref === href) return;
-        timerRef.current = window.setTimeout(() => setOpenHref(href), slowMs(CASE_ROW_OPEN_DELAY_MS));
-      },
-      onPointerLeave: () => {
-        if (hoveredRef.current !== href) return;
-        hoveredRef.current = null;
-        clearTimer();
-        timerRef.current = window.setTimeout(() => setOpenHref(null), slowMs(HOVER_CLOSE_DELAY_MS));
-      },
-      onFocus: (e: FocusEvent<HTMLElement>) => {
-        if (!(e.target as HTMLElement).matches(":focus-visible")) return;
-        clearTimer();
-        setOpenHref(href);
-      },
-      onBlur: () => {
-        if (hoveredRef.current === href) return;
-        setOpenHref((current) => (current === href ? null : current));
-      },
-    }),
-  };
-}
-
-/** A case study under Works: "Name - description" on one line, the
- * description truncated with an ellipsis. Open (see useCaseRowHover), it
- * grows to the full description, wrapped onto extra lines under the name.
- *
- * The height animates between two measured numbers (Framer can't animate
- * between two "auto"s): one line (the name's own height) and a hidden,
- * always-wrapped copy of the row, both kept current by a ResizeObserver.
- * The visible text only goes back to one line once the collapse has
- * finished, so it doesn't jump mid-animation. */
-function CaseStudyRow({
-  href,
-  label,
-  description,
-  open,
-  hoverProps,
-}: {
-  href: string;
-  label: string;
-  description: string;
-  open: boolean;
-  hoverProps: ReturnType<ReturnType<typeof useCaseRowHover>["rowProps"]>;
-}) {
-  const reduced = useReducedMotion();
-  const nameRef = useRef<HTMLSpanElement>(null);
-  const measureRef = useRef<HTMLSpanElement>(null);
-  const [heights, setHeights] = useState<{ line: number; full: number } | null>(null);
-  // Whether the last height animation that finished was an open one — keeps
-  // the text wrapped until a collapse has actually finished.
-  const [settledOpen, setSettledOpen] = useState(false);
-  const wrapped = open || settledOpen;
-
-  useEffect(() => {
-    const name = nameRef.current;
-    const measure = measureRef.current;
-    if (!name || !measure) return;
-    const observer = new ResizeObserver(() => setHeights({ line: name.offsetHeight, full: measure.offsetHeight }));
-    observer.observe(measure);
-    return () => observer.disconnect();
-  }, []);
-
-  const transition = reduced
-    ? { duration: 0 }
-    : slowTransition(
-        open
-          ? { duration: CASE_ROW_EXPAND_S, ease: "easeOut" as const }
-          : { duration: CASE_ROW_COLLAPSE_S, ease: "easeIn" as const },
-      );
-
-  const text = (ref?: React.Ref<HTMLSpanElement>) => (
-    <>
-      <span ref={ref} className={styles.itemName}>
-        {label}
-      </span>
-      <span className={styles.itemDescription}>&nbsp;- {description}</span>
-    </>
-  );
-
+/** A case study under Works: the name, then " - description" in full,
+ * wrapping onto extra lines under the name. */
+function CaseStudyRow({ href, label, description }: { href: string; label: string; description: string }) {
   return (
-    // The hover area: the whole row, its 4px gap above included (see
-    // .caseRow), so the pointer never falls between two rows.
-    <div className={styles.caseRow} {...hoverProps}>
-      <motion.div
-        className={styles.caseClip}
-        initial={false}
-        animate={heights ? { height: open ? heights.full : heights.line } : undefined}
-        transition={transition}
-        onAnimationComplete={() => setSettledOpen(open)}
-      >
-        <Link
-          href={href}
-          className={`${styles.itemLink} ${wrapped ? styles.itemLinkWrapped : ""} ${open ? styles.itemLinkOpen : ""}`}
-        >
-          {text(nameRef)}
-        </Link>
-        {/* Hidden full-width, always-wrapped copy, only here to be measured. */}
-        <span ref={measureRef} className={`${styles.itemLink} ${styles.itemLinkWrapped} ${styles.measure}`} aria-hidden="true">
-          {text()}
-        </span>
-      </motion.div>
-    </div>
+    <Link href={href} className={styles.itemLink}>
+      <span className={styles.itemName}>{label}</span>
+      <span className={styles.itemDescription}> - {description}</span>
+    </Link>
   );
 }
 
@@ -345,8 +215,6 @@ function HeadingLink({ href, label, seed }: { href: string; label: string; seed:
 }
 
 export default function Sidebar({ mode, onModeChange }: SidebarProps) {
-  const caseRows = useCaseRowHover();
-
   return (
     <aside className={styles.sidebar}>
       {/* Top section: name + intro, links, Experience — equal spacing. */}
@@ -381,14 +249,7 @@ export default function Sidebar({ mode, onModeChange }: SidebarProps) {
           title={copy.nav.works}
           seed={21}
           items={WORK_LINKS.map((link) => (
-            <CaseStudyRow
-              key={link.href}
-              href={link.href}
-              label={link.label}
-              description={link.description}
-              open={caseRows.openHref === link.href}
-              hoverProps={caseRows.rowProps(link.href)}
-            />
+            <CaseStudyRow key={link.href} href={link.href} label={link.label} description={link.description} />
           ))}
         />
         <HeadingLink href="/about" label={copy.nav.about} seed={22} />
