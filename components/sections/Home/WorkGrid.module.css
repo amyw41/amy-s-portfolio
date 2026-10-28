@@ -3,6 +3,8 @@
 .work {
   position: absolute;
   inset: 0;
+  /* Above the jar view while the jar drops away behind it. */
+  z-index: 1;
   overflow-y: auto;
   padding: 48px;
 }

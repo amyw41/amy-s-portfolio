@@ -67,6 +67,31 @@ export const JAR_LIFT_IN_MS = 250;
 export const JAR_LIFT_OUT_MS = 200;
 export const TILE_LIFT_PX = 6;
 
+// The jar's cartoon moves (Home/JarView.tsx, brief Part 2.4), all on the
+// STOP_MOTION_FPS clock.
+// jar → work: anticipation — lift JAR_ANTICIPATE_PX and squash to
+// JAR_ANTICIPATE_SCALE_Y over JAR_ANTICIPATE_S — then drop down out of the
+// stage over JAR_DROP_OUT_S (ease-in), jostling the items with
+// JAR_JOSTLE_STRENGTH as it goes.
+// work → jar: after the grid's exit (WORK_EXIT_S), drop in from above over
+// JAR_DROP_IN_S (ease-in), land with a squash (JAR_LAND_SCALE_X/Y) and
+// spring back over JAR_LAND_S, then the items fall in.
+// "what's inside?" drops in from above by HEADING_DROP_PX with a small
+// overshoot over HEADING_DROP_S.
+export const JAR_ANTICIPATE_PX = 10;
+export const JAR_ANTICIPATE_SCALE_Y = 0.96;
+export const JAR_ANTICIPATE_S = 0.12;
+export const JAR_DROP_OUT_S = 0.45;
+export const JAR_JOSTLE_STRENGTH = 1;
+export const JAR_DROP_IN_S = 0.42;
+export const JAR_LAND_SCALE_X = 1.04;
+export const JAR_LAND_SCALE_Y = 0.92;
+export const JAR_LAND_S = 0.36;
+export const HEADING_DROP_PX = 48;
+export const HEADING_DROP_S = 0.45;
+// Ease with a little overshoot past the end before settling (back-out).
+export const EASE_OVERSHOOT = [0.34, 1.4, 0.64, 1] as const;
+
 // Hover-intent leave delay for the project hover preview (step 6, brief
 // Part 3.1) — the brief's own name for it.
 export const HOVER_CLOSE_DELAY_MS = 150;
@@ -110,6 +135,34 @@ export function getSlowFactor(): number {
   const raw = Number(new URLSearchParams(window.location.search).get("slow"));
   slowFactor = Number.isFinite(raw) && raw > 0 ? raw : 1;
   return slowFactor;
+}
+
+/** Turns an easing curve into stop motion (brief Part 4.1): the animation
+ * only advances STOP_MOTION_FPS times a second, holding each pose in
+ * between, so it steps like hand-drawn frames. `durationS` is the
+ * animation's real (already ?slow-scaled) length, which sets how many
+ * frames it gets. */
+export function stopMotion(ease: readonly [number, number, number, number], durationS: number): (t: number) => number {
+  const frames = Math.max(1, Math.round(durationS * STOP_MOTION_FPS));
+  const curve = cubicBezier(ease);
+  return (t) => curve(Math.min(1, Math.floor(t * frames) / frames));
+}
+
+/** CSS-style cubic-bezier(x1, y1, x2, y2) as a function of progress. */
+function cubicBezier([x1, y1, x2, y2]: readonly [number, number, number, number]): (t: number) => number {
+  const sample = (a: number, b: number, t: number) => 3 * a * t * (1 - t) ** 2 + 3 * b * t ** 2 * (1 - t) + t ** 3;
+  return (x) => {
+    if (x <= 0 || x >= 1) return x <= 0 ? 0 : 1;
+    // Solve for the curve parameter whose x matches, by bisection.
+    let lo = 0;
+    let hi = 1;
+    for (let i = 0; i < 24; i++) {
+      const mid = (lo + hi) / 2;
+      if (sample(x1, x2, mid) < x) lo = mid;
+      else hi = mid;
+    }
+    return sample(y1, y2, (lo + hi) / 2);
+  };
 }
 
 /** Scales a millisecond duration/delay by the ?slow factor. */

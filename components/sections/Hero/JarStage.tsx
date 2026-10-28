@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type CSSProperties, type RefObject } from "react";
+import { useEffect, useRef, type CSSProperties, type MutableRefObject, type RefObject } from "react";
 import Image from "next/image";
 import styles from "./JarStage.module.css";
 import JarItem from "./JarItem";
@@ -28,15 +28,38 @@ interface JarStageProps {
   /** One item to isolate (brief Part 3.1): it lifts, everything else dims.
    * An id with no item in the jar (e.g. "extras") changes nothing. */
   isolatedId?: string | null;
+  /** Passed to useJarPhysics: false holds the items back (nothing spawns
+   * or falls) until it turns true. Default true. */
+  start?: boolean;
+  /** Filled with useJarPhysics's jostle(strength), for whoever moves the
+   * jar to knock its items around (Home/JarView.tsx). */
+  jostleRef?: MutableRefObject<((strength: number) => void) | null>;
 }
 
-export default function JarStage({ items, projectsOn, favouritesOn, textPlatformsRef, isolatedId = null }: JarStageProps) {
+export default function JarStage({
+  items,
+  projectsOn,
+  favouritesOn,
+  textPlatformsRef,
+  isolatedId = null,
+  start = true,
+  jostleRef,
+}: JarStageProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { ready, renderInfo, outlineMasks, registerItemEl, debugWalls, debugPhysicsEnabled } = useJarPhysics(
+  const { ready, renderInfo, outlineMasks, registerItemEl, debugWalls, debugPhysicsEnabled, jostle } = useJarPhysics(
     containerRef,
     items,
     textPlatformsRef,
+    { start },
   );
+
+  useEffect(() => {
+    if (!jostleRef) return;
+    jostleRef.current = jostle;
+    return () => {
+      jostleRef.current = null;
+    };
+  }, [jostle, jostleRef]);
 
   const isolating = isolatedId !== null && items.some((item) => item.id === isolatedId);
 

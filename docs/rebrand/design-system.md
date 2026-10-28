@@ -93,4 +93,7 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 | Grid reorder (filters) | tiles slide to new places, 350ms ease-out |
 | Leaving work mode | heading + grid slide up 12px and fade out together, 200ms ease-in; then the jar shows |
 | Works hover lift | in 250ms ease-out, back 200ms ease-in |
-| Reduced motion | no animation, things just appear  |
+| Jar → work | jar lifts 10px + squashes to scaleY 0.96 (120ms), then drops out of the stage (450ms ease-in), 12fps stop motion; items get kicked up and knock around inside; clink sound on the click |
+| "what's inside?" arriving | drops 48px from above with a small overshoot, 450ms, while the grid sweeps in |
+| Work → jar | grid leaves (200ms), then the jar drops in from above (420ms ease-in) and lands with a squash (scaleX 1.04, scaleY 0.92) springing back (360ms), 12fps stop motion; then the items fall in |
+| Reduced motion | no animation, things just appear; mode switches are plain 200ms fades, no sound |

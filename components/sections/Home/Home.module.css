@@ -60,12 +60,18 @@
    * here. The 70cqw term only binds on a narrow stage. */
   width: min(calc(min(85cqh, 592px) * 1600 / 2257), 70cqw);
   flex: 0 0 auto;
+  /* The jar's landing/anticipation squash (JarView) pivots on its base. */
+  transform-origin: 50% 100%;
 }
 
-/* Jar mode's view: fills the stage and centres the jar in it. */
+/* Jar mode's view: fills the stage and centres the jar in it. Its own
+ * stacking context (z-index), so the jar items' z-indexes stay inside it
+ * and the jar passes behind work mode's grid while one leaves as the other
+ * arrives. */
 .jarView {
   position: absolute;
   inset: 0;
+  z-index: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -96,7 +102,11 @@
     display: none;
   }
 
+  /* Clipped here (not on desktop, where the stage already starts at the
+   * top of the screen): the jar dropping in from above, or out below,
+   * mustn't pass over the stacked header. */
   .stage {
     height: max(75svh, 460px);
+    overflow: clip;
   }
 }

@@ -16,6 +16,9 @@ import {
   GRID_TILE_RISE_PX,
   GRID_TILE_S,
   GRID_TILE_SCALE,
+  EASE_OVERSHOOT,
+  HEADING_DROP_PX,
+  HEADING_DROP_S,
   slowTransition,
   JAR_LIFT_IN_MS,
   JAR_LIFT_OUT_MS,
@@ -137,7 +140,16 @@ export default function WorkGrid({ focusedId = null }: { focusedId?: string | nu
 
   return (
     <motion.div className={styles.work} variants={variants.view} initial="shown" animate="shown" exit="gone">
-      <h2 className={styles.heading}>{copy.heading}</h2>
+      {/* Drops in from above with a little overshoot, as the jar leaves
+       * (brief Part 2.4: the camera panning down into the jar). */}
+      <motion.h2
+        className={styles.heading}
+        initial={reduced ? { opacity: 0 } : { opacity: 0, y: -HEADING_DROP_PX }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={reduced ? { duration: 0.2 } : slowTransition({ duration: HEADING_DROP_S, ease: EASE_OVERSHOOT })}
+      >
+        {copy.heading}
+      </motion.h2>
       <div className={styles.filters}>
         {CATEGORY_ORDER.map((category) => (
           <CircleToggle

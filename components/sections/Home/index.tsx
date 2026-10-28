@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import styles from "./Home.module.css";
 import Sidebar, { type HomeMode } from "./Sidebar";
 import WorkGrid from "./WorkGrid";
 import BuzzPath from "@/components/ui/BuzzPath";
-import JarStage from "@/components/sections/Hero/JarStage";
-import { JAR_ITEMS } from "@/components/sections/Hero/items.manifest";
+import JarView from "./JarView";
+import { createJarSound, type JarSound } from "@/components/sections/Hero/jar-sound";
 import { content } from "@/lib/content";
 import { geist } from "@/lib/fonts";
 import { buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
+import { JAR_ANTICIPATE_S, JAR_DROP_OUT_S, slowMs } from "@/lib/motion";
 
 const copy = content.en.sidebar;
 
@@ -36,6 +37,31 @@ export default function Home() {
   // the stage: its jar item lifts and the rest dim (or, in work mode, its
   // grid tile).
   const [focusedCase, setFocusedCase] = useState<string | null>(null);
+  // Whether the jar view is arriving from work mode (drops in) rather than
+  // just being there on first load. Read by JarView once, when it mounts.
+  const [jarEntering, setJarEntering] = useState(false);
+
+  // The jar clink for jar → work. Created up front so its audio is decoded
+  // by the time anyone clicks; the click itself is the user gesture that
+  // lets it play.
+  const soundRef = useRef<JarSound | null>(null);
+  useEffect(() => {
+    const sound = createJarSound();
+    soundRef.current = sound;
+    return () => sound.dispose();
+  }, []);
+
+  function changeMode(next: HomeMode) {
+    if (next === mode) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (next === "work" && !reduced && soundRef.current) {
+      const spanMs = slowMs((JAR_ANTICIPATE_S + JAR_DROP_OUT_S) * 1000);
+      soundRef.current.start(spanMs / 1000);
+      window.setTimeout(() => soundRef.current?.stop(), spanMs);
+    }
+    setJarEntering(next === "jar");
+    setMode(next);
+  }
 
   // The taskbar's "work" link on every other page still points at
   // /#projects (the old projects section) — land those visits in work mode.
@@ -51,7 +77,7 @@ export default function Home() {
 
   return (
     <main className={`${geist.variable} ${styles.frame}`}>
-      <Sidebar mode={mode} onModeChange={setMode} onCaseFocus={setFocusedCase} />
+      <Sidebar mode={mode} onModeChange={changeMode} onCaseFocus={setFocusedCase} />
 
       <div className={styles.divider} aria-hidden="true">
         <BuzzPath
@@ -64,21 +90,13 @@ export default function Home() {
       </div>
 
       <section className={styles.stage}>
-        {/* mode="wait": leaving work mode, the grid slides up and fades out
-         * first (WorkGrid's exit), then the jar shows. The jar itself has no
-         * exit yet — its cartoon drop is step 5. */}
-        <AnimatePresence mode="wait" initial={false}>
+        {/* Both views can be on stage at once while one leaves and the other
+         * arrives: jar → work, the jar drops away as "what's inside?" drops
+         * in; work → jar, the grid slides out and the jar waits for it
+         * before dropping in (JarView). */}
+        <AnimatePresence initial={false}>
           {mode === "jar" ? (
-            <motion.div key="jar" className={styles.jarView} exit={{ opacity: 0, transition: { duration: 0 } }}>
-              <div className={styles.jarWrapper}>
-                {/* Unmounted (not hidden) in work mode: useJarPhysics sizes
-                 * everything off this box's measured width, and a hidden
-                 * (display:none) box measures 0 — remounting rebuilds the
-                 * world cleanly and the items fall in again, which is what
-                 * work → jar should look like anyway (brief Part 2.4). */}
-                <JarStage items={JAR_ITEMS} projectsOn={false} favouritesOn={false} isolatedId={focusedCase} />
-              </div>
-            </motion.div>
+            <JarView key="jar" entering={jarEntering} isolatedId={focusedCase} />
           ) : (
             <WorkGrid key="work" focusedId={focusedCase} />
           )}

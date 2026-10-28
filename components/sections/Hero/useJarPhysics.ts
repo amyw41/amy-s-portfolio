@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import Matter from "matter-js";
 import { JAR_INTERIOR_POINTS, JAR_WALL_THICKNESS, computeJarWallRects, createJarWallBodies, type JarWallRect } from "./jar-shape";
 import { computeAlphaBBox, dilateAlphaMask, ALPHA_THRESHOLD, type AlphaBBox } from "./alpha-bbox";
@@ -216,6 +216,23 @@ function preloadBBox(item: JarItemDef): Promise<BBoxPreloadResult> {
  * and drift toward centre before touching down. */
 const PIN_RELEASE_Y_FRACTION = 0.92;
 
+/** jostle()'s kick at strength 1, px/step at REFERENCE_WIDTH: every body
+ * gets JOSTLE_UP (±30%) upward and up to JOSTLE_SIDE either way, plus up to
+ * JOSTLE_SPIN rad/step of spin unless its rotation is locked. Enough for the pile to
+ * lift, knock together and resettle — still clamped by the per-tick
+ * containment, so nothing leaves the jar. */
+const JOSTLE_UP = 9;
+const JOSTLE_SIDE = 2.5;
+const JOSTLE_SPIN = 0.12;
+
+export interface JarPhysicsOptions {
+  /** false holds everything — measuring, spawning, the fall — until it
+   * turns true (e.g. until the jar has landed after dropping in). Default
+   * true. Setup measures the container's on-screen position, so it mustn't
+   * run while the jar is mid-move under a transform. */
+  start?: boolean;
+}
+
 export function useJarPhysics(
   containerRef: RefObject<HTMLDivElement | null>,
   items: JarItemDef[],
@@ -224,8 +241,12 @@ export function useJarPhysics(
   // and rest on (see buildTextPlatformBodies below). Optional: without it,
   // a dragged item just falls straight past that column.
   textPlatformsRef?: RefObject<HTMLDivElement | null>,
+  { start = true }: JarPhysicsOptions = {},
 ) {
   const [ready, setReady] = useState(false);
+  // Set by setup once the world exists; a no-op before that (and after
+  // cleanup).
+  const jostleRef = useRef<(strength: number) => void>(() => {});
   const [renderInfo, setRenderInfo] = useState<Record<string, RenderInfo>>({});
   // Set once after the initial preload pass and never touched again (not
   // even by rebuildForResize) — a ring's raster is resolution-independent
@@ -285,7 +306,7 @@ export function useJarPhysics(
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || !start) return;
 
     let cancelled = false;
     const cleanupFns: Array<() => void> = [];
@@ -1285,6 +1306,27 @@ export function useJarPhysics(
         cancelAnimationFrame(replayRafId);
         startLiveLoop();
       };
+      // Kicks every body up (with a little sideways and spin), so the pile
+      // knocks around and resettles — used as the jar is lowered away (brief
+      // Part 2.4). Needs the live engine, so it ends a replay first.
+      jostleRef.current = (strength: number) => {
+        skipReplayOnInteraction();
+        for (const { id, body } of physicsItems) {
+          if (body.isStatic) continue;
+          if (body.isSleeping) Sleeping.set(body, false);
+          Body.setVelocity(body, {
+            x: body.velocity.x + (Math.random() * 2 - 1) * JOSTLE_SIDE * scale * strength,
+            y: body.velocity.y - JOSTLE_UP * (0.7 + Math.random() * 0.6) * scale * strength,
+          });
+          if (!itemsById.get(id)?.lockRotation) {
+            Body.setAngularVelocity(body, (Math.random() * 2 - 1) * JOSTLE_SPIN * strength);
+          }
+        }
+      };
+      cleanupFns.push(() => {
+        jostleRef.current = () => {};
+      });
+
       container.addEventListener("mousedown", skipReplayOnInteraction);
       container.addEventListener("touchstart", skipReplayOnInteraction, { passive: true });
       cleanupFns.push(() => {
@@ -1346,7 +1388,9 @@ export function useJarPhysics(
       cleanupFns.forEach((fn) => fn());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [containerRef, items]);
+  }, [containerRef, items, start]);
+
+  const jostle = useCallback((strength: number) => jostleRef.current(strength), []);
 
   return {
     ready,
@@ -1355,5 +1399,6 @@ export function useJarPhysics(
     registerItemEl,
     debugWalls,
     debugPhysicsEnabled,
+    jostle,
   };
 }
