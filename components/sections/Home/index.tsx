@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import styles from "./Home.module.css";
 import Sidebar, { type HomeMode } from "./Sidebar";
 import WorkGrid from "./WorkGrid";
-import CircleToggle from "@/components/ui/CircleToggle";
 import BuzzPath from "@/components/ui/BuzzPath";
 import JarStage from "@/components/sections/Hero/JarStage";
 import { JAR_ITEMS } from "@/components/sections/Hero/items.manifest";
@@ -33,8 +32,6 @@ const DIVIDER_VARIANTS = [0, 1, 2].map((v) =>
 // for now, just no longer rendered here).
 export default function Home() {
   const [mode, setMode] = useState<HomeMode>("jar");
-  const [projectsOn, setProjectsOn] = useState(false);
-  const [itemsOn, setItemsOn] = useState(false);
   // The case study hovered/focused in the sidebar's Works list, isolated on
   // the stage: its jar item lifts and the rest dim (or, in work mode, its
   // grid tile).
@@ -79,28 +76,7 @@ export default function Home() {
                  * (display:none) box measures 0 — remounting rebuilds the
                  * world cleanly and the items fall in again, which is what
                  * work → jar should look like anyway (brief Part 2.4). */}
-                <JarStage
-                  items={JAR_ITEMS}
-                  projectsOn={projectsOn}
-                  favouritesOn={itemsOn}
-                  isolatedId={focusedCase}
-                />
-                {/* Inside the jar's box so they sit beside it and follow it as
-                 * it resizes. */}
-                <div className={styles.toggles}>
-                  <CircleToggle
-                    label={copy.toggles.projects}
-                    color="var(--c-red)"
-                    active={projectsOn}
-                    onToggle={() => setProjectsOn((v) => !v)}
-                  />
-                  <CircleToggle
-                    label={copy.toggles.items}
-                    color="var(--c-blue)"
-                    active={itemsOn}
-                    onToggle={() => setItemsOn((v) => !v)}
-                  />
-                </div>
+                <JarStage items={JAR_ITEMS} projectsOn={false} favouritesOn={false} isolatedId={focusedCase} />
               </div>
             </motion.div>
           ) : (

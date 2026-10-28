@@ -60,24 +60,6 @@
    * here. The 70cqw term only binds on a narrow stage. */
   width: min(calc(min(85cqh, 592px) * 1600 / 2257), 70cqw);
   flex: 0 0 auto;
-  /* Anchors .toggles beside the jar. */
-  position: relative;
-}
-
-/* Highlight toggles, stacked just right of the jar, vertically centred on
- * it. Positioned off the jar's own box, so they move with it. */
-.toggles {
-  position: absolute;
-  top: 50%;
-  left: calc(100% + 28px);
-  transform: translateY(-50%);
-  white-space: nowrap;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  /* CircleToggle's label is calc(var(--fs-small) + 1px); home text runs
-   * 2px smaller than the rest of the site. */
-  --fs-small: calc(clamp(12px, 1.13vw, 17px) - 2px);
 }
 
 /* Jar mode's view: fills the stage and centres the jar in it. */
@@ -116,14 +98,5 @@
 
   .stage {
     height: max(75svh, 460px);
-  }
-
-  /* No room beside the jar on a phone: a centred row just under it. */
-  .toggles {
-    top: calc(100% + 16px);
-    left: 50%;
-    transform: translateX(-50%);
-    flex-direction: row;
-    gap: 20px;
   }
 }

@@ -58,10 +58,6 @@ export const content = {
         jar: "jar",
         work: "work",
       },
-      toggles: {
-        projects: "projects",
-        items: "items",
-      },
       // Work-mode stage heading — the grid itself arrives in step 4.
       workHeading: "what's inside?",
     },

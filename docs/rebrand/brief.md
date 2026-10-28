@@ -89,7 +89,7 @@ Everything sits on **one left edge**, the name's: items aren't indented and have
 ### 2.3 Stage: jar mode (the default)
 
 - The jar is **centered** in the stage and fills **most of it** (about 85% of the stage height, still capped at the laptop size).
-- **Highlight toggles** on the right side of the stage, stacked vertically: **projects** and **items**. These are the current projects/favourites toggles with the same behavior: the chosen group gets a colored outline, the rest dim.
+- **No highlight toggles** (removed): instead, hovering a case study in the sidebar isolates its item in the jar (3.1).
 - Projects stay **in** the jar alongside your items (default, see Part 7).
 - Everything from the current jar still works: drag, rustle, items landing on things.
 
@@ -366,8 +366,8 @@ None of these block steps 1–6. The default is listed for each.
 
 1. **Logo** (the "Amy 王 → monogram" idea). You'll send an image. Needed in step 7; a placeholder "aw" until then. It could animate through its steps while the sidebar shrinks.
 2. **"View next case study"** at the bottom of each case study. You'll decide later. Easy to add after step 7.
-3. **Projects in the jar.** Default: they stay in, and the highlight toggles keep working. If you'd rather the jar only hold your items, the highlight toggles go.
-4. **Highlight toggles: 2 or 3?** The sketch shows 3 circles. Default: 2, projects and items.
+3. **Projects in the jar.** Decided: they stay in, so hovering a case study can lift its item (3.1).
+4. **Highlight toggles.** Decided: removed. Hovering a case study isolates its item instead (3.1).
 5. **Intro copy** for the sidebar. Placeholder: the current tagline.
 6. **Scroll instead of a toggle** for switching modes. Not doing it (it fights the one-screen layout and the menu previews), but noted in case you want to revisit.
 7. **Sound.** Default: the jar clink plays when switching modes. A small mute button may be worth adding.

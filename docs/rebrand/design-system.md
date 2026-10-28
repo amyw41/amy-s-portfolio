@@ -27,7 +27,6 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 | Inactive mode button (jar/work) | 40% black (70% on hover) |
 | Divider line | #000 |
 | Background | #fff |
-| Highlight toggles | projects: red #ff2841, items: blue #42b4fa |
 
 ## Layout
 
@@ -62,7 +61,6 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 - **Case-study row:** the name, then " - description" in full whenever Works is open, wrapping onto extra lines under the name.
 - **Works hover isolate:** hovering (or focusing) a case-study row lifts its jar item 12px and scales it to 1.04, above the pile, and dims every other item (`--dim-white`). In work mode its grid tile lifts 6px and the other tiles dim. Extras has no jar item, so it does nothing in the jar.
 - **Hover circle:** hand-drawn wiggly oval, drawn on like a pen when hovering a heading, un-drawn on leave. 16px past the word left/right, 8px above/below.
-- **Highlight toggles:** stacked 10px apart just right of the jar, 28px from its right edge, vertically centred on it, moving with it. On mobile: a centred row 16px under the jar.
 
 ## Hand-drawn lines
 
