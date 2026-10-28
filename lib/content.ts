@@ -34,24 +34,27 @@ export const content = {
       // Placeholder until the real intro copy is written (brief Part 7.5) —
       // same line as hero.tagline above.
       intro: "design engineer who adds whimsy to intuitive products.",
-      // Second paragraph under the intro.
-      currently: "Currently: design @ Blueprint, campus lead @ Notion, studying management engineering @ Waterloo.",
-      // Accessible names for the icon-only social bar under the name.
+      // Accessible names for the icon-only links row under the intro.
       social: {
         label: "Social links",
+        twitter: "X / Twitter",
         linkedin: "LinkedIn",
-        twitter: "Twitter",
         email: "Email",
       },
-      // Two menu groups: "Works" (projects, which expands to the case
-      // studies) and "Other" (about, play).
+      experience: {
+        heading: "Experience",
+        items: ["Design @ Blueprint", "Campus @ Notion", "Management Eng @ Waterloo"],
+      },
+      // Lower menu section: Works (lists the case studies), then About and
+      // Play as plain links.
       nav: {
         works: "Works",
-        projects: "projects",
-        other: "Other",
-        about: "about",
-        play: "play",
+        about: "About",
+        play: "Play",
       },
+      // Accessible name prefix for each case study's chevron button
+      // ("Preview CyberSea").
+      preview: "Preview",
       extras: "Extras",
       modes: {
         label: "view",

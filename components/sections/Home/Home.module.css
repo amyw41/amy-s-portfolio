@@ -83,16 +83,14 @@
 /* ---------- mobile: sidebar stacks on top ---------- */
 
 @media (max-width: 767px) {
+  /* Sidebar in normal flow on top, then a fixed-height stage — the page
+   * scrolls. The stage needs a definite height: .jarWrapper's cqh resolves
+   * against it under size containment. */
   .frame {
     display: flex;
     flex-direction: column;
     width: 100%;
-    /* Has to be a definite height (not min-height) — otherwise the stage's
-     * flex:1 height isn't definite either, and .jarWrapper's cqh resolves to
-     * 0 under the stage's size containment. The 620px floor (header + a
-     * usable stage) lets a very short phone scroll instead of crushing the
-     * jar. */
-    height: max(100dvh, 620px);
+    height: auto;
     overflow: visible;
   }
 
@@ -102,7 +100,7 @@
   }
 
   .stage {
-    flex: 1;
+    height: max(75svh, 460px);
   }
 
   .toggles {

@@ -33,16 +33,20 @@ Sketches: `02-home-jar.png` (jar mode), `03-home-grid.png` (work mode).
 ┌──────────────── frame: min(100vw, 1536px) × 100dvh, centered ────────────────┐
 │                    │                                                          │
 │    amy wang        ⌇                                              ○ projects  │
-│    [in][x][@]      ⌇  ← social bar                                ○ items     │
-│    short intro…    ⌇                                                          │
-│    currently…      ⌇                  ╭──────────╮                            │
-│                    ⌇                  │   jar    │                            │
-│    Works           ⌇                  │  items   │                            │
-│      projects      ⌇                  ╰──────────╯                            │
-│    Other           ⌇                                                          │
-│      about         ⌇                                                          │
-│      play          ⌇                                                          │
+│    short intro…    ⌇                                              ○ items     │
 │                    ⌇                                                          │
+│    X  in  ✉        ⌇  ← links                                                 │
+│                    ⌇                                                          │
+│   (Experience ˄)   ⌇                  ╭──────────╮                            │
+│      – Design @ …  ⌇                  │   jar    │                            │
+│      – Campus @ …  ⌇                  │  items   │                            │
+│      – Mgmt Eng …  ⌇                  ╰──────────╯                            │
+│                    ⌇                                                          │
+│   (Works ˄)        ⌇                                                          │
+│      – CyberSea ˄  ⌇                                                          │
+│      – …           ⌇                                                          │
+│    About           ⌇                                                          │
+│    Play            ⌇                                                          │
 │    jar   work      ⌇  ← mode toggle                                           │
 │                    │                                                          │
 └───────────────────────────────────────────────────────────────────────────────┘
@@ -62,27 +66,30 @@ Sketches: `02-home-jar.png` (jar mode), `03-home-grid.png` (work mode).
 
 **The box.** The sidebar is a box **flush with the frame's top, left and bottom**: no padding outside it. The divider line is its right edge. All the spacing is **inside** the box: the text sits about **32px** from the screen edges and the line. The stage runs to the frame's right edge and full height.
 
-Width about `clamp(260px, 20vw, 320px)`. **Font: Geist** for the home page, letter-spacing **-0.6px**. **Sizes:** name 28px, regular text 14px, case-study names 13px. Top to bottom:
+Width about `clamp(260px, 20vw, 320px)`. **Font: Geist** for the home page, letter-spacing **-0.6px**. **Sizes:** name 28px, everything else 14px. Headings are black, regular weight; items under them are weight 300.
 
-1. **amy wang**, the name. The only large text in the sidebar.
-2. **Social bar**, right under the name: a small bordered row of **LinkedIn**, **Twitter** and **Email** logos (the old hero's icon bar, scaled down), linking to `content.en.footer.links`.
-3. **Short intro**, at regular text size, then a second paragraph: **"Currently design @ Blueprint, campus lead @ Notion, studying management engineering @ Waterloo."**
-4. **Menu**, on the **same left edge** as the name, in two groups. Each group heading is in a **darker text color** than its items:
-   - **Works**
-     - **projects**: expands to list your case studies by name (CyberSea, Spotify Guessr, SkinSprout, Extras, from `lib/projects.ts`).
-   - **Other**
-     - **about**: goes to `/about`.
-     - **play**: goes to `/playground`.
-5. **Mode toggle**, at the bottom of the sidebar with clear space above it: two buttons, **jar** and **work** (see 2.4).
+Two sections, everything on the same left edge as the name:
 
-There's no separate contact section any more; the social bar replaces it.
+**Top section**, three blocks with equal spacing between them:
+1. **amy wang** (the name) and the **short intro** (weight 300).
+2. **Links**: plain black **X**, **LinkedIn** and **mail** icons in a row, no border, no colour, linking to `content.en.footer.links`.
+3. **Experience** (dropdown), with: Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo.
 
-**Indenting:** like tabs: menu items sit about 14px right of their group heading, and case-study names another 14px right of "projects". Everything else shares one left edge.
+**Bottom section**, separated by a clearly bigger gap, sitting just above the mode toggle:
+1. **Works** (dropdown), listing your case studies (CyberSea, Spotify Guessr, SkinSprout, Extras, from `lib/projects.ts`). Each name links to its case study.
+2. **About**, a link to `/about`.
+3. **Play**, a link to `/playground`.
 
-**Hover, menu items (projects, about, play):**
-- A **hand-drawn circle** draws itself around the word: the existing `ScribbleOval`, drawn on with a pen-stroke reveal.
-- Hovering **projects** also **expands** it to show the case-study names. Use hover intent: open after about 60ms, close about 150ms after the pointer leaves the whole projects area, so moving down into the list doesn't close it. It also opens on click and keyboard focus, so it works on touch and with a keyboard.
-- The buttons are **circles** (decided): no box around the text at rest, just the drawn oval on hover and on the active one.
+**Mode toggle** at the very bottom: two buttons, **jar** and **work** (see 2.4).
+
+**Items under a heading** are indented about 14px, like a tab, and start with a short dash **–** in light grey (50% opacity).
+
+**Dropdowns.** Experience and Works have a small chevron beside them; the heading and chevron are one button, and both start **open**. Clicking it:
+- toggles the list;
+- **draws the wiggly circle** (`ScribbleOval`'s path) around the heading with a pen-stroke reveal (pathLength 0 → 1, ~350ms), and un-draws it on close;
+- turns the chevron (closed points down, open points up; the angle is `CHEVRON_OPEN_DEG` in `lib/motion.ts`).
+
+**Case studies under Works** also get a chevron, pointing **up** (they open upward). Clicking it circles that row and turns its chevron; it's the trigger for the project preview that slides up from the bottom of the stage (3.1, step 6). Only one is open at a time.
 
 **Hover, small items (case-study names):**
 - The text turns **lighter**, to about 55% black.
@@ -200,7 +207,7 @@ Sketch: `01-intro-spill.png`, and the top left of `00-full-reference.png`. Total
 | 1.4 – 2.0 | It overflows: **two strands** run down the outside, one left and one right. They draw on with the pen reveal, accelerating like falling liquid. |
 | 2.0 – 3.4 | **The unravel.** The tip of the right strand is the needle. It travels **down toward the bottom of the page, near the left side**, then turns and goes **up**, tracing where the divider will be. Behind it, the line gets pulled out of the drawing: the jar visibly unwinds from the far end, like a thread pulled through a needle, until nothing is left but the line. The liquid fill fades as the jar unravels. |
 | 3.3 – 3.6 | The line settles into the squiggly divider, with padding top and bottom, and starts buzzing. |
-| 3.4 – 3.9 | The sidebar loads top to bottom: name, social bar, intro, menu, mode toggle. Each one fades and rises 8px, 70ms apart. |
+| 3.4 – 3.9 | The sidebar loads top to bottom: name, intro, links, Experience, Works / About / Play, mode toggle. Each one fades and rises 8px, 70ms apart. |
 | 3.6 → | The real jar drops into the stage with its landing squash, then the items fall in (existing physics). |
 
 **How the unravel works.** Put this in the step 8 prompt word for word.
@@ -316,7 +323,7 @@ Each step works on its own and can be checked before moving on. Copy the prompt,
 
 *Sketch: 02-home-jar.png*
 
-> Read brief Part 2.2. Add the hover effects: menu items (projects/about/play) get the hand-drawn circle drawn on with a pen reveal and buzzing while hovered; projects expands with a smooth height animation and staggered items. Small items (case study names) turn lighter and get a squiggly underline drawn in left to right. Indent levels like tabs. Group headings (Works, Other) are darker than their items. Check the keyboard: Tab through everything and make sure focus shows the same effects. Commit.
+> Read brief Part 2.2. Polish the sidebar from step 1: make the drawn circles around open dropdowns buzz, give the dropdown lists a smooth height animation with staggered items, and add hover effects: small items (case study names) turn lighter and get a squiggly underline drawn in left to right; About and Play get the hand-drawn circle on hover. Check the keyboard: Tab through everything and make sure focus shows the same effects. Commit.
 
 **Step 4: Work mode grid**
 

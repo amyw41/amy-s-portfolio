@@ -21,12 +21,16 @@ export const ARC_SPRING = { type: "spring" as const, stiffness: 300, damping: 30
 
 // ---------- rebrand v2 timings (brief Part 4.3) ----------
 //
-// Hover intent for the sidebar's "work" menu (Home/Sidebar.tsx): opens this
-// long after the pointer enters, closes HOVER_CLOSE_DELAY_MS after it leaves
-// the whole work area. HOVER_CLOSE_DELAY_MS is the brief's own name — the
-// project hover preview (step 6) reuses it for its own leave delay.
-export const WORK_HOVER_OPEN_MS = 60;
+// Leave delay for the project hover preview (step 6, brief Part 3.1) — the
+// brief's own name for it.
 export const HOVER_CLOSE_DELAY_MS = 150;
+
+// Sidebar dropdowns (Home/Sidebar.tsx): the hand-drawn oval pen-draws on
+// around an opened heading in OVAL_DRAW_S (un-draws on close), while its
+// chevron turns CHEVRON_OPEN_DEG over CHEVRON_TURN_S.
+export const OVAL_DRAW_S = 0.35;
+export const CHEVRON_TURN_S = 0.2;
+export const CHEVRON_OPEN_DEG = 180;
 
 // ---------- debug params (rebrand v2) ----------
 //

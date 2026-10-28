@@ -2,12 +2,11 @@
  * divider as its right edge. All of its spacing is this inner --box-pad,
  * from the screen edges and the line. */
 .sidebar {
-  /* One tab stop (brief Part 2.2): menu items sit this much further right
-   * than their group heading, case studies further right than "projects". */
+  /* One tab stop (brief Part 2.2): items sit this much further right than
+   * their heading. */
   --indent: 14px;
   --box-pad: 32px;
-  /* Regular text size — the intro, the menu and the mode toggle all share
-   * it; only the name is bigger. */
+  /* Regular text size — everything but the name. */
   --fs-body: 14px;
   display: flex;
   flex-direction: column;
@@ -16,10 +15,20 @@
   overflow-y: auto;
 }
 
+/* ---------- top section: name + intro, links, Experience ---------- */
+
+/* Equal spacing between its three blocks. */
+.top {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 22px;
+}
+
 .identity {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
 }
 
 .name {
@@ -39,56 +48,39 @@
   color: rgba(0, 0, 0, 0.75);
 }
 
-/* A blank line's worth of space between the intro's paragraphs. */
-.intro + .intro {
-  margin-top: 12px;
-}
-
-/* ---------- social bar ---------- */
-
-/* The old hero's bordered icon row (Hero.module.css .socialGroup), scaled
- * down to sit under the name. */
-.socialBar {
+/* Plain black icons, no border. */
+.socialRow {
   display: flex;
-  width: fit-content;
-  margin: 2px 0 6px;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
   padding: 0;
   list-style: none;
-  border: 1px solid #000;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.socialBar li + li {
-  border-left: 1px solid #000;
 }
 
 .socialIcon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
+  color: #000;
 }
 
-.socialIcon img {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-  user-select: none;
-}
+/* ---------- bottom section: Works, About, Play ---------- */
 
-/* ---------- menu: Works / Other ---------- */
-
-/* Same left edge as the name and intro; only each group's items are
- * indented. */
-.nav {
+/* margin-top:auto drops it to just above the mode toggle; the padding is the
+ * minimum gap from the top section when the column runs short. */
+.bottom {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 18px;
-  margin-top: 32px;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 40px;
 }
+
+/* ---------- headings and their items ---------- */
 
 .group {
   display: flex;
@@ -96,32 +88,14 @@
   align-items: flex-start;
 }
 
-/* Darker than the items under it (brief Part 2.2). */
-.groupHeading {
-  margin: 0 0 4px;
-  font-size: var(--fs-body);
-  font-weight: 400;
-  line-height: 1.45;
-  color: #000;
-}
-
-.groupItems {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+/* A heading with a dropdown (Experience, Works): text + chevron in one
+ * button. position:relative anchors .oval. */
+.headingButton,
+.headingLink {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
   gap: 4px;
-  padding-left: var(--indent);
-}
-
-.workArea {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-/* Menu items (projects, about, play), at regular text size. Plain text at
- * rest — the drawn oval on hover comes in step 3. */
-.navItem {
   background: none;
   border: none;
   padding: 0;
@@ -131,39 +105,80 @@
   font-weight: 400;
   line-height: 1.45;
   letter-spacing: inherit;
-  color: rgba(0, 0, 0, 0.7);
+  color: #000;
   text-decoration: none;
 }
 
-.workList {
+.chevron {
+  display: inline-flex;
+}
+
+.items {
   list-style: none;
-  margin: 4px 0 2px;
+  margin: 6px 0 0;
   padding: 0 0 0 var(--indent);
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-/* Small items: case-study names. Not 55% black at rest —
- * that's their hover colour (step 3), so rest has to sit clearly darker. */
-.smallItem {
-  font-size: 13px;
-  font-weight: 400;
+.item {
+  font-size: var(--fs-body);
+  font-weight: 300;
   line-height: 1.45;
-  color: rgba(0, 0, 0, 0.7);
+  color: #000;
+}
+
+/* The light-grey dash before every item. */
+.item::before {
+  content: "–";
+  margin-right: 6px;
+  opacity: 0.5;
+}
+
+.caseStudy {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.itemLink {
+  color: inherit;
   text-decoration: none;
+}
+
+.chevronButton {
+  display: inline-flex;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+}
+
+/* Hand-drawn oval around an opened heading/case study (DrawnOval in
+ * Sidebar.tsx). Sized explicitly off its parent's box plus a margin on every
+ * side — see Hero.module.css's .scribble for why width/height can't be
+ * left to auto on an absolutely positioned SVG. */
+.oval {
+  --oval-expand-y: 5px;
+  --oval-expand-x: 12px;
+  position: absolute;
+  top: calc(-1 * var(--oval-expand-y));
+  left: calc(-1 * var(--oval-expand-x));
+  width: calc(100% + 2 * var(--oval-expand-x));
+  height: calc(100% + 2 * var(--oval-expand-y));
+  overflow: visible;
+  pointer-events: none;
 }
 
 /* ---------- jar / work mode toggle ---------- */
 
-/* margin-top:auto pins it to the bottom of the box; the padding keeps clear
- * space above it even when the projects list is open and the column runs
- * short. */
 .modeToggle {
   display: flex;
   gap: 16px;
-  margin-top: auto;
-  padding-top: 40px;
+  padding-top: 32px;
 }
 
 .modeButton {
@@ -187,82 +202,25 @@
   color: #000;
 }
 
-/* ---------- mobile: compact header ---------- */
+/* ---------- mobile: stacks on top ---------- */
 
+/* Same structure, just in normal flow above the stage (the page scrolls). */
 @media (max-width: 767px) {
   .sidebar {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-areas:
-      "identity mode"
-      "nav nav";
-    row-gap: 14px;
-    padding: 20px 16px 16px;
+    padding: 24px 16px 20px;
     overflow: visible;
   }
 
-  .identity {
-    grid-area: identity;
-    gap: 4px;
-  }
-
   .name {
-    font-size: 22px;
+    font-size: 24px;
   }
 
-  .intro {
-    font-size: 12px;
+  .bottom {
+    margin-top: 0;
+    padding-top: 28px;
   }
 
   .modeToggle {
-    grid-area: mode;
-    align-self: start;
-    margin-top: 8px;
-    padding-top: 0;
-  }
-
-  /* Menus become one row (brief Part 4.5): each group's heading and items
-   * sit inline. */
-  .nav {
-    grid-area: nav;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 8px 24px;
-    margin-top: 0;
-  }
-
-  .group {
-    flex-direction: row;
-    align-items: baseline;
-    gap: 12px;
-  }
-
-  .groupHeading {
-    margin: 0;
-  }
-
-  .groupItems {
-    flex-direction: row;
-    gap: 12px;
-    padding-left: 0;
-  }
-
-  .workArea {
-    position: relative;
-  }
-
-  /* Opens as a small dropdown under "projects" instead of pushing the row
-   * apart. */
-  .workList {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    z-index: 10;
-    margin: 0;
-    padding: 8px 12px;
-    background: #fff;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    border-radius: 6px;
-    white-space: nowrap;
+    padding-top: 24px;
   }
 }
