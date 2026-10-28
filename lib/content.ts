@@ -52,9 +52,6 @@ export const content = {
         about: "About",
         play: "Play",
       },
-      // Accessible name prefix for each case study's chevron button
-      // ("Preview CyberSea").
-      preview: "Preview",
       extras: "Extras",
       modes: {
         label: "view",

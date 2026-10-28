@@ -32,21 +32,21 @@ Sketches: `02-home-jar.png` (jar mode), `03-home-grid.png` (work mode).
 ```
 ┌──────────────── frame: min(100vw, 1536px) × 100dvh, centered ────────────────┐
 │                    │                                                          │
-│    amy wang        ⌇                                              ○ projects  │
-│    short intro…    ⌇                                              ○ items     │
+│                    ⌇                                              ○ projects  │
+│    amy wang        ⌇                                              ○ items     │
+│    short intro…    ⌇                                                          │
+│    X in ✉          ⌇  ← links                                                 │
 │                    ⌇                                                          │
-│    X  in  ✉        ⌇  ← links                                                 │
+│    Experience ˄    ⌇                  ╭──────────╮                            │
+│    Design @ …      ⌇                  │   jar    │                            │
+│    Campus @ …      ⌇                  │  items   │                            │
+│    Mgmt Eng @ …    ⌇                  ╰──────────╯                            │
 │                    ⌇                                                          │
-│   (Experience ˄)   ⌇                  ╭──────────╮                            │
-│      – Design @ …  ⌇                  │   jar    │                            │
-│      – Campus @ …  ⌇                  │  items   │                            │
-│      – Mgmt Eng …  ⌇                  ╰──────────╯                            │
-│                    ⌇                                                          │
-│   (Works ˄)        ⌇                                                          │
-│      – CyberSea ˄  ⌇                                                          │
-│      – …           ⌇                                                          │
+│    Works ˄         ⌇                                                          │
+│    CyberSea …      ⌇                                                          │
 │    About           ⌇                                                          │
 │    Play            ⌇                                                          │
+│                    ⌇                                                          │
 │    jar   work      ⌇  ← mode toggle                                           │
 │                    │                                                          │
 └───────────────────────────────────────────────────────────────────────────────┘
@@ -64,36 +64,27 @@ Sketches: `02-home-jar.png` (jar mode), `03-home-grid.png` (work mode).
 
 ### 2.2 Sidebar
 
-**The box.** The sidebar is a box **flush with the frame's top, left and bottom**: no padding outside it. The divider line is its right edge. All the spacing is **inside** the box: the text sits about **32px** from the screen edges and the line. The stage runs to the frame's right edge and full height.
+**The box.** The sidebar is a box **flush with the frame's top, left and bottom**: no padding outside it. The divider line is its right edge and belongs to that outer box (inset 32px top and bottom). The text has its own, deeper inner padding: **32px** from the left edge and the line, and **64px** top and bottom, so the line starts clearly above the name and ends clearly below the mode toggle. The stage runs to the frame's right edge and full height.
 
-Width about `clamp(260px, 20vw, 320px)`. **Font: Geist** for the home page, letter-spacing **-0.6px**. **Sizes:** name 28px, everything else 14px. Headings are black, regular weight; items under them are weight 300.
+Width about `clamp(260px, 20vw, 320px)`. **Font: Geist** for the home page, letter-spacing **-0.6px**. **Sizes:** name 24px, everything else 14px. Headings are black, regular weight; items under them are weight 300.
 
-Two sections, everything on the same left edge as the name:
+Everything sits on **one left edge**, the name's: items aren't indented and have no dash.
 
 **Top section**, three blocks with equal spacing between them:
 1. **amy wang** (the name) and the **short intro** (weight 300).
-2. **Links**: plain black **X**, **LinkedIn** and **mail** icons in a row, no border, no colour, linking to `content.en.footer.links`.
+2. **Links**: plain black **X**, **LinkedIn** and **mail** icons, close together, no border, no colour, linking to `content.en.footer.links`.
 3. **Experience** (dropdown), with: Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo.
 
-**Bottom section**, separated by a clearly bigger gap, sitting just above the mode toggle:
-1. **Works** (dropdown), listing your case studies (CyberSea, Spotify Guessr, SkinSprout, Extras, from `lib/projects.ts`). Each name links to its case study.
+**Bottom section**, after a bigger gap. It flows straight on from the top section (it isn't pinned to the bottom), so closing a dropdown pulls everything below it up:
+1. **Works** (dropdown), listing your case studies (CyberSea, Spotify Guessr, SkinSprout, Extras, from `lib/projects.ts`). Each name links to its case study and turns **bold on hover** (without nudging anything).
 2. **About**, a link to `/about`.
 3. **Play**, a link to `/playground`.
 
 **Mode toggle** at the very bottom: two buttons, **jar** and **work** (see 2.4).
 
-**Items under a heading** are indented about 14px, like a tab, and start with a short dash **–** in light grey (50% opacity).
+**Dropdowns.** Experience and Works have a small chevron beside them; the heading and chevron are one button, and both start **open**. Clicking it toggles the list and turns the chevron (closed points down, open points up; the angle is `CHEVRON_OPEN_DEG` in `lib/motion.ts`). The list **grows open** while its items **fade down into place** one after another (from about 6px above); closing is quicker and all at once. Case studies have no dropdown.
 
-**Dropdowns.** Experience and Works have a small chevron beside them; the heading and chevron are one button, and both start **open**. Clicking it:
-- toggles the list;
-- **draws the wiggly circle** (`ScribbleOval`'s path) around the heading with a pen-stroke reveal (pathLength 0 → 1, ~350ms), and un-draws it on close;
-- turns the chevron (closed points down, open points up; the angle is `CHEVRON_OPEN_DEG` in `lib/motion.ts`).
-
-**Case studies under Works** also get a chevron, pointing **up** (they open upward). Clicking it circles that row and turns its chevron; it's the trigger for the project preview that slides up from the bottom of the stage (3.1, step 6). Only one is open at a time.
-
-**Hover, small items (case-study names):**
-- The text turns **lighter**, to about 55% black.
-- A **squiggly underline draws in** under it, from left to right.
+**Hover, headings (Experience, Works, About, Play):** the **wiggly circle** (`ScribbleOval`'s path) draws itself on around the heading with a pen-stroke reveal (~350ms) and un-draws when the pointer leaves. It's light grey (about 45% black), with some breathing room around the word. It shows on keyboard focus too, and doesn't stay after a click.
 
 ### 2.3 Stage: jar mode (the default)
 
@@ -323,7 +314,7 @@ Each step works on its own and can be checked before moving on. Copy the prompt,
 
 *Sketch: 02-home-jar.png*
 
-> Read brief Part 2.2. Polish the sidebar from step 1: make the drawn circles around open dropdowns buzz, give the dropdown lists a smooth height animation with staggered items, and add hover effects: small items (case study names) turn lighter and get a squiggly underline drawn in left to right; About and Play get the hand-drawn circle on hover. Check the keyboard: Tab through everything and make sure focus shows the same effects. Commit.
+> Read brief Part 2.2. Polish the sidebar from step 1: make the hover circles around the headings buzz while they are drawn, and check every hover/focus state with the keyboard. Check the keyboard: Tab through everything and make sure focus shows the same effects. Commit.
 
 **Step 4: Work mode grid**
 

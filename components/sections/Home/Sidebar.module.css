@@ -1,17 +1,17 @@
 /* The sidebar "box": flush with the frame's top, left and bottom, with the
- * divider as its right edge. All of its spacing is this inner --box-pad,
- * from the screen edges and the line. */
+ * divider as its right edge. The divider belongs to that outer box (inset
+ * --frame-gap, Home.module.css); the text has its own, deeper inner
+ * padding, so the line starts clearly above the name and ends clearly
+ * below the mode toggle. */
 .sidebar {
-  /* One tab stop (brief Part 2.2): items sit this much further right than
-   * their heading. */
-  --indent: 14px;
   --box-pad: 32px;
+  --box-pad-block: 64px;
   /* Regular text size — everything but the name. */
   --fs-body: 14px;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: var(--box-pad);
+  padding: var(--box-pad-block) var(--box-pad);
   overflow-y: auto;
 }
 
@@ -33,7 +33,7 @@
 
 .name {
   margin: 0;
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 400;
   line-height: 1.15;
   color: #000;
@@ -52,7 +52,10 @@
 .socialRow {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
+  /* Pulls the first icon's own box padding back so the glyph lines up with
+   * the text edge. */
+  margin-left: -3px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -69,15 +72,14 @@
 
 /* ---------- bottom section: Works, About, Play ---------- */
 
-/* margin-top:auto drops it to just above the mode toggle; the padding is the
- * minimum gap from the top section when the column runs short. */
+/* Flows straight on from the top section (not pinned to the bottom), so
+ * closing Experience or Works pulls everything under it up. */
 .bottom {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 12px;
-  margin-top: auto;
-  padding-top: 40px;
+  margin-top: 48px;
 }
 
 /* ---------- headings and their items ---------- */
@@ -88,10 +90,9 @@
   align-items: flex-start;
 }
 
-/* A heading with a dropdown (Experience, Works): text + chevron in one
- * button. position:relative anchors .oval. */
-.headingButton,
-.headingLink {
+/* Every heading — Experience and Works (dropdown buttons: text + chevron),
+ * About and Play (links). position:relative anchors .oval. */
+.heading {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -113,57 +114,54 @@
   display: inline-flex;
 }
 
+/* Same left edge as the heading — no indent, no dash. overflow:hidden
+ * clips the items while the height animates (Sidebar.tsx). */
 .items {
   list-style: none;
-  margin: 6px 0 0;
-  padding: 0 0 0 var(--indent);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 .item {
+  padding-top: 4px;
   font-size: var(--fs-body);
   font-weight: 300;
   line-height: 1.45;
   color: #000;
 }
 
-/* The light-grey dash before every item. */
-.item::before {
-  content: "–";
-  margin-right: 6px;
-  opacity: 0.5;
-}
-
-.caseStudy {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
+/* Case-study names go bold on hover. The invisible bold copy in ::after
+ * reserves the bold width up front, so going bold doesn't nudge anything. */
 .itemLink {
+  display: inline-flex;
+  flex-direction: column;
   color: inherit;
   text-decoration: none;
 }
 
-.chevronButton {
-  display: inline-flex;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  color: inherit;
+.itemLink::after {
+  content: attr(data-text);
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-weight: 500;
+  user-select: none;
+  pointer-events: none;
 }
 
-/* Hand-drawn oval around an opened heading/case study (DrawnOval in
- * Sidebar.tsx). Sized explicitly off its parent's box plus a margin on every
- * side — see Hero.module.css's .scribble for why width/height can't be
- * left to auto on an absolutely positioned SVG. */
+.itemLink:hover,
+.itemLink:focus-visible {
+  font-weight: 500;
+}
+
+/* Hand-drawn oval around a hovered heading (DrawnOval in Sidebar.tsx), in a
+ * light grey rather than full black. Sized explicitly off its parent's box
+ * plus a margin on every side — see Hero.module.css's .scribble for why
+ * width/height can't be left to auto on an absolutely positioned SVG. */
 .oval {
-  --oval-expand-y: 5px;
-  --oval-expand-x: 12px;
+  --oval-expand-y: 8px;
+  --oval-expand-x: 16px;
   position: absolute;
   top: calc(-1 * var(--oval-expand-y));
   left: calc(-1 * var(--oval-expand-x));
@@ -171,13 +169,17 @@
   height: calc(100% + 2 * var(--oval-expand-y));
   overflow: visible;
   pointer-events: none;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 /* ---------- jar / work mode toggle ---------- */
 
+/* margin-top:auto pins it to the bottom of the box; the padding is the
+ * minimum gap above it when the column runs short. */
 .modeToggle {
   display: flex;
   gap: 16px;
+  margin-top: auto;
   padding-top: 32px;
 }
 
@@ -216,8 +218,7 @@
   }
 
   .bottom {
-    margin-top: 0;
-    padding-top: 28px;
+    margin-top: 28px;
   }
 
   .modeToggle {

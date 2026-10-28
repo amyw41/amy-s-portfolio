@@ -25,12 +25,19 @@ export const ARC_SPRING = { type: "spring" as const, stiffness: 300, damping: 30
 // brief's own name for it.
 export const HOVER_CLOSE_DELAY_MS = 150;
 
-// Sidebar dropdowns (Home/Sidebar.tsx): the hand-drawn oval pen-draws on
-// around an opened heading in OVAL_DRAW_S (un-draws on close), while its
-// chevron turns CHEVRON_OPEN_DEG over CHEVRON_TURN_S.
+// Sidebar (Home/Sidebar.tsx): the hand-drawn oval pen-draws on around a
+// heading in OVAL_DRAW_S while it's hovered/focused and un-draws on leave; a
+// dropdown's chevron turns CHEVRON_OPEN_DEG over CHEVRON_TURN_S. Opening a
+// dropdown grows its list over DROPDOWN_OPEN_S while the items fade down
+// into place DROPDOWN_ITEM_STAGGER_S apart; closing runs quicker
+// (DROPDOWN_CLOSE_S) with no stagger.
 export const OVAL_DRAW_S = 0.35;
 export const CHEVRON_TURN_S = 0.2;
 export const CHEVRON_OPEN_DEG = 180;
+export const DROPDOWN_OPEN_S = 0.28;
+export const DROPDOWN_CLOSE_S = 0.18;
+export const DROPDOWN_ITEM_STAGGER_S = 0.035;
+export const DROPDOWN_ITEM_DROP_PX = 6;
 
 // ---------- debug params (rebrand v2) ----------
 //
