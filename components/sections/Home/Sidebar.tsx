@@ -95,6 +95,7 @@ export default function Sidebar({ mode, onModeChange }: SidebarProps) {
       <div className={styles.identity}>
         <h1 className={styles.name}>{copy.name}</h1>
         <p className={styles.intro}>{copy.intro}</p>
+        <p className={styles.intro}>{copy.currently}</p>
       </div>
 
       <nav className={styles.nav} aria-label="Main">

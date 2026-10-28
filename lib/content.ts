@@ -34,6 +34,8 @@ export const content = {
       // Placeholder until the real intro copy is written (brief Part 7.5) —
       // same line as hero.tagline above.
       intro: "design engineer who adds whimsy to intuitive products.",
+      // Second paragraph under the intro.
+      currently: "Currently: design @ Blueprint, campus lead @ Notion, studying management engineering @ Waterloo.",
       nav: {
         work: "work",
         about: "about",

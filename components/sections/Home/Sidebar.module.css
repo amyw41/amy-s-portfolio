@@ -39,6 +39,11 @@
   color: rgba(0, 0, 0, 0.75);
 }
 
+/* A blank line's worth of space between the intro's paragraphs. */
+.intro + .intro {
+  margin-top: 12px;
+}
+
 /* ---------- unnamed work / about / play group ---------- */
 
 /* Same left edge as the name and intro — no indent for this group. */
