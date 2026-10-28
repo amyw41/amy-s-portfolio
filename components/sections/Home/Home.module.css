@@ -1,21 +1,30 @@
 /* The whole home page is this one frame (brief Part 1's size rule): never
  * wider than the 1536px laptop layout, centred on bigger screens, exactly
- * one screen tall, no side padding — the sidebar sits flush left and the
- * stage runs to the right edge. */
+ * one screen tall. The sidebar is a "box" inset from the page by
+ * --frame-gap on its top, left and bottom; the divider is that box's right
+ * edge, so it runs the box's full height and inherits the same gap from the
+ * top and bottom of the screen. The stage isn't inset — it still runs to
+ * the right edge and the full height. */
 .frame {
+  --frame-gap: 32px;
   --sidebar-width: clamp(260px, 20vw, 320px);
   display: grid;
   grid-template-columns: var(--sidebar-width) 1px minmax(0, 1fr);
   width: min(100vw, 1536px);
   height: 100dvh;
   margin-inline: auto;
+  padding-left: var(--frame-gap);
   overflow: hidden;
+  font-family: var(--font-figtree), system-ui, sans-serif;
+  /* body's -0.03em is tuned for Roboto; Figtree is already fairly tight. */
+  letter-spacing: -0.01em;
 }
 
-/* Plain for now; step 2 swaps in the squiggly buzzing line. Inset from the
- * top and bottom so it never touches either edge. */
+/* Plain for now; step 2 swaps in the squiggly buzzing line. Same vertical
+ * inset as the sidebar box (Sidebar.module.css), so it's exactly the box's
+ * right edge. */
 .divider {
-  margin-block: 32px;
+  margin-block: var(--frame-gap);
   background: #000;
 }
 
@@ -77,6 +86,7 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+    padding-left: 0;
     /* Has to be a definite height (not min-height) — otherwise the stage's
      * flex:1 height isn't definite either, and .jarWrapper's cqh resolves to
      * 0 under the stage's size containment. The 620px floor (header + a

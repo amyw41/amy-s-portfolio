@@ -31,45 +31,52 @@ Sketches: `02-home-jar.png` (jar mode), `03-home-grid.png` (work mode).
 
 ```
 ┌──────────────── frame: min(100vw, 1536px) × 100dvh, centered ────────────────┐
-│                │                                                    ○ ~~~     │
-│  amy wang      ⌇                                                    ○ ~~~     │
-│  short intro…  ⌇                    ╭──────────╮                              │
-│                ⌇                    │          │                              │
-│    work   ◯    ⌇                    │   jar    │                              │
-│    about       ⌇                    │  items   │                              │
-│    play        ⌇                    ╰──────────╯                              │
-│                ⌇                                                              │
-│  contact       ⌇                                                              │
-│    twitter     ⌇                                                              │
-│    linkedin    ⌇                                                              │
-│    email       │                                                              │
 │                                                                               │
-│  (jar) (work)  ← mode toggle, near the bottom                                 │
+│   ┌─ sidebar box ──┐                                              ○ projects  │
+│   │ amy wang       ⌇                                              ○ items     │
+│   │ short intro…   ⌇                  ╭──────────╮                            │
+│   │                ⌇                  │          │                            │
+│   │ work           ⌇                  │   jar    │                            │
+│   │ about          ⌇                  │  items   │                            │
+│   │ play           ⌇                  ╰──────────╯                            │
+│   │                ⌇                                                          │
+│   │ jar   work     ⌇  ← mode toggle                                           │
+│   │                ⌇                                                          │
+│   │ contact        ⌇                                                          │
+│   │   twitter      ⌇                                                          │
+│   │   linkedin     ⌇                                                          │
+│   │   email        ⌇                                                          │
+│   └────────────────┘                                                          │
+│                                                                               │
 └───────────────────────────────────────────────────────────────────────────────┘
 ```
+
+(The box outline is only for explanation; nothing is drawn except the divider line on its right edge.)
 
 ### 2.1 The divider line
 
 - A vertical hand-drawn line between the sidebar and the stage.
 - It's **a bit squiggly**: a gentle wobble, not a ruler-straight line.
-- It **doesn't touch the top or bottom**. Leave padding of about 32px above and below it.
+- It's the **right edge of the sidebar box** (see 2.2) and runs that box's full height. The box is inset from the page by about 32px top and bottom, so the line never touches the top or bottom of the screen.
 - It buzzes gently (see 4.1), like every other drawn line.
 - It's the same line the intro creates, so the intro ends exactly where this line sits.
 
 ### 2.2 Sidebar
 
-Width about `clamp(260px, 20vw, 320px)`. Top to bottom:
+**The box.** The sidebar is a box inset from the page by about **32px on the top, left and bottom**. The divider line is its right edge. Inside the box, the text has its own padding (about 24px) from the box edges and the line. The stage isn't inset: it runs to the frame's right edge and full height.
 
-1. **amy wang**, the name.
-2. **Short intro**, one or two lines. Copy to be written. Placeholder: the current tagline in `lib/content.ts`.
-3. **Unnamed section** (no heading) with three buttons:
+Width about `clamp(260px, 20vw, 320px)`. **Font: Figtree** (for the home page). Top to bottom:
+
+1. **amy wang**, the name. The only large text in the sidebar.
+2. **Short intro**, one or two lines, at regular text size. Copy to be written. Placeholder: the current tagline in `lib/content.ts`.
+3. **Unnamed section** (no heading) with three buttons, on the **same left edge** as the name and intro, and at **regular text size and style** (not a bigger nav size):
    - **work**: expands to list your case studies by name (CyberSea, Spotify Guessr, SkinSprout, Extras, from `lib/projects.ts`).
    - **about**: goes to `/about`.
    - **play**: goes to `/playground`.
-4. **contact**: a heading in a **darker text color** than the items. Under it, always visible: **twitter**, **linkedin**, **email** (from `content.en.footer.links`).
-5. **Mode toggle** near the bottom of the sidebar, with clear space above it: two buttons, **jar** and **work** (see 2.4).
+4. **Mode toggle**, pushed down toward the bottom, just above contact with clear space between them: two buttons, **jar** and **work** (see 2.4).
+5. **contact**, at the **very bottom of the sidebar**: a heading in a **darker text color** than the items. Under it, always visible: **twitter**, **linkedin**, **email** (from `content.en.footer.links`).
 
-**Indenting:** each level sits a bit further right, like tabs. Items under a section are indented about 14px from the section, and case-study names under "work" another 14px.
+**Indenting:** only sub-items are indented, like tabs: case-study names sit about 14px right of "work", and the contact links about 14px right of "contact". Everything else shares one left edge.
 
 **Hover, big sections (work, about, play):**
 - A **hand-drawn circle** draws itself around the word: the existing `ScribbleOval`, drawn on with a pen-stroke reveal.

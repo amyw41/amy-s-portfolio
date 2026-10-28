@@ -7,6 +7,7 @@ import CircleToggle from "@/components/ui/CircleToggle";
 import JarStage from "@/components/sections/Hero/JarStage";
 import { JAR_ITEMS } from "@/components/sections/Hero/items.manifest";
 import { content } from "@/lib/content";
+import { figtree } from "@/lib/fonts";
 
 const copy = content.en.sidebar;
 
@@ -31,7 +32,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className={styles.frame}>
+    <main className={`${figtree.variable} ${styles.frame}`}>
       <Sidebar mode={mode} onModeChange={setMode} />
 
       <div className={styles.divider} aria-hidden="true" />

@@ -128,6 +128,19 @@ export default function Sidebar({ mode, onModeChange }: SidebarProps) {
         </Link>
       </nav>
 
+      <div className={styles.modeToggle} role="group" aria-label={copy.modes.label}>
+        {(["jar", "work"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            className={`${styles.modeButton} ${mode === m ? styles.modeButtonActive : ""}`}
+            aria-pressed={mode === m}
+            onClick={() => onModeChange(m)}
+          >
+            {copy.modes[m]}
+          </button>
+        ))}
+      </div>
       <div className={styles.contact}>
         <h2 className={styles.contactHeading}>{copy.contact.heading}</h2>
         <ul className={styles.contactList}>
@@ -149,19 +162,6 @@ export default function Sidebar({ mode, onModeChange }: SidebarProps) {
         </ul>
       </div>
 
-      <div className={styles.modeToggle} role="group" aria-label={copy.modes.label}>
-        {(["jar", "work"] as const).map((m) => (
-          <button
-            key={m}
-            type="button"
-            className={`${styles.modeButton} ${mode === m ? styles.modeButtonActive : ""}`}
-            aria-pressed={mode === m}
-            onClick={() => onModeChange(m)}
-          >
-            {copy.modes[m]}
-          </button>
-        ))}
-      </div>
     </aside>
   );
 }

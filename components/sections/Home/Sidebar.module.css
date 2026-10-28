@@ -1,12 +1,21 @@
+/* The sidebar "box": inset from the page by Home.module.css's --frame-gap
+ * on top/bottom (the frame's own padding-left covers the left), with the
+ * divider as its right edge. --box-pad is the text's own padding inside it,
+ * from the box edges and the line. */
 .sidebar {
-  /* One tab stop (brief Part 2.2): each nesting level sits this much
-   * further right — work/about/play under the name, case studies under
-   * work, contact links under the contact heading. */
+  /* One tab stop (brief Part 2.2): case studies sit this much further right
+   * than "work", contact links further right than "contact". */
   --indent: 14px;
+  --box-pad: 24px;
+  /* Regular text size — the intro, work/about/play and the mode toggle all
+   * share it; only the name is bigger. */
+  --fs-body: 16px;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 32px 24px 32px 28px;
+  margin-block: var(--frame-gap);
+  padding: var(--box-pad);
+  padding-top: 4px;
   overflow-y: auto;
 }
 
@@ -18,29 +27,30 @@
 
 .name {
   margin: 0;
-  font-size: 28px;
-  font-weight: 300;
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.15;
   color: #000;
   white-space: nowrap;
 }
 
 .intro {
   margin: 0;
-  font-size: 15px;
-  font-weight: 300;
+  font-size: var(--fs-body);
+  font-weight: 400;
   line-height: 1.45;
-  color: rgba(0, 0, 0, 0.8);
+  color: rgba(0, 0, 0, 0.75);
 }
 
 /* ---------- unnamed work / about / play group ---------- */
 
+/* Same left edge as the name and intro — no indent for this group. */
 .nav {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
-  margin-top: 36px;
-  padding-left: var(--indent);
+  margin-top: 32px;
 }
 
 .workArea {
@@ -49,17 +59,17 @@
   align-items: flex-start;
 }
 
-/* Big sections. Plain text at rest — the drawn oval on hover/active comes
- * in step 3. */
+/* Big sections, at regular text size (only their hover oval, step 3, sets
+ * them apart). Plain text at rest. */
 .navItem {
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
   font-family: inherit;
-  font-size: 19px;
+  font-size: var(--fs-body);
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 1.45;
   letter-spacing: inherit;
   color: #000;
   text-decoration: none;
@@ -67,7 +77,7 @@
 
 .workList {
   list-style: none;
-  margin: 2px 0 6px;
+  margin: 4px 0 4px;
   padding: 0 0 0 var(--indent);
   display: flex;
   flex-direction: column;
@@ -78,42 +88,20 @@
  * that's their hover colour (step 3), so rest has to sit clearly darker. */
 .smallItem {
   font-size: 15px;
-  font-weight: 300;
-  line-height: 1.45;
-  color: rgba(0, 0, 0, 0.75);
-  text-decoration: none;
-}
-
-/* ---------- contact ---------- */
-
-.contact {
-  margin-top: 32px;
-}
-
-/* Darker than its own items (brief Part 2.2). */
-.contactHeading {
-  margin: 0 0 4px;
-  font-size: 15px;
   font-weight: 400;
-  color: #000;
-}
-
-.contactList {
-  list-style: none;
-  margin: 0;
-  padding: 0 0 0 var(--indent);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  line-height: 1.45;
+  color: rgba(0, 0, 0, 0.7);
+  text-decoration: none;
 }
 
 /* ---------- jar / work mode toggle ---------- */
 
+/* margin-top:auto pushes this and the contact block below it down to the
+ * bottom of the box; the padding keeps clear space above it even when the
+ * work list is open and the column runs short. */
 .modeToggle {
   display: flex;
   gap: 16px;
-  /* margin-top:auto pins it to the bottom; the min keeps clear space above
-   * it even when the work list is open and the column runs short. */
   margin-top: auto;
   padding-top: 40px;
 }
@@ -124,7 +112,7 @@
   padding: 0;
   cursor: pointer;
   font-family: inherit;
-  font-size: 15px;
+  font-size: var(--fs-body);
   font-weight: 400;
   letter-spacing: inherit;
   color: rgba(0, 0, 0, 0.4);
@@ -139,6 +127,29 @@
   color: #000;
 }
 
+/* ---------- contact (bottom of the sidebar) ---------- */
+
+.contact {
+  margin-top: 28px;
+}
+
+/* Darker than its own items (brief Part 2.2). */
+.contactHeading {
+  margin: 0 0 4px;
+  font-size: var(--fs-body);
+  font-weight: 400;
+  color: #000;
+}
+
+.contactList {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 var(--indent);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 /* ---------- mobile: compact header ---------- */
 
 @media (max-width: 767px) {
@@ -150,6 +161,7 @@
       "nav nav"
       "contact contact";
     row-gap: 14px;
+    margin-block: 0;
     padding: 20px 16px 16px;
     overflow: visible;
   }
@@ -170,7 +182,7 @@
   .modeToggle {
     grid-area: mode;
     align-self: start;
-    margin-top: 6px;
+    margin-top: 8px;
     padding-top: 0;
   }
 
