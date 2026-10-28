@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState, type FocusEvent, type ReactNode } from "react";
+import { useId, useMemo, useRef, useState, type FocusEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
 import { ChevronDown, Mail } from "lucide-react";
@@ -8,6 +8,8 @@ import styles from "./Sidebar.module.css";
 import { content } from "@/lib/content";
 import { PROJECTS } from "@/lib/projects";
 import {
+  CASE_ROW_COLLAPSE_S,
+  CASE_ROW_EXPAND_S,
   CHEVRON_OPEN_DEG,
   CHEVRON_TURN_S,
   DROPDOWN_CLOSE_S,
@@ -208,6 +210,79 @@ function DropdownGroup({ title, seed, items }: { title: string; seed: number; it
   );
 }
 
+/** A case study under Works: "Name - description" on one line, the
+ * description truncated with an ellipsis. Hovering (or keyboard-focusing)
+ * the row grows it to the full description, wrapped onto extra lines under
+ * the name, and shrinks it back on leave.
+ *
+ * The height animates between two measured numbers (Framer can't animate
+ * between two "auto"s): the one-line row as it is, and a hidden, always-
+ * wrapped copy of it. Both are read in the hover handler, so nothing is
+ * measured during render. The visible row only switches back to one line
+ * once the collapse has finished, so the text doesn't jump mid-animation. */
+function CaseStudyRow({ href, label, description }: { href: string; label: string; description: string }) {
+  const reduced = useReducedMotion();
+  const rowRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
+  const [open, setOpen] = useState(false);
+  const [wrapped, setWrapped] = useState(false);
+  const [heights, setHeights] = useState<{ line: number; full: number } | null>(null);
+
+  const expand = () => {
+    if (!wrapped && rowRef.current && measureRef.current) {
+      setHeights({ line: rowRef.current.offsetHeight, full: measureRef.current.offsetHeight });
+    }
+    setWrapped(true);
+    setOpen(true);
+  };
+  const collapse = () => setOpen(false);
+
+  const transition = reduced
+    ? { duration: 0 }
+    : slowTransition(
+        open
+          ? { duration: CASE_ROW_EXPAND_S, ease: "easeOut" as const }
+          : { duration: CASE_ROW_COLLAPSE_S, ease: "easeIn" as const },
+      );
+
+  const text = (
+    <>
+      <span className={styles.itemName}>{label}</span>
+      <span className={styles.itemDescription}>&nbsp;- {description}</span>
+    </>
+  );
+
+  return (
+    <motion.div
+      ref={rowRef}
+      className={styles.caseRow}
+      initial={false}
+      animate={heights ? { height: open ? heights.full : heights.line } : undefined}
+      transition={transition}
+      onAnimationComplete={() => {
+        if (!open) setWrapped(false);
+      }}
+      onPointerEnter={expand}
+      onPointerLeave={collapse}
+    >
+      <Link
+        href={href}
+        className={`${styles.itemLink} ${wrapped ? styles.itemLinkWrapped : ""} ${open ? styles.itemLinkOpen : ""}`}
+        onFocus={(e) => {
+          if (e.currentTarget.matches(":focus-visible")) expand();
+        }}
+        onBlur={collapse}
+      >
+        {text}
+      </Link>
+      {/* Hidden full-width, always-wrapped copy, only here to be measured. */}
+      <span ref={measureRef} className={`${styles.itemLink} ${styles.itemLinkWrapped} ${styles.measure}`} aria-hidden="true">
+        {text}
+      </span>
+    </motion.div>
+  );
+}
+
 /** About / Play: a top-level heading that's just a link. */
 function HeadingLink({ href, label, seed }: { href: string; label: string; seed: number }) {
   const oval = useHoverOval();
@@ -254,16 +329,7 @@ export default function Sidebar({ mode, onModeChange }: SidebarProps) {
           title={copy.nav.works}
           seed={21}
           items={WORK_LINKS.map((link) => (
-            // One line: the name never shrinks, the description truncates
-            // with an ellipsis when the sidebar is too narrow for it.
-            // data-text feeds the invisible bold copy that reserves the
-            // hover-bold width (Sidebar.module.css .itemName::after).
-            <Link key={link.href} href={link.href} className={styles.itemLink}>
-              <span className={styles.itemName} data-text={link.label}>
-                {link.label}
-              </span>
-              <span className={styles.itemDescription}>&nbsp;- {link.description}</span>
-            </Link>
+            <CaseStudyRow key={link.href} href={link.href} label={link.label} description={link.description} />
           ))}
         />
         <HeadingLink href="/about" label={copy.nav.about} seed={22} />

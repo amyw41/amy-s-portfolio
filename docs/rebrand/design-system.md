@@ -15,7 +15,6 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 | Heading weight (Experience, Works, About, Play) | 500 |
 | jar/work toggle weight | 400 |
 | Body weight (intro, list items) | 300 |
-| Hover-bold weight (case-study names) | 500 |
 
 ## Colour
 
@@ -23,7 +22,7 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 |---|---|
 | Text | #000 |
 | Intro text | 75% black |
-| Case-study description | 30% black |
+| Case-study description | 30% black (55% while its row is hovered) |
 | Hover circle | 45% black |
 | Inactive mode button (jar/work) | 40% black (70% on hover) |
 | Divider line | #000 |
@@ -37,8 +36,7 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 | Frame | min(100vw, 1536px) wide, 100dvh tall, centred, no outer padding |
 | Sidebar width | clamp(260px, 20vw, 320px) (~307px) |
 | Divider | 1px, inset 32px from the top and bottom of the screen |
-| Sidebar padding, left/right | 32px |
-| Sidebar padding, top/bottom | 64px |
+| Sidebar padding | 48px on every side (the divider starts 16px above the name) |
 | Mobile breakpoint | below 768px the sidebar stacks above the stage |
 
 ## Sidebar spacing (top to bottom)
@@ -60,7 +58,7 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 - **Icons:** X, LinkedIn, mail. Plain black, ~18–20px, no border.
 - **Headings with a dropdown** (Experience, Works): text + chevron (14px). Start open. Closed points down, open points up.
 - **List items:** same left edge as the heading, no indent, no dash.
-- **Case-study row:** name, then " - description" on one line; the description truncates with "…".
+- **Case-study row:** name, then " - description" on one line; the description truncates with "…". Hovering (or keyboard-focusing) the row expands it to the full description, wrapped onto extra lines under the name; the name doesn't change.
 - **Hover circle:** hand-drawn wiggly oval, drawn on like a pen when hovering a heading, un-drawn on leave. 16px past the word left/right, 8px above/below.
 - **Highlight toggles:** stacked on the stage's right, 40px from its top and right edges, 10px apart.
 
@@ -72,4 +70,5 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 | Chevron turn | 200ms, 180° |
 | Dropdown open | 280ms ease-out; items fade down from 6px above, 35ms apart |
 | Dropdown close | 180ms ease-in, all at once |
+| Case-study row expand / collapse | 200ms ease-out / 160ms ease-in |
 | Reduced motion | no animation, things just appear |

@@ -39,6 +39,12 @@ export const DROPDOWN_CLOSE_S = 0.18;
 export const DROPDOWN_ITEM_STAGGER_S = 0.035;
 export const DROPDOWN_ITEM_DROP_PX = 6;
 
+// Case-study rows under Works: hovering one grows it from its one-line,
+// truncated description to the full wrapped text over CASE_ROW_EXPAND_S,
+// and shrinks it back over CASE_ROW_COLLAPSE_S on leave.
+export const CASE_ROW_EXPAND_S = 0.2;
+export const CASE_ROW_COLLAPSE_S = 0.16;
+
 // ---------- debug params (rebrand v2) ----------
 //
 // ?slow=4 — global animation slow-down factor. Every rebrand animation added

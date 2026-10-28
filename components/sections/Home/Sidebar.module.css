@@ -1,11 +1,10 @@
 /* The sidebar "box": flush with the frame's top, left and bottom, with the
  * divider as its right edge. The divider belongs to that outer box (inset
- * --frame-gap, Home.module.css); the text has its own, deeper inner
- * padding, so the line starts clearly above the name and ends clearly
- * below the mode toggle. */
+ * --frame-gap, Home.module.css); the text has its own inner padding, equal
+ * on every side and deeper than the divider's inset, so the line starts
+ * above the name and ends below the mode toggle. */
 .sidebar {
-  --box-pad: 32px;
-  --box-pad-block: 64px;
+  --box-pad: 48px;
   /* Regular text size — everything but the name. */
   --fs-body: 14px;
   /* Space between the bottom section's headings (Works → About → Play,
@@ -15,7 +14,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: var(--box-pad-block) var(--box-pad);
+  padding: var(--box-pad);
   overflow-y: auto;
 }
 
@@ -141,7 +140,16 @@
   color: #000;
 }
 
-/* A case-study row: name, then " - description" on the same line. */
+/* A case-study row (CaseStudyRow in Sidebar.tsx). position:relative
+ * anchors the hidden measuring copy; overflow:hidden clips the text while
+ * the row's height animates. */
+.caseRow {
+  position: relative;
+  overflow: hidden;
+}
+
+/* At rest: name, then " - description", on one line. The name never
+ * shrinks; the description truncates with an ellipsis instead. */
 .itemLink {
   display: flex;
   min-width: 0;
@@ -150,37 +158,47 @@
   text-decoration: none;
 }
 
-/* The name goes bold on hover. The invisible bold copy in ::after reserves
- * the bold width up front, so going bold doesn't nudge anything. Never
- * shrinks — the description gives way instead. */
 .itemName {
-  display: inline-flex;
-  flex-direction: column;
   flex-shrink: 0;
 }
 
-.itemName::after {
-  content: attr(data-text);
-  height: 0;
-  overflow: hidden;
-  visibility: hidden;
-  font-weight: 500;
-  user-select: none;
-  pointer-events: none;
-}
-
-.itemLink:hover .itemName,
-.itemLink:focus-visible .itemName {
-  font-weight: 500;
-}
-
-/* Same size and weight as the name, much lighter; truncates with an
- * ellipsis when the row runs out of width. */
 .itemDescription {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   color: rgba(0, 0, 0, 0.3);
+}
+
+/* Hovered: the same text as one wrapping paragraph, so the description
+ * flows onto extra lines under the name. */
+.itemLinkWrapped {
+  display: block;
+  white-space: normal;
+}
+
+.itemLinkWrapped .itemDescription {
+  overflow: visible;
+}
+
+.itemLinkOpen .itemDescription {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .itemDescription {
+    transition: color calc(160ms * var(--slow, 1)) ease;
+  }
+}
+
+/* The hidden always-wrapped copy CaseStudyRow measures its open height
+ * from. Same width as the row, out of flow, invisible. */
+.measure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* Hand-drawn oval around a hovered heading (DrawnOval in Sidebar.tsx), in a
