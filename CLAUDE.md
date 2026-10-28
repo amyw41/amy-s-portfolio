@@ -2,6 +2,7 @@
 
 ## Rebrand (in progress)
 - The spec is docs/rebrand/brief.md; sketches are in docs/rebrand/sketches/. Read the parts the task names before planning.
+- Visual values (type, colour, spacing, motion) come from docs/rebrand/design-system.md, which Amy maintains. Follow it exactly; if it disagrees with the code or the brief, it wins. When Amy asks for a visual change, update that file too.
 - Work only on the step you're given. Don't start later steps.
 - Max layout size is ~1536x696 CSS px, centered on bigger screens, no side padding.
 - Keep the existing jar physics (useJarPhysics.ts). Extend it with small options; don't rewrite it.
