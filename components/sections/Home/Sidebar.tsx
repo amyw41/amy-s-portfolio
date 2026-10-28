@@ -28,6 +28,8 @@ export type HomeMode = "jar" | "work";
 interface SidebarProps {
   mode: HomeMode;
   onModeChange: (mode: HomeMode) => void;
+  /** The case study being hovered/focused in Works (its slug), or null. */
+  onCaseFocus: (id: string | null) => void;
 }
 
 // X and LinkedIn marks — lucide-react no longer ships brand icons, so these
@@ -60,10 +62,16 @@ const SOCIAL_LINKS = [
 
 // Case studies listed under Works — every project in lib/projects.ts, then
 // Extras last (it isn't a Project, see ExtrasCard.tsx, but has its own case
-// study at /extras).
+// study at /extras). `id` is the project's slug — also its jar item's id and
+// its work-mode tile's id.
 const WORK_LINKS = [
-  ...PROJECTS.map((project) => ({ href: `/${project.slug}`, label: project.title, description: project.description })),
-  { href: "/extras", label: copy.extras, description: content.en.projects.extras.description },
+  ...PROJECTS.map((project) => ({
+    id: project.slug,
+    href: `/${project.slug}`,
+    label: project.title,
+    description: project.description,
+  })),
+  { id: "extras", href: "/extras", label: copy.extras, description: content.en.projects.extras.description },
 ];
 
 /** Hover/keyboard-focus tracking for a heading — drives its DrawnOval.
@@ -193,10 +201,30 @@ function DropdownGroup({ title, seed, items }: { title: string; seed: number; it
 }
 
 /** A case study under Works: the name, then " - description" in full,
- * wrapping onto extra lines under the name. */
-function CaseStudyRow({ href, label, description }: { href: string; label: string; description: string }) {
+ * wrapping onto extra lines under the name. Hovering or keyboard-focusing
+ * it isolates that project on the stage (onFocusChange → Home). */
+function CaseStudyRow({
+  href,
+  label,
+  description,
+  onFocusChange,
+}: {
+  href: string;
+  label: string;
+  description: string;
+  onFocusChange: (active: boolean) => void;
+}) {
   return (
-    <Link href={href} className={styles.itemLink}>
+    <Link
+      href={href}
+      className={styles.itemLink}
+      onPointerEnter={() => onFocusChange(true)}
+      onPointerLeave={() => onFocusChange(false)}
+      onFocus={(e) => {
+        if (e.currentTarget.matches(":focus-visible")) onFocusChange(true);
+      }}
+      onBlur={() => onFocusChange(false)}
+    >
       <span className={styles.itemName}>{label}</span>
       <span className={styles.itemDescription}> - {description}</span>
     </Link>
@@ -214,7 +242,7 @@ function HeadingLink({ href, label, seed }: { href: string; label: string; seed:
   );
 }
 
-export default function Sidebar({ mode, onModeChange }: SidebarProps) {
+export default function Sidebar({ mode, onModeChange, onCaseFocus }: SidebarProps) {
   return (
     <aside className={styles.sidebar}>
       {/* Top section: name + intro, links, Experience — equal spacing. */}
@@ -249,7 +277,13 @@ export default function Sidebar({ mode, onModeChange }: SidebarProps) {
           title={copy.nav.works}
           seed={21}
           items={WORK_LINKS.map((link) => (
-            <CaseStudyRow key={link.href} href={link.href} label={link.label} description={link.description} />
+            <CaseStudyRow
+              key={link.href}
+              href={link.href}
+              label={link.label}
+              description={link.description}
+              onFocusChange={(active) => onCaseFocus(active ? link.id : null)}
+            />
           ))}
         />
         <HeadingLink href="/about" label={copy.nav.about} seed={22} />

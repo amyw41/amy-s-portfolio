@@ -33,6 +33,10 @@ interface JarItemProps {
    * bringToFront), which this component has no say in. */
   dimmed: boolean;
   bordered: boolean;
+  /** Raised out of the pile (brief Part 3.1: hovering its case study in the
+   * sidebar). Purely visual — an inner wrapper's transform, so the physics
+   * body and the outer div's physics-driven transform are untouched. */
+  lifted?: boolean;
 }
 
 const JarItem = forwardRef<HTMLDivElement, JarItemProps>(function JarItem(
@@ -51,6 +55,7 @@ const JarItem = forwardRef<HTMLDivElement, JarItemProps>(function JarItem(
     outlineMask,
     dimmed,
     bordered,
+    lifted = false,
   },
   ref,
 ) {
@@ -108,7 +113,7 @@ const JarItem = forwardRef<HTMLDivElement, JarItemProps>(function JarItem(
   return (
     <div
       ref={ref}
-      className={styles.item}
+      className={`${styles.item} ${lifted ? styles.lifted : ""}`}
       style={{
         width,
         height,
@@ -126,71 +131,73 @@ const JarItem = forwardRef<HTMLDivElement, JarItemProps>(function JarItem(
           : undefined,
       }}
     >
-      {/* Ring sits outside .clip's overflow:hidden (it pads past the div's
-       * own bounds by design — see ringLeft/Top/Width/Height) and earlier
-       * in the DOM than .clip, so it paints behind the item's image. */}
-      {!isBox && outlineMask && (
-        <div
-          className={`${styles.ring} ${bordered ? styles.ringActive : ""}`}
-          style={
-            {
-              left: ringLeft,
-              top: ringTop,
-              width: ringWidth,
-              height: ringHeight,
-              "--cat-color": catColor,
-              maskImage: `url(${outlineMask})`,
-              WebkitMaskImage: `url(${outlineMask})`,
-            } as CSSProperties
-          }
-        />
-      )}
+      <div className={styles.lift}>
+        {/* Ring sits outside .clip's overflow:hidden (it pads past the div's
+         * own bounds by design — see ringLeft/Top/Width/Height) and earlier
+         * in the DOM than .clip, so it paints behind the item's image. */}
+        {!isBox && outlineMask && (
+          <div
+            className={`${styles.ring} ${bordered ? styles.ringActive : ""}`}
+            style={
+              {
+                left: ringLeft,
+                top: ringTop,
+                width: ringWidth,
+                height: ringHeight,
+                "--cat-color": catColor,
+                maskImage: `url(${outlineMask})`,
+                WebkitMaskImage: `url(${outlineMask})`,
+              } as CSSProperties
+            }
+          />
+        )}
 
-      {/* Sizes/positions the full (padded) source image against the alpha
-       * bbox — NOT a hard clip anymore (JarItem.module.css's .clip is
-       * overflow:visible): a cropRegion'd item's excluded content (e.g.
-       * cam.png's beaded strap/gems) still paints past this div's own
-       * bounds, at this same item's z-index, same as any other part of its
-       * own image. cropRegion only ever kept that content out of the
-       * sizing/physics math (see its doc comment in items.manifest.ts) —
-       * it never hid it on purpose; this div's own width/height (the
-       * cropped bbox) still drive that math untouched. */}
-      <div className={styles.clip} style={{ width, height, borderRadius }}>
-        {/* Plain <img>, not next/image, on purpose: width/height/left/top
-         * here are per-render floats out of computeRenderInfo's alpha-bbox
-         * math (useJarPhysics.ts), not fixed intrinsic dimensions — next/
-         * image's own optimizer/loader has no role to play on a size that's
-         * entirely recomputed client-side every resize. */}
-        <img
-          src={item.src}
-          alt=""
-          aria-hidden="true"
-          className={styles.image}
-          draggable={false}
-          style={{ width: imgWidth, height: imgHeight, left: imgLeft, top: imgTop }}
-        />
+        {/* Sizes/positions the full (padded) source image against the alpha
+         * bbox — NOT a hard clip anymore (JarItem.module.css's .clip is
+         * overflow:visible): a cropRegion'd item's excluded content (e.g.
+         * cam.png's beaded strap/gems) still paints past this div's own
+         * bounds, at this same item's z-index, same as any other part of its
+         * own image. cropRegion only ever kept that content out of the
+         * sizing/physics math (see its doc comment in items.manifest.ts) —
+         * it never hid it on purpose; this div's own width/height (the
+         * cropped bbox) still drive that math untouched. */}
+        <div className={styles.clip} style={{ width, height, borderRadius }}>
+          {/* Plain <img>, not next/image, on purpose: width/height/left/top
+           * here are per-render floats out of computeRenderInfo's alpha-bbox
+           * math (useJarPhysics.ts), not fixed intrinsic dimensions — next/
+           * image's own optimizer/loader has no role to play on a size that's
+           * entirely recomputed client-side every resize. */}
+          <img
+            src={item.src}
+            alt=""
+            aria-hidden="true"
+            className={styles.image}
+            draggable={false}
+            style={{ width: imgWidth, height: imgHeight, left: imgLeft, top: imgTop }}
+          />
 
-        {/* Dimming construction: never a plain opacity drop on the item
-         * itself — a white silhouette overlay, masked to the item's own
-         * alpha (or sharing the box's own border-radius for 'box' items),
-         * faded in/out at var(--dim-white). Animating only opacity here
-         * keeps this compositor-only, so it costs nothing while physics
-         * keeps writing this item's own transform every tick. */}
-        <div
-          className={`${styles.dimOverlay} ${dimmed ? styles.dimActive : ""}`}
-          style={
-            isBox
-              ? { left: 0, top: 0, width, height, borderRadius }
-              : {
-                  left: imgLeft,
-                  top: imgTop,
-                  width: imgWidth,
-                  height: imgHeight,
-                  maskImage: `url(${item.src})`,
-                  WebkitMaskImage: `url(${item.src})`,
-                }
-          }
-        />
+          {/* Dimming construction: never a plain opacity drop on the item
+           * itself — a white silhouette overlay, masked to the item's own
+           * alpha (or sharing the box's own border-radius for 'box' items),
+           * faded in/out at var(--dim-white). Animating only opacity here
+           * keeps this compositor-only, so it costs nothing while physics
+           * keeps writing this item's own transform every tick. */}
+          <div
+            className={`${styles.dimOverlay} ${dimmed ? styles.dimActive : ""}`}
+            style={
+              isBox
+                ? { left: 0, top: 0, width, height, borderRadius }
+                : {
+                    left: imgLeft,
+                    top: imgTop,
+                    width: imgWidth,
+                    height: imgHeight,
+                    maskImage: `url(${item.src})`,
+                    WebkitMaskImage: `url(${item.src})`,
+                  }
+            }
+          />
+        </div>
       </div>
     </div>
   );

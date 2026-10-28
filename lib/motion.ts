@@ -57,6 +57,16 @@ export const WORK_EXIT_S = 0.2;
 export const WORK_EXIT_RISE_PX = 12;
 export const GRID_REORDER_S = 0.35;
 
+// Hovering a case study in the sidebar's Works list isolates it: its jar
+// item lifts JAR_LIFT_PX and scales to JAR_LIFT_SCALE over JAR_LIFT_IN_MS
+// (settling back over JAR_LIFT_OUT_MS) while every other item dims. In work
+// mode its grid tile lifts TILE_LIFT_PX instead and the other tiles dim.
+export const JAR_LIFT_PX = 12;
+export const JAR_LIFT_SCALE = 1.04;
+export const JAR_LIFT_IN_MS = 250;
+export const JAR_LIFT_OUT_MS = 200;
+export const TILE_LIFT_PX = 6;
+
 // Hover-intent leave delay for the project hover preview (step 6, brief
 // Part 3.1) — the brief's own name for it.
 export const HOVER_CLOSE_DELAY_MS = 150;

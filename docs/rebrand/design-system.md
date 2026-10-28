@@ -59,7 +59,8 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 - **Icons:** X, LinkedIn, mail. Plain black, ~18–20px, no border.
 - **Headings with a dropdown** (Experience, Works): text + chevron (14px). Start open. Closed points down, open points up.
 - **List items:** same left edge as the heading, no indent, no dash.
-- **Case-study row:** the name, then " - description" in full whenever Works is open, wrapping onto extra lines under the name. No hover behaviour.
+- **Case-study row:** the name, then " - description" in full whenever Works is open, wrapping onto extra lines under the name.
+- **Works hover isolate:** hovering (or focusing) a case-study row lifts its jar item 12px and scales it to 1.04, above the pile, and dims every other item (`--dim-white`). In work mode its grid tile lifts 6px and the other tiles dim. Extras has no jar item, so it does nothing in the jar.
 - **Hover circle:** hand-drawn wiggly oval, drawn on like a pen when hovering a heading, un-drawn on leave. 16px past the word left/right, 8px above/below.
 - **Highlight toggles:** stacked 10px apart just right of the jar, 28px from its right edge, vertically centred on it, moving with it. On mobile: a centred row 16px under the jar.
 
@@ -93,4 +94,5 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 | Grid tiles in | each 300ms ease-out: rise 12px, scale 0.97 → 1, fade in; 40ms apart, top left first |
 | Grid reorder (filters) | tiles slide to new places, 350ms ease-out |
 | Leaving work mode | heading + grid slide up 12px and fade out together, 200ms ease-in; then the jar shows |
+| Works hover lift | in 250ms ease-out, back 200ms ease-in |
 | Reduced motion | no animation, things just appear  |

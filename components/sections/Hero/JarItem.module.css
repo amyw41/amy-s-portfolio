@@ -18,6 +18,31 @@
     filter 250ms ease-out;
 }
 
+/* Lifted (JarItem's `lifted`): drawn above every other item while it's
+ * raised. !important beats the physics loop's inline z-index. */
+.lifted {
+  z-index: 10000 !important;
+}
+
+/* Everything the item draws, wrapped so a lift can transform it without
+ * touching .item's own physics-driven transform. Timings: lib/motion.ts
+ * JAR_LIFT_* (passed in as custom properties by JarStage). */
+.lift {
+  position: absolute;
+  inset: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lift {
+    transition: transform calc(var(--lift-out-ms, 200ms) * var(--slow, 1)) ease-in;
+  }
+
+  .lifted .lift {
+    transform: translateY(calc(var(--lift-px, 12px) * -1)) scale(var(--lift-scale, 1.04));
+    transition: transform calc(var(--lift-in-ms, 250ms) * var(--slow, 1)) cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
 /* Was overflow:hidden, clipping the full (padded) source image down to the
  * alpha bbox — e.g. cam.png's beaded strap/gems, excluded from the bbox via
  * cropRegion (items.manifest.ts) so they wouldn't drag sizing/physics/

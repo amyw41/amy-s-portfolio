@@ -56,6 +56,18 @@
   text-decoration: none;
 }
 
+/* Isolated by a hover in the sidebar's Works list: lifts a little. */
+@media (prefers-reduced-motion: no-preference) {
+  .tile {
+    transition: transform calc(var(--lift-out-ms) * var(--slow, 1)) ease-in;
+  }
+
+  .lifted {
+    transform: translateY(calc(var(--tile-lift) * -1));
+    transition: transform calc(var(--lift-in-ms) * var(--slow, 1)) cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
 .cover {
   position: relative;
   display: block;

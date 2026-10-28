@@ -35,6 +35,10 @@ export default function Home() {
   const [mode, setMode] = useState<HomeMode>("jar");
   const [projectsOn, setProjectsOn] = useState(false);
   const [itemsOn, setItemsOn] = useState(false);
+  // The case study hovered/focused in the sidebar's Works list, isolated on
+  // the stage: its jar item lifts and the rest dim (or, in work mode, its
+  // grid tile).
+  const [focusedCase, setFocusedCase] = useState<string | null>(null);
 
   // The taskbar's "work" link on every other page still points at
   // /#projects (the old projects section) — land those visits in work mode.
@@ -50,7 +54,7 @@ export default function Home() {
 
   return (
     <main className={`${geist.variable} ${styles.frame}`}>
-      <Sidebar mode={mode} onModeChange={setMode} />
+      <Sidebar mode={mode} onModeChange={setMode} onCaseFocus={setFocusedCase} />
 
       <div className={styles.divider} aria-hidden="true">
         <BuzzPath
@@ -75,7 +79,12 @@ export default function Home() {
                  * (display:none) box measures 0 — remounting rebuilds the
                  * world cleanly and the items fall in again, which is what
                  * work → jar should look like anyway (brief Part 2.4). */}
-                <JarStage items={JAR_ITEMS} projectsOn={projectsOn} favouritesOn={itemsOn} />
+                <JarStage
+                  items={JAR_ITEMS}
+                  projectsOn={projectsOn}
+                  favouritesOn={itemsOn}
+                  isolatedId={focusedCase}
+                />
                 {/* Inside the jar's box so they sit beside it and follow it as
                  * it resizes. */}
                 <div className={styles.toggles}>
@@ -95,7 +104,7 @@ export default function Home() {
               </div>
             </motion.div>
           ) : (
-            <WorkGrid key="work" />
+            <WorkGrid key="work" focusedId={focusedCase} />
           )}
         </AnimatePresence>
       </section>

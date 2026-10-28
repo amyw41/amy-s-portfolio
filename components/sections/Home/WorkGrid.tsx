@@ -17,11 +17,22 @@ import {
   GRID_TILE_S,
   GRID_TILE_SCALE,
   slowTransition,
+  JAR_LIFT_IN_MS,
+  JAR_LIFT_OUT_MS,
+  TILE_LIFT_PX,
   WORK_EXIT_RISE_PX,
   WORK_EXIT_S,
 } from "@/lib/motion";
 
 const copy = content.en.projects;
+
+// A sidebar-hovered tile's lift (WorkGrid.module.css .lifted) — same timing
+// as the jar item's.
+const LIFT_VARS = {
+  "--tile-lift": `${TILE_LIFT_PX}px`,
+  "--lift-in-ms": `${JAR_LIFT_IN_MS}ms`,
+  "--lift-out-ms": `${JAR_LIFT_OUT_MS}ms`,
+} as CSSProperties;
 
 const CATEGORY_ORDER: ProjectCategory[] = ["work", "personal", "hackathon"];
 /** Extras isn't a Project (no category, see ExtrasCard.tsx), so it gets an
@@ -74,7 +85,7 @@ const TILES: Tile[] = [
  * (GRID_STAGGER apart). Leaving (back to jar), the whole view slides up and
  * fades out at once — Home/index.tsx waits for that before showing the jar.
  */
-export default function WorkGrid() {
+export default function WorkGrid({ focusedId = null }: { focusedId?: string | null }) {
   const reduced = useReducedMotion() ?? false;
   const [active, setActive] = useState<Set<ProjectCategory>>(() => new Set());
 
@@ -93,6 +104,9 @@ export default function WorkGrid() {
       .sort((a, b) => Number(b.match) - Number(a.match) || a.index - b.index)
       .map(({ tile, match }) => ({ tile, dimmed: !match }));
   }, [active]);
+
+  // A case study hovered in the sidebar: its tile lifts, the others dim.
+  const isolating = focusedId !== null && TILES.some((t) => t.id === focusedId);
 
   const variants = useMemo<{ view: Variants; tile: Variants }>(
     () => ({
@@ -137,47 +151,51 @@ export default function WorkGrid() {
       </div>
 
       <ul className={styles.grid}>
-        {ordered.map(({ tile, dimmed }) => (
-          <motion.li
-            key={tile.id}
-            className={styles.tileItem}
-            layout={reduced ? false : "position"}
-            // Each tile's sweep delay is its place in the default order, so
-            // the arrival sweep is always top-left first.
-            custom={TILES.indexOf(tile)}
-            variants={variants.tile}
-            initial="hidden"
-            animate="shown"
-            transition={{ layout: slowTransition({ duration: GRID_REORDER_S, ease: EASE_OUT }) }}
-          >
-            <Link
-              href={tile.href}
-              className={`${styles.tile} ${dimmed ? styles.dimmed : ""}`}
-              style={tile.category ? ({ "--tile-color": PROJECT_CATEGORY_COLOR[tile.category] } as CSSProperties) : undefined}
+        {ordered.map(({ tile, dimmed: filteredOut }) => {
+          const lifted = isolating && tile.id === focusedId;
+          const dimmed = isolating ? !lifted : filteredOut;
+          return (
+            <motion.li
+              key={tile.id}
+              className={styles.tileItem}
+              layout={reduced ? false : "position"}
+              // Each tile's sweep delay is its place in the default order, so
+              // the arrival sweep is always top-left first.
+              custom={TILES.indexOf(tile)}
+              variants={variants.tile}
+              initial="hidden"
+              animate="shown"
+              transition={{ layout: slowTransition({ duration: GRID_REORDER_S, ease: EASE_OUT }) }}
             >
-              <span className={styles.cover}>
-                {tile.cover ? (
-                  <Image src={tile.cover} alt="" fill sizes="(max-width: 767px) 50vw, 280px" className={styles.media} />
-                ) : tile.video ? (
-                  <video
-                    className={styles.media}
-                    src={tile.video}
-                    muted
-                    loop
-                    playsInline
-                    autoPlay={!reduced}
-                    preload="metadata"
-                    aria-hidden="true"
-                  />
-                ) : null}
-              </span>
-              <span className={styles.caption}>
-                <span className={styles.title}>{tile.title}</span>
-                {tile.year !== null && <span className={styles.year}>{tile.year}</span>}
-              </span>
-            </Link>
-          </motion.li>
-        ))}
+              <Link
+                href={tile.href}
+                className={`${styles.tile} ${dimmed ? styles.dimmed : ""} ${lifted ? styles.lifted : ""}`}
+                style={LIFT_VARS}
+              >
+                <span className={styles.cover}>
+                  {tile.cover ? (
+                    <Image src={tile.cover} alt="" fill sizes="(max-width: 767px) 50vw, 280px" className={styles.media} />
+                  ) : tile.video ? (
+                    <video
+                      className={styles.media}
+                      src={tile.video}
+                      muted
+                      loop
+                      playsInline
+                      autoPlay={!reduced}
+                      preload="metadata"
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                </span>
+                <span className={styles.caption}>
+                  <span className={styles.title}>{tile.title}</span>
+                  {tile.year !== null && <span className={styles.year}>{tile.year}</span>}
+                </span>
+              </Link>
+            </motion.li>
+          );
+        })}
       </ul>
     </motion.div>
   );

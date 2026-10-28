@@ -1,12 +1,21 @@
 "use client";
 
-import { useRef, type RefObject } from "react";
+import { useRef, type CSSProperties, type RefObject } from "react";
 import Image from "next/image";
 import styles from "./JarStage.module.css";
 import JarItem from "./JarItem";
 import { useJarPhysics } from "./useJarPhysics";
 import { getJarItemVisualState } from "./jar-visual-state";
 import type { JarItemDef } from "./items.manifest";
+import { JAR_LIFT_IN_MS, JAR_LIFT_OUT_MS, JAR_LIFT_PX, JAR_LIFT_SCALE } from "@/lib/motion";
+
+// JarItem's lift transition reads these (JarItem.module.css .lift).
+const LIFT_VARS = {
+  "--lift-px": `${JAR_LIFT_PX}px`,
+  "--lift-scale": JAR_LIFT_SCALE,
+  "--lift-in-ms": `${JAR_LIFT_IN_MS}ms`,
+  "--lift-out-ms": `${JAR_LIFT_OUT_MS}ms`,
+} as CSSProperties;
 
 interface JarStageProps {
   items: JarItemDef[];
@@ -16,9 +25,12 @@ interface JarStageProps {
    * Hero/index.tsx. Optional so JarStage stays usable without it (a
    * dragged item just falls straight past where a platform would be). */
   textPlatformsRef?: RefObject<HTMLDivElement | null>;
+  /** One item to isolate (brief Part 3.1): it lifts, everything else dims.
+   * An id with no item in the jar (e.g. "extras") changes nothing. */
+  isolatedId?: string | null;
 }
 
-export default function JarStage({ items, projectsOn, favouritesOn, textPlatformsRef }: JarStageProps) {
+export default function JarStage({ items, projectsOn, favouritesOn, textPlatformsRef, isolatedId = null }: JarStageProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { ready, renderInfo, outlineMasks, registerItemEl, debugWalls, debugPhysicsEnabled } = useJarPhysics(
     containerRef,
@@ -26,8 +38,10 @@ export default function JarStage({ items, projectsOn, favouritesOn, textPlatform
     textPlatformsRef,
   );
 
+  const isolating = isolatedId !== null && items.some((item) => item.id === isolatedId);
+
   return (
-    <div ref={containerRef} className={styles.stage}>
+    <div ref={containerRef} className={styles.stage} style={LIFT_VARS}>
       <Image
         src="/images/drawings/jar.svg"
         alt=""
@@ -49,7 +63,10 @@ export default function JarStage({ items, projectsOn, favouritesOn, textPlatform
           {items.map((item) => {
             const info = renderInfo[item.id];
             if (!info) return null;
-            const { dimmed, bordered } = getJarItemVisualState(item.category, projectsOn, favouritesOn);
+            const base = getJarItemVisualState(item.category, projectsOn, favouritesOn);
+            const lifted = isolating && item.id === isolatedId;
+            const dimmed = isolating ? !lifted : base.dimmed;
+            const bordered = base.bordered;
             return (
               <JarItem
                 key={item.id}
@@ -68,6 +85,7 @@ export default function JarStage({ items, projectsOn, favouritesOn, textPlatform
                 outlineMask={outlineMasks[item.id] ?? null}
                 dimmed={dimmed}
                 bordered={bordered}
+                lifted={lifted}
               />
             );
           })}

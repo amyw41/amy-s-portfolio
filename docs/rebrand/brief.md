@@ -117,29 +117,29 @@ Everything sits on **one left edge**, the name's: items aren't indented and have
 
 ## Part 3. Projects and case studies
 
-Sketches: `04-hover-slide-up.png`, `05-click-zoom-and-case-study.png`.
+Sketch: `05-click-zoom-and-case-study.png`. (`04-hover-slide-up.png` is superseded by 3.1 below.)
 
 ### 3.1 Hovering a case study in the work menu
 
-1. **The background lightens.** A white layer fades over the stage to about 70% opacity, so the jar or grid fades back.
-2. **The project slides up from the bottom of the stage** until about **3/4 of it is showing**. The bottom quarter stays cut off below the frame's bottom edge, so it feels like it's peeking up.
-   - Size: about 65% of the stage width, at the cover's 3:2 shape.
-   - Motion: a spring, so it rises quickly and settles with a tiny bounce. Starting at a slight tilt (−2°) that straightens out makes it feel placed by hand.
-   - Content: the project's cover image, or its video if it has one (existing `AutoplayVideo`).
-3. **A drawn line surrounds the thumbnail.** It draws itself on around the tile like a pen circling it, starting top left and going clockwise. The end overshoots the start a little, like a real pen loop.
-4. **The line buzzes**: it swaps between 3 slightly different drawings, about 10 times a second (see 4.1).
-5. **Moving to another project:** the current one slides back down while the new one rises; they overlap, not wait for each other.
-6. **Leaving the menu:** wait about 150ms (so brushing past doesn't flicker), then the project slides down, the line un-draws, and the background clears.
-7. **Prefetch** the case-study page on hover, so the click is instant.
+Hovering a case study in the sidebar's **Works** list (or tabbing to it) **isolates that project on the stage**:
+
+1. **In jar mode:** the project's own item in the jar **lifts up a little** (about 12px, scaling to 1.04, ~250ms ease-out) and draws above the pile, while **every other item dims** with the same white wash the old highlight toggles used. On leave it settles back down (~200ms) and the dimming clears.
+   - The lift is purely visual (a transform on the item's drawing), never a push on its physics body, so the pile isn't disturbed.
+   - Case studies map to jar items by slug (cybersea, spotify, skinsprout). **Extras** has no item in the jar, so hovering it changes nothing there.
+2. **In work mode:** the same idea on the grid: the project's tile lifts slightly (6px) and the other tiles dim.
+3. **Reduced motion:** dimming only, no lift.
+4. **Prefetch** the case-study page on hover, so the click is instant.
+
+(This replaces the earlier idea of a project preview sliding up from the bottom of the stage. The sketch `04-hover-slide-up.png` is out of date.)
 
 ### 3.2 Clicking: zoom into the case study
 
-1. **Everything else disappears first** (about 350ms). The jar or grid, the highlight toggles, the mode toggle, and the menu items all fade and drop a little (8–12px), staggered quickly. The drawn line around the project un-draws.
+1. **Everything else disappears first** (about 350ms). The rest of the jar (or the other grid tiles), the mode toggle, and the menu items all fade and drop a little (8–12px), staggered quickly. The clicked project's lifted jar item (or its grid tile) stays.
 2. **The sidebar shrinks.** It narrows from its full width to a thin rail (about 64px):
    - **The name retracts into the top-left corner**, becoming the logo. The logo design is still to come (Part 7); until then, use a placeholder like "aw".
    - The rail then shows **the case study's contents**: numbered sections 1, 2, 3, 4…, which jump to each section.
    - The divider line stays, sliding left with the rail.
-3. **The project zooms in** (about 600ms, overlapping the end of step 2). The thumbnail grows from its peek position into **its spot on the case-study page**: the large thumbnail on the left under the title. Its corners and drawn line settle into the case-study layout.
+3. **The project zooms in** (about 600ms, overlapping the end of step 2). Starting from the lifted jar item (or the grid tile), it grows into **its spot on the case-study page**: the large thumbnail on the left under the title. Its corners settle into the case-study layout.
 4. **The case study fills in**: the title fades down into place, then the sections on the right fade up one after another.
 
 This is all one continuous motion. The thumbnail on the home page and on the case study is the same image in the same final spot, so the page change is invisible.
@@ -336,17 +336,17 @@ Each step works on its own and can be checked before moving on. Copy the prompt,
 
 > Read brief Part 2.4 and 4.1 (stop-motion timing). Add small options to useJarPhysics without rewriting it: a `start` flag so items only spawn when told, and a `jostle(strength)` function that gives every body an upward kick with slight random sideways spin. Then build the transitions. Jar → work: anticipation lift and squash, accelerate down off the stage, jostle at the start so items knock around inside, play jar-sound.ts on the click, and "what's inside?" drops in from the top with an overshoot. Work → jar: jar drops in from above, lands with a squash and springs back, then items spawn and fall in. Run the jar's moves on the 12fps stop-motion clock. Check with ?slow=4. Commit.
 
-**Step 6: Project hover preview**
+**Step 6: Works hover, finishing touches**
 
-*Sketch: 04-hover-slide-up.png*
+*No sketch*
 
-> Read brief Part 3.1. When hovering a case study in the work menu: lighten the stage with a white layer (~70%), slide the project up from the bottom with PREVIEW_SPRING until 3/4 of it shows (bottom quarter cut off), starting at −2° and straightening. Surround it with a buzzing BuzzPath rounded-rectangle outline that draws on clockwise from the top left with a slight overshoot. Switching projects overlaps out/in (AnimatePresence popLayout). Leaving waits 150ms, then reverses. Prefetch the case-study route on hover. Pause jar rustle/drag while a preview is up. Commit.
+> Read brief Part 3.1. The hover isolate-and-lift is already built (Works row → jar item lifts and the rest dim; in work mode the grid tile lifts and the rest dim). Finish it: prefetch the case-study route on hover/focus, check the keyboard path (Tab through Works and confirm each focus isolates its project), make sure the lifted item still reads clearly when it's buried at the bottom of the pile, and tune the lift with ?slow=4. Commit.
 
 **Step 7: Zoom into the case study and the new case study layout**
 
 *Sketch: 05-click-zoom-and-case-study.png*
 
-> Read brief Parts 3.2 and 3.3. First rebuild the case-study page layout: thin left rail (logo placeholder "aw" at the top, numbered section contents that highlight the current section, reusing TableOfContents from CaseStudyKit.tsx), title at top, sticky thumbnail on the left below it, sections stacked on the right in a scrolling column. Move existing case-study content into it without changing the writing. Delete the leftover app/projects/[slug] route. Then build the transition from a hover preview or a grid tile: everything else fades and drops out (staggered), the sidebar narrows into the rail while the name retracts into the corner as the logo, then the thumbnail grows into its exact spot on the case-study page, and the route changes underneath it so the swap is invisible (keep the overlay in a provider in the root layout; skip PageTransition's fade for this arrival). Logo click reverses back home without the intro. Commit.
+> Read brief Parts 3.2 and 3.3. First rebuild the case-study page layout: thin left rail (logo placeholder "aw" at the top, numbered section contents that highlight the current section, reusing TableOfContents from CaseStudyKit.tsx), title at top, sticky thumbnail on the left below it, sections stacked on the right in a scrolling column. Move existing case-study content into it without changing the writing. Delete the leftover app/projects/[slug] route. Then build the transition from the lifted jar item (brief 3.1) or a grid tile: everything else fades and drops out (staggered), the sidebar narrows into the rail while the name retracts into the corner as the logo, then the thumbnail grows into its exact spot on the case-study page, and the route changes underneath it so the swap is invisible (keep the overlay in a provider in the root layout; skip PageTransition's fade for this arrival). Logo click reverses back home without the intro. Commit.
 
 **Step 8: The intro**
 
