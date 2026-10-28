@@ -53,7 +53,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
   {
     slug: "cybersea",
     title: "CyberSea",
-    description: "Making Arctic shipping routes readable.",
+    description: "Making Arctic trade routes readable.",
     category: "hackathon",
     hasVideo: true,
     year: 2026,

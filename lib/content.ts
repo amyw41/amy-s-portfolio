@@ -7,8 +7,8 @@
 export const content = {
   en: {
     hero: {
-      title: "amy wang",
-      tagline: "design engineer who adds whimsy to intuitive products.",
+      title: "Amy Wang",
+      tagline: "A design engineer who adds whimsy to intuitive products.",
       social: {
         linkedin: { label: "LinkedIn", href: "https://linkedin.com/in/amyw41" },
         gmail: { label: "Email", href: "mailto:amy.wang1@uwaterloo.ca" },
@@ -30,10 +30,10 @@ export const content = {
     // ("play" not "playground"). Social hrefs aren't repeated here:
     // Sidebar.tsx reads them from footer.links below.
     sidebar: {
-      name: "amy wang",
+      name: "Amy Wang",
       // Placeholder until the real intro copy is written (brief Part 7.5) —
       // same line as hero.tagline above.
-      intro: "design engineer who adds whimsy to intuitive products.",
+      intro: "is a designer who builds as the user. She adds creativity to intuitive experiences and loves to overthink interactions!",
       // Accessible names for the icon-only links row under the intro.
       social: {
         label: "Social links",
