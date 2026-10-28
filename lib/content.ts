@@ -27,8 +27,8 @@ export const content = {
     // Rebrand v2 home page sidebar (components/sections/Home/Sidebar.tsx).
     // Its own block rather than reusing hero.* — hero/ is kept around but
     // no longer rendered on home, and these labels deliberately differ
-    // ("play" not "playground", lowercase contact labels). Contact hrefs
-    // aren't repeated here: Sidebar.tsx reads them from footer.links below.
+    // ("play" not "playground"). Social hrefs aren't repeated here:
+    // Sidebar.tsx reads them from footer.links below.
     sidebar: {
       name: "amy wang",
       // Placeholder until the real intro copy is written (brief Part 7.5) —
@@ -36,18 +36,23 @@ export const content = {
       intro: "design engineer who adds whimsy to intuitive products.",
       // Second paragraph under the intro.
       currently: "Currently: design @ Blueprint, campus lead @ Notion, studying management engineering @ Waterloo.",
+      // Accessible names for the icon-only social bar under the name.
+      social: {
+        label: "Social links",
+        linkedin: "LinkedIn",
+        twitter: "Twitter",
+        email: "Email",
+      },
+      // Two menu groups: "Works" (projects, which expands to the case
+      // studies) and "Other" (about, play).
       nav: {
-        work: "work",
+        works: "Works",
+        projects: "projects",
+        other: "Other",
         about: "about",
         play: "play",
       },
       extras: "Extras",
-      contact: {
-        heading: "contact",
-        twitter: "twitter",
-        linkedin: "linkedin",
-        email: "email",
-      },
       modes: {
         label: "view",
         jar: "jar",

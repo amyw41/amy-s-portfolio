@@ -33,18 +33,17 @@ Sketches: `02-home-jar.png` (jar mode), `03-home-grid.png` (work mode).
 ┌──────────────── frame: min(100vw, 1536px) × 100dvh, centered ────────────────┐
 │                    │                                                          │
 │    amy wang        ⌇                                              ○ projects  │
-│    short intro…    ⌇                                              ○ items     │
-│                    ⌇                  ╭──────────╮                            │
-│    work            ⌇                  │   jar    │                            │
-│    about           ⌇                  │  items   │                            │
-│    play            ⌇                  ╰──────────╯                            │
+│    [in][x][@]      ⌇  ← social bar                                ○ items     │
+│    short intro…    ⌇                                                          │
+│    currently…      ⌇                  ╭──────────╮                            │
+│                    ⌇                  │   jar    │                            │
+│    Works           ⌇                  │  items   │                            │
+│      projects      ⌇                  ╰──────────╯                            │
+│    Other           ⌇                                                          │
+│      about         ⌇                                                          │
+│      play          ⌇                                                          │
 │                    ⌇                                                          │
 │    jar   work      ⌇  ← mode toggle                                           │
-│                    ⌇                                                          │
-│    contact         ⌇                                                          │
-│      twitter       ⌇                                                          │
-│      linkedin      ⌇                                                          │
-│      email         ⌇                                                          │
 │                    │                                                          │
 └───────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -63,25 +62,29 @@ Sketches: `02-home-jar.png` (jar mode), `03-home-grid.png` (work mode).
 
 **The box.** The sidebar is a box **flush with the frame's top, left and bottom**: no padding outside it. The divider line is its right edge. All the spacing is **inside** the box: the text sits about **32px** from the screen edges and the line. The stage runs to the frame's right edge and full height.
 
-Width about `clamp(260px, 20vw, 320px)`. **Font: Geist** for the home page, letter-spacing **-0.6px**. **Sizes:** name 28px, regular text 14px, case-study names and contact links 13px. Top to bottom:
+Width about `clamp(260px, 20vw, 320px)`. **Font: Geist** for the home page, letter-spacing **-0.6px**. **Sizes:** name 28px, regular text 14px, case-study names 13px. Top to bottom:
 
 1. **amy wang**, the name. The only large text in the sidebar.
-2. **Short intro**, one or two lines, at regular text size. Copy to be written. Placeholder: the current tagline in `lib/content.ts`.
-3. **Unnamed section** (no heading) with three buttons, on the **same left edge** as the name and intro, and at **regular text size and style** (not a bigger nav size):
-   - **work**: expands to list your case studies by name (CyberSea, Spotify Guessr, SkinSprout, Extras, from `lib/projects.ts`).
-   - **about**: goes to `/about`.
-   - **play**: goes to `/playground`.
-4. **Mode toggle**, pushed down toward the bottom, just above contact with clear space between them: two buttons, **jar** and **work** (see 2.4).
-5. **contact**, at the **very bottom of the sidebar**: a heading in a **darker text color** than the items. Under it, always visible: **twitter**, **linkedin**, **email** (from `content.en.footer.links`).
+2. **Social bar**, right under the name: a small bordered row of **LinkedIn**, **Twitter** and **Email** logos (the old hero's icon bar, scaled down), linking to `content.en.footer.links`.
+3. **Short intro**, at regular text size, then a second paragraph: **"Currently design @ Blueprint, campus lead @ Notion, studying management engineering @ Waterloo."**
+4. **Menu**, on the **same left edge** as the name, in two groups. Each group heading is in a **darker text color** than its items:
+   - **Works**
+     - **projects**: expands to list your case studies by name (CyberSea, Spotify Guessr, SkinSprout, Extras, from `lib/projects.ts`).
+   - **Other**
+     - **about**: goes to `/about`.
+     - **play**: goes to `/playground`.
+5. **Mode toggle**, at the bottom of the sidebar with clear space above it: two buttons, **jar** and **work** (see 2.4).
 
-**Indenting:** only sub-items are indented, like tabs: case-study names sit about 14px right of "work", and the contact links about 14px right of "contact". Everything else shares one left edge.
+There's no separate contact section any more; the social bar replaces it.
 
-**Hover, big sections (work, about, play):**
+**Indenting:** like tabs: menu items sit about 14px right of their group heading, and case-study names another 14px right of "projects". Everything else shares one left edge.
+
+**Hover, menu items (projects, about, play):**
 - A **hand-drawn circle** draws itself around the word: the existing `ScribbleOval`, drawn on with a pen-stroke reveal.
-- Hovering **work** also **expands** it to show the case-study names. Use hover intent: open after about 60ms, close about 150ms after the pointer leaves the whole work area, so moving down into the list doesn't close it. It also opens on click and keyboard focus, so it works on touch and with a keyboard.
+- Hovering **projects** also **expands** it to show the case-study names. Use hover intent: open after about 60ms, close about 150ms after the pointer leaves the whole projects area, so moving down into the list doesn't close it. It also opens on click and keyboard focus, so it works on touch and with a keyboard.
 - The buttons are **circles** (decided): no box around the text at rest, just the drawn oval on hover and on the active one.
 
-**Hover, small items (case-study names, contact links):**
+**Hover, small items (case-study names):**
 - The text turns **lighter**, to about 55% black.
 - A **squiggly underline draws in** under it, from left to right.
 
@@ -197,7 +200,7 @@ Sketch: `01-intro-spill.png`, and the top left of `00-full-reference.png`. Total
 | 1.4 – 2.0 | It overflows: **two strands** run down the outside, one left and one right. They draw on with the pen reveal, accelerating like falling liquid. |
 | 2.0 – 3.4 | **The unravel.** The tip of the right strand is the needle. It travels **down toward the bottom of the page, near the left side**, then turns and goes **up**, tracing where the divider will be. Behind it, the line gets pulled out of the drawing: the jar visibly unwinds from the far end, like a thread pulled through a needle, until nothing is left but the line. The liquid fill fades as the jar unravels. |
 | 3.3 – 3.6 | The line settles into the squiggly divider, with padding top and bottom, and starts buzzing. |
-| 3.4 – 3.9 | The sidebar loads top to bottom: name, intro, menu buttons, contact, mode toggle. Each one fades and rises 8px, 70ms apart. |
+| 3.4 – 3.9 | The sidebar loads top to bottom: name, social bar, intro, menu, mode toggle. Each one fades and rises 8px, 70ms apart. |
 | 3.6 → | The real jar drops into the stage with its landing squash, then the items fall in (existing physics). |
 
 **How the unravel works.** Put this in the step 8 prompt word for word.
@@ -313,7 +316,7 @@ Each step works on its own and can be checked before moving on. Copy the prompt,
 
 *Sketch: 02-home-jar.png*
 
-> Read brief Part 2.2. Add the hover effects: big sections (work/about/play) get the hand-drawn circle drawn on with a pen reveal and buzzing while hovered; work expands with a smooth height animation and staggered items. Small items (case study names, contact links) turn lighter and get a squiggly underline drawn in left to right. Indent levels like tabs. Contact heading is darker than its items. Check the keyboard: Tab through everything and make sure focus shows the same effects. Commit.
+> Read brief Part 2.2. Add the hover effects: menu items (projects/about/play) get the hand-drawn circle drawn on with a pen reveal and buzzing while hovered; projects expands with a smooth height animation and staggered items. Small items (case study names) turn lighter and get a squiggly underline drawn in left to right. Indent levels like tabs. Group headings (Works, Other) are darker than their items. Check the keyboard: Tab through everything and make sure focus shows the same effects. Commit.
 
 **Step 4: Work mode grid**
 

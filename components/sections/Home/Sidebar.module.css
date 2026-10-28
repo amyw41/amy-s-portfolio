@@ -2,12 +2,12 @@
  * divider as its right edge. All of its spacing is this inner --box-pad,
  * from the screen edges and the line. */
 .sidebar {
-  /* One tab stop (brief Part 2.2): case studies sit this much further right
-   * than "work", contact links further right than "contact". */
+  /* One tab stop (brief Part 2.2): menu items sit this much further right
+   * than their group heading, case studies further right than "projects". */
   --indent: 14px;
   --box-pad: 32px;
-  /* Regular text size — the intro, work/about/play and the mode toggle all
-   * share it; only the name is bigger. */
+  /* Regular text size — the intro, the menu and the mode toggle all share
+   * it; only the name is bigger. */
   --fs-body: 14px;
   display: flex;
   flex-direction: column;
@@ -44,15 +44,73 @@
   margin-top: 12px;
 }
 
-/* ---------- unnamed work / about / play group ---------- */
+/* ---------- social bar ---------- */
 
-/* Same left edge as the name and intro — no indent for this group. */
+/* The old hero's bordered icon row (Hero.module.css .socialGroup), scaled
+ * down to sit under the name. */
+.socialBar {
+  display: flex;
+  width: fit-content;
+  margin: 2px 0 6px;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #000;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.socialBar li + li {
+  border-left: 1px solid #000;
+}
+
+.socialIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+}
+
+.socialIcon img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  user-select: none;
+}
+
+/* ---------- menu: Works / Other ---------- */
+
+/* Same left edge as the name and intro; only each group's items are
+ * indented. */
 .nav {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
+  gap: 18px;
   margin-top: 32px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Darker than the items under it (brief Part 2.2). */
+.groupHeading {
+  margin: 0 0 4px;
+  font-size: var(--fs-body);
+  font-weight: 400;
+  line-height: 1.45;
+  color: #000;
+}
+
+.groupItems {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding-left: var(--indent);
 }
 
 .workArea {
@@ -61,8 +119,8 @@
   align-items: flex-start;
 }
 
-/* Big sections, at regular text size (only their hover oval, step 3, sets
- * them apart). Plain text at rest. */
+/* Menu items (projects, about, play), at regular text size. Plain text at
+ * rest — the drawn oval on hover comes in step 3. */
 .navItem {
   background: none;
   border: none;
@@ -73,20 +131,20 @@
   font-weight: 400;
   line-height: 1.45;
   letter-spacing: inherit;
-  color: #000;
+  color: rgba(0, 0, 0, 0.7);
   text-decoration: none;
 }
 
 .workList {
   list-style: none;
-  margin: 4px 0 4px;
+  margin: 4px 0 2px;
   padding: 0 0 0 var(--indent);
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-/* Small items: case-study names and contact links. Not 55% black at rest —
+/* Small items: case-study names. Not 55% black at rest —
  * that's their hover colour (step 3), so rest has to sit clearly darker. */
 .smallItem {
   font-size: 13px;
@@ -98,9 +156,9 @@
 
 /* ---------- jar / work mode toggle ---------- */
 
-/* margin-top:auto pushes this and the contact block below it down to the
- * bottom of the box; the padding keeps clear space above it even when the
- * work list is open and the column runs short. */
+/* margin-top:auto pins it to the bottom of the box; the padding keeps clear
+ * space above it even when the projects list is open and the column runs
+ * short. */
 .modeToggle {
   display: flex;
   gap: 16px;
@@ -129,29 +187,6 @@
   color: #000;
 }
 
-/* ---------- contact (bottom of the sidebar) ---------- */
-
-.contact {
-  margin-top: 28px;
-}
-
-/* Darker than its own items (brief Part 2.2). */
-.contactHeading {
-  margin: 0 0 4px;
-  font-size: var(--fs-body);
-  font-weight: 400;
-  color: #000;
-}
-
-.contactList {
-  list-style: none;
-  margin: 0;
-  padding: 0 0 0 var(--indent);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
 /* ---------- mobile: compact header ---------- */
 
 @media (max-width: 767px) {
@@ -160,8 +195,7 @@
     grid-template-columns: 1fr auto;
     grid-template-areas:
       "identity mode"
-      "nav nav"
-      "contact contact";
+      "nav nav";
     row-gap: 14px;
     padding: 20px 16px 16px;
     overflow: visible;
@@ -187,12 +221,29 @@
     padding-top: 0;
   }
 
-  /* Menus become one row (brief Part 4.5). */
+  /* Menus become one row (brief Part 4.5): each group's heading and items
+   * sit inline. */
   .nav {
     grid-area: nav;
     flex-direction: row;
-    gap: 20px;
+    flex-wrap: wrap;
+    gap: 8px 24px;
     margin-top: 0;
+  }
+
+  .group {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .groupHeading {
+    margin: 0;
+  }
+
+  .groupItems {
+    flex-direction: row;
+    gap: 12px;
     padding-left: 0;
   }
 
@@ -200,7 +251,7 @@
     position: relative;
   }
 
-  /* Opens as a small dropdown under "work" instead of pushing the row
+  /* Opens as a small dropdown under "projects" instead of pushing the row
    * apart. */
   .workList {
     position: absolute;
@@ -213,23 +264,5 @@
     border: 1px solid rgba(0, 0, 0, 0.15);
     border-radius: 6px;
     white-space: nowrap;
-  }
-
-  .contact {
-    grid-area: contact;
-    display: flex;
-    align-items: baseline;
-    gap: 14px;
-    margin-top: 0;
-  }
-
-  .contactHeading {
-    margin: 0;
-  }
-
-  .contactList {
-    flex-direction: row;
-    gap: 14px;
-    padding-left: 0;
   }
 }

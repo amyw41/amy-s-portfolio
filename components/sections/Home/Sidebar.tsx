@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type FocusEvent, type PointerEvent } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import styles from "./Sidebar.module.css";
 import { content } from "@/lib/content";
 import { PROJECTS } from "@/lib/projects";
@@ -17,7 +18,15 @@ interface SidebarProps {
   onModeChange: (mode: HomeMode) => void;
 }
 
-// Case studies listed under "work" — every project in lib/projects.ts, then
+// Icon-only social bar under the name. Same logo files as the old hero's
+// top bar; hrefs from footer.links.
+const SOCIAL_LINKS = [
+  { href: links.linkedin.href, label: copy.social.linkedin, src: "/images/logos/linkedin.png", size: 176 },
+  { href: links.twitter.href, label: copy.social.twitter, src: "/images/logos/twitter.png", size: 155 },
+  { href: links.email.href, label: copy.social.email, src: "/images/logos/gmail.png", size: 172 },
+];
+
+// Case studies listed under "projects" — every project in lib/projects.ts, then
 // Extras last (it isn't a Project, see ExtrasCard.tsx, but has its own case
 // study at /extras).
 const WORK_LINKS = [
@@ -26,15 +35,15 @@ const WORK_LINKS = [
 ];
 
 /**
- * "work" opens three ways, tracked separately so one closing can't cancel
+ * "projects" opens three ways, tracked separately so one closing can't cancel
  * another:
  * - hover (mouse only), with intent: opens WORK_HOVER_OPEN_MS after the
- *   pointer enters the whole work area (button + list), closes
+ *   pointer enters the whole projects area (button + list), closes
  *   HOVER_CLOSE_DELAY_MS after it leaves — so moving down into the list, or
  *   briefly brushing past, doesn't flicker it.
  * - click/tap, which pins it open until clicked again (or Escape). Touch has
  *   no hover, so this is how it opens there.
- * - keyboard focus anywhere inside the work area.
+ * - keyboard focus anywhere inside the projects area.
  */
 function useWorkDisclosure() {
   const [hoverOpen, setHoverOpen] = useState(false);
@@ -94,39 +103,65 @@ export default function Sidebar({ mode, onModeChange }: SidebarProps) {
     <aside className={styles.sidebar}>
       <div className={styles.identity}>
         <h1 className={styles.name}>{copy.name}</h1>
+        <ul className={styles.socialBar} aria-label={copy.social.label}>
+          {SOCIAL_LINKS.map((link) => (
+            <li key={link.href}>
+              <a
+                className={styles.socialIcon}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={link.label}
+              >
+                <Image src={link.src} alt="" width={link.size} height={link.size} draggable={false} />
+              </a>
+            </li>
+          ))}
+        </ul>
         <p className={styles.intro}>{copy.intro}</p>
         <p className={styles.intro}>{copy.currently}</p>
       </div>
 
       <nav className={styles.nav} aria-label="Main">
-        <div className={styles.workArea} {...work.areaProps}>
-          <button
-            type="button"
-            className={styles.navItem}
-            aria-expanded={work.open}
-            aria-controls={workListId}
-            onClick={work.togglePinned}
-          >
-            {copy.nav.work}
-          </button>
-          {work.open && (
-            <ul id={workListId} className={styles.workList}>
-              {WORK_LINKS.map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className={styles.smallItem}>
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
+        <div className={styles.group}>
+          <h2 className={styles.groupHeading}>{copy.nav.works}</h2>
+          <div className={styles.groupItems}>
+            <div className={styles.workArea} {...work.areaProps}>
+              <button
+                type="button"
+                className={styles.navItem}
+                aria-expanded={work.open}
+                aria-controls={workListId}
+                onClick={work.togglePinned}
+              >
+                {copy.nav.projects}
+              </button>
+              {work.open && (
+                <ul id={workListId} className={styles.workList}>
+                  {WORK_LINKS.map((link) => (
+                    <li key={link.href}>
+                      <Link href={link.href} className={styles.smallItem}>
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         </div>
-        <Link href="/about" className={styles.navItem}>
-          {copy.nav.about}
-        </Link>
-        <Link href="/playground" className={styles.navItem}>
-          {copy.nav.play}
-        </Link>
+
+        <div className={styles.group}>
+          <h2 className={styles.groupHeading}>{copy.nav.other}</h2>
+          <div className={styles.groupItems}>
+            <Link href="/about" className={styles.navItem}>
+              {copy.nav.about}
+            </Link>
+            <Link href="/playground" className={styles.navItem}>
+              {copy.nav.play}
+            </Link>
+          </div>
+        </div>
       </nav>
 
       <div className={styles.modeToggle} role="group" aria-label={copy.modes.label}>
@@ -142,27 +177,6 @@ export default function Sidebar({ mode, onModeChange }: SidebarProps) {
           </button>
         ))}
       </div>
-      <div className={styles.contact}>
-        <h2 className={styles.contactHeading}>{copy.contact.heading}</h2>
-        <ul className={styles.contactList}>
-          <li>
-            <a className={styles.smallItem} href={links.twitter.href} target="_blank" rel="noopener noreferrer">
-              {copy.contact.twitter}
-            </a>
-          </li>
-          <li>
-            <a className={styles.smallItem} href={links.linkedin.href} target="_blank" rel="noopener noreferrer">
-              {copy.contact.linkedin}
-            </a>
-          </li>
-          <li>
-            <a className={styles.smallItem} href={links.email.href} target="_blank" rel="noopener noreferrer">
-              {copy.contact.email}
-            </a>
-          </li>
-        </ul>
-      </div>
-
     </aside>
   );
 }
