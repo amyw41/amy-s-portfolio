@@ -21,8 +21,8 @@ export const ARC_SPRING = { type: "spring" as const, stiffness: 300, damping: 30
 
 // ---------- rebrand v2 timings (brief Part 4.3) ----------
 //
-// Leave delay for the project hover preview (step 6, brief Part 3.1) — the
-// brief's own name for it.
+// Hover-intent leave delay: the sidebar's case-study rows (below) and the
+// project hover preview (step 6, brief Part 3.1) — the brief's own name.
 export const HOVER_CLOSE_DELAY_MS = 150;
 
 // Sidebar (Home/Sidebar.tsx): the hand-drawn oval pen-draws on around a
@@ -39,14 +39,13 @@ export const DROPDOWN_CLOSE_S = 0.18;
 export const DROPDOWN_ITEM_STAGGER_S = 0.035;
 export const DROPDOWN_ITEM_DROP_PX = 6;
 
-// Case-study rows under Works: hovering one types its description out
-// after the name, TYPE_CHAR_MS per character, and leaving erases it
-// backwards, ERASE_CHAR_MS per character. As the text wraps onto new lines
-// the row's height eases to fit over CASE_ROW_GROW_S, so the rows below
-// glide down instead of jumping a line at a time.
-export const TYPE_CHAR_MS = 18;
-export const ERASE_CHAR_MS = 6;
-export const CASE_ROW_GROW_S = 0.15;
+// Case-study rows under Works: resting on one for CASE_ROW_OPEN_DELAY_MS
+// grows it from its one-line, truncated description to the full wrapped
+// text over CASE_ROW_EXPAND_S; it shrinks back over CASE_ROW_COLLAPSE_S,
+// HOVER_CLOSE_DELAY_MS after the pointer leaves the row.
+export const CASE_ROW_OPEN_DELAY_MS = 100;
+export const CASE_ROW_EXPAND_S = 0.2;
+export const CASE_ROW_COLLAPSE_S = 0.16;
 
 // ---------- debug params (rebrand v2) ----------
 //

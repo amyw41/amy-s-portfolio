@@ -22,8 +22,7 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 |---|---|
 | Text | #000 |
 | Intro text | 75% black |
-| Case-study description | 30% black |
-| Typing caret | 55% black, 1px wide |
+| Case-study description | 30% black (55% while its row is open) |
 | Hover circle | 45% black |
 | Inactive mode button (jar/work) | 40% black (70% on hover) |
 | Divider line | #000 |
@@ -60,7 +59,7 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 - **Icons:** X, LinkedIn, mail. Plain black, ~18–20px, no border.
 - **Headings with a dropdown** (Experience, Works): text + chevron (14px). Start open. Closed points down, open points up.
 - **List items:** same left edge as the heading, no indent, no dash.
-- **Case-study row:** just the name at rest. Hovering (or keyboard-focusing) it types " - description" out after the name with a thin blinking caret, wrapping onto extra lines; leaving erases it backwards. Moving between rows: the old one erases while the new one types.
+- **Case-study row:** name, then " - description" on one line; the description truncates with "…". Hovering it (or keyboard focus) expands it to the full description, wrapped onto extra lines under the name. The hover area is the whole row, expanded lines and the gap above included; only one row is open at a time.
 - **Hover circle:** hand-drawn wiggly oval, drawn on like a pen when hovering a heading, un-drawn on leave. 16px past the word left/right, 8px above/below.
 - **Highlight toggles:** stacked on the stage's right, 40px from its top and right edges, 10px apart.
 
@@ -72,7 +71,6 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 | Chevron turn | 200ms, 180° |
 | Dropdown open | 280ms ease-out; items fade down from 6px above, 35ms apart |
 | Dropdown close | 180ms ease-in, all at once |
-| Case-study typing | 18ms per character; erase 6ms per character |
-| Case-study row height (as lines wrap) | 150ms ease-out |
-| Caret blink | 900ms cycle |
-| Reduced motion | no animation, things just appear (descriptions show in full on hover, no typing) |
+| Case-study row open | after 100ms of hovering; expands 200ms ease-out |
+| Case-study row close | 150ms after the pointer leaves the row; collapses 160ms ease-in |
+| Reduced motion | no animation, things just appear (case-study rows open and close without animating) |

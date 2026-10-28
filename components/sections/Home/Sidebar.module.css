@@ -141,46 +141,72 @@
   color: #000;
 }
 
-/* A case-study row (CaseStudyRow in Sidebar.tsx). overflow:hidden clips
- * a freshly wrapped line while the row's height eases open to fit it. */
+/* A case-study row (CaseStudyRow in Sidebar.tsx): the hover area. Pulled
+ * up over its list item's own top padding (the 4px --item-gap) and padded
+ * back down, so that gap belongs to the row and the pointer never lands
+ * between two rows. */
 .caseRow {
+  margin-top: calc(-1 * var(--item-gap));
+  padding-top: var(--item-gap);
+}
+
+/* Clips the text while the height animates; anchors the measuring copy. */
+.caseClip {
+  position: relative;
   overflow: hidden;
 }
 
-.caseRowContent {
-  display: block;
-}
-
+/* At rest: name, then " - description", on one line. The name never
+ * shrinks; the description truncates with an ellipsis instead. */
 .itemLink {
+  display: flex;
+  min-width: 0;
+  white-space: nowrap;
   color: inherit;
   text-decoration: none;
 }
 
-/* The typed-out " - description". */
+.itemName {
+  flex-shrink: 0;
+}
+
 .itemDescription {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: rgba(0, 0, 0, 0.3);
 }
 
-/* Thin blinking caret at the end of the text while it types. */
-.caret {
-  display: inline-block;
-  width: 1px;
-  height: 1em;
-  margin-left: 1px;
-  vertical-align: -0.12em;
-  background: rgba(0, 0, 0, 0.55);
+/* Open: the same text as one wrapping paragraph, so the description flows
+ * onto extra lines under the name. */
+.itemLinkWrapped {
+  display: block;
+  white-space: normal;
+}
+
+.itemLinkWrapped .itemDescription {
+  overflow: visible;
+}
+
+.itemLinkOpen .itemDescription {
+  color: rgba(0, 0, 0, 0.55);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .caret {
-    animation: caretBlink calc(900ms * var(--slow, 1)) steps(1) infinite;
+  .itemDescription {
+    transition: color calc(160ms * var(--slow, 1)) ease;
   }
 }
 
-@keyframes caretBlink {
-  50% {
-    opacity: 0;
-  }
+/* The hidden always-wrapped copy CaseStudyRow measures its open height
+ * from. Same width as the row, out of flow, invisible. */
+.measure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* Hand-drawn oval around a hovered heading (DrawnOval in Sidebar.tsx), in a
