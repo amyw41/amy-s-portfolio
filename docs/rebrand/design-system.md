@@ -63,7 +63,7 @@ Sidebar, top to bottom:
    - **Works:** each case study as its name then " - description" in full (55% black), wrapping onto extra lines under the name.
    - **Extra:** About Me (/about), Play (/playground).
 
-- **Dropdown headings** (Experience, Works, Extra): text + chevron (14px). On load only Experience is open; Works and Extra start closed. Closed points down, open points up.
+- **Dropdown headings** (Experience, Works, Extra): text + chevron (14px). On load Experience and Works are open; Extra starts closed. Closed points down, open points up.
 - **Hover circle:** hand-drawn wiggly oval drawn on like a pen when hovering a heading (Experience, Works, Extra), un-drawn on leave. 16px past the word left/right, 8px above/below.
 - **Item links** (case studies, About Me, Play) fade to 55% black on hover.
 - **Works hover isolate:** hovering (or focusing) a case study lifts its jar item 12px and scales it to 1.04 (staying at its own layer in the pile), and dims every other item (`--dim-white`). In work mode its grid tile lifts 6px and the other tiles dim. Extras has no jar item, so it does nothing in the jar.

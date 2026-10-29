@@ -264,7 +264,7 @@ export default function Sidebar({ onCaseFocus }: SidebarProps) {
       </h1>
 
       <nav className={styles.menu} aria-label="Main">
-        {/* Only Experience starts open; Works and Extra open on click. */}
+        {/* Experience and Works start open; Extra opens on click. */}
         <DropdownGroup title={copy.experience.heading} seed={20} items={[...copy.experience.items]} defaultOpen />
         <DropdownGroup
           title={copy.nav.works}
@@ -278,6 +278,7 @@ export default function Sidebar({ onCaseFocus }: SidebarProps) {
               onFocusChange={(active) => onCaseFocus(active ? link.id : null)}
             />
           ))}
+          defaultOpen
         />
         <DropdownGroup
           title={copy.nav.extra}
