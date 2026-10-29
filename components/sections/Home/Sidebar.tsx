@@ -152,9 +152,19 @@ function dropdownVariants(reduced: boolean): { list: Variants; item: Variants } 
 }
 
 /** A heading with a dropdown (Experience, Works): the heading text and its
- * chevron are one button. Starts open. */
-function DropdownGroup({ title, seed, items }: { title: string; seed: number; items: ReactNode[] }) {
-  const [open, setOpen] = useState(true);
+ * chevron are one button. Starts closed unless `defaultOpen`. */
+function DropdownGroup({
+  title,
+  seed,
+  items,
+  defaultOpen = false,
+}: {
+  title: string;
+  seed: number;
+  items: ReactNode[];
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
   const listId = useId();
   const oval = useHoverOval();
   const reduced = useReducedMotion() ?? false;
@@ -279,7 +289,8 @@ export default function Sidebar({ onCaseFocus }: SidebarProps) {
             </Link>,
           ]}
         />
-        <DropdownGroup title={copy.experience.heading} seed={20} items={[...copy.experience.items]} />
+        {/* Only Experience starts open; Works and Extra open on click. */}
+        <DropdownGroup title={copy.experience.heading} seed={20} items={[...copy.experience.items]} defaultOpen />
       </nav>
     </aside>
   );

@@ -72,7 +72,7 @@ Top to bottom, everything on one left edge:
 2. **Intro:** one paragraph, the name then the description ("Amy Wang is a designer who…"), at body size in medium weight.
 3. **Menu:** three dropdown groups: **Works** (each case study with its full description; hovering one isolates it on the stage, 3.1), **Extra** (About Me, Play), **Experience** (Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo).
 
-Everything flows down from the top: opening a list pushes what's below it down. Headings get the hand-drawn hover circle; every group has a chevron and starts open.
+Everything flows down from the top: opening a list pushes what's below it down. Headings get the hand-drawn hover circle; every group has a chevron; on load only Experience is open.
 
 The **jar / work toggle** isn't in the sidebar: it sits top right of the stage as two plain labels, the selected one underlined with a hand-drawn squiggle (jar red, work blue). See 2.4 and the design system.
 
