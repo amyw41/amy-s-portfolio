@@ -42,19 +42,16 @@
   color: #000;
 }
 
-/* ---------- name + intro, centred ---------- */
+/* ---------- name + intro ---------- */
 
-/* Auto margins top and bottom share the free height equally, so this sits
- * exactly halfway between the icons and the menu (which ends up at the
- * bottom of the box). The padding is the minimum gap either side when the
- * column runs short. */
+/* The sidebar is one stack flowing down from the top: fixed gaps above and
+ * below this block (not auto margins), so opening a list only ever pushes
+ * what's under it down. 38px @696 tall each. */
 .identity {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  margin-block: auto;
-  /* 24px @696 tall. */
-  padding-block: clamp(14px, 3.45dvh, 40px);
+  padding-block: clamp(20px, 5.46dvh, 80px);
 }
 
 .name {
@@ -179,6 +176,10 @@
  * window; on a really short one they shrink a little faster still, so
  * everything fits without the sidebar scrolling. */
 @media (min-width: 768px) and (max-height: 660px) {
+  .identity {
+    padding-block: 4.5dvh;
+  }
+
   .experience {
     margin-bottom: 3.8dvh;
   }
@@ -198,7 +199,6 @@
   }
 
   .identity {
-    margin-block: 0;
     padding-block: 24px;
   }
 

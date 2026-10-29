@@ -46,12 +46,12 @@ Horizontal spacing scales with the window's width (vw), vertical spacing with it
 | Between | Value |
 |---|---|
 | Icon → icon | 4px (each icon in a 24px box; the X lines up with the text's left edge) |
-| Icons → name block → menu | the name block sits exactly halfway: equal flexible gaps above and below it, each at least `clamp(14px, 3.45dvh, 40px)`; the menu ends at the bottom padding |
+| Icons → name block, name block → menu | `clamp(20px, 5.46dvh, 80px)` each (38px @696). Everything flows from the top; opening a list pushes what's below it down |
 | Name → intro | 14px |
 | Heading → first item, item → item | 4px |
 | Experience list → Works | `clamp(16px, 5.75dvh, 64px)` (40px @696) |
 | Works → About → Play (incl. last case study → About) | 8px |
-| On windows under 660px tall | Experience → Works tightens to 3.8dvh |
+| On windows under 660px tall | the two big gaps tighten to 4.5dvh, Experience → Works to 3.8dvh |
 | Mobile | name block 24px above and below; Experience → Works 20px |
 
 ## Components
@@ -59,7 +59,7 @@ Horizontal spacing scales with the window's width (vw), vertical spacing with it
 Sidebar, top to bottom:
 
 1. **Social icons:** X, LinkedIn, mail. Plain black, ~18–20px, no border.
-2. **Name + intro**, centred between the icons and the menu: "Amy Wang" (24px), then the intro paragraph (14px, light, 75% black).
+2. **Name + intro**, a fixed gap below the icons: "Amy Wang" (24px), then the intro paragraph (14px, light, 75% black).
 3. **Menu**, all on one left edge:
    - **Experience** (dropdown): Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo.
    - **Works** (dropdown): each case study as its name then " - description" in full, wrapping onto extra lines under the name.
