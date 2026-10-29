@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import styles from "./Home.module.css";
 import Sidebar, { type HomeMode } from "./Sidebar";
@@ -52,10 +52,20 @@ export default function Home() {
     return () => sound.dispose();
   }, []);
 
+  // Whether the jar has fully arrived (landed, items in) — JarView reports
+  // it. Leaving a jar that hasn't is an interrupted arrival: it just drops
+  // away quickly, so no clink.
+  const jarSettledRef = useRef(true);
+  const handleJarSettled = useCallback((settled: boolean) => {
+    jarSettledRef.current = settled;
+  }, []);
+
   function changeMode(next: HomeMode) {
     if (next === mode) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (next === "work" && !reduced && soundRef.current) {
+    // Switching back mid-exit: cut the clink off with it.
+    if (next === "jar") soundRef.current?.stop();
+    if (next === "work" && !reduced && jarSettledRef.current && soundRef.current) {
       const spanMs = slowMs((JAR_ANTICIPATE_S + JAR_DROP_OUT_S) * 1000);
       soundRef.current.start(spanMs / 1000);
       window.setTimeout(() => soundRef.current?.stop(), spanMs);
@@ -98,7 +108,7 @@ export default function Home() {
          * out, then the jar drops in). */}
         <AnimatePresence mode="wait" initial={false}>
           {mode === "jar" ? (
-            <JarView key="jar" entering={jarEntering} isolatedId={focusedCase} />
+            <JarView key="jar" entering={jarEntering} isolatedId={focusedCase} onSettledChange={handleJarSettled} />
           ) : (
             <WorkGrid key="work" focusedId={focusedCase} />
           )}

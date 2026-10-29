@@ -104,4 +104,5 @@ Sidebar, top to bottom:
 | "what's inside?" arriving | after the jar has gone: drops 48px from above with a small overshoot, 450ms, while the grid sweeps in |
 | Work → jar | grid leaves (200ms), then the jar drops in from above (420ms ease-in) and lands with a squash (scaleX 1.04, scaleY 0.92) springing back (360ms), smooth; then the items fall in |
 | jar / work toggle | knob springs to the other label (stiffness 400, damping 32 — no wobbly overshoot) while its colour crossfades red ↔ blue (250ms); reduced motion: it jumps |
+| Interrupted switch | every switch can be reversed mid-way. Leaving a jar that hasn't fully arrived (still dropping in, or items not in yet): queued steps are cancelled (no items spawn, no clink) and it drops straight out in 180ms. Calling the jar back while it's leaving: it rises back into place in 250ms. Calling work back while the grid is leaving: the grid returns. |
 | Reduced motion | no animation, things just appear; mode switches are plain 200ms fades, no sound |

@@ -37,6 +37,8 @@ interface JarStageProps {
   /** Passed to useJarPhysics: false skips building the outline rings that
    * `bordered` items show. Default true. */
   outlines?: boolean;
+  /** Called once the items exist and have started falling in. */
+  onReady?: () => void;
 }
 
 export default function JarStage({
@@ -48,6 +50,7 @@ export default function JarStage({
   start = true,
   jostleRef,
   outlines = true,
+  onReady,
 }: JarStageProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { ready, renderInfo, outlineMasks, registerItemEl, debugWalls, debugPhysicsEnabled, jostle } = useJarPhysics(
@@ -56,6 +59,14 @@ export default function JarStage({
     textPlatformsRef,
     { start, outlines },
   );
+
+  const onReadyRef = useRef(onReady);
+  useEffect(() => {
+    onReadyRef.current = onReady;
+  });
+  useEffect(() => {
+    if (ready) onReadyRef.current?.();
+  }, [ready]);
 
   useEffect(() => {
     if (!jostleRef) return;
