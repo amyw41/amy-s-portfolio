@@ -240,10 +240,16 @@ function roundedRectPoint(s: number, w: number, h: number, r: number): { p: [num
   }
 }
 
+/** Fewest points a rectangle is sampled at, so tiny ones (the toggle's
+ * doodles) keep round corners instead of being cut into polygons. */
+const RECT_MIN_STEPS = 32;
+
 /** A hand-drawn rounded rectangle, `width` × `height` (in the path's own
  * units, origin top-left), corner `radius`. Drawn as one stroke starting at
  * the top left and going clockwise, carrying on a little past the start like
- * a real pen loop. For the outline around projects (brief Part 3.1). */
+ * a real pen loop. For the outline around projects (brief Part 3.1).
+ * `overshootDrift` is how far out the pen's tail ends, px — smaller for tiny
+ * shapes, where the default would read as a tick. */
 export function buildWobblyRectPath(
   seed: number,
   width: number,
@@ -251,20 +257,21 @@ export function buildWobblyRectPath(
   radius: number,
   amplitude = 1,
   variant = 0,
+  overshootDrift = RECT_OVERSHOOT_DRIFT_PX,
 ): string {
   const r = Math.min(radius, width / 2, height / 2);
   const perimeter = 2 * (width - 2 * r) + 2 * (height - 2 * r) + 2 * Math.PI * r;
   const total = perimeter * (1 + RECT_OVERSHOOT);
   const phaseA = hash(seed, 501) * Math.PI * 2;
   const phaseB = hash(seed, 502) * Math.PI * 2;
-  const steps = Math.ceil(total / RECT_SAMPLE_PX);
+  const steps = Math.max(RECT_MIN_STEPS, Math.ceil(total / RECT_SAMPLE_PX));
 
   const points: [number, number][] = [];
   for (let i = 0; i <= steps; i++) {
     const s = (i / steps) * total;
     const { p, n } = roundedRectPoint(s % perimeter, width, height, r);
     const t = s / perimeter;
-    const drift = Math.max(0, t - 1) / RECT_OVERSHOOT * RECT_OVERSHOOT_DRIFT_PX;
+    const drift = Math.max(0, t - 1) / RECT_OVERSHOOT * overshootDrift;
     const offset =
       amplitude * (1.2 * Math.sin(t * Math.PI * 2 * 3 + phaseA) + 0.5 * Math.sin(t * Math.PI * 2 * 7 + phaseB)) +
       drift +
@@ -272,4 +279,21 @@ export function buildWobblyRectPath(
     points.push([p[0] + n[0] * offset, p[1] + n[1] * offset]);
   }
   return smoothPathFromPoints(points);
+}
+
+// ---------- washes ----------
+
+/** A block of colour `width` × `height` (origin top-left) whose top edge is
+ * a gentle wave `amplitude` px high, `waves` crests across — the surface of
+ * the toggle doodles' pencil wash (and the jar's liquid). Closed, for fill. */
+export function buildWashPath(seed: number, width: number, height: number, amplitude = 1, waves = 2): string {
+  const phase = hash(seed, 601) * Math.PI * 2;
+  const steps = 24;
+  const points: [number, number][] = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const y = amplitude * (0.75 * Math.sin(t * Math.PI * 2 * waves + phase) + 0.25 * Math.sin(t * Math.PI * 2 * waves * 2.3 + phase * 1.7));
+    points.push([t * width, y]);
+  }
+  return `${smoothPathFromPoints(points)} L${width},${height} L0,${height} Z`;
 }

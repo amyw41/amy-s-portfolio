@@ -67,9 +67,15 @@ export const JAR_LIFT_IN_MS = 250;
 export const JAR_LIFT_OUT_MS = 200;
 export const TILE_LIFT_PX = 6;
 
-// The jar / work toggle (Home/ModeToggle.tsx): its knob springs between
-// the two labels — firm, no wobbly overshoot.
-export const MODE_KNOB_SPRING = { type: "spring", stiffness: 400, damping: 32 } as const;
+// The jar / work toggle (Home/ModeToggle.tsx): the newly picked doodle's
+// pencil wash fills in from the bottom over MODE_FILL_S (ease-out) while the
+// old one's drains out over the same time; the jar's liquid surface sloshes
+// MODE_SLOSH_PX sideways as it rises. Hovering an unpicked doodle tilts it
+// MODE_TILT_DEG over MODE_TILT_MS.
+export const MODE_FILL_S = 0.3;
+export const MODE_SLOSH_PX = 4;
+export const MODE_TILT_DEG = -7;
+export const MODE_TILT_MS = 150;
 
 // The jar's cartoon moves (Home/JarView.tsx, brief Part 2.4).
 // jar → work: anticipation — lift JAR_ANTICIPATE_PX and squash to
