@@ -13,8 +13,6 @@ const links = content.en.footer.links;
 export type HomeMode = "jar" | "work";
 
 interface SidebarProps {
-  mode: HomeMode;
-  onModeChange: (mode: HomeMode) => void;
   /** The case study being hovered/focused in Works (its slug), or null. */
   onCaseFocus: (id: string | null) => void;
 }
@@ -67,7 +65,7 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-export default function Sidebar({ mode, onModeChange, onCaseFocus }: SidebarProps) {
+export default function Sidebar({ onCaseFocus }: SidebarProps) {
   return (
     <aside className={styles.sidebar}>
       <ul className={styles.socialRow} aria-label={copy.social.label}>
@@ -134,20 +132,6 @@ export default function Sidebar({ mode, onModeChange, onCaseFocus }: SidebarProp
           ))}
         </Group>
       </nav>
-
-      <div className={styles.modeToggle} role="group" aria-label={copy.modes.label}>
-        {(["jar", "work"] as const).map((m) => (
-          <button
-            key={m}
-            type="button"
-            className={`${styles.modeButton} ${mode === m ? styles.modeButtonActive : ""}`}
-            aria-pressed={mode === m}
-            onClick={() => onModeChange(m)}
-          >
-            {copy.modes[m]}
-          </button>
-        ))}
-      </div>
     </aside>
   );
 }

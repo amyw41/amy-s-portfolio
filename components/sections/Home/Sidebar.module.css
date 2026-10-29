@@ -104,40 +104,6 @@
   }
 }
 
-/* ---------- jar / work mode toggle ---------- */
-
-/* margin-top:auto pins it to the bottom of the box; the padding is the
- * minimum gap above it when the column runs short. */
-.modeToggle {
-  display: flex;
-  gap: 16px;
-  margin-top: auto;
-  /* At least this much clear space above it, so it never touches the
-   * last menu item on a short window. */
-  padding-top: clamp(12px, 2.3dvh, 28px);
-}
-
-.modeButton {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: var(--fs-body);
-  font-weight: 400;
-  letter-spacing: inherit;
-  color: rgba(0, 0, 0, 0.4);
-}
-
-.modeButton:hover {
-  color: rgba(0, 0, 0, 0.7);
-}
-
-.modeButtonActive,
-.modeButtonActive:hover {
-  color: #000;
-}
-
 /* ---------- very short windows (e.g. 150% browser zoom) ---------- */
 
 /* Below the 696px laptop height the big gaps already shrink with the
@@ -157,9 +123,5 @@
     --section-gap: 24px;
     padding: 24px 16px 20px;
     overflow: visible;
-  }
-
-  .modeToggle {
-    padding-top: 24px;
   }
 }

@@ -1,0 +1,75 @@
+/* Top right of the stage, the same distance from the top and from the right
+ * edge — the sidebar's own responsive top padding (--pad-y, Home.module.css)
+ * for both, so it lines up with the icons across the divider. Above both
+ * views (jar and work) so it's always reachable. */
+.toggle {
+  position: absolute;
+  top: var(--pad-y);
+  right: var(--pad-y);
+  z-index: 2;
+  display: flex;
+  gap: 10px;
+}
+
+.button {
+  position: relative;
+  padding: 3px 16px 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: inherit;
+  color: #000;
+}
+
+/* The hand-drawn pill + its pencil fill, stretched over the button. Like the
+ * old hover oval, sized explicitly off the button's box (an absolutely
+ * positioned SVG can't be left to auto). */
+.drawing {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.outline {
+  stroke: var(--mode-color);
+}
+
+/* Coloured pencil: thick-ish, slightly see-through strokes that overlap
+ * where the zig-zag doubles back, like real pencil build-up. */
+.scribble {
+  stroke: var(--mode-color);
+  stroke-width: 3px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-opacity: 0.55;
+}
+
+/* Label sits above the scribble. */
+.label {
+  position: relative;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--mode-color);
+  outline-offset: 4px;
+  border-radius: 999px;
+}
+
+/* Unselected, hovered: the outline firms up a little. */
+.button[aria-pressed="false"]:hover .outline {
+  stroke-width: 1.4px;
+}
+
+@media (max-width: 767px) {
+  .toggle {
+    top: 16px;
+    right: 16px;
+  }
+}

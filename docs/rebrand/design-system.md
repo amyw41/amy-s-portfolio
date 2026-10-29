@@ -13,7 +13,7 @@ Values are given at the 1536×696 laptop size. Layout spacing scales with the wi
 | Size | 14px everywhere in the sidebar, line-height 1.45 (no separate large name) |
 | Medium (500) | the intro paragraph, group headings (Works, Extra, Experience) |
 | Light (300) | menu items |
-| jar/work toggle weight | 400 |
+| jar/work toggle weight | 400 (label in black) |
 
 ## Colour
 
@@ -21,7 +21,7 @@ Values are given at the 1536×696 laptop size. Layout spacing scales with the wi
 |---|---|
 | Text | #000 |
 | Menu item hover/focus | 55% black |
-| Inactive mode button (jar/work) | 40% black (70% on hover) |
+| jar / work toggle | jar red `--c-red`, work blue `--c-blue` |
 | Divider line | #000 |
 | Background | #fff |
 
@@ -46,8 +46,6 @@ Horizontal spacing scales with the window's width (vw), vertical spacing with it
 | Icons → intro, intro → menu | `clamp(28px, 9.2dvh, 112px)` each (64px @696) |
 | Group → group (Works → Extra → Experience) | 14px |
 | Heading → first item, item → item | 4px |
-| Last item → jar/work toggle | fills the leftover space, at least `clamp(12px, 2.3dvh, 28px)` |
-| jar ↔ work | 16px |
 | On windows under 660px tall | the two big gaps tighten to 6dvh |
 | Mobile | the two big gaps are 24px |
 
@@ -61,7 +59,8 @@ Sidebar, top to bottom:
    - **Works:** the case studies by name (CyberSea, Spotify Guessr, SkinSprout, Extras). No descriptions.
    - **Extra:** About Me (/about), Play (/playground).
    - **Experience:** Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo (plain text).
-4. **jar / work toggle** at the bottom.
+
+- **jar / work toggle:** not in the sidebar — top right of the stage, `--pad-y` from both the top and the right edge (16px on mobile), the two buttons side by side, 10px apart. Each is its label (14px, black) in a hand-drawn pill outline in its colour: **jar red** (`--c-red`), **work blue** (`--c-blue`). The selected one is **coloured in like pencil**: a zig-zag scribble (3px strokes at 55% of its colour, overlapping where it doubles back) clipped to the pill. Unselected: outline only.
 
 - **Item hover/focus:** links fade to 55% black.
 - **Works hover isolate:** hovering (or focusing) a case study also lifts its jar item 12px and scales it to 1.04 (staying at its own layer in the pile, not brought to the front), and dims every other item (`--dim-white`). In work mode its grid tile lifts 6px and the other tiles dim. Extras has no jar item, so it does nothing in the jar.
@@ -96,4 +95,5 @@ Sidebar, top to bottom:
 | Jar → work | jar lifts 10px + squashes to scaleY 0.96 (120ms), then drops out of the stage (380ms ease-in), 12fps stop motion; items get kicked up and knock around inside; clink sound on the click. Work only starts coming in once the jar has gone. |
 | "what's inside?" arriving | after the jar has gone: drops 48px from above with a small overshoot, 450ms, while the grid sweeps in |
 | Work → jar | grid leaves (200ms), then the jar drops in from above (420ms ease-in) and lands with a squash (scaleX 1.04, scaleY 0.92) springing back (360ms), 12fps stop motion; then the items fall in |
+| jar / work toggle | selected button's pencil fill draws on, 300ms ease-out; the old one fades out over 300ms |
 | Reduced motion | no animation, things just appear; mode switches are plain 200ms fades, no sound |

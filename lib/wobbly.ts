@@ -273,3 +273,34 @@ export function buildWobblyRectPath(
   }
   return smoothPathFromPoints(points);
 }
+
+// ---------- coloured-pencil fill ----------
+
+/** Horizontal step between scribble strokes, in the pill's own units (its
+ * 128-unit box, PILL_VIEW_BOX) — dense enough to read as coloured in. */
+const SCRIBBLE_STEP = 7;
+/** How far each stroke's ends may stray from the pill's top/bottom edge
+ * (they overshoot it; the pill clips them). */
+const SCRIBBLE_JITTER = 8;
+
+/** A coloured-pencil scribble filling buildWobblyPillPath's box: one
+ * continuous zig-zag of slightly uneven diagonal strokes, left to right,
+ * overshooting the top and bottom so that, clipped to the pill shape, it
+ * reads as a button coloured in by hand. Same units and viewBox as the pill
+ * (PILL_VIEW_BOX), so the two stretch together. */
+export function buildScribbleFillPath(seed = 0): string {
+  const top = SQUIRCLE_CENTER - SQUIRCLE_HALF - 6;
+  const bottom = SQUIRCLE_CENTER + SQUIRCLE_HALF + 6;
+  const left = SQUIRCLE_CENTER - SQUIRCLE_HALF - 4;
+  const right = SQUIRCLE_CENTER + SQUIRCLE_HALF + 4;
+  let d = "";
+  let x = left;
+  for (let i = 0; x <= right; i++) {
+    const y = i % 2 === 0 ? top + hash(seed, 600 + i) * SCRIBBLE_JITTER : bottom - hash(seed, 600 + i) * SCRIBBLE_JITTER;
+    // Each stroke leans a little and lands a little unevenly.
+    const px = x + (hash(seed, 900 + i) - 0.5) * SCRIBBLE_STEP * 0.8;
+    d += `${i === 0 ? "M" : "L"}${px.toFixed(2)},${y.toFixed(2)} `;
+    x += SCRIBBLE_STEP * (0.75 + hash(seed, 1200 + i) * 0.5);
+  }
+  return d.trim();
+}

@@ -5,6 +5,7 @@ import { AnimatePresence } from "framer-motion";
 import styles from "./Home.module.css";
 import Sidebar, { type HomeMode } from "./Sidebar";
 import WorkGrid from "./WorkGrid";
+import ModeToggle from "./ModeToggle";
 import BuzzPath from "@/components/ui/BuzzPath";
 import JarView from "./JarView";
 import { createJarSound, type JarSound } from "@/components/sections/Hero/jar-sound";
@@ -77,7 +78,7 @@ export default function Home() {
 
   return (
     <main className={`${geist.variable} ${styles.frame}`}>
-      <Sidebar mode={mode} onModeChange={changeMode} onCaseFocus={setFocusedCase} />
+      <Sidebar onCaseFocus={setFocusedCase} />
 
       <div className={styles.divider} aria-hidden="true">
         <BuzzPath
@@ -90,6 +91,7 @@ export default function Home() {
       </div>
 
       <section className={styles.stage}>
+        <ModeToggle mode={mode} onChange={changeMode} />
         {/* mode="wait": one view at a time — the leaving one finishes its
          * exit before the next starts (jar → work: the jar drops away, then
          * "what's inside?" and the grid come in; work → jar: the grid slides

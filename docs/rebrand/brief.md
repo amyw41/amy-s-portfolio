@@ -74,9 +74,10 @@ Top to bottom, everything on one left edge:
    - **Works:** the case studies by name (CyberSea, Spotify Guessr, SkinSprout, Extras). Hovering one isolates it on the stage (3.1).
    - **Extra:** About Me (`/about`), Play (`/playground`).
    - **Experience:** Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo.
-4. **Mode toggle** at the bottom: **jar** and **work** (see 2.4).
 
 Menu items fade to 55% black on hover.
+
+The **jar / work toggle** isn't in the sidebar: it sits top right of the stage as two hand-drawn pills, the selected one coloured in with pencil (jar red, work blue). See 2.4 and the design system.
 
 ### 2.3 Stage: jar mode (the default)
 
@@ -87,7 +88,7 @@ Menu items fade to 55% black on hover.
 
 ### 2.4 Switching modes
 
-**jar → work** (click "work" at the bottom of the sidebar):
+**jar → work** (click "work" at the top right of the stage):
 
 1. **The jar is lowered off the table**, cartoon style:
    - **Anticipation:** the jar lifts about 10px and squashes slightly (scaleY 0.96) for about 120ms.
