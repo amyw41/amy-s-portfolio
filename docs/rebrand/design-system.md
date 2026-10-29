@@ -11,7 +11,7 @@ Values are given at the 1536×696 laptop size. Layout spacing scales with the wi
 | Font | Geist |
 | Letter spacing | -0.6px |
 | Size | 14px everywhere in the sidebar, line-height 1.45 (no separate large name) |
-| Medium (500) | the intro paragraph, group headings (Works, Extra, Experience) |
+| Medium (500) | the intro paragraph, group headings (Experience, Works, Extra) |
 | Light (300) | menu items |
 | jar/work toggle weight | 400 |
 
@@ -47,7 +47,7 @@ Everything flows from the top with fixed gaps; opening a group pushes what's bel
 |---|---|
 | Icon → icon | 4px (each icon in a 24px box; the X lines up with the text's left edge) |
 | Icons → intro, intro → menu | `clamp(24px, 6.9dvh, 96px)` each (48px @696) |
-| Group → group (Works → Extra → Experience) | 14px |
+| Group → group (Experience → Works → Extra) | 14px |
 | Heading → first item, item → item | 4px |
 | On windows under 660px tall | the two big gaps tighten to 4.5dvh |
 | Mobile | the two big gaps are 24px |
@@ -59,12 +59,12 @@ Sidebar, top to bottom:
 1. **Social icons:** X, LinkedIn, mail. Plain black, ~18–20px, no border.
 2. **Intro:** one paragraph, the name then the description ("Amy Wang is a designer who…"), medium weight, black.
 3. **Menu:** three groups, all on one left edge, each a dropdown:
+   - **Experience:** Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo (plain text).
    - **Works:** each case study as its name then " - description" in full (55% black), wrapping onto extra lines under the name.
    - **Extra:** About Me (/about), Play (/playground).
-   - **Experience:** Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo (plain text).
 
-- **Dropdown headings** (Works, Extra, Experience): text + chevron (14px). On load only Experience is open; Works and Extra start closed. Closed points down, open points up.
-- **Hover circle:** hand-drawn wiggly oval drawn on like a pen when hovering a heading (Works, Extra, Experience), un-drawn on leave. 16px past the word left/right, 8px above/below.
+- **Dropdown headings** (Experience, Works, Extra): text + chevron (14px). On load only Experience is open; Works and Extra start closed. Closed points down, open points up.
+- **Hover circle:** hand-drawn wiggly oval drawn on like a pen when hovering a heading (Experience, Works, Extra), un-drawn on leave. 16px past the word left/right, 8px above/below.
 - **Item links** (case studies, About Me, Play) fade to 55% black on hover.
 - **Works hover isolate:** hovering (or focusing) a case study lifts its jar item 12px and scales it to 1.04 (staying at its own layer in the pile), and dims every other item (`--dim-white`). In work mode its grid tile lifts 6px and the other tiles dim. Extras has no jar item, so it does nothing in the jar.
 - **jar / work toggle:** not in the sidebar — top right of the stage, `--pad-y` from both the top and the right edge (16px on mobile). A hand-drawn **segmented toggle**: one pill track (0.6px black pen line, low wobble, 120×32px) holding both labels in equal 60px segments, and a hand-drawn pill **knob** (3px inside the track) behind the active label, filled with its colour — **jar red** (`--c-red`), **work blue** (`--c-blue`). Labels 14px: active black (on the knob), inactive grey (45% black), black on hover.

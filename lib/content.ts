@@ -44,8 +44,8 @@ export const content = {
         heading: "Experience",
         items: ["Design @ Blueprint", "Campus @ Notion", "Management Eng @ Waterloo"],
       },
-      // The menu's three groups, top to bottom: Works (the case studies),
-      // Extra (About Me, Play), then Experience (above).
+      // The menu's three groups, top to bottom: Experience (above), Works
+      // (the case studies), then Extra (About Me, Play).
       nav: {
         works: "Works",
         extra: "Extra",

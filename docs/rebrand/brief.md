@@ -70,7 +70,7 @@ Top to bottom, everything on one left edge:
 
 1. **Social icons:** X, LinkedIn, mail, plain black.
 2. **Intro:** one paragraph, the name then the description ("Amy Wang is a designer who…"), at body size in medium weight.
-3. **Menu:** three dropdown groups: **Works** (each case study with its full description; hovering one isolates it on the stage, 3.1), **Extra** (About Me, Play), **Experience** (Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo).
+3. **Menu:** three dropdown groups: **Experience** (Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo), **Works** (each case study with its full description; hovering one isolates it on the stage, 3.1), **Extra** (About Me, Play).
 
 Everything flows down from the top: opening a list pushes what's below it down. Headings get the hand-drawn hover circle; every group has a chevron; on load only Experience is open.
 
