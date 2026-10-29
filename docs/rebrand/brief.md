@@ -74,7 +74,7 @@ Top to bottom, everything on one left edge:
 
 Everything flows down from the top: opening a list pushes what's below it down. Headings get the hand-drawn hover circle; every group has a chevron; on load only Experience is open.
 
-The **jar / work toggle** isn't in the sidebar: it sits top right of the stage as two plain labels, the selected one underlined with a hand-drawn squiggle (jar red, work blue). See 2.4 and the design system.
+The **jar / work toggle** isn't in the sidebar: it sits top right of the stage as a hand-drawn segmented toggle: one pill track with both labels, and a coloured knob (jar red, work blue) that slides behind the active one. See 2.4 and the design system.
 
 ### 2.3 Stage: jar mode (the default)
 

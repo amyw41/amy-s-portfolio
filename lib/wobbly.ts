@@ -273,31 +273,3 @@ export function buildWobblyRectPath(
   }
   return smoothPathFromPoints(points);
 }
-
-// ---------- squiggly underline ----------
-
-/** Box the squiggle is drawn in (stretch it over the text with
- * preserveAspectRatio="none" and a non-scaling stroke). */
-export const SQUIGGLE_VIEW_BOX = "0 0 100 12";
-/** How far each crest swings from the middle line (in the box's own units,
- * 12 tall). */
-const SQUIGGLE_AMPLITUDE = 3.2;
-const SQUIGGLE_STEPS = 64;
-
-/** A hand-drawn squiggly underline: a gentle sine wave of `waves` full
- * waves across SQUIGGLE_VIEW_BOX, its height varied a little along the way
- * (seeded) so it looks drawn by hand rather than plotted. Scale `waves`
- * with the underlined text's length so the wave size stays even. */
-export function buildSquigglePath(seed = 0, waves = 3): string {
-  const phase = hash(seed, 1500) * Math.PI * 2;
-  const wobblePhase = hash(seed, 1501) * Math.PI * 2;
-  const points: [number, number][] = [];
-  for (let i = 0; i <= SQUIGGLE_STEPS; i++) {
-    const t = i / SQUIGGLE_STEPS;
-    // Slight drift in wave height along the line, and a hair of tilt.
-    const amp = SQUIGGLE_AMPLITUDE * (0.8 + 0.25 * Math.sin(t * Math.PI * 2 + wobblePhase));
-    const y = 6 + amp * Math.sin(t * Math.PI * 2 * waves + phase) + (t - 0.5) * (hash(seed, 1502) - 0.5) * 2;
-    points.push([1 + t * 98, y]);
-  }
-  return smoothPathFromPoints(points);
-}

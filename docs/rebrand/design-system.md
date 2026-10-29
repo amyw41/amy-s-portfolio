@@ -67,7 +67,7 @@ Sidebar, top to bottom:
 - **Hover circle:** hand-drawn wiggly oval drawn on like a pen when hovering a heading (Works, Extra, Experience), un-drawn on leave. 16px past the word left/right, 8px above/below.
 - **Item links** (case studies, About Me, Play) fade to 55% black on hover.
 - **Works hover isolate:** hovering (or focusing) a case study lifts its jar item 12px and scales it to 1.04 (staying at its own layer in the pile), and dims every other item (`--dim-white`). In work mode its grid tile lifts 6px and the other tiles dim. Extras has no jar item, so it does nothing in the jar.
-- **jar / work toggle:** not in the sidebar — top right of the stage, `--pad-y` from both the top and the right edge (16px on mobile), two plain labels side by side, 20px apart. Labels are 14px, grey (45% black) until hovered or selected, then black. The **selected** one has a hand-drawn **squiggly underline** in its colour — **jar red** (`--c-red`), **work blue** (`--c-blue`) — drawn on when you click it (the old one un-draws). **Hover** on the unselected one: its squiggle previews faintly (35% opacity) and the label darkens.
+- **jar / work toggle:** not in the sidebar — top right of the stage, `--pad-y` from both the top and the right edge (16px on mobile). A hand-drawn **segmented toggle**: one pill track (0.6px black pen line, low wobble, 120×32px) holding both labels in equal 60px segments, and a hand-drawn pill **knob** (3px inside the track) behind the active label, filled with its colour — **jar red** (`--c-red`), **work blue** (`--c-blue`). Labels 14px: active black (on the knob), inactive grey (45% black), black on hover.
 
 ## Hand-drawn lines
 
@@ -103,5 +103,5 @@ Sidebar, top to bottom:
 | Jar → work | jar lifts 10px + squashes to scaleY 0.96 (120ms), then drops out of the stage (380ms ease-in), smooth; items get kicked up and knock around inside; clink sound on the click. Work only starts coming in once the jar has gone. |
 | "what's inside?" arriving | after the jar has gone: drops 48px from above with a small overshoot, 450ms, while the grid sweeps in |
 | Work → jar | grid leaves (200ms), then the jar drops in from above (420ms ease-in) and lands with a squash (scaleX 1.04, scaleY 0.92) springing back (360ms), smooth; then the items fall in |
-| jar / work toggle | selected label's squiggle draws on 300ms ease-out (old one un-draws); hover preview draws on in 150ms |
+| jar / work toggle | knob springs to the other label (stiffness 400, damping 32 — no wobbly overshoot) while its colour crossfades red ↔ blue (250ms); reduced motion: it jumps |
 | Reduced motion | no animation, things just appear; mode switches are plain 200ms fades, no sound |

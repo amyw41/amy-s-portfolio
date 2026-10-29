@@ -1,34 +1,57 @@
 /* Top right of the stage, the same distance from the top and from the right
  * edge — the sidebar's own responsive top padding (--pad-y, Home.module.css)
  * for both, so it lines up with the icons across the divider. Above both
- * views (jar and work) so it's always reachable. */
+ * views (jar and work) so it's always reachable. Sized inline from
+ * ModeToggle.tsx's geometry constants. */
 .toggle {
   position: absolute;
   top: var(--pad-y);
   right: var(--pad-y);
   z-index: 2;
   display: flex;
-  gap: 20px;
 }
 
-/* Plain text label: grey until hovered or selected. */
+/* The hand-drawn pill track, behind everything. */
+.track {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* The coloured knob that slides behind the active label. */
+.knob {
+  position: absolute;
+  pointer-events: none;
+}
+
+.knobFill {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+/* Labels sit on top of the knob, centred in their segment. Black on the
+ * knob (reads on both the red and the blue); grey when inactive, black on
+ * hover. */
 .button {
   position: relative;
-  padding: 0 0 6px;
+  height: 100%;
+  padding: 0;
   background: none;
   border: none;
   cursor: pointer;
   font-family: inherit;
   font-size: 14px;
   font-weight: 400;
-  line-height: 1.45;
+  line-height: 1;
   letter-spacing: inherit;
   color: rgba(0, 0, 0, 0.45);
 }
 
 .button:hover,
 .button:focus-visible,
-.selected {
+.active {
   color: #000;
 }
 
@@ -38,24 +61,10 @@
   }
 }
 
-/* The squiggle, under the label and a touch wider than it. Explicitly
- * sized (an absolutely positioned SVG can't be left to auto). Its stroke is
- * currentColor, set here to the button's own colour. */
-.underline {
-  position: absolute;
-  left: -2px;
-  bottom: 0;
-  width: calc(100% + 4px);
-  height: 7px;
-  overflow: visible;
-  pointer-events: none;
-  color: var(--mode-color);
-}
-
 .button:focus-visible {
-  outline: 2px solid var(--mode-color);
-  outline-offset: 4px;
-  border-radius: 4px;
+  outline: 2px solid #000;
+  outline-offset: 2px;
+  border-radius: 999px;
 }
 
 @media (max-width: 767px) {

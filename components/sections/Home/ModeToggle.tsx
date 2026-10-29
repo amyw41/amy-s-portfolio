@@ -1,105 +1,94 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import styles from "./ModeToggle.module.css";
 import type { HomeMode } from "./Sidebar";
 import { content } from "@/lib/content";
-import { MODE_HOVER_DRAW_S, MODE_UNDERLINE_DRAW_S, slowTransition } from "@/lib/motion";
-import { buildSquigglePath, LINE_STROKE_WIDTH, SQUIGGLE_VIEW_BOX } from "@/lib/wobbly";
+import { MODE_KNOB_SPRING } from "@/lib/motion";
+import { buildWobblyRectPath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
 
 const copy = content.en.sidebar.modes;
 
 // jar = red, work = blue (the site's two category colours, lib/tokens.css).
-const MODES: { mode: HomeMode; color: string; seed: number }[] = [
-  { mode: "jar", color: "var(--c-red)", seed: 40 },
-  { mode: "work", color: "var(--c-blue)", seed: 41 },
+const MODES: { mode: HomeMode; color: string }[] = [
+  { mode: "jar", color: "var(--c-red)" },
+  { mode: "work", color: "var(--c-blue)" },
 ];
 
-/** Full waves of underline per letter of label. */
-const SQUIGGLE_WAVES_PER_LETTER = 0.7;
+// Geometry, in px (the SVGs are drawn 1:1). Each label gets an equal-width
+// segment; the knob sits inside the track with KNOB_INSET all round.
+const SEGMENT_W = 60;
+const TRACK_H = 32;
+const KNOB_INSET = 3;
+const TRACK_W = SEGMENT_W * MODES.length;
+const KNOB_W = SEGMENT_W - KNOB_INSET * 2;
+const KNOB_H = TRACK_H - KNOB_INSET * 2;
+/** Low wobble: slightly imperfect pen lines, like the jar's ink — not wavy. */
+const PEN_AMPLITUDE = 0.25;
 
-/** Opacity of the squiggle previewed while hovering an unselected button. */
-const HOVER_PREVIEW_OPACITY = 0.35;
-
-/** One label. Selected, it's underlined with a hand-drawn squiggle in its
- * colour, drawn on when it becomes selected (and un-drawn when it stops
- * being). Hovering (or keyboard-focusing) an unselected one previews its
- * squiggle faintly and darkens the label from grey to black. */
-function ModeButton({
-  label,
-  color,
-  seed,
-  selected,
-  onSelect,
-}: {
-  label: string;
-  color: string;
-  seed: number;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  const reduced = useReducedMotion();
-  // Wave count follows the label's length, so the waves are the same size
-  // under "jar" and "work".
-  const squiggle = useMemo(() => buildSquigglePath(seed, label.length * SQUIGGLE_WAVES_PER_LETTER), [seed, label]);
-  const [hovered, setHovered] = useState(false);
-  const previewing = !selected && hovered;
-
-  const drawS = selected ? MODE_UNDERLINE_DRAW_S : MODE_HOVER_DRAW_S;
-  return (
-    <button
-      type="button"
-      className={`${styles.button} ${selected ? styles.selected : ""}`}
-      aria-pressed={selected}
-      onClick={onSelect}
-      onPointerEnter={() => setHovered(true)}
-      onPointerLeave={() => setHovered(false)}
-      onFocus={(e) => setHovered(e.currentTarget.matches(":focus-visible"))}
-      onBlur={() => setHovered(false)}
-      style={{ "--mode-color": color } as CSSProperties}
-    >
-      {label}
-      <svg className={styles.underline} viewBox={SQUIGGLE_VIEW_BOX} preserveAspectRatio="none" fill="none" aria-hidden="true">
-        <motion.path
-          d={squiggle}
-          stroke="currentColor"
-          strokeWidth={LINE_STROKE_WIDTH * 2}
-          strokeLinecap="round"
-          vectorEffect="non-scaling-stroke"
-          initial={false}
-          animate={{
-            pathLength: selected || previewing ? 1 : 0,
-            opacity: selected ? 1 : previewing ? HOVER_PREVIEW_OPACITY : 0,
-          }}
-          transition={
-            reduced
-              ? { duration: 0 }
-              : {
-                  pathLength: slowTransition({ duration: drawS, ease: "easeOut" as const }),
-                  // Fade only once it's un-drawn, so leaving doesn't blink out.
-                  opacity: slowTransition({ duration: 0.01, delay: selected || previewing ? 0 : drawS }),
-                }
-          }
-        />
-      </svg>
-    </button>
-  );
-}
-
-/** The jar / work switch, top right of the stage. */
+/**
+ * The jar / work switch, top right of the stage: a segmented toggle drawn
+ * by hand — one pill track holding both labels, and a pill knob filled with
+ * the active mode's colour that slides behind the active label (spring) as
+ * its colour crossfades. Reduced motion: the knob just jumps.
+ */
 export default function ModeToggle({ mode, onChange }: { mode: HomeMode; onChange: (mode: HomeMode) => void }) {
+  const reduced = useReducedMotion();
+  const track = useMemo(() => buildWobblyRectPath(60, TRACK_W - 1, TRACK_H - 1, (TRACK_H - 1) / 2, PEN_AMPLITUDE), []);
+  const knob = useMemo(() => buildWobblyRectPath(61, KNOB_W, KNOB_H, KNOB_H / 2, PEN_AMPLITUDE), []);
+  const activeIndex = MODES.findIndex((m) => m.mode === mode);
+  const transition = reduced ? { duration: 0 } : MODE_KNOB_SPRING;
+
   return (
-    <div className={styles.toggle} role="group" aria-label={copy.label}>
-      {MODES.map(({ mode: m, color, seed }) => (
-        <ModeButton
+    <div className={styles.toggle} role="group" aria-label={copy.label} style={{ width: TRACK_W, height: TRACK_H }}>
+      <svg
+        className={styles.track}
+        width={TRACK_W}
+        height={TRACK_H}
+        viewBox={`-0.5 -0.5 ${TRACK_W} ${TRACK_H}`}
+        fill="none"
+        aria-hidden="true"
+      >
+        <path d={track} stroke="#000" strokeWidth={LINE_STROKE_WIDTH} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      </svg>
+
+      <motion.div
+        className={styles.knob}
+        style={{ left: KNOB_INSET, top: KNOB_INSET, width: KNOB_W, height: KNOB_H }}
+        initial={false}
+        animate={{ x: activeIndex * SEGMENT_W }}
+        transition={transition}
+        aria-hidden="true"
+      >
+        {/* One fill per colour, crossfading as the knob slides. */}
+        {MODES.map(({ mode: m, color }) => (
+          <motion.svg
+            key={m}
+            className={styles.knobFill}
+            width={KNOB_W}
+            height={KNOB_H}
+            viewBox={`0 0 ${KNOB_W} ${KNOB_H}`}
+            initial={false}
+            animate={{ opacity: m === mode ? 1 : 0 }}
+            transition={reduced ? { duration: 0 } : { duration: 0.25, ease: "easeOut" }}
+          >
+            <path d={knob} fill={color} stroke={color} strokeWidth={LINE_STROKE_WIDTH} strokeLinejoin="round" />
+          </motion.svg>
+        ))}
+      </motion.div>
+
+      {MODES.map(({ mode: m }) => (
+        <button
           key={m}
-          label={copy[m]}
-          color={color}
-          seed={seed}
-          selected={mode === m}
-          onSelect={() => onChange(m)}
-        />
+          type="button"
+          className={`${styles.button} ${m === mode ? styles.active : ""}`}
+          style={{ width: SEGMENT_W }}
+          aria-pressed={m === mode}
+          onClick={() => onChange(m)}
+        >
+          {copy[m]}
+        </button>
       ))}
     </div>
   );
