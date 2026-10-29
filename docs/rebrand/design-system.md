@@ -86,14 +86,14 @@ Sidebar, top to bottom:
 | Token | Value |
 |---|---|
 | Buzz | 10 drawings per second, cycling 3 |
-| Stop-motion moves (intro, jar) | 12 fps |
+| Stop-motion moves | 12 fps — currently only for the intro; the jar's moves run smooth (`JAR_MOVES_STOP_MOTION = false`) |
 | Easing | out [0.22, 1, 0.36, 1]; in [0.55, 0, 1, 0.45]; in-out [0.65, 0, 0.35, 1] |
 | Grid tiles in | each 300ms ease-out: rise 12px, scale 0.97 → 1, fade in; 40ms apart, top left first |
 | Grid reorder (filters) | tiles slide to new places, 350ms ease-out |
 | Leaving work mode | heading + grid slide up 12px and fade out together, 200ms ease-in; then the jar shows |
 | Works hover lift | in 250ms ease-out, back 200ms ease-in |
-| Jar → work | jar lifts 10px + squashes to scaleY 0.96 (120ms), then drops out of the stage (380ms ease-in), 12fps stop motion; items get kicked up and knock around inside; clink sound on the click. Work only starts coming in once the jar has gone. |
+| Jar → work | jar lifts 10px + squashes to scaleY 0.96 (120ms), then drops out of the stage (380ms ease-in), smooth; items get kicked up and knock around inside; clink sound on the click. Work only starts coming in once the jar has gone. |
 | "what's inside?" arriving | after the jar has gone: drops 48px from above with a small overshoot, 450ms, while the grid sweeps in |
-| Work → jar | grid leaves (200ms), then the jar drops in from above (420ms ease-in) and lands with a squash (scaleX 1.04, scaleY 0.92) springing back (360ms), 12fps stop motion; then the items fall in |
+| Work → jar | grid leaves (200ms), then the jar drops in from above (420ms ease-in) and lands with a squash (scaleX 1.04, scaleY 0.92) springing back (360ms), smooth; then the items fall in |
 | jar / work toggle | selected button's pencil fill draws on, 300ms ease-out; the old one fades out over 300ms |
 | Reduced motion | no animation, things just appear; mode switches are plain 200ms fades, no sound |

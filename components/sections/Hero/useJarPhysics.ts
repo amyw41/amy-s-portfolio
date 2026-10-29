@@ -30,6 +30,12 @@ const STEP_MS = 1000 / 60;
  * total steps than a smooth one and settle differently. Early frames are
  * exactly when image decode and mask work make frames long. */
 const MAX_STEPS_PER_FRAME = 600;
+/** The live loop's own cap. The fall is precomputed (deterministic) and
+ * replayed, so the live loop only ever handles drags, rustle and jostle —
+ * where dropping a little sim time after a slow frame is invisible, but
+ * catching up hundreds of steps in one frame makes that frame (and the next)
+ * long, which is exactly the stutter you'd see while the jar moves. */
+const LIVE_MAX_STEPS_PER_FRAME = 4;
 
 const RUSTLE_RADIUS = 80;
 const RUSTLE_FORCE = 0.0009;
@@ -1266,7 +1272,7 @@ export function useJarPhysics(
         function rafTick(now: number) {
           accumulator += now - lastTime;
           lastTime = now;
-          accumulator = Math.min(accumulator, STEP_MS * MAX_STEPS_PER_FRAME);
+          accumulator = Math.min(accumulator, STEP_MS * LIVE_MAX_STEPS_PER_FRAME);
           while (accumulator >= STEP_MS) {
             // Snapshot before stepping: this is the endpoint interpolation
             // renders from.

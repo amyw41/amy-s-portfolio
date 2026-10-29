@@ -173,6 +173,7 @@ const JarItem = forwardRef<HTMLDivElement, JarItemProps>(function JarItem(
             aria-hidden="true"
             className={styles.image}
             draggable={false}
+            decoding="async"
             style={{ width: imgWidth, height: imgHeight, left: imgLeft, top: imgTop }}
           />
 

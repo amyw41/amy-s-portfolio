@@ -71,8 +71,7 @@ export const TILE_LIFT_PX = 6;
 // scribble draws on over MODE_FILL_DRAW_S; the old one fades over the same.
 export const MODE_FILL_DRAW_S = 0.3;
 
-// The jar's cartoon moves (Home/JarView.tsx, brief Part 2.4), all on the
-// STOP_MOTION_FPS clock.
+// The jar's cartoon moves (Home/JarView.tsx, brief Part 2.4).
 // jar → work: anticipation — lift JAR_ANTICIPATE_PX and squash to
 // JAR_ANTICIPATE_SCALE_Y over JAR_ANTICIPATE_S — then drop down out of the
 // stage over JAR_DROP_OUT_S (ease-in), jostling the items with
@@ -82,6 +81,10 @@ export const MODE_FILL_DRAW_S = 0.3;
 // spring back over JAR_LAND_S, then the items fall in.
 // "what's inside?" drops in from above by HEADING_DROP_PX with a small
 // overshoot over HEADING_DROP_S.
+// The brief asked for these on the 12fps stop-motion clock; that stepping
+// read as choppy ("pixels not flowing"), so they run smooth at the
+// display's frame rate. true brings the stepped stop-motion look back.
+export const JAR_MOVES_STOP_MOTION = false;
 export const JAR_ANTICIPATE_PX = 10;
 export const JAR_ANTICIPATE_SCALE_Y = 0.96;
 export const JAR_ANTICIPATE_S = 0.12;

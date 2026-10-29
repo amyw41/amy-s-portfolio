@@ -17,9 +17,16 @@ import {
   JAR_LAND_S,
   JAR_LAND_SCALE_X,
   JAR_LAND_SCALE_Y,
+  JAR_MOVES_STOP_MOTION,
   slowMs,
   stopMotion,
 } from "@/lib/motion";
+
+/** The jar's easing: smooth at the display's frame rate, or stepped on the
+ * STOP_MOTION_FPS clock when JAR_MOVES_STOP_MOTION is on. */
+function jarEase(ease: readonly [number, number, number, number], durationS: number) {
+  return JAR_MOVES_STOP_MOTION ? stopMotion(ease, durationS) : ease;
+}
 
 interface JarViewProps {
   /** Arriving from work mode: drop in from above and land before the items
@@ -34,9 +41,9 @@ interface JarViewProps {
 const OFF_STAGE = "110%";
 
 /**
- * Jar mode's stage, with the jar's cartoon moves (brief Part 2.4). Every
- * move runs on the STOP_MOTION_FPS clock (stopMotion), so it steps like
- * hand-drawn frames.
+ * Jar mode's stage, with the jar's cartoon moves (brief Part 2.4). They run
+ * smooth; JAR_MOVES_STOP_MOTION puts them back on the stepped
+ * STOP_MOTION_FPS clock (jarEase).
  *
  * Arriving (work → jar, once the grid has gone): drops in from above,
  * lands with a squash and springs back, and only then lets the items spawn
@@ -69,14 +76,14 @@ export default function JarView({ entering, isolatedId }: JarViewProps) {
         await animate(
           scope.current,
           { y: [`-${OFF_STAGE}`, "0%"], opacity: [1, 1] },
-          { duration: dropS, ease: stopMotion(EASE_IN, dropS) },
+          { duration: dropS, ease: jarEase(EASE_IN, dropS) },
         );
         const landS = slowMs(JAR_LAND_S * 1000) / 1000;
         if (wrapperRef.current) {
           await animate(
             wrapperRef.current,
             { scaleX: [1, JAR_LAND_SCALE_X, 1], scaleY: [1, JAR_LAND_SCALE_Y, 1] },
-            { duration: landS, times: [0, 0.3, 1], ease: stopMotion(EASE_OUT, landS) },
+            { duration: landS, times: [0, 0.3, 1], ease: jarEase(EASE_OUT, landS) },
           );
         }
       }
@@ -102,13 +109,13 @@ export default function JarView({ entering, isolatedId }: JarViewProps) {
           await animate(
             wrapperRef.current,
             { y: -JAR_ANTICIPATE_PX, scaleY: JAR_ANTICIPATE_SCALE_Y },
-            { duration: anticipateS, ease: stopMotion(EASE_OUT, anticipateS) },
+            { duration: anticipateS, ease: jarEase(EASE_OUT, anticipateS) },
           );
           // Un-squash as it starts to fall.
-          animate(wrapperRef.current, { scaleY: 1 }, { duration: anticipateS, ease: stopMotion(EASE_OUT, anticipateS) });
+          animate(wrapperRef.current, { scaleY: 1 }, { duration: anticipateS, ease: jarEase(EASE_OUT, anticipateS) });
         }
         const dropS = slowMs(JAR_DROP_OUT_S * 1000) / 1000;
-        await animate(scope.current, { y: OFF_STAGE }, { duration: dropS, ease: stopMotion(EASE_IN, dropS) });
+        await animate(scope.current, { y: OFF_STAGE }, { duration: dropS, ease: jarEase(EASE_IN, dropS) });
       }
       safeToRemove?.();
     })();
