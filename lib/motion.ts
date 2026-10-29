@@ -67,9 +67,12 @@ export const JAR_LIFT_IN_MS = 250;
 export const JAR_LIFT_OUT_MS = 200;
 export const TILE_LIFT_PX = 6;
 
-// The jar / work toggle (Home/ModeToggle.tsx): the selected button's pencil
-// scribble draws on over MODE_FILL_DRAW_S; the old one fades over the same.
-export const MODE_FILL_DRAW_S = 0.3;
+// The jar / work toggle (Home/ModeToggle.tsx): the selected label's
+// squiggly underline draws on over MODE_UNDERLINE_DRAW_S (the old one
+// un-draws over the same); hovering an unselected label previews its
+// squiggle faintly, drawn on over MODE_HOVER_DRAW_S.
+export const MODE_UNDERLINE_DRAW_S = 0.3;
+export const MODE_HOVER_DRAW_S = 0.15;
 
 // The jar's cartoon moves (Home/JarView.tsx, brief Part 2.4).
 // jar → work: anticipation — lift JAR_ANTICIPATE_PX and squash to

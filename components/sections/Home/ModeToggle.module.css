@@ -8,12 +8,13 @@
   right: var(--pad-y);
   z-index: 2;
   display: flex;
-  gap: 10px;
+  gap: 20px;
 }
 
+/* Plain text label: grey until hovered or selected. */
 .button {
   position: relative;
-  padding: 3px 16px 4px;
+  padding: 0 0 6px;
   background: none;
   border: none;
   cursor: pointer;
@@ -22,49 +23,39 @@
   font-weight: 400;
   line-height: 1.45;
   letter-spacing: inherit;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.button:hover,
+.button:focus-visible,
+.selected {
   color: #000;
 }
 
-/* The hand-drawn pill + its pencil fill, stretched over the button. Like the
- * old hover oval, sized explicitly off the button's box (an absolutely
- * positioned SVG can't be left to auto). */
-.drawing {
+@media (prefers-reduced-motion: no-preference) {
+  .button {
+    transition: color calc(150ms * var(--slow, 1)) ease;
+  }
+}
+
+/* The squiggle, under the label and a touch wider than it. Explicitly
+ * sized (an absolutely positioned SVG can't be left to auto). Its stroke is
+ * currentColor, set here to the button's own colour. */
+.underline {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  left: -2px;
+  bottom: 0;
+  width: calc(100% + 4px);
+  height: 7px;
   overflow: visible;
   pointer-events: none;
-}
-
-.outline {
-  stroke: var(--mode-color);
-}
-
-/* Coloured pencil: thick-ish, slightly see-through strokes that overlap
- * where the zig-zag doubles back, like real pencil build-up. */
-.scribble {
-  stroke: var(--mode-color);
-  stroke-width: 3px;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-opacity: 0.55;
-}
-
-/* Label sits above the scribble. */
-.label {
-  position: relative;
+  color: var(--mode-color);
 }
 
 .button:focus-visible {
   outline: 2px solid var(--mode-color);
   outline-offset: 4px;
-  border-radius: 999px;
-}
-
-/* Unselected, hovered: the outline firms up a little. */
-.button[aria-pressed="false"]:hover .outline {
-  stroke-width: 1.4px;
+  border-radius: 4px;
 }
 
 @media (max-width: 767px) {

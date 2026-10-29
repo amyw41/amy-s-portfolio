@@ -274,33 +274,30 @@ export function buildWobblyRectPath(
   return smoothPathFromPoints(points);
 }
 
-// ---------- coloured-pencil fill ----------
+// ---------- squiggly underline ----------
 
-/** Horizontal step between scribble strokes, in the pill's own units (its
- * 128-unit box, PILL_VIEW_BOX) — dense enough to read as coloured in. */
-const SCRIBBLE_STEP = 7;
-/** How far each stroke's ends may stray from the pill's top/bottom edge
- * (they overshoot it; the pill clips them). */
-const SCRIBBLE_JITTER = 8;
+/** Box the squiggle is drawn in (stretch it over the text with
+ * preserveAspectRatio="none" and a non-scaling stroke). */
+export const SQUIGGLE_VIEW_BOX = "0 0 100 12";
+/** How far each crest swings from the middle line (in the box's own units,
+ * 12 tall). */
+const SQUIGGLE_AMPLITUDE = 3.2;
+const SQUIGGLE_STEPS = 64;
 
-/** A coloured-pencil scribble filling buildWobblyPillPath's box: one
- * continuous zig-zag of slightly uneven diagonal strokes, left to right,
- * overshooting the top and bottom so that, clipped to the pill shape, it
- * reads as a button coloured in by hand. Same units and viewBox as the pill
- * (PILL_VIEW_BOX), so the two stretch together. */
-export function buildScribbleFillPath(seed = 0): string {
-  const top = SQUIRCLE_CENTER - SQUIRCLE_HALF - 6;
-  const bottom = SQUIRCLE_CENTER + SQUIRCLE_HALF + 6;
-  const left = SQUIRCLE_CENTER - SQUIRCLE_HALF - 4;
-  const right = SQUIRCLE_CENTER + SQUIRCLE_HALF + 4;
-  let d = "";
-  let x = left;
-  for (let i = 0; x <= right; i++) {
-    const y = i % 2 === 0 ? top + hash(seed, 600 + i) * SCRIBBLE_JITTER : bottom - hash(seed, 600 + i) * SCRIBBLE_JITTER;
-    // Each stroke leans a little and lands a little unevenly.
-    const px = x + (hash(seed, 900 + i) - 0.5) * SCRIBBLE_STEP * 0.8;
-    d += `${i === 0 ? "M" : "L"}${px.toFixed(2)},${y.toFixed(2)} `;
-    x += SCRIBBLE_STEP * (0.75 + hash(seed, 1200 + i) * 0.5);
+/** A hand-drawn squiggly underline: a gentle sine wave of `waves` full
+ * waves across SQUIGGLE_VIEW_BOX, its height varied a little along the way
+ * (seeded) so it looks drawn by hand rather than plotted. Scale `waves`
+ * with the underlined text's length so the wave size stays even. */
+export function buildSquigglePath(seed = 0, waves = 3): string {
+  const phase = hash(seed, 1500) * Math.PI * 2;
+  const wobblePhase = hash(seed, 1501) * Math.PI * 2;
+  const points: [number, number][] = [];
+  for (let i = 0; i <= SQUIGGLE_STEPS; i++) {
+    const t = i / SQUIGGLE_STEPS;
+    // Slight drift in wave height along the line, and a hair of tilt.
+    const amp = SQUIGGLE_AMPLITUDE * (0.8 + 0.25 * Math.sin(t * Math.PI * 2 + wobblePhase));
+    const y = 6 + amp * Math.sin(t * Math.PI * 2 * waves + phase) + (t - 0.5) * (hash(seed, 1502) - 0.5) * 2;
+    points.push([1 + t * 98, y]);
   }
-  return d.trim();
+  return smoothPathFromPoints(points);
 }

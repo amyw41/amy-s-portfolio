@@ -77,7 +77,7 @@ Top to bottom, everything on one left edge:
 
 Menu items fade to 55% black on hover.
 
-The **jar / work toggle** isn't in the sidebar: it sits top right of the stage as two hand-drawn pills, the selected one coloured in with pencil (jar red, work blue). See 2.4 and the design system.
+The **jar / work toggle** isn't in the sidebar: it sits top right of the stage as two plain labels, the selected one underlined with a hand-drawn squiggle (jar red, work blue). See 2.4 and the design system.
 
 ### 2.3 Stage: jar mode (the default)
 
