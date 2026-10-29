@@ -69,10 +69,10 @@ Sketches: `02-home-jar.png` (jar mode), `03-home-grid.png` (work mode).
 Top to bottom, everything on one left edge:
 
 1. **Social icons:** X, LinkedIn, mail, plain black.
-2. **Name + intro:** "Amy Wang" with the intro paragraph under it.
-3. **Menu**: **Experience** (dropdown: Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo), then **Works** (dropdown: each case study with its full description; hovering one isolates it on the stage, 3.1), then **About** and **Play** as links.
+2. **Intro:** one paragraph, the name then the description ("Amy Wang is a designer who…"), at body size in medium weight.
+3. **Menu:** three dropdown groups: **Works** (each case study with its full description; hovering one isolates it on the stage, 3.1), **Extra** (About Me, Play), **Experience** (Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo).
 
-Everything flows down from the top: opening a list pushes what's below it down. Headings get the hand-drawn hover circle; Experience and Works have chevrons and start open.
+Everything flows down from the top: opening a list pushes what's below it down. Headings get the hand-drawn hover circle; every group has a chevron and starts open.
 
 The **jar / work toggle** isn't in the sidebar: it sits top right of the stage as two plain labels, the selected one underlined with a hand-drawn squiggle (jar red, work blue). See 2.4 and the design system.
 

@@ -7,9 +7,10 @@
 .sidebar {
   /* Regular text size — everything but the name. */
   --fs-body: 14px;
-  /* Space between the bottom section's headings (Works → About → Play,
-   * including after Works's open list), and above each list item. */
-  --heading-gap: 8px;
+  /* The two big gaps (icons → intro, intro → menu): 48px @696 tall. */
+  --section-gap: clamp(24px, 6.9dvh, 96px);
+  /* Between the menu's groups, and above each list item. */
+  --group-gap: 14px;
   --item-gap: 4px;
   display: flex;
   flex-direction: column;
@@ -42,48 +43,27 @@
   color: #000;
 }
 
-/* ---------- name + intro ---------- */
+/* ---------- intro: name + description, one paragraph ---------- */
 
-/* The sidebar is one stack flowing down from the top: fixed gaps above and
- * below this block (not auto margins), so opening a list only ever pushes
- * what's under it down. 38px @696 tall each. */
-.identity {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding-block: clamp(20px, 5.46dvh, 80px);
-}
-
-.name {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 400;
-  line-height: 1.15;
-  color: #000;
-  white-space: nowrap;
-}
-
+/* The sidebar is one stack flowing down from the top, with fixed gaps (not
+ * auto margins), so opening a group only ever pushes what's under it down.
+ * --section-gap is the two big gaps: icons → intro, intro → menu. */
 .intro {
-  margin: 0;
+  margin: var(--section-gap) 0 0;
   font-size: var(--fs-body);
-  font-weight: 300;
+  font-weight: 500;
   line-height: 1.45;
-  color: rgba(0, 0, 0, 0.75);
+  color: #000;
 }
 
-/* ---------- menu: Experience, Works, About, Play ---------- */
+/* ---------- menu: Works, Extra, Experience ---------- */
 
 .menu {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--heading-gap);
-}
-
-/* A bigger gap after Experience, before Works / About / Play: 40px @696. */
-.experience {
-  align-self: stretch;
-  margin-bottom: clamp(16px, 5.75dvh, 64px);
+  gap: var(--group-gap);
+  margin-top: var(--section-gap);
 }
 
 /* ---------- headings and their items ---------- */
@@ -149,6 +129,17 @@
   text-decoration: none;
 }
 
+.itemLink:hover,
+.itemLink:focus-visible {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .itemLink {
+    transition: color calc(150ms * var(--slow, 1)) ease;
+  }
+}
+
 .itemDescription {
   color: rgba(0, 0, 0, 0.55);
 }
@@ -176,12 +167,8 @@
  * window; on a really short one they shrink a little faster still, so
  * everything fits without the sidebar scrolling. */
 @media (min-width: 768px) and (max-height: 660px) {
-  .identity {
-    padding-block: 4.5dvh;
-  }
-
-  .experience {
-    margin-bottom: 3.8dvh;
+  .sidebar {
+    --section-gap: 4.5dvh;
   }
 }
 
@@ -190,19 +177,8 @@
 /* Same structure, just in normal flow above the stage (the page scrolls). */
 @media (max-width: 767px) {
   .sidebar {
+    --section-gap: 24px;
     padding: 24px 16px 20px;
     overflow: visible;
-  }
-
-  .name {
-    font-size: 24px;
-  }
-
-  .identity {
-    padding-block: 24px;
-  }
-
-  .experience {
-    margin-bottom: 20px;
   }
 }

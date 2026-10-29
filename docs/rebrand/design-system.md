@@ -10,10 +10,9 @@ Values are given at the 1536×696 laptop size. Layout spacing scales with the wi
 |---|---|
 | Font | Geist |
 | Letter spacing | -0.6px |
-| Name size | 24px, weight 400, line-height 1.15 |
-| Body size (everything else) | 14px, line-height 1.45 |
-| Heading weight (Experience, Works, About, Play) | 500 |
-| Body weight (intro, list items) | 300 |
+| Size | 14px everywhere in the sidebar, line-height 1.45 (no separate large name) |
+| Medium (500) | the intro paragraph, group headings (Works, Extra, Experience) |
+| Light (300) | menu items |
 | jar/work toggle weight | 400 |
 
 ## Colour
@@ -21,7 +20,6 @@ Values are given at the 1536×696 laptop size. Layout spacing scales with the wi
 | Token | Value |
 |---|---|
 | Text | #000 |
-| Intro text | 75% black |
 | Case-study description | 55% black |
 | Hover circle | 45% black |
 | jar / work toggle | jar red `--c-red`, work blue `--c-blue` |
@@ -43,30 +41,31 @@ Horizontal spacing scales with the window's width (vw), vertical spacing with it
 
 ## Sidebar spacing (top to bottom)
 
+Everything flows from the top with fixed gaps; opening a group pushes what's below it down.
+
 | Between | Value |
 |---|---|
 | Icon → icon | 4px (each icon in a 24px box; the X lines up with the text's left edge) |
-| Icons → name block, name block → menu | `clamp(20px, 5.46dvh, 80px)` each (38px @696). Everything flows from the top; opening a list pushes what's below it down |
-| Name → intro | 14px |
+| Icons → intro, intro → menu | `clamp(24px, 6.9dvh, 96px)` each (48px @696) |
+| Group → group (Works → Extra → Experience) | 14px |
 | Heading → first item, item → item | 4px |
-| Experience list → Works | `clamp(16px, 5.75dvh, 64px)` (40px @696) |
-| Works → About → Play (incl. last case study → About) | 8px |
-| On windows under 660px tall | the two big gaps tighten to 4.5dvh, Experience → Works to 3.8dvh |
-| Mobile | name block 24px above and below; Experience → Works 20px |
+| On windows under 660px tall | the two big gaps tighten to 4.5dvh |
+| Mobile | the two big gaps are 24px |
 
 ## Components
 
 Sidebar, top to bottom:
 
 1. **Social icons:** X, LinkedIn, mail. Plain black, ~18–20px, no border.
-2. **Name + intro**, a fixed gap below the icons: "Amy Wang" (24px), then the intro paragraph (14px, light, 75% black).
-3. **Menu**, all on one left edge:
-   - **Experience** (dropdown): Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo.
-   - **Works** (dropdown): each case study as its name then " - description" in full, wrapping onto extra lines under the name.
-   - **About** (link to /about), **Play** (link to /playground).
+2. **Intro:** one paragraph, the name then the description ("Amy Wang is a designer who…"), medium weight, black.
+3. **Menu:** three groups, all on one left edge, each a dropdown:
+   - **Works:** each case study as its name then " - description" in full (55% black), wrapping onto extra lines under the name.
+   - **Extra:** About Me (/about), Play (/playground).
+   - **Experience:** Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo (plain text).
 
-- **Dropdown headings** (Experience, Works): text + chevron (14px), both start open. Closed points down, open points up.
-- **Hover circle:** hand-drawn wiggly oval drawn on like a pen when hovering a heading (Experience, Works, About, Play), un-drawn on leave. 16px past the word left/right, 8px above/below.
+- **Dropdown headings** (Works, Extra, Experience): text + chevron (14px), all start open. Closed points down, open points up.
+- **Hover circle:** hand-drawn wiggly oval drawn on like a pen when hovering a heading (Works, Extra, Experience), un-drawn on leave. 16px past the word left/right, 8px above/below.
+- **Item links** (case studies, About Me, Play) fade to 55% black on hover.
 - **Works hover isolate:** hovering (or focusing) a case study lifts its jar item 12px and scales it to 1.04 (staying at its own layer in the pile), and dims every other item (`--dim-white`). In work mode its grid tile lifts 6px and the other tiles dim. Extras has no jar item, so it does nothing in the jar.
 - **jar / work toggle:** not in the sidebar — top right of the stage, `--pad-y` from both the top and the right edge (16px on mobile), two plain labels side by side, 20px apart. Labels are 14px, grey (45% black) until hovered or selected, then black. The **selected** one has a hand-drawn **squiggly underline** in its colour — **jar red** (`--c-red`), **work blue** (`--c-blue`) — drawn on when you click it (the old one un-draws). **Hover** on the unselected one: its squiggle previews faintly (35% opacity) and the label darkens.
 

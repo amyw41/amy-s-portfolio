@@ -30,8 +30,8 @@ export const content = {
     // ("play" not "playground"). Social hrefs aren't repeated here:
     // Sidebar.tsx reads them from footer.links below.
     sidebar: {
+      // The intro is one paragraph: the name, then this sentence.
       name: "Amy Wang",
-      // Placeholder until the real intro copy is written (brief Part 7.5).
       intro: "is a designer who builds as the user. She adds creativity to intuitive experiences and loves to overthink interactions!",
       // Accessible names for the icon-only links row under the intro.
       social: {
@@ -44,11 +44,12 @@ export const content = {
         heading: "Experience",
         items: ["Design @ Blueprint", "Campus @ Notion", "Management Eng @ Waterloo"],
       },
-      // The menu under Experience: Works (lists the case studies), then
-      // About and Play as plain links.
+      // The menu's three groups, top to bottom: Works (the case studies),
+      // Extra (About Me, Play), then Experience (above).
       nav: {
         works: "Works",
-        about: "About",
+        extra: "Extra",
+        about: "About Me",
         play: "Play",
       },
       extras: "Extras",

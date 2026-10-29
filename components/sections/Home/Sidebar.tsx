@@ -229,17 +229,6 @@ function CaseStudyRow({
   );
 }
 
-/** About / Play: a top-level heading that's just a link. */
-function HeadingLink({ href, label, seed }: { href: string; label: string; seed: number }) {
-  const oval = useHoverOval();
-  return (
-    <Link href={href} className={styles.heading} {...oval.props}>
-      <DrawnOval seed={seed} drawn={oval.drawn} />
-      {label}
-    </Link>
-  );
-}
-
 export default function Sidebar({ onCaseFocus }: SidebarProps) {
   return (
     <aside className={styles.sidebar}>
@@ -259,17 +248,12 @@ export default function Sidebar({ onCaseFocus }: SidebarProps) {
         ))}
       </ul>
 
-      {/* Name + intro, centred in the space between the icons and the menu
-       * (equal gaps above and below — Sidebar.module.css .identity). */}
-      <div className={styles.identity}>
-        <h1 className={styles.name}>{copy.name}</h1>
-        <p className={styles.intro}>{copy.intro}</p>
-      </div>
+      {/* The name and description as one paragraph — no separate title. */}
+      <h1 className={styles.intro}>
+        {copy.name} {copy.intro}
+      </h1>
 
       <nav className={styles.menu} aria-label="Main">
-        <div className={styles.experience}>
-          <DropdownGroup title={copy.experience.heading} seed={20} items={[...copy.experience.items]} />
-        </div>
         <DropdownGroup
           title={copy.nav.works}
           seed={21}
@@ -283,8 +267,19 @@ export default function Sidebar({ onCaseFocus }: SidebarProps) {
             />
           ))}
         />
-        <HeadingLink href="/about" label={copy.nav.about} seed={22} />
-        <HeadingLink href="/playground" label={copy.nav.play} seed={23} />
+        <DropdownGroup
+          title={copy.nav.extra}
+          seed={22}
+          items={[
+            <Link key="about" href="/about" className={styles.itemLink}>
+              {copy.nav.about}
+            </Link>,
+            <Link key="play" href="/playground" className={styles.itemLink}>
+              {copy.nav.play}
+            </Link>,
+          ]}
+        />
+        <DropdownGroup title={copy.experience.heading} seed={20} items={[...copy.experience.items]} />
       </nav>
     </aside>
   );
