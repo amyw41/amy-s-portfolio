@@ -1,27 +1,40 @@
 /* Top right of the stage, the same distance from the top and from the right
  * edge — the sidebar's own responsive top padding (--pad-y, Home.module.css)
  * for both, so it lines up with the icons across the divider. Above both
- * views (jar and work) so it's always reachable. */
+ * views (jar and work) so it's always reachable. Sized inline from
+ * ModeToggle.tsx's geometry constants. */
 .toggle {
   position: absolute;
   top: var(--pad-y);
   right: var(--pad-y);
   z-index: 2;
   display: flex;
-  gap: 16px;
 }
 
-/* A doodle with its label beside it. Label grey when unpicked, black when
- * picked or hovered. */
+/* The hand-drawn pill track, behind everything. */
+.track {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* Each side's crayon shading, behind its label (placed inline). */
+.shade {
+  position: absolute;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* Labels sit on top of the shading, centred in their segment. Black on the
+ * shaded side (reads on both the red and the blue); grey when inactive,
+ * black on hover. */
 .button {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 4px;
-  margin: -2px -4px;
+  position: relative;
+  height: 100%;
+  padding: 0;
   background: none;
   border: none;
-  border-radius: 6px;
   cursor: pointer;
   font-family: inherit;
   font-size: 14px;
@@ -37,30 +50,16 @@
   color: #000;
 }
 
-.doodle {
-  display: block;
-  overflow: visible;
-}
-
-/* Hovering an unpicked doodle tilts it a few degrees (--tilt, from
- * lib/motion.ts via ModeToggle.tsx). */
-.button:not(.active):hover .doodle {
-  transform: rotate(var(--tilt));
-}
-
 @media (prefers-reduced-motion: no-preference) {
   .button {
-    transition: color calc(var(--tilt-ms) * var(--slow, 1)) ease;
-  }
-
-  .doodle {
-    transition: transform calc(var(--tilt-ms) * var(--slow, 1)) ease-out;
+    transition: color calc(150ms * var(--slow, 1)) ease;
   }
 }
 
 .button:focus-visible {
   outline: 2px solid #000;
   outline-offset: 2px;
+  border-radius: 999px;
 }
 
 @media (max-width: 767px) {

@@ -74,7 +74,7 @@ Top to bottom, everything on one left edge:
 
 Everything flows down from the top: opening a list pushes what's below it down. Headings get the hand-drawn hover circle; every group has a chevron; on load Experience and Works are open, Extra closed.
 
-The **jar / work toggle** isn't in the sidebar: it sits top right of the stage as two small hand-drawn icon buttons, a jar doodle and a 2×2 grid doodle, each labelled. The picked one is coloured in with a pencil wash (jar red, work blue) that fills from the bottom up when picked and drains when not. See 2.4 and the design system.
+The **jar / work toggle** isn't in the sidebar: it sits top right of the stage as a hand-drawn segmented toggle: one pill track with both labels, with the picked side shaded in loose crayon strokes (jar red, work blue) that scribble in when it's picked. See 2.4 and the design system.
 
 ### 2.3 Stage: jar mode (the default)
 

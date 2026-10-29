@@ -1,163 +1,199 @@
 "use client";
 
-import { useId } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { motion, useAnimate, useReducedMotion } from "framer-motion";
 import styles from "./ModeToggle.module.css";
 import type { HomeMode } from "./Sidebar";
 import { content } from "@/lib/content";
-import { EASE_IN, EASE_OUT, MODE_FILL_S, MODE_SLOSH_PX, MODE_TILT_DEG, MODE_TILT_MS, slowMs } from "@/lib/motion";
-import { buildWashPath, buildWobblyRectPath } from "@/lib/wobbly";
+import {
+  CRAYON_ERASE_S,
+  CRAYON_HINT_OPACITY,
+  CRAYON_HINT_S,
+  CRAYON_HINT_STROKES,
+  CRAYON_STAGGER_S,
+  CRAYON_STROKE_S,
+  EASE_IN,
+  EASE_OUT,
+  slowMs,
+} from "@/lib/motion";
+import { buildCrayonStrokes, buildWobblyRectPath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
 
 const copy = content.en.sidebar.modes;
 
-// Geometry, in px (the doodles are drawn 1:1 in an ICON × ICON box).
-const ICON = 24;
-/** The doodles' ink: a touch heavier than LINE_STROKE_WIDTH, which reads
- * too faint at this size. */
-const DOODLE_STROKE = 0.75;
-/** Low wobble: slightly imperfect pen lines, like the jar's ink — not wavy. */
-const PEN_AMPLITUDE = 0.18;
-/** The pen tail at the end of each tiny loop, px. */
-const PEN_TAIL = 0.6;
-/** The wash is laid on a little off the lines, like a quick colouring-in. */
-const WASH_OFFSET: [number, number] = [0.8, 0.7];
-const WASH_OPACITY = 0.55;
-
-/** A rounded rect at (x, y), as SVG markup: the ink, and the same shape
- * nudged by WASH_OFFSET for the wash's clip (a <clipPath> only takes bare
- * shapes, so the offset goes on each path, not a wrapping group). */
-function rectAt(seed: number, x: number, y: number, w: number, h: number, r: number) {
-  const d = buildWobblyRectPath(seed, w, h, r, PEN_AMPLITUDE, 0, PEN_TAIL);
-  return {
-    ink: `<path transform="translate(${x} ${y})" d="${d}"/>`,
-    clip: `<path transform="translate(${x + WASH_OFFSET[0]} ${y + WASH_OFFSET[1]})" d="${d}"/>`,
-  };
-}
-const join = (shapes: { ink: string; clip: string }[]) => ({
-  ink: shapes.map((s) => s.ink).join(""),
-  clip: shapes.map((s) => s.clip).join(""),
-});
-
-interface Doodle {
-  mode: HomeMode;
-  color: string;
-  /** The outline, as SVG markup (pre-built: the paths never change). */
-  ink: string;
-  /** The area the wash fills (the ink's shapes minus any lid, nudged by
-   * WASH_OFFSET), as <clipPath> content. */
-  fillArea: string;
-  /** How far down the wash's surface sits when full — the jar's liquid
-   * stops short of the neck; the grid fills right up. */
-  fullY: number;
-  /** Wave height of the wash's surface, px. */
-  surface: number;
-  /** Whether the surface sloshes sideways as it fills (the jar's liquid). */
-  slosh: boolean;
-}
-
 // jar = red, work = blue (the site's two category colours, lib/tokens.css).
-const jarLid = rectAt(70, 6.5, 3, 11, 4, 1.5);
-const jarBody = rectAt(71, 3.5, 7, 17, 16.5, 4.5);
-const gridCells = join([
-  rectAt(81, 2, 2, 9, 9, 2),
-  rectAt(82, 13, 2.4, 9, 9, 2),
-  rectAt(83, 2.3, 13, 9, 9, 2),
-  rectAt(84, 13, 13, 9, 9, 2),
-]);
-const DOODLES: Doodle[] = [
-  {
-    mode: "jar",
-    color: "var(--c-red)",
-    ink: jarLid.ink + jarBody.ink,
-    fillArea: jarBody.clip,
-    fullY: 10,
-    surface: 0.9,
-    slosh: true,
-  },
-  { mode: "work", color: "var(--c-blue)", ink: gridCells.ink, fillArea: gridCells.clip, fullY: 0, surface: 0.5, slosh: false },
+const MODES: { mode: HomeMode; color: string }[] = [
+  { mode: "jar", color: "var(--c-red)" },
+  { mode: "work", color: "var(--c-blue)" },
 ];
 
-/** The wash: wider than the icon so it can slosh, and tall enough to cover
- * it from any resting height. */
-const WASH_W = ICON + MODE_SLOSH_PX * 2;
-const washPaths = Object.fromEntries(
-  DOODLES.map((d, i) => [d.mode, buildWashPath(90 + i, WASH_W, ICON + 2, d.surface, d.slosh ? 2 : 1.3)]),
-) as Record<HomeMode, string>;
-/** Below the icon: an empty doodle's wash waits here, out of sight. */
-const EMPTY_Y = ICON + 2;
+// Geometry, in px (the SVGs are drawn 1:1). Each label gets an equal-width
+// segment; its shading fills the segment with SHADE_INSET all round.
+const SEGMENT_W = 60;
+const TRACK_H = 32;
+const SHADE_INSET = 4;
+const TRACK_W = SEGMENT_W * MODES.length;
+const SHADE_W = SEGMENT_W - SHADE_INSET * 2;
+const SHADE_H = TRACK_H - SHADE_INSET * 2;
+/** Low wobble: slightly imperfect pen lines, like the jar's ink — not wavy. */
+const PEN_AMPLITUDE = 0.25;
+/** The crayon: how wide each stroke is, and how many fill a side. */
+const CRAYON_W = 5;
+const CRAYON_STROKES = 11;
+
+/** Seconds, scaled by ?slow. */
+const slowS = (s: number) => slowMs(s * 1000) / 1000;
+
+type ShadeState = "on" | "off" | "hint";
 
 /**
- * The jar / work switch, top right of the stage: two small hand-drawn icon
- * buttons — a jar doodle and a 2×2 grid doodle — each with its label. The
- * picked one is coloured in with a soft pencil wash (jar red, work blue);
- * picking the other fills it from the bottom up while the old one drains.
- * The jar's wash is liquid: a wavy surface that sloshes as it rises.
- * Hovering an unpicked doodle tilts it (CSS). Reduced motion: instant.
+ * One side's crayon shading: loose diagonal strokes, run through a grain
+ * filter so they read as waxy crayon — grainy, a little broken, building up
+ * where they overlap.
+ * - on: coloured in stroke by stroke, like a quick scribble;
+ * - off: the shading fades out (from on), or the hint strokes retract;
+ * - hint (hovering the unpicked side): a couple of faint strokes.
+ * Starts in whatever state it mounts in, with no animation.
  */
-export default function ModeToggle({ mode, onChange }: { mode: HomeMode; onChange: (mode: HomeMode) => void }) {
-  const reduced = useReducedMotion();
-  const uid = useId().replace(/:/g, "");
-  const fillS = slowMs(MODE_FILL_S * 1000) / 1000;
+function CrayonShade({ seed, color, state, x }: { seed: number; color: string; state: ShadeState; x: number }) {
+  const reduced = useReducedMotion() ?? false;
+  const [scope, animate] = useAnimate<SVGGElement>();
+  const strokes = useMemo(() => buildCrayonStrokes(seed, SHADE_W, SHADE_H, CRAYON_STROKES, CRAYON_W), [seed]);
+  const filterId = `crayon-${useId().replace(/:/g, "")}`;
+  // The state it was last animated to, so leaving "on" (fade) and leaving
+  // "hint" (retract) can differ.
+  const prevRef = useRef<ShadeState>(state);
+  // Bumped per change, so a superseded sequence stops before resetting.
+  const seqRef = useRef(0);
+  const [initial] = useState(state);
+
+  useEffect(() => {
+    const prev = prevRef.current;
+    prevRef.current = state;
+    if (prev === state) return;
+    const seq = ++seqRef.current;
+    const group = scope.current;
+    const paths = [...group.querySelectorAll("path")];
+    const d = (s: number) => (reduced ? 0 : slowS(s));
+    // Draws a stroke on or off. An undrawn stroke is also hidden: at
+    // pathLength 0 its round caps would still leave a dot.
+    const draw = (p: SVGPathElement, on: boolean, duration: number, delay = 0) => {
+      if (on) animate(p, { opacity: 1 }, { duration: 0, delay });
+      animate(p, { pathLength: on ? 1 : 0 }, { duration, delay, ease: on ? EASE_OUT : EASE_IN });
+      if (!on) animate(p, { opacity: 0 }, { duration: 0, delay: delay + duration });
+    };
+
+    if (state === "on") {
+      animate(group, { opacity: 1 }, { duration: 0 });
+      // Hint strokes already drawn stay put; the rest scribble in.
+      paths.forEach((p, i) => draw(p, true, d(CRAYON_STROKE_S), d(CRAYON_STAGGER_S) * i));
+    } else if (state === "hint") {
+      animate(group, { opacity: CRAYON_HINT_OPACITY }, { duration: 0 });
+      paths.forEach((p, i) => (i < CRAYON_HINT_STROKES ? draw(p, true, d(CRAYON_HINT_S)) : draw(p, false, 0)));
+    } else if (prev === "hint") {
+      // Leaving a hover hint: the strokes retract.
+      paths.forEach((p) => draw(p, false, d(CRAYON_HINT_S)));
+    } else {
+      // Leaving "on": the shading fades away, then the strokes reset
+      // (undrawn, at full opacity) ready to scribble in again next time.
+      (async () => {
+        await animate(group, { opacity: 0 }, { duration: d(CRAYON_ERASE_S), ease: EASE_OUT });
+        if (seq !== seqRef.current) return;
+        paths.forEach((p) => draw(p, false, 0));
+        animate(group, { opacity: 1 }, { duration: 0 });
+      })();
+    }
+  }, [state, reduced, animate, scope]);
 
   return (
-    <div
-      className={styles.toggle}
-      role="group"
-      aria-label={copy.label}
-      style={{ "--tilt": `${MODE_TILT_DEG}deg`, "--tilt-ms": `${MODE_TILT_MS}ms` } as React.CSSProperties}
+    <svg
+      className={styles.shade}
+      style={{ left: x + SHADE_INSET, top: SHADE_INSET }}
+      width={SHADE_W}
+      height={SHADE_H}
+      viewBox={`0 0 ${SHADE_W} ${SHADE_H}`}
+      aria-hidden="true"
     >
-      {DOODLES.map((d) => {
-        const on = d.mode === mode;
-        const clipId = `${uid}-${d.mode}-clip`;
-        const grainId = `${uid}-${d.mode}-grain`;
-        return (
-          <button
-            key={d.mode}
-            type="button"
-            className={`${styles.button} ${on ? styles.active : ""}`}
-            aria-pressed={on}
-            onClick={() => onChange(d.mode)}
-          >
-            <svg className={styles.doodle} width={ICON} height={ICON} viewBox={`0 0 ${ICON} ${ICON}`} aria-hidden="true">
-              <defs>
-                <clipPath id={clipId} dangerouslySetInnerHTML={{ __html: d.fillArea }} />
-                {/* Pencil grain: roughens the wash's edges and breaks up
-                 * its colour a little, so it reads as coloured-in, not a
-                 * flat fill. */}
-                <filter id={grainId} x="-10%" y="-10%" width="120%" height="120%">
-                  <feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed={d.mode === "jar" ? 3 : 7} />
-                  <feDisplacementMap in="SourceGraphic" scale="1.2" xChannelSelector="R" yChannelSelector="G" result="rough" />
-                  <feTurbulence type="fractalNoise" baseFrequency="2.2" numOctaves="1" seed={11} result="noise" />
-                  <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.1 1.35" result="grain" />
-                  <feComposite in="rough" in2="grain" operator="in" />
-                </filter>
-              </defs>
-              <g clipPath={`url(#${clipId})`} filter={`url(#${grainId})`}>
-                <motion.path
-                  d={washPaths[d.mode]}
-                  fill={d.color}
-                  fillOpacity={WASH_OPACITY}
-                  initial={false}
-                  animate={{ y: on ? d.fullY : EMPTY_Y, x: on || !d.slosh ? -MODE_SLOSH_PX : 0 }}
-                  transition={
-                    reduced
-                      ? { duration: 0 }
-                      : { duration: fillS, ease: on ? EASE_OUT : EASE_IN }
-                  }
-                />
-              </g>
-              <g
-                fill="none"
-                stroke="#000"
-                strokeWidth={DOODLE_STROKE}
-                strokeLinecap="round"
-                dangerouslySetInnerHTML={{ __html: d.ink }}
-              />
-            </svg>
-            <span className={styles.label}>{copy[d.mode]}</span>
-          </button>
-        );
-      })}
+      <defs>
+        {/* Crayon texture: roughen the strokes' edges a touch, then knock
+         * small holes in them where the paper's tooth would skip. */}
+        <filter id={filterId} x="-15%" y="-15%" width="130%" height="130%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed={seed} result="warp" />
+          <feDisplacementMap in="SourceGraphic" in2="warp" scale="2" xChannelSelector="R" yChannelSelector="G" result="rough" />
+          <feTurbulence type="fractalNoise" baseFrequency="1.8" numOctaves="1" seed={seed + 1} result="tooth" />
+          <feColorMatrix in="tooth" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.6" result="grain" />
+          <feComposite in="rough" in2="grain" operator="in" />
+        </filter>
+      </defs>
+      <g ref={scope} filter={`url(#${filterId})`} style={{ opacity: initial === "hint" ? CRAYON_HINT_OPACITY : 1 }}>
+        {strokes.map((s, i) => {
+          const drawn = initial === "on" || (initial === "hint" && i < CRAYON_HINT_STROKES);
+          return (
+            <motion.path
+              key={i}
+              d={s.d}
+              fill="none"
+              stroke={color}
+              strokeOpacity={s.opacity}
+              strokeWidth={CRAYON_W}
+              strokeLinecap="round"
+              initial={{ pathLength: drawn ? 1 : 0, opacity: drawn ? 1 : 0 }}
+            />
+          );
+        })}
+      </g>
+    </svg>
+  );
+}
+
+/**
+ * The jar / work switch, top right of the stage: a segmented toggle drawn
+ * by hand — one pill track holding both labels — with the picked side
+ * shaded in crayon (jar red, work blue) instead of a knob. Picking the
+ * other side scribbles it in stroke by stroke while the old shading fades;
+ * hovering the unpicked side sketches a faint hint. Reduced motion: the
+ * shading just appears.
+ */
+export default function ModeToggle({ mode, onChange }: { mode: HomeMode; onChange: (mode: HomeMode) => void }) {
+  const track = useMemo(() => buildWobblyRectPath(60, TRACK_W - 1, TRACK_H - 1, (TRACK_H - 1) / 2, PEN_AMPLITUDE), []);
+  const [hovered, setHovered] = useState<HomeMode | null>(null);
+
+  return (
+    <div className={styles.toggle} role="group" aria-label={copy.label} style={{ width: TRACK_W, height: TRACK_H }}>
+      {MODES.map(({ mode: m, color }, i) => (
+        <CrayonShade
+          key={m}
+          seed={30 + i}
+          color={color}
+          x={i * SEGMENT_W}
+          state={m === mode ? "on" : m === hovered ? "hint" : "off"}
+        />
+      ))}
+
+      <svg
+        className={styles.track}
+        width={TRACK_W}
+        height={TRACK_H}
+        viewBox={`-0.5 -0.5 ${TRACK_W} ${TRACK_H}`}
+        fill="none"
+        aria-hidden="true"
+      >
+        <path d={track} stroke="#000" strokeWidth={LINE_STROKE_WIDTH} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+      </svg>
+
+      {MODES.map(({ mode: m }) => (
+        <button
+          key={m}
+          type="button"
+          className={`${styles.button} ${m === mode ? styles.active : ""}`}
+          style={{ width: SEGMENT_W }}
+          aria-pressed={m === mode}
+          onClick={() => onChange(m)}
+          onPointerEnter={() => setHovered(m)}
+          onPointerLeave={() => setHovered((h) => (h === m ? null : h))}
+        >
+          {copy[m]}
+        </button>
+      ))}
     </div>
   );
 }

@@ -240,16 +240,10 @@ function roundedRectPoint(s: number, w: number, h: number, r: number): { p: [num
   }
 }
 
-/** Fewest points a rectangle is sampled at, so tiny ones (the toggle's
- * doodles) keep round corners instead of being cut into polygons. */
-const RECT_MIN_STEPS = 32;
-
 /** A hand-drawn rounded rectangle, `width` × `height` (in the path's own
  * units, origin top-left), corner `radius`. Drawn as one stroke starting at
  * the top left and going clockwise, carrying on a little past the start like
- * a real pen loop. For the outline around projects (brief Part 3.1).
- * `overshootDrift` is how far out the pen's tail ends, px — smaller for tiny
- * shapes, where the default would read as a tick. */
+ * a real pen loop. For the outline around projects (brief Part 3.1). */
 export function buildWobblyRectPath(
   seed: number,
   width: number,
@@ -257,21 +251,20 @@ export function buildWobblyRectPath(
   radius: number,
   amplitude = 1,
   variant = 0,
-  overshootDrift = RECT_OVERSHOOT_DRIFT_PX,
 ): string {
   const r = Math.min(radius, width / 2, height / 2);
   const perimeter = 2 * (width - 2 * r) + 2 * (height - 2 * r) + 2 * Math.PI * r;
   const total = perimeter * (1 + RECT_OVERSHOOT);
   const phaseA = hash(seed, 501) * Math.PI * 2;
   const phaseB = hash(seed, 502) * Math.PI * 2;
-  const steps = Math.max(RECT_MIN_STEPS, Math.ceil(total / RECT_SAMPLE_PX));
+  const steps = Math.ceil(total / RECT_SAMPLE_PX);
 
   const points: [number, number][] = [];
   for (let i = 0; i <= steps; i++) {
     const s = (i / steps) * total;
     const { p, n } = roundedRectPoint(s % perimeter, width, height, r);
     const t = s / perimeter;
-    const drift = Math.max(0, t - 1) / RECT_OVERSHOOT * overshootDrift;
+    const drift = Math.max(0, t - 1) / RECT_OVERSHOOT * RECT_OVERSHOOT_DRIFT_PX;
     const offset =
       amplitude * (1.2 * Math.sin(t * Math.PI * 2 * 3 + phaseA) + 0.5 * Math.sin(t * Math.PI * 2 * 7 + phaseB)) +
       drift +
@@ -281,19 +274,42 @@ export function buildWobblyRectPath(
   return smoothPathFromPoints(points);
 }
 
-// ---------- washes ----------
+// ---------- crayon shading ----------
 
-/** A block of colour `width` × `height` (origin top-left) whose top edge is
- * a gentle wave `amplitude` px high, `waves` crests across — the surface of
- * the toggle doodles' pencil wash (and the jar's liquid). Closed, for fill. */
-export function buildWashPath(seed: number, width: number, height: number, amplitude = 1, waves = 2): string {
-  const phase = hash(seed, 601) * Math.PI * 2;
-  const steps = 24;
-  const points: [number, number][] = [];
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    const y = amplitude * (0.75 * Math.sin(t * Math.PI * 2 * waves + phase) + 0.25 * Math.sin(t * Math.PI * 2 * waves * 2.3 + phase * 1.7));
-    points.push([t * width, y]);
+export interface CrayonStroke {
+  d: string;
+  /** Each stroke a slightly different pressure. */
+  opacity: number;
+}
+
+/** Loose, roughly diagonal back-and-forth crayon strokes filling a pill
+ * `width` × `height` (origin top-left): `count` strokes left to right, each
+ * a gently bowed line slanting up to the right, alternating which end it
+ * starts from like a scribble going back and forth. Ends stay inside the
+ * pill (shorter near its round ends) and vary a little, so the shading has
+ * soft, uneven edges rather than an outline. `strokeWidth` is the crayon's
+ * width, used to keep the ends in. For the jar / work toggle. */
+export function buildCrayonStrokes(seed: number, width: number, height: number, count: number, strokeWidth: number): CrayonStroke[] {
+  const r = height / 2;
+  const slant = 0.42;
+  const strokes: CrayonStroke[] = [];
+  for (let i = 0; i < count; i++) {
+    const cx = width * ((i + 0.5) / count) + (hash(seed, 800 + i) - 0.5) * (width / count) * 0.6;
+    // Half the pill's height at cx, less the crayon's own half-width.
+    const d = Math.min(cx, width - cx);
+    const half = (d >= r ? r : Math.sqrt(Math.max(0, r * r - (r - d) * (r - d)))) - strokeWidth * 0.35;
+    const top = Math.max(1, half * (0.8 + 0.2 * hash(seed, 820 + i)));
+    const bottom = Math.max(1, half * (0.8 + 0.2 * hash(seed, 840 + i)));
+    const a: [number, number] = [cx - slant * bottom, r + bottom];
+    const b: [number, number] = [cx + slant * top, r - top];
+    const [from, to] = i % 2 === 0 ? [a, b] : [b, a];
+    const bow = (hash(seed, 860 + i) - 0.5) * 1.6;
+    const mx = (from[0] + to[0]) / 2 + bow;
+    const my = (from[1] + to[1]) / 2;
+    strokes.push({
+      d: `M${from[0].toFixed(2)},${from[1].toFixed(2)} Q${mx.toFixed(2)},${my.toFixed(2)} ${to[0].toFixed(2)},${to[1].toFixed(2)}`,
+      opacity: 0.4 + 0.25 * hash(seed, 880 + i),
+    });
   }
-  return `${smoothPathFromPoints(points)} L${width},${height} L0,${height} Z`;
+  return strokes;
 }
