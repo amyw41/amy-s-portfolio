@@ -19,7 +19,6 @@ import {
   JAR_LAND_SCALE_Y,
   slowMs,
   stopMotion,
-  WORK_EXIT_S,
 } from "@/lib/motion";
 
 interface JarViewProps {
@@ -39,7 +38,7 @@ const OFF_STAGE = "110%";
  * move runs on the STOP_MOTION_FPS clock (stopMotion), so it steps like
  * hand-drawn frames.
  *
- * Arriving (work → jar): waits for the grid's exit, drops in from above,
+ * Arriving (work → jar, once the grid has gone): drops in from above,
  * lands with a squash and springs back, and only then lets the items spawn
  * and fall (JarStage's `start`) — useJarPhysics measures the jar's position
  * on screen, so it mustn't run while the jar is mid-drop.
@@ -63,15 +62,14 @@ export default function JarView({ entering, isolatedId }: JarViewProps) {
     if (!entering) return;
     let cancelled = false;
     (async () => {
-      const delay = slowMs(WORK_EXIT_S * 1000) / 1000;
       if (reduced) {
-        await animate(scope.current, { opacity: [0, 1] }, { duration: 0.2, delay });
+        await animate(scope.current, { opacity: [0, 1] }, { duration: 0.2 });
       } else {
         const dropS = slowMs(JAR_DROP_IN_S * 1000) / 1000;
         await animate(
           scope.current,
           { y: [`-${OFF_STAGE}`, "0%"], opacity: [1, 1] },
-          { duration: dropS, delay, ease: stopMotion(EASE_IN, dropS) },
+          { duration: dropS, ease: stopMotion(EASE_IN, dropS) },
         );
         const landS = slowMs(JAR_LAND_S * 1000) / 1000;
         if (wrapperRef.current) {
@@ -137,6 +135,8 @@ export default function JarView({ entering, isolatedId }: JarViewProps) {
           isolatedId={isolatedId}
           start={start}
           jostleRef={jostleRef}
+          // Home never highlights a category, so no item is ever bordered.
+          outlines={false}
         />
       </div>
     </div>

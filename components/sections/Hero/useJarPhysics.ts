@@ -189,11 +189,39 @@ interface BBoxPreloadResult {
   img: HTMLImageElement;
 }
 
+/** preloadBBox results for the rest of the visit, keyed by src + crop. The
+ * jar remounts every time it comes back from work mode, and re-decoding
+ * and re-scanning every item's pixels each time was the slowest part of
+ * that (hundreds of ms on the main thread) — the result never changes. */
+const bboxCache = new Map<string, Promise<BBoxPreloadResult>>();
+
 /** Decode plus alpha bbox only — no canvas dilation, no encoding. This is
  * the only preload work the fall itself has to wait on, since the bbox
  * drives every item's sizing and physics geometry. Ring rasters are
- * generated later; see the call site. */
+ * generated later; see the call site. Cached (bboxCache). */
 function preloadBBox(item: JarItemDef): Promise<BBoxPreloadResult> {
+  const key = `${item.src}|${item.cropRegion ? JSON.stringify(item.cropRegion) : ""}`;
+  const cached = bboxCache.get(key);
+  if (cached) return cached;
+  const loading = loadBBox(item);
+  bboxCache.set(key, loading);
+  // A failed load shouldn't stick: let the next mount try again.
+  loading.catch(() => bboxCache.delete(key));
+  return loading;
+}
+
+/** Precomputed falls (setup's history), for the rest of the visit, keyed by
+ * the jar's size and on-screen position — see the deterministic-settle
+ * block for why the same key always gives the same recording. */
+const fallCache = new Map<string, { x: number; y: number; angle: number }[][]>();
+
+/** Dilated click masks (setup's clickMasks), for the rest of the visit,
+ * keyed by src + crop + dilation radius. Dilating a full-resolution mask is
+ * the most expensive synchronous step of setup — seconds on a throttled
+ * CPU — and it ran again every time the jar remounted. */
+const clickMaskCache = new Map<string, { mask: Uint8Array; width: number; height: number; padR: number }>();
+
+function loadBBox(item: JarItemDef): Promise<BBoxPreloadResult> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
     img.onload = () => {
@@ -231,6 +259,11 @@ export interface JarPhysicsOptions {
    * true. Setup measures the container's on-screen position, so it mustn't
    * run while the jar is mid-move under a transform. */
   start?: boolean;
+  /** false skips generating the blob items' outline-ring rasters — canvas
+   * work plus a PNG encode per item, the costliest thing the live loop does
+   * — for a jar that never shows a ring (nothing ever `bordered`). Default
+   * true. */
+  outlines?: boolean;
 }
 
 export function useJarPhysics(
@@ -241,7 +274,7 @@ export function useJarPhysics(
   // and rest on (see buildTextPlatformBodies below). Optional: without it,
   // a dragged item just falls straight past that column.
   textPlatformsRef?: RefObject<HTMLDivElement | null>,
-  { start = true }: JarPhysicsOptions = {},
+  { start = true, outlines = true }: JarPhysicsOptions = {},
 ) {
   const [ready, setReady] = useState(false);
   // Set by setup once the world exists; a no-op before that (and after
@@ -328,7 +361,10 @@ export function useJarPhysics(
       // and used to block here too, which was most of the delay before
       // items started falling. It's deferred below.
       const outlineThicknessPx = getOutlineThicknessPx();
+      const preloadStart = performance.now();
       const preloadEntries = await Promise.all(items.map(async (item) => [item.id, await preloadBBox(item)] as const));
+      if (debugPerf) console.log(`[jar][debug=perf] preload (decode + alpha bbox): ${(performance.now() - preloadStart).toFixed(1)}ms`);
+      const setupAfterPreload = performance.now();
       if (cancelled) return;
       const bboxes = Object.fromEntries(
         preloadEntries.map(([id, r]) => [id, r.bbox]),
@@ -356,6 +392,9 @@ export function useJarPhysics(
           if (radius <= 0) {
             return [item.id, { mask: bbox.alphaMask, width: bbox.bboxW, height: bbox.bboxH, padR: 0 }];
           }
+          const cacheKey = `${item.src}|${item.cropRegion ? JSON.stringify(item.cropRegion) : ""}|${radius}`;
+          const cachedMask = clickMaskCache.get(cacheKey);
+          if (cachedMask) return [item.id, cachedMask];
           const paddedW = bbox.bboxW + radius * 2;
           const paddedH = bbox.bboxH + radius * 2;
           const padded = new Uint8Array(paddedW * paddedH);
@@ -365,7 +404,9 @@ export function useJarPhysics(
             padded.set(bbox.alphaMask.subarray(srcOffset, srcOffset + bbox.bboxW), dstOffset);
           }
           const mask = dilateAlphaMask(padded, paddedW, paddedH, radius);
-          return [item.id, { mask, width: paddedW, height: paddedH, padR: radius }];
+          const clickMask = { mask, width: paddedW, height: paddedH, padR: radius };
+          clickMaskCache.set(cacheKey, clickMask);
+          return [item.id, clickMask];
         }),
       ) as Record<string, { mask: Uint8Array; width: number; height: number; padR: number }>;
 
@@ -1045,13 +1086,42 @@ export function useJarPhysics(
       // runs synchronously here, then plays back as a recording (see
       // replayTick). 1200 ticks is 20 sim-seconds of headroom, but the loop
       // bails as soon as every body is asleep.
-      const history: { x: number; y: number; angle: number }[][] = [];
-      for (let i = 0; i < 1200; i++) {
-        stepPhysics();
-        if (!instant) {
-          history.push(physicsItems.map(({ body }) => ({ x: body.position.x, y: body.position.y, angle: body.angle })));
+      if (debugPerf) console.log(`[jar][debug=perf] setup after preload: ${(performance.now() - setupAfterPreload).toFixed(1)}ms`);
+      const precomputeStart = performance.now();
+      // The fall is deterministic for a given size and on-screen position
+      // (that's the point of precomputing it), so a remount at the same
+      // geometry — the jar coming back from work mode — replays the cached
+      // recording and puts every body straight at its settled pose instead
+      // of re-simulating it.
+      const fallKey = `${width.toFixed(1)}x${height.toFixed(1)}@${containerTop.toFixed(1)}|${items
+        .map((item) => item.id)
+        .join(",")}`;
+      const cachedFall = instant ? undefined : fallCache.get(fallKey);
+      let history: { x: number; y: number; angle: number }[][] = [];
+      if (cachedFall) {
+        history = cachedFall;
+        const settled = cachedFall[cachedFall.length - 1];
+        physicsItems.forEach(({ body }, i) => {
+          Body.setPosition(body, { x: settled[i].x, y: settled[i].y });
+          Body.setAngle(body, settled[i].angle);
+          Body.setVelocity(body, { x: 0, y: 0 });
+          Body.setAngularVelocity(body, 0);
+          Sleeping.set(body, true);
+        });
+      } else {
+        for (let i = 0; i < 1200; i++) {
+          stepPhysics();
+          if (!instant) {
+            history.push(physicsItems.map(({ body }) => ({ x: body.position.x, y: body.position.y, angle: body.angle })));
+          }
+          if (physicsItems.every(({ body }) => body.isSleeping)) break;
         }
-        if (physicsItems.every(({ body }) => body.isSleeping)) break;
+        if (!instant && history.length > 0) fallCache.set(fallKey, history);
+      }
+      if (debugPerf) {
+        console.log(
+          `[jar][debug=perf] precompute (${history.length} ticks${cachedFall ? ", cached" : ""}): ${(performance.now() - precomputeStart).toFixed(1)}ms`,
+        );
       }
       // Force-mark entered, so anything that never crossed the mouth line
       // during precompute isn't pinned to its lane forever.
@@ -1160,7 +1230,7 @@ export function useJarPhysics(
         // Yields between items so a burst of encodes can't monopolise a tick.
         (async () => {
           for (const item of items) {
-            if (cancelled || item.shape !== "blob") continue;
+            if (cancelled || !outlines || item.shape !== "blob") continue;
             const img = imgsById.get(item.id);
             const bbox = bboxes[item.id];
             if (!img || !bbox) continue;

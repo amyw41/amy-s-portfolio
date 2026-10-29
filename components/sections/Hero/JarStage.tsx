@@ -34,6 +34,9 @@ interface JarStageProps {
   /** Filled with useJarPhysics's jostle(strength), for whoever moves the
    * jar to knock its items around (Home/JarView.tsx). */
   jostleRef?: MutableRefObject<((strength: number) => void) | null>;
+  /** Passed to useJarPhysics: false skips building the outline rings that
+   * `bordered` items show. Default true. */
+  outlines?: boolean;
 }
 
 export default function JarStage({
@@ -44,13 +47,14 @@ export default function JarStage({
   isolatedId = null,
   start = true,
   jostleRef,
+  outlines = true,
 }: JarStageProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { ready, renderInfo, outlineMasks, registerItemEl, debugWalls, debugPhysicsEnabled, jostle } = useJarPhysics(
     containerRef,
     items,
     textPlatformsRef,
-    { start },
+    { start, outlines },
   );
 
   useEffect(() => {

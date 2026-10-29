@@ -78,6 +78,7 @@
   flex: 0 0 auto;
   /* The jar's landing/anticipation squash (JarView) pivots on its base. */
   transform-origin: 50% 100%;
+  will-change: transform;
 }
 
 /* Jar mode's view: fills the stage and centres the jar in it. Its own
@@ -88,6 +89,9 @@
   position: absolute;
   inset: 0;
   z-index: 0;
+  /* Its own compositor layer: the drop in/out moves the whole jar every
+   * frame, which shouldn't repaint the jar drawing each time. */
+  will-change: transform;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -73,7 +73,7 @@ export const TILE_LIFT_PX = 6;
 // JAR_ANTICIPATE_SCALE_Y over JAR_ANTICIPATE_S — then drop down out of the
 // stage over JAR_DROP_OUT_S (ease-in), jostling the items with
 // JAR_JOSTLE_STRENGTH as it goes.
-// work → jar: after the grid's exit (WORK_EXIT_S), drop in from above over
+// work → jar: once the grid has gone (WORK_EXIT_S), drop in from above over
 // JAR_DROP_IN_S (ease-in), land with a squash (JAR_LAND_SCALE_X/Y) and
 // spring back over JAR_LAND_S, then the items fall in.
 // "what's inside?" drops in from above by HEADING_DROP_PX with a small
@@ -81,7 +81,7 @@ export const TILE_LIFT_PX = 6;
 export const JAR_ANTICIPATE_PX = 10;
 export const JAR_ANTICIPATE_SCALE_Y = 0.96;
 export const JAR_ANTICIPATE_S = 0.12;
-export const JAR_DROP_OUT_S = 0.45;
+export const JAR_DROP_OUT_S = 0.38;
 export const JAR_JOSTLE_STRENGTH = 1;
 export const JAR_DROP_IN_S = 0.42;
 export const JAR_LAND_SCALE_X = 1.04;

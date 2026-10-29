@@ -90,11 +90,11 @@ export default function Home() {
       </div>
 
       <section className={styles.stage}>
-        {/* Both views can be on stage at once while one leaves and the other
-         * arrives: jar → work, the jar drops away as "what's inside?" drops
-         * in; work → jar, the grid slides out and the jar waits for it
-         * before dropping in (JarView). */}
-        <AnimatePresence initial={false}>
+        {/* mode="wait": one view at a time — the leaving one finishes its
+         * exit before the next starts (jar → work: the jar drops away, then
+         * "what's inside?" and the grid come in; work → jar: the grid slides
+         * out, then the jar drops in). */}
+        <AnimatePresence mode="wait" initial={false}>
           {mode === "jar" ? (
             <JarView key="jar" entering={jarEntering} isolatedId={focusedCase} />
           ) : (
