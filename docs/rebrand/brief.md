@@ -64,27 +64,19 @@ Sketches: `02-home-jar.png` (jar mode), `03-home-grid.png` (work mode).
 
 ### 2.2 Sidebar
 
-**The box.** The sidebar is a box **flush with the frame's top, left and bottom**: no padding outside it. The divider line is its right edge and belongs to that outer box (inset 32px top and bottom). The text has its own, deeper inner padding: **32px** from the left edge and the line, and **64px** top and bottom, so the line starts clearly above the name and ends clearly below the mode toggle. The stage runs to the frame's right edge and full height.
+**The box.** The sidebar is a box **flush with the window's top, left and bottom**: no padding outside it. The divider line is its right edge and belongs to that outer box (inset from the top and bottom). The text has its own, deeper inner padding, so the line starts clearly above the first line of text and ends clearly below the mode toggle. All spacing scales with the window; exact values are in `docs/rebrand/design-system.md`.
 
-Width about `clamp(260px, 20vw, 320px)`. **Font: Geist** for the home page, letter-spacing **-0.6px**. **Sizes:** name 24px, everything else 14px. Headings are black, regular weight; items under them are weight 300.
+Top to bottom, everything on one left edge:
 
-Everything sits on **one left edge**, the name's: items aren't indented and have no dash.
+1. **Social icons:** X, LinkedIn, mail, plain black.
+2. **Intro:** one paragraph, the name then the description ("Amy Wang is a designer who…"), at body size in medium weight. There's no separate big name.
+3. **Menu:** three always-open groups (no dropdowns), each a medium heading with items under it:
+   - **Works:** the case studies by name (CyberSea, Spotify Guessr, SkinSprout, Extras). Hovering one isolates it on the stage (3.1).
+   - **Extra:** About Me (`/about`), Play (`/playground`).
+   - **Experience:** Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo.
+4. **Mode toggle** at the bottom: **jar** and **work** (see 2.4).
 
-**Top section**, three blocks with equal spacing between them:
-1. **amy wang** (the name) and the **short intro** (weight 300).
-2. **Links**: plain black **X**, **LinkedIn** and **mail** icons, close together, no border, no colour, linking to `content.en.footer.links`.
-3. **Experience** (dropdown), with: Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo.
-
-**Bottom section**, after a bigger gap. It flows straight on from the top section (it isn't pinned to the bottom), so closing a dropdown pulls everything below it up:
-1. **Works** (dropdown), listing your case studies (CyberSea, Spotify Guessr, SkinSprout, Extras, from `lib/projects.ts`). Each name links to its case study and turns **bold on hover** (without nudging anything).
-2. **About**, a link to `/about`.
-3. **Play**, a link to `/playground`.
-
-**Mode toggle** at the very bottom: two buttons, **jar** and **work** (see 2.4).
-
-**Dropdowns.** Experience and Works have a small chevron beside them; the heading and chevron are one button, and both start **open**. Clicking it toggles the list and turns the chevron (closed points down, open points up; the angle is `CHEVRON_OPEN_DEG` in `lib/motion.ts`). The list **grows open** while its items **fade down into place** one after another (from about 6px above); closing is quicker and all at once. Case studies have no dropdown.
-
-**Hover, headings (Experience, Works, About, Play):** the **wiggly circle** (`ScribbleOval`'s path) draws itself on around the heading with a pen-stroke reveal (~350ms) and un-draws when the pointer leaves. It's light grey (about 45% black), with some breathing room around the word. It shows on keyboard focus too, and doesn't stay after a click.
+Menu items fade to 55% black on hover.
 
 ### 2.3 Stage: jar mode (the default)
 

@@ -1,24 +1,11 @@
 "use client";
 
-import { useId, useMemo, useState, type FocusEvent, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
-import { ChevronDown, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import styles from "./Sidebar.module.css";
 import { content } from "@/lib/content";
 import { PROJECTS } from "@/lib/projects";
-import {
-  CHEVRON_OPEN_DEG,
-  CHEVRON_TURN_S,
-  DROPDOWN_CLOSE_S,
-  DROPDOWN_ITEM_DROP_PX,
-  DROPDOWN_ITEM_STAGGER_S,
-  DROPDOWN_OPEN_S,
-  OVAL_DRAW_S,
-  slowTransition,
-} from "@/lib/motion";
-import { buildWobblyPillPath, LINE_STROKE_WIDTH, PILL_VIEW_BOX } from "@/lib/wobbly";
-import BuzzPath from "@/components/ui/BuzzPath";
 
 const copy = content.en.sidebar;
 const links = content.en.footer.links;
@@ -52,242 +39,100 @@ function LinkedInIcon() {
   );
 }
 
-// Plain black icon row (no border) — order matches the mockup: X, LinkedIn,
-// mail. hrefs from footer.links.
+// Plain black icon row (no border), at the very top of the sidebar — order
+// matches the mockup: X, LinkedIn, mail. hrefs from footer.links.
 const SOCIAL_LINKS = [
   { href: links.twitter.href, label: copy.social.twitter, icon: <XIcon /> },
   { href: links.linkedin.href, label: copy.social.linkedin, icon: <LinkedInIcon /> },
   { href: links.email.href, label: copy.social.email, icon: <Mail size={20} strokeWidth={1.75} aria-hidden="true" /> },
 ];
 
-// Case studies listed under Works — every project in lib/projects.ts, then
-// Extras last (it isn't a Project, see ExtrasCard.tsx, but has its own case
-// study at /extras). `id` is the project's slug — also its jar item's id and
-// its work-mode tile's id.
+// Case studies listed under Works, names only — every project in
+// lib/projects.ts, then Extras last (it isn't a Project, see ExtrasCard.tsx,
+// but has its own case study at /extras). `id` is the project's slug — also
+// its jar item's id and its work-mode tile's id.
 const WORK_LINKS = [
-  ...PROJECTS.map((project) => ({
-    id: project.slug,
-    href: `/${project.slug}`,
-    label: project.title,
-    description: project.description,
-  })),
-  { id: "extras", href: "/extras", label: copy.extras, description: content.en.projects.extras.description },
+  ...PROJECTS.map((project) => ({ id: project.slug, href: `/${project.slug}`, label: project.title })),
+  { id: "extras", href: "/extras", label: copy.extras },
 ];
 
-/** Hover/keyboard-focus tracking for a heading — drives its DrawnOval.
- * :focus-visible only, so a mouse click (which also focuses the button)
- * doesn't leave the oval drawn after the pointer has left. */
-function useHoverOval() {
-  const [hovered, setHovered] = useState(false);
-  const [focused, setFocused] = useState(false);
-  return {
-    drawn: hovered || focused,
-    props: {
-      onPointerEnter: () => setHovered(true),
-      onPointerLeave: () => setHovered(false),
-      onFocus: (e: FocusEvent<HTMLElement>) => setFocused(e.currentTarget.matches(":focus-visible")),
-      onBlur: () => setFocused(false),
-    },
-  };
-}
-
-/** The hand-drawn oval around a hovered heading: buzzes while it's
- * visible, pen-drawn on (pathLength 0 → 1) when `drawn` turns true and
- * un-drawn when it turns false. Instant under reduced motion (BuzzPath). */
-function DrawnOval({ seed, drawn }: { seed: number; drawn: boolean }) {
-  const variants = useMemo(() => [0, 1, 2].map((v) => buildWobblyPillPath(seed, 1, v)), [seed]);
-  return (
-    <BuzzPath
-      className={styles.oval}
-      variants={variants}
-      viewBox={PILL_VIEW_BOX}
-      preserveAspectRatio="none"
-      strokeWidth={LINE_STROKE_WIDTH}
-      drawn={drawn}
-      drawDuration={OVAL_DRAW_S}
-    />
-  );
-}
-
-/** Dropdown chevron: points down when closed, turns CHEVRON_OPEN_DEG when
- * open. */
-function Chevron({ open }: { open: boolean }) {
-  const reduced = useReducedMotion();
-  return (
-    <motion.span
-      className={styles.chevron}
-      initial={false}
-      animate={{ rotate: open ? CHEVRON_OPEN_DEG : 0 }}
-      transition={reduced ? { duration: 0 } : slowTransition({ duration: CHEVRON_TURN_S, ease: "easeOut" as const })}
-      aria-hidden="true"
-    >
-      <ChevronDown size={14} strokeWidth={1.75} />
-    </motion.span>
-  );
-}
-
-// Opening: the list grows while its items fade down into place one after
-// another. Closing: everything goes at once, quicker. Durations are scaled
-// by ?slow where the variants are built (dropdownVariants below).
-function dropdownVariants(reduced: boolean): { list: Variants; item: Variants } {
-  if (reduced) {
-    return {
-      list: { open: { height: "auto" }, closed: { height: 0 } },
-      item: { open: { opacity: 1, y: 0 }, closed: { opacity: 0, y: 0 } },
-    };
-  }
-  const open = slowTransition({ duration: DROPDOWN_OPEN_S, ease: "easeOut" as const });
-  const close = slowTransition({ duration: DROPDOWN_CLOSE_S, ease: "easeIn" as const });
-  return {
-    list: {
-      open: {
-        height: "auto",
-        transition: { ...open, staggerChildren: slowTransition({ duration: DROPDOWN_ITEM_STAGGER_S }).duration },
-      },
-      closed: { height: 0, transition: close },
-    },
-    item: {
-      open: { opacity: 1, y: 0, transition: open },
-      closed: { opacity: 0, y: -DROPDOWN_ITEM_DROP_PX, transition: close },
-    },
-  };
-}
-
-/** A heading with a dropdown (Experience, Works): the heading text and its
- * chevron are one button. Starts open. */
-function DropdownGroup({ title, seed, items }: { title: string; seed: number; items: ReactNode[] }) {
-  const [open, setOpen] = useState(true);
-  const listId = useId();
-  const oval = useHoverOval();
-  const reduced = useReducedMotion() ?? false;
-  const variants = useMemo(() => dropdownVariants(reduced), [reduced]);
-
+/** One of the menu's always-open groups: a medium-weight heading with its
+ * items listed under it. */
+function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className={styles.group}>
-      <button
-        type="button"
-        className={styles.heading}
-        aria-expanded={open}
-        aria-controls={listId}
-        onClick={() => setOpen((v) => !v)}
-        {...oval.props}
-      >
-        <DrawnOval seed={seed} drawn={oval.drawn} />
-        {title}
-        <Chevron open={open} />
-      </button>
-      {/* initial={false}: lists that start open don't animate in on load. */}
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.ul
-            key="list"
-            id={listId}
-            className={styles.items}
-            variants={variants.list}
-            initial="closed"
-            animate="open"
-            exit="closed"
-          >
-            {items.map((item, i) => (
-              <motion.li key={i} className={styles.item} variants={variants.item}>
-                {item}
-              </motion.li>
-            ))}
-          </motion.ul>
-        )}
-      </AnimatePresence>
+      <h2 className={styles.heading}>{title}</h2>
+      <ul className={styles.items}>{children}</ul>
     </div>
-  );
-}
-
-/** A case study under Works: the name, then " - description" in full,
- * wrapping onto extra lines under the name. Hovering or keyboard-focusing
- * it isolates that project on the stage (onFocusChange → Home). */
-function CaseStudyRow({
-  href,
-  label,
-  description,
-  onFocusChange,
-}: {
-  href: string;
-  label: string;
-  description: string;
-  onFocusChange: (active: boolean) => void;
-}) {
-  return (
-    <Link
-      href={href}
-      className={styles.itemLink}
-      onPointerEnter={() => onFocusChange(true)}
-      onPointerLeave={() => onFocusChange(false)}
-      onFocus={(e) => {
-        if (e.currentTarget.matches(":focus-visible")) onFocusChange(true);
-      }}
-      onBlur={() => onFocusChange(false)}
-    >
-      <span className={styles.itemName}>{label}</span>
-      <span className={styles.itemDescription}> - {description}</span>
-    </Link>
-  );
-}
-
-/** About / Play: a top-level heading that's just a link. */
-function HeadingLink({ href, label, seed }: { href: string; label: string; seed: number }) {
-  const oval = useHoverOval();
-  return (
-    <Link href={href} className={styles.heading} {...oval.props}>
-      <DrawnOval seed={seed} drawn={oval.drawn} />
-      {label}
-    </Link>
   );
 }
 
 export default function Sidebar({ mode, onModeChange, onCaseFocus }: SidebarProps) {
   return (
     <aside className={styles.sidebar}>
-      {/* Top section: name + intro, links, Experience — equal spacing. */}
-      <div className={styles.top}>
-        <div className={styles.identity}>
-          <h1 className={styles.name}>{copy.name}</h1>
-          <p className={styles.intro}>{copy.intro}</p>
-        </div>
+      <ul className={styles.socialRow} aria-label={copy.social.label}>
+        {SOCIAL_LINKS.map((link) => (
+          <li key={link.href}>
+            <a
+              className={styles.socialIcon}
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={link.label}
+            >
+              {link.icon}
+            </a>
+          </li>
+        ))}
+      </ul>
 
-        <ul className={styles.socialRow} aria-label={copy.social.label}>
-          {SOCIAL_LINKS.map((link) => (
+      {/* The name and description as one paragraph — no separate title. */}
+      <h1 className={styles.intro}>
+        {copy.name} {copy.intro}
+      </h1>
+
+      <nav className={styles.nav} aria-label="Main">
+        <Group title={copy.nav.works}>
+          {WORK_LINKS.map((link) => (
             <li key={link.href}>
-              <a
-                className={styles.socialIcon}
+              {/* Hovering or keyboard-focusing a case study isolates it on
+               * the stage (its jar item lifts, the rest dim — Home). */}
+              <Link
                 href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={link.label}
+                className={styles.itemLink}
+                onPointerEnter={() => onCaseFocus(link.id)}
+                onPointerLeave={() => onCaseFocus(null)}
+                onFocus={(e) => {
+                  if (e.currentTarget.matches(":focus-visible")) onCaseFocus(link.id);
+                }}
+                onBlur={() => onCaseFocus(null)}
               >
-                {link.icon}
-              </a>
+                {link.label}
+              </Link>
             </li>
           ))}
-        </ul>
+        </Group>
 
-        <DropdownGroup title={copy.experience.heading} seed={20} items={[...copy.experience.items]} />
-      </div>
+        <Group title={copy.nav.extra}>
+          <li>
+            <Link href="/about" className={styles.itemLink}>
+              {copy.nav.about}
+            </Link>
+          </li>
+          <li>
+            <Link href="/playground" className={styles.itemLink}>
+              {copy.nav.play}
+            </Link>
+          </li>
+        </Group>
 
-      {/* Bottom section: Works (case studies), About, Play. */}
-      <nav className={styles.bottom} aria-label="Main">
-        <DropdownGroup
-          title={copy.nav.works}
-          seed={21}
-          items={WORK_LINKS.map((link) => (
-            <CaseStudyRow
-              key={link.href}
-              href={link.href}
-              label={link.label}
-              description={link.description}
-              onFocusChange={(active) => onCaseFocus(active ? link.id : null)}
-            />
+        <Group title={copy.experience.heading}>
+          {copy.experience.items.map((item) => (
+            <li key={item} className={styles.item}>
+              {item}
+            </li>
           ))}
-        />
-        <HeadingLink href="/about" label={copy.nav.about} seed={22} />
-        <HeadingLink href="/playground" label={copy.nav.play} seed={23} />
+        </Group>
       </nav>
 
       <div className={styles.modeToggle} role="group" aria-label={copy.modes.label}>
