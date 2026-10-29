@@ -25,17 +25,17 @@ const RESIZE_DEBOUNCE_MS = 150;
  * non-deterministic — the same load could settle into a different pile from
  * frame timing jitter alone. */
 const STEP_MS = 1000 / 60;
-/** Caps catch-up steps per real frame. Keep this generous: time beyond the
- * cap is dropped rather than simulated, so a janky load would run fewer
- * total steps than a smooth one and settle differently. Early frames are
- * exactly when image decode and mask work make frames long. */
-const MAX_STEPS_PER_FRAME = 600;
 /** The live loop's own cap. The fall is precomputed (deterministic) and
  * replayed, so the live loop only ever handles drags, rustle and jostle —
  * where dropping a little sim time after a slow frame is invisible, but
  * catching up hundreds of steps in one frame makes that frame (and the next)
  * long, which is exactly the stutter you'd see while the jar moves. */
 const LIVE_MAX_STEPS_PER_FRAME = 4;
+/** The replay's cap. It's a recording, so after a slow frame it's better to
+ * run a touch behind than to skip ahead — skipping showed as items jumping
+ * hundreds of px in one frame when the jar's setup delayed the first frames
+ * (e.g. right after it lands coming back from work mode). */
+const REPLAY_MAX_STEPS_PER_FRAME = 4;
 
 const RUSTLE_RADIUS = 80;
 const RUSTLE_FORCE = 0.0009;
@@ -216,10 +216,21 @@ function preloadBBox(item: JarItemDef): Promise<BBoxPreloadResult> {
   return loading;
 }
 
+/** One body's pose at one tick of the precomputed fall, plus whether it had
+ * entered the jar yet (released from its lane pin) — so the live engine can
+ * pick up from any tick of the replay, not just the end (see the handoff in
+ * skipReplayOnInteraction). */
+interface ReplayFrame {
+  x: number;
+  y: number;
+  angle: number;
+  entered: boolean;
+}
+
 /** Precomputed falls (setup's history), for the rest of the visit, keyed by
  * the jar's size and on-screen position — see the deterministic-settle
  * block for why the same key always gives the same recording. */
-const fallCache = new Map<string, { x: number; y: number; angle: number }[][]>();
+const fallCache = new Map<string, ReplayFrame[][]>();
 
 /** Dilated click masks (setup's clickMasks), for the rest of the visit,
  * keyed by src + crop + dilation radius. Dilating a full-resolution mask is
@@ -1085,7 +1096,7 @@ export function useJarPhysics(
       // fixed timestep: sub-STEP_MS differences in when the first callback
       // lands (downstream of real decode and layout timing) shift which
       // tick two bodies first touch, and with this many colliding bodies
-      // that cascades into a visibly different pile. MAX_STEPS_PER_FRAME
+      // that cascades into a visibly different pile. Capping catch-up steps
       // doesn't help, since that's about dropped time, not phase.
       //
       // So real time is removed from the physics entirely: the whole fall
@@ -1103,7 +1114,7 @@ export function useJarPhysics(
         .map((item) => item.id)
         .join(",")}`;
       const cachedFall = instant ? undefined : fallCache.get(fallKey);
-      let history: { x: number; y: number; angle: number }[][] = [];
+      let history: ReplayFrame[][] = [];
       if (cachedFall) {
         history = cachedFall;
         const settled = cachedFall[cachedFall.length - 1];
@@ -1118,7 +1129,14 @@ export function useJarPhysics(
         for (let i = 0; i < 1200; i++) {
           stepPhysics();
           if (!instant) {
-            history.push(physicsItems.map(({ body }) => ({ x: body.position.x, y: body.position.y, angle: body.angle })));
+            history.push(
+              physicsItems.map(({ id, body }) => ({
+                x: body.position.x,
+                y: body.position.y,
+                angle: body.angle,
+                entered: hasEnteredJar.get(id) ?? false,
+              })),
+            );
           }
           if (physicsItems.every(({ body }) => body.isSleeping)) break;
         }
@@ -1372,14 +1390,47 @@ export function useJarPhysics(
       // Engine.update only runs from the live loop, so a press during
       // replay can grab a body but nothing would follow the cursor until
       // replay finished. Cutting replay short on interaction fixes that:
-      // the bodies are already at the poses replay was tweening toward, so
-      // it's an unnoticeable snap.
+      // handOffReplayToLive puts every body where the replay is showing it,
+      // so the switch is seamless.
       let replayRafId = 0;
       let replayInProgress = false;
+      // Where the replay has got to (replayTick advances these).
+      let replayIndex = 0;
+      let replayAccumulator = 0;
+      // The live bodies are at the END of the precomputed fall (precompute
+      // ran the real engine to the settled pile), so starting the live loop
+      // mid-replay used to snap every item straight to its resting spot.
+      // Instead, put each body exactly where the replay is showing it, moving
+      // as fast as it's moving there, with its lane pin (hasEnteredJar) as
+      // it was at that tick — then the live engine carries on the fall
+      // naturally, and whatever the click lands on can be grabbed mid-air.
+      const handOffReplayToLive = () => {
+        const frame = history[replayIndex];
+        const nextFrame = history[Math.min(replayIndex + 1, history.length - 1)];
+        const alpha = replayAccumulator / STEP_MS;
+        physicsItems.forEach(({ id, body }, i) => {
+          const rec = frame[i];
+          const next = nextFrame[i];
+          if (!rec || !next) return;
+          Body.setPosition(body, { x: rec.x + (next.x - rec.x) * alpha, y: rec.y + (next.y - rec.y) * alpha });
+          Body.setAngle(body, rec.angle + (next.angle - rec.angle) * alpha);
+          // One replay frame is one engine step, so the frame-to-frame
+          // difference is the per-step velocity Matter expects.
+          Body.setVelocity(body, { x: next.x - rec.x, y: next.y - rec.y });
+          Body.setAngularVelocity(body, next.angle - rec.angle);
+          Sleeping.set(body, false);
+          hasEnteredJar.set(id, rec.entered);
+          if (!rec.entered) {
+            landedIds.delete(id);
+            pinVxById.set(id, next.x - rec.x);
+          }
+        });
+      };
       const skipReplayOnInteraction = () => {
         if (!replayInProgress) return;
         replayInProgress = false;
         cancelAnimationFrame(replayRafId);
+        handOffReplayToLive();
         startLiveLoop();
       };
       // Kicks every body up (with a little sideways and spin), so the pile
@@ -1403,24 +1454,27 @@ export function useJarPhysics(
         jostleRef.current = () => {};
       });
 
-      container.addEventListener("mousedown", skipReplayOnInteraction);
-      container.addEventListener("touchstart", skipReplayOnInteraction, { passive: true });
+      // Capture phase: the handoff has to happen before the drag handlers
+      // (on window) pick a body, so the grab acts on the handed-off pose.
+      container.addEventListener("mousedown", skipReplayOnInteraction, { capture: true });
+      container.addEventListener("touchstart", skipReplayOnInteraction, { passive: true, capture: true });
       cleanupFns.push(() => {
-        container.removeEventListener("mousedown", skipReplayOnInteraction);
-        container.removeEventListener("touchstart", skipReplayOnInteraction);
+        container.removeEventListener("mousedown", skipReplayOnInteraction, { capture: true });
+        container.removeEventListener("touchstart", skipReplayOnInteraction, { capture: true });
       });
 
       if (instant || history.length === 0) {
         startLiveLoop();
       } else {
         replayInProgress = true;
-        let replayIndex = 0;
-        let replayAccumulator = 0;
-        let replayLastTime = performance.now();
+        // Clock starts on the first frame, not now: whatever runs between
+        // here and that frame (React mounting the items) mustn't count as
+        // replay time.
+        let replayLastTime: number | null = null;
         function replayTick(now: number) {
-          replayAccumulator += now - replayLastTime;
+          replayAccumulator += replayLastTime === null ? 0 : now - replayLastTime;
           replayLastTime = now;
-          replayAccumulator = Math.min(replayAccumulator, STEP_MS * MAX_STEPS_PER_FRAME);
+          replayAccumulator = Math.min(replayAccumulator, STEP_MS * REPLAY_MAX_STEPS_PER_FRAME);
           while (replayAccumulator >= STEP_MS && replayIndex < history.length - 1) {
             replayIndex++;
             replayAccumulator -= STEP_MS;
