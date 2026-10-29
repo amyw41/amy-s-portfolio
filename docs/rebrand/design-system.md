@@ -2,7 +2,7 @@
 
 The source of truth for how the site looks. Amy edits this file; code follows it. When a value here and the code disagree, this file wins: change the code to match.
 
-Values are at the 1536×696 laptop size (the biggest the site gets).
+Values are given at the 1536×696 laptop size. Layout spacing scales with the window (see Layout); type sizes don't.
 
 ## Type
 
@@ -30,13 +30,15 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 
 ## Layout
 
+Horizontal spacing scales with the window's width (vw), vertical spacing with its height (dvh), each clamped; the middle term lands exactly on the 1536×696 value.
+
 | Token | Value |
 |---|---|
-| Frame | min(100vw, 1536px) wide, 100dvh tall, centred, no outer padding |
-| Sidebar width | clamp(260px, 20vw, 320px) (~307px) |
-| Divider | hand-drawn black line, 0.6px (the jar's ink weight), gently wobbling up to ~1.4px either side of straight, buzzing; inset 16px from the top and bottom of the screen (a plain 1px rule on mobile) |
-| Sidebar padding, left/right | 32px |
-| Sidebar padding, top/bottom | 48px (the divider starts 32px above the name) |
+| Frame | full window width, 100dvh tall, no outer padding; the sidebar is always flush with the window's left edge |
+| Sidebar width | `clamp(300px, 20vw, 380px)` (307px @1536) |
+| Divider | hand-drawn black line, 0.6px (the jar's ink weight), gently wobbling up to ~1.4px either side of straight, buzzing; inset `clamp(8px, 2.3dvh, 28px)` (16px @696) from the top and bottom of the screen (a plain 1px rule on mobile) |
+| Sidebar padding, left/right | `clamp(20px, 2.083vw, 56px)` (32px @1536) |
+| Sidebar padding, top/bottom | `clamp(24px, 6.9dvh, 80px)` (48px @696; the divider starts 32px above the name there) |
 | Mobile breakpoint | below 768px the sidebar stacks above the stage |
 
 ## Sidebar spacing (top to bottom)
@@ -44,13 +46,14 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 | Between | Value |
 |---|---|
 | Name → intro | 14px |
-| Intro → icons → Experience | 22px each |
+| Intro → icons → Experience | `clamp(14px, 3.16dvh, 32px)` each (22px @696) |
 | Icon → icon | 4px (each icon in a 24px box) |
 | Heading → its chevron | 4px |
 | Heading → first item, item → item | 4px |
-| Experience list → Works | 40px |
+| Experience list → Works | `clamp(20px, 5.75dvh, 64px)` (40px @696) |
 | Works → About → Play (incl. last case study → About) | 8px |
-| Play → jar/work toggle | fills the leftover space, at least 16px |
+| On windows under 660px tall | intro → icons → Experience tighten to 2.4dvh, Experience → Works to 3.8dvh |
+| Play → jar/work toggle | fills the leftover space, at least `clamp(12px, 2.3dvh, 28px)` |
 | jar ↔ work | 16px |
 
 ## Components
@@ -71,7 +74,7 @@ Values are at the 1536×696 laptop size (the biggest the site gets).
 
 ## Work mode (stage)
 
-- **Padding:** 48px (heading lines up with the name across the divider); 24px 16px on mobile.
+- **Padding:** top/bottom same as the sidebar's (`clamp(24px, 6.9dvh, 80px)`, so the heading lines up with the name across the divider); left/right `clamp(24px, 3.125vw, 80px)` (48px @1536); 24px 16px on mobile.
 - **Heading** "what's inside?": 24px, weight 400 (22px on mobile).
 - **Filters:** the circle toggles (work / personal project / hackathon), 14px from the heading, 20px apart.
 - **Grid:** 32px below the filters; 4 across with 24px column / 32px row gaps (2 across once the stage is under 720px wide).

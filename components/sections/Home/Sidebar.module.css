@@ -1,11 +1,10 @@
 /* The sidebar "box": flush with the frame's top, left and bottom, with the
  * divider as its right edge. The divider belongs to that outer box (inset
  * --frame-gap, Home.module.css); the text has its own, deeper inner
+ * padding (--pad-x / --pad-y, also Home.module.css, both responsive)
  * padding, so the line starts clearly above the name and ends clearly
  * below the mode toggle. */
 .sidebar {
-  --box-pad: 32px;
-  --box-pad-block: 48px;
   /* Regular text size — everything but the name. */
   --fs-body: 14px;
   /* Space between the bottom section's headings (Works → About → Play,
@@ -15,7 +14,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: var(--box-pad-block) var(--box-pad);
+  padding: var(--pad-y) var(--pad-x);
   overflow-y: auto;
 }
 
@@ -26,7 +25,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 22px;
+  /* 22px @696 tall. */
+  gap: clamp(14px, 3.16dvh, 32px);
 }
 
 .identity {
@@ -83,7 +83,8 @@
   flex-direction: column;
   align-items: flex-start;
   gap: var(--heading-gap);
-  margin-top: 40px;
+  /* 40px @696 tall. */
+  margin-top: clamp(20px, 5.75dvh, 64px);
 }
 
 /* ---------- headings and their items ---------- */
@@ -178,7 +179,9 @@
   display: flex;
   gap: 16px;
   margin-top: auto;
-  padding-top: 16px;
+  /* At least this much clear space above it, so it never touches the
+   * last menu item on a short window. */
+  padding-top: clamp(12px, 2.3dvh, 28px);
 }
 
 .modeButton {
@@ -200,6 +203,21 @@
 .modeButtonActive,
 .modeButtonActive:hover {
   color: #000;
+}
+
+/* ---------- very short windows (e.g. 150% browser zoom) ---------- */
+
+/* Below the 696px laptop height the gaps above already shrink with the
+ * window; on a really short one they shrink a little faster still, so
+ * everything fits without the sidebar scrolling. */
+@media (min-width: 768px) and (max-height: 660px) {
+  .top {
+    gap: 2.4dvh;
+  }
+
+  .bottom {
+    margin-top: 3.8dvh;
+  }
 }
 
 /* ---------- mobile: stacks on top ---------- */

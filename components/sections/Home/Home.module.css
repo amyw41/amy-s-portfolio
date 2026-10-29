@@ -1,18 +1,34 @@
-/* The whole home page is this one frame (brief Part 1's size rule): never
- * wider than the 1536px laptop layout, centred on bigger screens, exactly
- * one screen tall, no padding of its own — the sidebar sits flush left (all
- * its spacing is inside it, see Sidebar.module.css) and the stage runs to
- * the right edge. */
+/* The whole home page is this one frame: the full width of the window and
+ * exactly one screen tall, no padding of its own — the sidebar sits flush
+ * against the window's left edge at every size (all its spacing is inside
+ * it, see Sidebar.module.css) and the stage fills the rest.
+ *
+ * The layout's spacing scales with the window rather than being fixed px:
+ * horizontal values with its width (vw), vertical ones with its height
+ * (dvh), each clamped so a small laptop doesn't get cramped and a big
+ * monitor doesn't get sparse. The middle term is chosen so every value
+ * lands exactly on the original design at the 1536×696 laptop size
+ * (e.g. 32px / 1536px = 2.083vw, 48px / 696px = 6.9dvh). Shared here so the
+ * sidebar and the stage use the same numbers. */
 .frame {
-  --frame-gap: 16px;
+  /* Divider inset from the top and bottom of the screen: 16px @696 tall. */
+  --frame-gap: clamp(8px, 2.3dvh, 28px);
+  /* Sidebar text's left/right padding: 32px @1536 wide. */
+  --pad-x: clamp(20px, 2.083vw, 56px);
+  /* Sidebar text's (and the work stage's) top/bottom padding: 48px @696. */
+  --pad-y: clamp(24px, 6.9dvh, 80px);
+  /* Stage content's left/right padding (work mode): 48px @1536. */
+  --stage-pad-x: clamp(24px, 3.125vw, 80px);
   /* Home page tracking for Geist — one place to tune it. */
   --home-tracking: -0.6px;
-  --sidebar-width: clamp(260px, 20vw, 320px);
+  /* 307px @1536 wide; never under 300px, so the intro and descriptions
+   * don't wrap onto so many lines that the sidebar outgrows a short
+   * window (e.g. 150% browser zoom). */
+  --sidebar-width: clamp(300px, 20vw, 380px);
   display: grid;
   grid-template-columns: var(--sidebar-width) 1px minmax(0, 1fr);
-  width: min(100vw, 1536px);
+  width: 100%;
   height: 100dvh;
-  margin-inline: auto;
   overflow: hidden;
   font-family: var(--font-geist), system-ui, sans-serif;
   letter-spacing: var(--home-tracking);
