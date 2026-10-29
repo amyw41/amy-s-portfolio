@@ -48,7 +48,7 @@ export const content = {
       // Lower menu section: Works (lists the case studies), then About and
       // Play as plain links.
       nav: {
-        works: "Works",
+        works: "Work",
         about: "About",
         play: "Play",
       },
