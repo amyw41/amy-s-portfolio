@@ -103,10 +103,9 @@ export const JAR_DROP_IN_S = 0.42;
 export const JAR_LAND_SCALE_X = 1.04;
 export const JAR_LAND_SCALE_Y = 0.92;
 export const JAR_LAND_S = 0.36;
-// Interruptions (switching back mid-transition): an unsettled jar leaves
-// straight down over JAR_QUICK_EXIT_S (no anticipation, no clink, no items);
-// a jar called back mid-exit rises back into place over JAR_RETURN_S.
-export const JAR_QUICK_EXIT_S = 0.18;
+// Interruptions (switching back mid-transition): an unsettled jar skips its
+// exit (gone at once — no anticipation, no clink, no items); a jar called
+// back mid-exit rises back into place over JAR_RETURN_S.
 export const JAR_RETURN_S = 0.25;
 export const HEADING_DROP_PX = 48;
 export const HEADING_DROP_S = 0.45;

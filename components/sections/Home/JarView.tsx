@@ -18,7 +18,6 @@ import {
   JAR_LAND_SCALE_X,
   JAR_LAND_SCALE_Y,
   JAR_MOVES_STOP_MOTION,
-  JAR_QUICK_EXIT_S,
   JAR_RETURN_S,
   slowMs,
   stopMotion,
@@ -64,7 +63,7 @@ const OFF_STAGE = "110%";
  *   then accelerates down out of the stage;
  * - not settled yet (still dropping in, or landed but items not in): every
  *   queued step is cancelled — the item spawn included, so no items ever
- *   appear — and it drops straight out from wherever it is, quickly.
+ *   appear — and it skips its exit: gone at once, so work comes straight in.
  *
  * Coming back mid-exit (jar clicked again before it's gone): the exit stops
  * and the jar rises back into place from where it is, then carries on as
@@ -141,11 +140,10 @@ export default function JarView({ entering, isolatedId, onSettledChange }: JarVi
         if (reduced) {
           await run(scope.current, { opacity: 0 }, { duration: 0.2 });
         } else if (!settled) {
-          // Interrupted arrival: call off the item spawn and get out fast.
+          // Interrupted arrival: call off the item spawn and skip ahead —
+          // hidden at once, so work mode comes straight in.
           setStart(false);
-          if (wrapperRef.current) run(wrapperRef.current, { scaleX: 1, scaleY: 1, y: 0 }, { duration: slowS(JAR_QUICK_EXIT_S) });
-          const quickS = slowS(JAR_QUICK_EXIT_S);
-          await run(scope.current, { y: OFF_STAGE }, { duration: quickS, ease: jarEase(EASE_IN, quickS) });
+          await run(scope.current, { opacity: 0 }, { duration: 0 });
         } else {
           jostleRef.current?.(JAR_JOSTLE_STRENGTH);
           const anticipateS = slowS(JAR_ANTICIPATE_S);
