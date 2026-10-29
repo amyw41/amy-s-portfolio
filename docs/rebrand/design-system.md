@@ -64,7 +64,7 @@ Sidebar, top to bottom:
 4. **jar / work toggle** at the bottom.
 
 - **Item hover/focus:** links fade to 55% black.
-- **Works hover isolate:** hovering (or focusing) a case study also lifts its jar item 12px and scales it to 1.04, above the pile, and dims every other item (`--dim-white`). In work mode its grid tile lifts 6px and the other tiles dim. Extras has no jar item, so it does nothing in the jar.
+- **Works hover isolate:** hovering (or focusing) a case study also lifts its jar item 12px and scales it to 1.04 (staying at its own layer in the pile, not brought to the front), and dims every other item (`--dim-white`). In work mode its grid tile lifts 6px and the other tiles dim. Extras has no jar item, so it does nothing in the jar.
 
 ## Hand-drawn lines
 
