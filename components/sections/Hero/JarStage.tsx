@@ -37,6 +37,12 @@ interface JarStageProps {
   /** Passed to useJarPhysics: false skips building the outline rings that
    * `bordered` items show. Default true. */
   outlines?: boolean;
+  /** Passed to useJarPhysics: how long before the fall shows, and where
+   * and how the items start (see JarPhysicsOptions). */
+  entranceDelayMs?: number;
+  spawnLead?: number;
+  spawnGap?: number;
+  spawnSpeed?: number;
   /** Called once the items exist and have started falling in. */
   onReady?: () => void;
 }
@@ -50,6 +56,10 @@ export default function JarStage({
   start = true,
   jostleRef,
   outlines = true,
+  entranceDelayMs,
+  spawnLead,
+  spawnGap,
+  spawnSpeed,
   onReady,
 }: JarStageProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,7 +67,7 @@ export default function JarStage({
     containerRef,
     items,
     textPlatformsRef,
-    { start, outlines },
+    { start, outlines, entranceDelayMs, spawnLead, spawnGap, spawnSpeed },
   );
 
   const onReadyRef = useRef(onReady);

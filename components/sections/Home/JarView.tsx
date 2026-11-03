@@ -13,6 +13,10 @@ import {
   JAR_ANTICIPATE_SCALE_Y,
   JAR_DROP_IN_S,
   JAR_DROP_OUT_S,
+  JAR_ITEMS_DELAY_MS,
+  JAR_ITEMS_SPAWN_GAP,
+  JAR_ITEMS_SPAWN_LEAD,
+  JAR_ITEMS_SPAWN_SPEED,
   JAR_JOSTLE_STRENGTH,
   JAR_LAND_S,
   JAR_LAND_SCALE_X,
@@ -52,10 +56,11 @@ const OFF_STAGE = "110%";
  * smooth; JAR_MOVES_STOP_MOTION puts them back on the stepped
  * STOP_MOTION_FPS clock (jarEase).
  *
- * Arriving (work → jar, once the grid has gone): drops in from above,
- * lands with a squash and springs back, and only then lets the items spawn
- * and fall (JarStage's `start`) — useJarPhysics measures the jar's position
- * on screen, so it mustn't run while the jar is mid-drop.
+ * Arriving (work → jar, once the grid has gone): drops in from above and,
+ * the moment it stops, lets the items spawn and fall (JarStage's `start`) —
+ * useJarPhysics measures the jar's position on screen, so it mustn't run
+ * while the jar is mid-drop or squashed. Once they exist it lands with a
+ * squash and springs back while they fall in.
  *
  * Leaving (jar → work, via AnimatePresence + usePresence):
  * - settled jar (landed, items in): kicks the items up (jostle) so they
@@ -86,6 +91,11 @@ export default function JarView({ entering, isolatedId, onSettledChange }: JarVi
   const sequenceRef = useRef(0);
   const landedRef = useRef(!entering);
   const itemsReadyRef = useRef(false);
+  // Resolved by JarStage's onReady: the arrival waits on it before the
+  // landing squash.
+  const readyWaitersRef = useRef<(() => void)[]>([]);
+  const itemsReady = () =>
+    itemsReadyRef.current ? Promise.resolve() : new Promise<void>((resolve) => readyWaitersRef.current.push(resolve));
   const leavingRef = useRef(false);
 
   const run = (...args: Parameters<typeof animate>) => {
@@ -109,6 +119,11 @@ export default function JarView({ entering, isolatedId, onSettledChange }: JarVi
       } else {
         const dropS = slowS(JAR_DROP_IN_S);
         await run(scope.current, { y: [`-${OFF_STAGE}`, "0%"], opacity: [1, 1] }, { duration: dropS, ease: jarEase(EASE_IN, dropS) });
+        if (seq !== sequenceRef.current) return;
+        // The items start the moment the jar stops (useJarPhysics measures
+        // it now, at rest), and the landing squash plays as they fall in.
+        setStart(true);
+        await itemsReady();
         if (seq !== sequenceRef.current) return;
         const landS = slowS(JAR_LAND_S);
         if (wrapperRef.current) {
@@ -209,8 +224,14 @@ export default function JarView({ entering, isolatedId, onSettledChange }: JarVi
           jostleRef={jostleRef}
           // Home never highlights a category, so no item is ever bordered.
           outlines={false}
+          entranceDelayMs={JAR_ITEMS_DELAY_MS}
+          spawnLead={JAR_ITEMS_SPAWN_LEAD}
+          spawnGap={JAR_ITEMS_SPAWN_GAP}
+          spawnSpeed={JAR_ITEMS_SPAWN_SPEED}
           onReady={() => {
             itemsReadyRef.current = true;
+            readyWaitersRef.current.forEach((resolve) => resolve());
+            readyWaitersRef.current = [];
             reportSettled();
           }}
         />

@@ -43,6 +43,14 @@
   flex-direction: column-reverse;
 }
 
+/* On the desktop layout any scroll flips back, so the work grid needs no
+ * hint; the up cue is mobile's way back only. */
+@media (min-width: 768px) {
+  .up {
+    display: none;
+  }
+}
+
 .chevron {
   display: block;
   overflow: visible;

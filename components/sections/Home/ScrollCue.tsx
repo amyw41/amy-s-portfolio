@@ -40,12 +40,13 @@ function Chevron({ up }: { up: boolean }) {
 }
 
 /**
- * The hints that you can scroll between modes, now there's no toggle: on
- * the jar, "scroll" over a down chevron at the bottom of the stage; on the
- * work grid, an up chevron over "jar" at the top. Each bobs gently the way
- * it points and is also a button (tap or keyboard) that switches. On the
- * desktop layout each fades away once its direction has been used; on
- * mobile, where the page scrolls normally, they're the switch and stay.
+ * The hint that you can scroll between modes, now there's no toggle: on
+ * the jar, "scroll" over a down chevron at the bottom of the stage. It bobs
+ * gently and is also a button (tap or keyboard) that switches. On the
+ * desktop layout it fades away once it's been used, and the work grid has
+ * no hint (any scroll flips back). On mobile, where the page scrolls
+ * normally, the cues are the switch and stay: "work" on the jar, and an up
+ * chevron over "jar" at the top of the grid.
  */
 export default function ScrollCue({
   mode,

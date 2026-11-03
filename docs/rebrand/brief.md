@@ -74,7 +74,7 @@ Top to bottom, everything on one left edge:
 
 Everything flows down from the top: opening a list pushes what's below it down. Headings get the hand-drawn hover circle; every group has a chevron; on load Experience and Works are open, Extra closed.
 
-There's **no jar / work toggle**: scrolling switches mode. On the stage, scroll down to go from the jar to the work grid, and scroll up (once the grid is at its top) to go back. A small hand-drawn cue says so: "scroll" with a down chevron at the bottom of the jar, an up chevron with "jar" at the top of the grid. Each fades once it's been used. On mobile, where the page scrolls normally, the cues are tap targets instead. See 2.4 and the design system.
+There's **no jar / work toggle**: scrolling switches mode. Every scroll on the stage, up or down, flips it: jar → work → jar… A small hand-drawn cue on the jar says so ("scroll" with a down chevron at the bottom); it fades once it's been used, and the work grid has none. On mobile, where the page scrolls normally, the cues are tap targets instead ("work" on the jar, "jar" at the top of the grid). See 2.4 and the design system.
 
 ### 2.3 Stage: jar mode (the default)
 
@@ -85,7 +85,7 @@ There's **no jar / work toggle**: scrolling switches mode. On the stage, scroll 
 
 ### 2.4 Switching modes
 
-**jar → work** (scroll down on the stage; on mobile, tap the "work" cue):
+**jar → work** (scroll on the stage, either way; on mobile, tap the "work" cue):
 
 1. **The jar is lowered off the table**, cartoon style:
    - **Anticipation:** the jar lifts about 10px and squashes slightly (scaleY 0.96) for about 120ms.
@@ -97,11 +97,11 @@ There's **no jar / work toggle**: scrolling switches mode. On the stage, scroll 
    - Grid tiles are your project thumbnails, with title and year underneath. The two pills under the heading in the sketch are the category filters (work / personal / hackathon, the existing filters).
    - Clicking a tile opens the case study with the same zoom as the menu (3.2).
 
-**work → jar** (click "jar"):
+**work → jar** (scroll on the stage again, either way; on mobile, tap the "jar" cue):
 
 1. The grid and heading slide up and fade out together (200ms, no stagger, so leaving is quicker than arriving).
-2. **The jar drops down from above** onto the "table". It lands with a squash (scaleY 0.92, scaleX 1.04) and springs back.
-3. **Then the items fill it**: the existing physics spawn, falling in from the top.
+2. **The jar drops down from above** onto the "table".
+3. **The items fill it straight away**: the moment the jar stops, the existing physics spawn and fall in from the top (no wait, already moving, close together), while the jar lands with a squash (scaleY 0.92, scaleX 1.04) and springs back.
 
 ---
 
@@ -359,5 +359,5 @@ None of these block steps 1–6. The default is listed for each.
 3. **Projects in the jar.** Decided: they stay in, so hovering a case study can lift its item (3.1).
 4. **Highlight toggles.** Decided: removed. Hovering a case study isolates its item instead (3.1).
 5. **Intro copy** for the sidebar. Placeholder: the current tagline.
-6. **Scroll instead of a toggle** for switching modes. Decided: doing it — scrolling down switches to work, up goes back (see 2.4 and the design system). The crayon toggle is kept in the repo, unused.
+6. **Scroll instead of a toggle** for switching modes. Decided: doing it — every scroll flips between the jar and the work grid, whichever way (see 2.4 and the design system). The crayon toggle is kept in the repo, unused.
 7. **Sound.** Default: the jar clink plays when switching modes. A small mute button may be worth adding.

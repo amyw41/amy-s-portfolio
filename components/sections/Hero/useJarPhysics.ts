@@ -281,6 +281,20 @@ export interface JarPhysicsOptions {
    * — for a jar that never shows a ring (nothing ever `bordered`). Default
    * true. */
   outlines?: boolean;
+  /** How long after setup starts before the fall shows, ms. Default
+   * JAR_PHYSICS_DELAY_MS (waits out the hero's fade-in); 0 for a jar that's
+   * already fully visible, like home's after it lands. */
+  entranceDelayMs?: number;
+  /** How far above the jar the first item spawns, px at REFERENCE_WIDTH.
+   * Default SPAWN_LEAD; 0 spawns it just off the top of the window, so the
+   * items arrive straight away. */
+  spawnLead?: number;
+  /** Gap between consecutive items' spawn points, px at REFERENCE_WIDTH —
+   * smaller brings them in closer together. Default SPAWN_GAP. */
+  spawnGap?: number;
+  /** Downward speed the items spawn with, px/step at REFERENCE_WIDTH — as
+   * if dropped from higher up, without the wait. Default 0. */
+  spawnSpeed?: number;
 }
 
 export function useJarPhysics(
@@ -291,7 +305,14 @@ export function useJarPhysics(
   // and rest on (see buildTextPlatformBodies below). Optional: without it,
   // a dragged item just falls straight past that column.
   textPlatformsRef?: RefObject<HTMLDivElement | null>,
-  { start = true, outlines = true }: JarPhysicsOptions = {},
+  {
+    start = true,
+    outlines = true,
+    entranceDelayMs = JAR_PHYSICS_DELAY_MS,
+    spawnLead = SPAWN_LEAD,
+    spawnGap = SPAWN_GAP,
+    spawnSpeed = 0,
+  }: JarPhysicsOptions = {},
 ) {
   const [ready, setReady] = useState(false);
   // Set by setup once the world exists; a no-op before that (and after
@@ -647,12 +668,12 @@ export function useJarPhysics(
         // On a short viewport SPAWN_LEAD is already past the viewport top
         // and wins; on a tall one, where .columns centres the stage well
         // down the page, containerTop dominates.
-        let cursor = Math.max(SPAWN_LEAD * scale, containerTop + OFF_VIEWPORT_LEAD);
+        let cursor = Math.max(spawnLead * scale, containerTop + OFF_VIEWPORT_LEAD);
         for (const id of orderedIds) {
           const info = currentRenderInfo[id];
           const size = Math.max(info?.divW ?? 0, info?.divH ?? 0) * BODY_SCALE;
           spawnYById.set(id, -(cursor + size / 2));
-          cursor += size + SPAWN_GAP * scale;
+          cursor += size + spawnGap * scale;
         }
       }
 
@@ -662,6 +683,7 @@ export function useJarPhysics(
         const spawnY = spawnYById.get(item.id) ?? -height;
         const spawnAngle = ((item.rotate ?? 0) * Math.PI) / 180;
         const body = createBodyForItem(item, info, targetX, spawnY, spawnAngle);
+        if (spawnSpeed) Body.setVelocity(body, { x: 0, y: spawnSpeed * scale });
         bodyIdToItemId.set(body.id, item.id);
         physicsItems.push({ id: item.id, body, halfWidth: info.divW / 2, halfHeight: info.divH / 2 });
         Composite.add(world, body);
@@ -1110,7 +1132,9 @@ export function useJarPhysics(
       // geometry — the jar coming back from work mode — replays the cached
       // recording and puts every body straight at its settled pose instead
       // of re-simulating it.
-      const fallKey = `${width.toFixed(1)}x${height.toFixed(1)}@${containerTop.toFixed(1)}|${items
+      // The spawn options change how the items start, so they're part of
+      // the key too.
+      const fallKey = `${width.toFixed(1)}x${height.toFixed(1)}@${containerTop.toFixed(1)}^${spawnLead},${spawnGap},${spawnSpeed}|${items
         .map((item) => item.id)
         .join(",")}`;
       const cachedFall = instant ? undefined : fallCache.get(fallKey);
@@ -1373,7 +1397,7 @@ export function useJarPhysics(
       // under reduced motion, which has no fade and no fall to delay.
       if (!instant) {
         const elapsed = performance.now() - setupStartTime;
-        const remaining = JAR_PHYSICS_DELAY_MS - elapsed;
+        const remaining = entranceDelayMs - elapsed;
         if (remaining > 0) {
           await new Promise((resolve) => setTimeout(resolve, remaining));
         }

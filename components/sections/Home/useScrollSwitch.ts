@@ -29,17 +29,18 @@ function scrollsItself(target: EventTarget | null, root: HTMLElement, dir: 1 | -
 }
 
 /**
- * Scroll to switch mode (brief Part 2.4), on the desktop layout: scrolling
- * down (wheel, trackpad, a swipe up on a touch screen, ↓ / PageDown / Space)
- * goes from jar to work; scrolling up goes back. Input over the sidebar
- * never switches, and neither does scrolling the work grid until it's at
- * its top.
+ * Scroll to switch mode (brief Part 2.4), on the desktop layout: every
+ * scroll gesture flips it, whichever way it goes — wheel, trackpad, a swipe
+ * on a touch screen, or ↓ / ↑ / PageDown / PageUp / Space. jar → work →
+ * jar… Input over the sidebar never switches. If the work grid overflows
+ * (small windows), it scrolls first, and a gesture only flips once the grid
+ * is at its edge in that direction — so all of it stays reachable.
  *
  * One gesture, one switch: travel adds up to SCROLL_SWITCH_THRESHOLD_PX,
  * then switching is locked until the transition is done (plus
- * SCROLL_SWITCH_SETTLE_MS), and the rest of that gesture — a trackpad's
- * inertial tail — is swallowed, so it doesn't scroll the grid that just
- * arrived either. A gesture that scrolled the grid can't also switch:
+ * SCROLL_SWITCH_SETTLE_MS). The rest of that gesture — a trackpad's
+ * inertial tail — and any wheel input during the lock is swallowed, so it
+ * doesn't scroll the grid that's just arriving either. A gesture that scrolled the grid can't also switch:
  * reaching its top takes a fresh scroll up to go back to the jar.
  *
  * `sidebarSelector` marks the area to leave alone; `onSwitch` gets the mode
@@ -73,10 +74,9 @@ export function useScrollSwitch(
     // switch.
     let scrolledInside = false;
 
-    /** Tries to switch in direction `dir`; returns whether it did. */
-    const trySwitch = (dir: 1 | -1) => {
-      const next: HomeMode = dir === 1 ? "work" : "jar";
-      if (modeRef.current === next) return false;
+    /** Flips the mode; returns whether it did. */
+    const trySwitch = () => {
+      const next: HomeMode = modeRef.current === "jar" ? "work" : "jar";
       onSwitchRef.current(next);
       lockedUntil = performance.now() + slowMs(MODE_TRANSITION_MS + SCROLL_SWITCH_SETTLE_MS);
       travel = 0;
@@ -100,7 +100,10 @@ export function useScrollSwitch(
         travel = 0;
       }
       lastWheel = e.timeStamp;
-      if (spent) {
+      // A spent gesture's tail, or anything while the switch is still
+      // locked, is swallowed: it would otherwise scroll the grid that's
+      // only just arriving.
+      if (spent || now < lockedUntil) {
         e.preventDefault();
         return;
       }
@@ -109,11 +112,11 @@ export function useScrollSwitch(
       if (dy === 0) return;
       const dir = dy > 0 ? 1 : -1;
       if (scrollsItself(e.target, root, dir)) scrolledInside = true;
-      if (scrolledInside || now < lockedUntil) return;
+      if (scrolledInside) return;
       // Changing direction starts the count again.
       if (Math.sign(travel) !== dir) travel = 0;
       travel += dy;
-      if (Math.abs(travel) >= SCROLL_SWITCH_THRESHOLD_PX) trySwitch(dir);
+      if (Math.abs(travel) >= SCROLL_SWITCH_THRESHOLD_PX) trySwitch();
     };
 
     let touchY: number | null = null;
@@ -127,7 +130,7 @@ export function useScrollSwitch(
       const dy = touchY - e.touches[0].clientY;
       const dir = dy > 0 ? 1 : -1;
       if (Math.abs(dy) < SCROLL_SWITCH_THRESHOLD_PX || ignored(e.target) || scrollsItself(e.target, root, dir)) return;
-      trySwitch(dir);
+      trySwitch();
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
@@ -146,12 +149,20 @@ export function useScrollSwitch(
       // Keys aren't aimed anywhere: check the work grid (if it's there) as
       // if they were aimed at it.
       const grid = root.querySelector("[data-scroll-switch-target]");
-      if (!desktop.matches || scrollsItself(grid?.firstElementChild ?? grid, root, dir)) return;
+      if (!desktop.matches) return;
+      if (grid && scrollsItself(grid.firstElementChild ?? grid, root, dir)) {
+        // The grid isn't focused, so the key wouldn't scroll it: do it here.
+        const page = e.key === "PageDown" || e.key === "PageUp" || e.key === " ";
+        grid.scrollBy({ top: dir * (page ? grid.clientHeight * 0.85 : 60), behavior: "smooth" });
+        e.preventDefault();
+        return;
+      }
       if (performance.now() < lockedUntil) return;
-      if (trySwitch(dir)) e.preventDefault();
+      if (trySwitch()) e.preventDefault();
     };
 
-    // Not passive: a spent gesture's tail is swallowed (preventDefault).
+    // Not passive: a spent gesture's tail and input during the lock are
+    // swallowed (preventDefault).
     root.addEventListener("wheel", onWheel, { passive: false });
     root.addEventListener("touchstart", onTouchStart, { passive: true });
     root.addEventListener("touchmove", onTouchMove, { passive: true });
