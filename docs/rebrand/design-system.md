@@ -13,7 +13,7 @@ Values are given at the 1536×696 laptop size. Layout spacing scales with the wi
 | Size | 14px everywhere in the sidebar, line-height 1.45 (no separate large name) |
 | Medium (500) | the intro paragraph, group headings (Experience, Works, Extra) |
 | Light (300) | menu items |
-| jar/work toggle weight | 400 |
+| scroll cue weight | 400 |
 
 ## Colour
 
@@ -22,7 +22,7 @@ Values are given at the 1536×696 laptop size. Layout spacing scales with the wi
 | Text | #000 |
 | Case-study description | 55% black |
 | Hover circle | 45% black |
-| jar / work toggle | jar red `--c-red`, work blue `--c-blue` |
+| Scroll cue | 45% black, black on hover |
 | Divider line | #000 |
 | Background | #fff |
 
@@ -67,7 +67,8 @@ Sidebar, top to bottom:
 - **Hover circle:** hand-drawn wiggly oval drawn on like a pen when hovering a heading (Experience, Works, Extra), un-drawn on leave. 16px past the word left/right, 8px above/below.
 - **Item links** (case studies, About Me, Play) fade to 55% black on hover.
 - **Works hover isolate:** hovering (or focusing) a case study lifts its jar item 12px and scales it to 1.04 (staying at its own layer in the pile), and dims every other item (`--dim-white`). In work mode its grid tile lifts 6px and the other tiles dim. Extras has no jar item, so it does nothing in the jar.
-- **jar / work toggle:** not in the sidebar — top right of the stage, `--pad-y` from both the top and the right edge (16px on mobile). A hand-drawn **segmented toggle**: one pill track (0.6px black pen line, low wobble, 120×32px) holding both labels in equal 60px segments. No knob: the picked side is **shaded in crayon** behind its label — 11 loose, roughly diagonal back-and-forth strokes (5px wide, 40–65% opacity each so they build up where they overlap) filling the segment 4px inside the track, with a crayon grain (grainy, slightly broken, soft uneven edges) — **jar red** (`--c-red`), **work blue** (`--c-blue`). Labels 14px: picked black, unpicked grey (45% black), black on hover.
+- **Switching modes: scroll, no toggle.** On the desktop layout, scrolling down on the stage (wheel, trackpad, a swipe up on a touch screen, ↓ / PageDown / Space) goes from jar to work; scrolling up goes back, but only once the work grid is at its top. Scrolling over the sidebar never switches. One gesture switches once: 50px of travel switches, then switching is locked until the transition is done plus 300ms, and the rest of that gesture (a trackpad's inertial tail) is swallowed so it doesn't scroll the grid. (The crayon segmented toggle, ModeToggle.tsx, is kept in the repo but not shown.)
+- **Scroll cue:** the hint that replaces the toggle, and also a button (tap or keyboard). On the jar: "scroll" (12px, weight 400) over a hand-drawn down chevron (16×9px, 1px pen line, low wobble), bottom centre of the stage, 12px up. On the work grid: an up chevron over "jar", top centre, 12px down. 45% black, black on hover, 2px black focus outline. On the desktop layout each cue fades out for good once its direction has been used. On mobile the page scrolls normally, so scrolling doesn't switch: the cues are the switch and stay — the down one reads "work", and the up one sits top right (16px in) clear of the heading.
 
 ## Hand-drawn lines
 
@@ -103,6 +104,6 @@ Sidebar, top to bottom:
 | Jar → work | jar lifts 10px + squashes to scaleY 0.96 (120ms), then drops out of the stage (380ms ease-in), smooth; items get kicked up and knock around inside; clink sound on the click. Work only starts coming in once the jar has gone. |
 | "what's inside?" arriving | after the jar has gone: drops 48px from above with a small overshoot, 450ms, while the grid sweeps in |
 | Work → jar | grid leaves (200ms), then the jar drops in from above (420ms ease-in) and lands with a squash (scaleX 1.04, scaleY 0.92) springing back (360ms), smooth; then the items fall in |
-| jar / work toggle | the new side is coloured in stroke by stroke, like scribbling with a crayon (each stroke draws on over 120ms ease-out, 30ms apart, ~420ms in all) while the old side's shading fades out (200ms); hovering the unpicked side draws 2 faint strokes (40% opacity, 180ms) that retract on leave; no jitter or buzz; reduced motion: the shading just appears |
+| Scroll switch | scrolling down runs the jar → work move (anticipation lift + squash, drop out, items jostle, clink), scrolling up the work → jar move — same as before. The scroll cue bobs 3px the way it points, every 1.8s, and fades out over 400ms once used; reduced motion: no bob, the cue just disappears, and the switch is the plain fades |
 | Interrupted switch | every switch can be reversed mid-way. Leaving a jar that hasn't fully arrived (still dropping in, or items not in yet): queued steps are cancelled (no items spawn, no clink) and it skips its exit: it's gone at once and work comes straight in. Calling the jar back while it's leaving: it rises back into place in 250ms. Calling work back while the grid is leaving: the grid returns. |
 | Reduced motion | no animation, things just appear; mode switches are plain 200ms fades, no sound |

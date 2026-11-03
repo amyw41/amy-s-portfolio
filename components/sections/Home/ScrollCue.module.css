@@ -1,0 +1,119 @@
+/* The scroll cues (ScrollCue.tsx): bottom centre of the stage on the jar,
+ * top centre on the work grid. Above both views. Small, grey, quiet. */
+.cue {
+  position: absolute;
+  left: 50%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  translate: -50% 0;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: inherit;
+  color: rgba(0, 0, 0, 0.45);
+  opacity: 1;
+  visibility: visible;
+}
+
+.cue:hover,
+.cue:focus-visible {
+  color: #000;
+}
+
+.cue:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+.down {
+  bottom: 12px;
+}
+
+.up {
+  top: 12px;
+  flex-direction: column-reverse;
+}
+
+.chevron {
+  display: block;
+  overflow: visible;
+}
+
+/* Not this mode's cue: faded out, and out of the tab order. */
+.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Already used once: on the desktop layout scrolling is the switch, so the
+ * hint bows out. On mobile the cue is the switch, so it stays. */
+@media (min-width: 768px) {
+  .used {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+.mobileOnly {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .desktopOnly {
+    display: none;
+  }
+
+  .mobileOnly {
+    display: inline;
+  }
+
+  /* Top right, clear of the "what's inside?" heading. */
+  .up {
+    left: auto;
+    right: 16px;
+    translate: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* visibility counts as visible for the whole transition whenever either
+   * end is visible, so it waits for the fade out and shows at once on the
+   * way in. */
+  .cue {
+    transition:
+      opacity calc(var(--cue-fade) * var(--slow, 1)) ease,
+      visibility calc(var(--cue-fade) * var(--slow, 1)),
+      color 150ms ease;
+  }
+
+  /* A slow bob the way it points. */
+  .down .chevron {
+    animation: bob calc(var(--cue-bob-s) * var(--slow, 1)) ease-in-out infinite;
+  }
+
+  .up .chevron {
+    animation: bob calc(var(--cue-bob-s) * var(--slow, 1)) ease-in-out infinite;
+    --cue-bob-dir: -1;
+  }
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(calc(var(--cue-bob-px) * var(--cue-bob-dir, 1)));
+  }
+}

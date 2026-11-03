@@ -112,6 +112,28 @@ export const HEADING_DROP_S = 0.45;
 // Ease with a little overshoot past the end before settling (back-out).
 export const EASE_OVERSHOOT = [0.34, 1.4, 0.64, 1] as const;
 
+// Scrolling switches mode (Home/useScrollSwitch.ts): wheel/trackpad/swipe
+// travel is added up until it passes SCROLL_SWITCH_THRESHOLD_PX, which
+// switches once. Then input is locked until the transition has finished
+// plus SCROLL_SWITCH_SETTLE_MS, and the rest of that gesture (a trackpad's
+// inertial tail) is ignored — a gesture ends after SCROLL_GESTURE_GAP_MS
+// with no wheel events. The transition's length is worked out from the
+// jar and grid timings above, whichever way is longer.
+export const SCROLL_SWITCH_THRESHOLD_PX = 50;
+export const SCROLL_SWITCH_SETTLE_MS = 300;
+export const SCROLL_GESTURE_GAP_MS = 200;
+export const MODE_TRANSITION_MS =
+  Math.max(
+    JAR_ANTICIPATE_S + JAR_DROP_OUT_S + HEADING_DROP_S,
+    WORK_EXIT_S + JAR_DROP_IN_S + JAR_LAND_S,
+  ) * 1000;
+// The scroll cue (Home/ScrollCue.tsx): bobs SCROLL_CUE_BOB_PX in the
+// direction it points, one bob every SCROLL_CUE_BOB_S; fades out over
+// SCROLL_CUE_FADE_S once it has been used.
+export const SCROLL_CUE_BOB_PX = 3;
+export const SCROLL_CUE_BOB_S = 1.8;
+export const SCROLL_CUE_FADE_S = 0.4;
+
 // Hover-intent leave delay for the project hover preview (step 6, brief
 // Part 3.1) — the brief's own name for it.
 export const HOVER_CLOSE_DELAY_MS = 150;

@@ -5,7 +5,8 @@ import { AnimatePresence } from "framer-motion";
 import styles from "./Home.module.css";
 import Sidebar, { type HomeMode } from "./Sidebar";
 import WorkGrid from "./WorkGrid";
-import ModeToggle from "./ModeToggle";
+import ScrollCue from "./ScrollCue";
+import { useScrollSwitch } from "./useScrollSwitch";
 import BuzzPath from "@/components/ui/BuzzPath";
 import JarView from "./JarView";
 import { createJarSound, type JarSound } from "@/components/sections/Hero/jar-sound";
@@ -60,6 +61,9 @@ export default function Home() {
     jarSettledRef.current = settled;
   }, []);
 
+  // Which ways the scroll cues have been used, so each hint can bow out.
+  const [cueUsed, setCueUsed] = useState<Record<HomeMode, boolean>>({ jar: false, work: false });
+
   function changeMode(next: HomeMode) {
     if (next === mode) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -72,7 +76,12 @@ export default function Home() {
     }
     setJarEntering(next === "jar");
     setMode(next);
+    setCueUsed((used) => (used[next] ? used : { ...used, [next]: true }));
   }
+
+  // Scrolling is the switch (no toggle): down for work, up for the jar.
+  const frameRef = useRef<HTMLElement>(null);
+  useScrollSwitch(frameRef, mode, changeMode);
 
   // The taskbar's "work" link on every other page still points at
   // /#projects (the old projects section) — land those visits in work mode.
@@ -87,7 +96,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className={`${geist.variable} ${styles.frame}`}>
+    <main ref={frameRef} className={`${geist.variable} ${styles.frame}`}>
       <Sidebar onCaseFocus={setFocusedCase} />
 
       <div className={styles.divider} aria-hidden="true">
@@ -101,7 +110,9 @@ export default function Home() {
       </div>
 
       <section className={styles.stage}>
-        <ModeToggle mode={mode} onChange={changeMode} />
+        {/* The crayon toggle (ModeToggle.tsx) is kept in the repo but no
+         * longer shown: scrolling switches, and these cues say so. */}
+        <ScrollCue mode={mode} used={cueUsed} onActivate={changeMode} />
         {/* mode="wait": one view at a time — the leaving one finishes its
          * exit before the next starts (jar → work: the jar drops away, then
          * "what's inside?" and the grid come in; work → jar: the grid slides

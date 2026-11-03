@@ -57,6 +57,12 @@ export const content = {
         label: "view",
         jar: "jar",
         work: "work",
+        // The scroll cues that replace the toggle: shown on the jar (scroll
+        // down for the work) and on the work grid (scroll up for the jar).
+        toWork: "scroll",
+        toWorkLabel: "Show the work",
+        toJar: "jar",
+        toJarLabel: "Back to the jar",
       },
       // Work-mode stage heading — the grid itself arrives in step 4.
       workHeading: "what's inside?",

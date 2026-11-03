@@ -47,7 +47,7 @@ Sketches: `02-home-jar.png` (jar mode), `03-home-grid.png` (work mode).
 │    About           ⌇                                                          │
 │    Play            ⌇                                                          │
 │                    ⌇                                                          │
-│    jar   work      ⌇  ← mode toggle                                           │
+│                    ⌇  ← (no toggle: scroll switches mode)                     │
 │                    │                                                          │
 └───────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -74,7 +74,7 @@ Top to bottom, everything on one left edge:
 
 Everything flows down from the top: opening a list pushes what's below it down. Headings get the hand-drawn hover circle; every group has a chevron; on load Experience and Works are open, Extra closed.
 
-The **jar / work toggle** isn't in the sidebar: it sits top right of the stage as a hand-drawn segmented toggle: one pill track with both labels, with the picked side shaded in loose crayon strokes (jar red, work blue) that scribble in when it's picked. See 2.4 and the design system.
+There's **no jar / work toggle**: scrolling switches mode. On the stage, scroll down to go from the jar to the work grid, and scroll up (once the grid is at its top) to go back. A small hand-drawn cue says so: "scroll" with a down chevron at the bottom of the jar, an up chevron with "jar" at the top of the grid. Each fades once it's been used. On mobile, where the page scrolls normally, the cues are tap targets instead. See 2.4 and the design system.
 
 ### 2.3 Stage: jar mode (the default)
 
@@ -85,13 +85,13 @@ The **jar / work toggle** isn't in the sidebar: it sits top right of the stage a
 
 ### 2.4 Switching modes
 
-**jar → work** (click "work" at the top right of the stage):
+**jar → work** (scroll down on the stage; on mobile, tap the "work" cue):
 
 1. **The jar is lowered off the table**, cartoon style:
    - **Anticipation:** the jar lifts about 10px and squashes slightly (scaleY 0.96) for about 120ms.
    - **Drop:** it accelerates down and out of the bottom of the stage (about 450ms, ease-in).
    - **Items react:** right as it starts moving, every item gets a small upward kick, so they lag behind, knock together, and resettle inside the jar as it goes. This is real physics, using the existing engine.
-   - **Clink sound:** play the jar sound (`components/sections/Hero/jar-sound.ts`, `public/sounds/jar-drop.mp3`) on the toggle click. It's allowed here because the click counts as the user action browsers require. Add a mute option later.
+   - **Clink sound:** play the jar sound (`components/sections/Hero/jar-sound.ts`, `public/sounds/jar-drop.mp3`) when switching. Browsers only let sound play after a click, tap or key press on the page, so it's silent if the visitor has only scrolled so far. Add a mute option later.
 2. **"what's inside?" comes down from the top** as the jar leaves, like the camera panning down into the jar. It drops from above the stage with a little overshoot and settles at the top.
 3. **The grid loads in:** project tiles appear one by one in a **diagonal sweep** from top left, like a gradient washing across. It's fast: about 40ms between tiles, each tile 300ms.
    - Grid tiles are your project thumbnails, with title and year underneath. The two pills under the heading in the sketch are the category filters (work / personal / hackathon, the existing filters).
@@ -124,7 +124,7 @@ Hovering a case study in the sidebar's **Works** list (or tabbing to it) **isola
 
 ### 3.2 Clicking: zoom into the case study
 
-1. **Everything else disappears first** (about 350ms). The rest of the jar (or the other grid tiles), the mode toggle, and the menu items all fade and drop a little (8–12px), staggered quickly. The clicked project's lifted jar item (or its grid tile) stays.
+1. **Everything else disappears first** (about 350ms). The rest of the jar (or the other grid tiles), the scroll cue, and the menu items all fade and drop a little (8–12px), staggered quickly. The clicked project's lifted jar item (or its grid tile) stays.
 2. **The sidebar shrinks.** It narrows from its full width to a thin rail (about 64px):
    - **The name retracts into the top-left corner**, becoming the logo. The logo design is still to come (Part 7); until then, use a placeholder like "aw".
    - The rail then shows **the case study's contents**: numbered sections 1, 2, 3, 4…, which jump to each section.
@@ -189,7 +189,7 @@ Sketch: `01-intro-spill.png`, and the top left of `00-full-reference.png`. Total
 | 2.0 – 3.0 | **The unravel.** The tip of the right strand is the needle. It travels **down toward the bottom of the page, near the left side**, tracing the start of its route. Behind it, the line gets pulled out of the drawing: the jar visibly unwinds from the far end, like a thread pulled through a needle, until nothing is left but the line. The liquid fill fades as the jar unravels. |
 | ~3.0 | **The split.** At a fork point the pulled line splits into **two strands**. |
 | 3.0 – 3.8 | **Strand A** turns and goes **up**, becoming the sidebar divider: it settles into the squiggly line, with padding top and bottom, and starts buzzing. **Strand B** travels into the stage and **draws the real jar's outline** with the pen-stroke reveal, so the jar is literally drawn by the same thread. Both strands finish together at about 3.8s. |
-| 3.8 → | Strand B's outline **cross-fades into the real jar art**, then the items fall in (existing physics). At the same time the sidebar loads top to bottom: name, intro, links, Experience, Works / About / Play, mode toggle. Each one fades and rises 8px, 70ms apart. |
+| 3.8 → | Strand B's outline **cross-fades into the real jar art**, then the items fall in (existing physics). At the same time the sidebar loads top to bottom: name, intro, links, Experience, Works / About / Play (the scroll cue fades in with the stage). Each one fades and rises 8px, 70ms apart. |
 
 **How the unravel works.** Put this in the step 8 prompt word for word.
 
@@ -359,5 +359,5 @@ None of these block steps 1–6. The default is listed for each.
 3. **Projects in the jar.** Decided: they stay in, so hovering a case study can lift its item (3.1).
 4. **Highlight toggles.** Decided: removed. Hovering a case study isolates its item instead (3.1).
 5. **Intro copy** for the sidebar. Placeholder: the current tagline.
-6. **Scroll instead of a toggle** for switching modes. Not doing it (it fights the one-screen layout and the menu previews), but noted in case you want to revisit.
+6. **Scroll instead of a toggle** for switching modes. Decided: doing it — scrolling down switches to work, up goes back (see 2.4 and the design system). The crayon toggle is kept in the repo, unused.
 7. **Sound.** Default: the jar clink plays when switching modes. A small mute button may be worth adding.

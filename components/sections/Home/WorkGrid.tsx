@@ -139,7 +139,16 @@ export default function WorkGrid({ focusedId = null }: { focusedId?: string | nu
   );
 
   return (
-    <motion.div className={styles.work} variants={variants.view} initial="shown" animate="shown" exit="gone">
+    // data-scroll-switch-target: the box useScrollSwitch checks before a key
+    // press switches back to the jar (only once it's scrolled to the top).
+    <motion.div
+      className={styles.work}
+      variants={variants.view}
+      initial="shown"
+      animate="shown"
+      exit="gone"
+      data-scroll-switch-target
+    >
       {/* Drops in from above with a little overshoot, as the jar leaves
        * (brief Part 2.4: the camera panning down into the jar). */}
       <motion.h2
