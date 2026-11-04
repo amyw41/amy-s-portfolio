@@ -11,7 +11,7 @@ import BuzzPath from "@/components/ui/BuzzPath";
 import JarView from "./JarView";
 import { createJarSound, type JarSound } from "@/components/sections/Hero/jar-sound";
 import { content } from "@/lib/content";
-import { geist } from "@/lib/fonts";
+import { gaegu, geist } from "@/lib/fonts";
 import { buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
 import { JAR_ANTICIPATE_S, JAR_DROP_OUT_S, slowMs } from "@/lib/motion";
 
@@ -92,7 +92,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main ref={frameRef} className={`${geist.variable} ${styles.frame}`}>
+    <main ref={frameRef} className={`${geist.variable} ${gaegu.variable} ${styles.frame}`}>
       <Sidebar onCaseFocus={setFocusedCase} />
 
       <div className={styles.divider} aria-hidden="true">

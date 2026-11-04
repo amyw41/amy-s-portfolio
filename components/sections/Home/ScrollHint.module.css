@@ -19,11 +19,15 @@
   color: #000;
 }
 
-/* Small lowercase label, light, like a menu board's captions. */
+/* Small lowercase label in the annotation hand (Gaegu Light, lib/fonts.ts),
+ * like a menu board's captions. Gaegu runs small, so 19px reads about like
+ * the 14-16px body; its own airy spacing, not Geist's tight tracking. */
 .label {
-  font-size: 14px;
+  font-family: var(--font-annotation), var(--font-geist), sans-serif;
+  font-size: 19px;
   font-weight: 300;
-  line-height: 1.2;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 

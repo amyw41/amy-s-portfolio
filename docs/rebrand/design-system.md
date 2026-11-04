@@ -9,6 +9,7 @@ Values are given at the 1536×696 laptop size. Layout spacing scales with the wi
 | Token | Value |
 |---|---|
 | Font | Geist |
+| Annotation hand (doodle labels only) | Gaegu Light (300), 19px, +0.02em tracking — a thin, monoline, separate-letter handwriting like a café menu board. Only the "scroll down!" label uses it |
 | Letter spacing | -0.6px |
 | Size | 14px everywhere in the sidebar, line-height 1.45 (no separate large name) |
 | Medium (500) | the intro paragraph, group headings (Experience, Works, Extra) |
@@ -68,7 +69,7 @@ Sidebar, top to bottom:
 - **Item links** (case studies, About Me, Play) fade to 55% black on hover.
 - **Works hover isolate:** hovering (or focusing) a case study lifts its jar item 12px and scales it to 1.04 (staying at its own layer in the pile), and dims every other item (`--dim-white`). In work mode its grid tile lifts 6px and the other tiles dim. Extras has no jar item, so it does nothing in the jar.
 - **Switching modes: scroll, no toggle.** On the desktop layout, every scroll gesture on the stage flips the mode, whichever way it goes — wheel, trackpad, a swipe on a touch screen, or ↓ / ↑ / PageDown / PageUp / Space: jar → work → jar… Scrolling over the sidebar never switches. If the work grid overflows (small windows) it scrolls first, and a gesture only flips once the grid is at its edge in that direction. One gesture switches once: 50px of travel switches, then switching is locked until the transition is done plus 300ms; the rest of that gesture (a trackpad's inertial tail) and any wheel input during the lock is swallowed, so it doesn't scroll the grid. (The crayon segmented toggle, ModeToggle.tsx, is kept in the repo but not shown.)
-- **Annotation ("scroll down!" doodle, desktop only):** a little menu-board-style doodle just right of the jar, at about half its height: "scroll down!" in lowercase (14px, weight 300, black) over a thin hand-drawn curly arrow (one loop, then down to an open arrowhead), in the jar's ink (~0.6px at 1536, scaling with the jar). Placed and sized in % of the jar, so it scales with the stage; it moves with the jar. Also a button: clicking it goes to the work.
+- **Annotation ("scroll down!" doodle, desktop only):** a little menu-board-style doodle just right of the jar, at about half its height: "scroll down!" in lowercase in the annotation hand (Gaegu Light, 19px, black) over a thin hand-drawn curly arrow (one loop, then down to an open arrowhead), in the jar's ink (~0.6px at 1536, scaling with the jar). Placed and sized in % of the jar, so it scales with the stage; it moves with the jar. Also a button: clicking it goes to the work.
 - **Mobile tap cues:** on mobile the page scrolls normally, so scrolling doesn't switch: two small tap buttons do — "work" (12px, weight 400) over a hand-drawn down chevron (16×9px, 1px pen line, low wobble), bottom centre of the jar, 12px up; and an up chevron over "jar", top right of the grid (12px down, 16px in), clear of the heading. 45% black, black on hover, 2px black focus outline.
 
 ## Hand-drawn lines
