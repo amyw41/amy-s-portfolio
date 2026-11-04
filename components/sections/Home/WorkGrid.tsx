@@ -55,8 +55,7 @@ interface Tile {
   aspect: number | null;
 }
 
-// The case studies (big, left column), in lib/projects.ts's authoring order.
-const BIG_TILES: Tile[] = PROJECTS.map((p) => ({
+const projectTile = (p: (typeof PROJECTS)[number]): Tile => ({
   id: p.slug,
   href: `/${p.slug}`,
   title: p.title,
@@ -65,20 +64,30 @@ const BIG_TILES: Tile[] = PROJECTS.map((p) => ({
   // Plays over the cover once the card's on screen (AutoplayVideo).
   video: p.video ?? null,
   aspect: null,
-}));
+});
 
-// The teaser extra(s) (small, right column): the ones flagged `teaser` in
-// lib/extras.ts (just the Birthday website for now), in its order. The rest are on the Play page only. Each
-// links to its own spot there; no year. Each card takes its media's shape.
-const SMALL_TILES: Tile[] = EXTRAS_PHOTOS.filter((photo) => photo.teaser).map((photo) => ({
-  id: `extra-${photo.id}`,
-  href: `/playground#extra-${photo.id}`,
-  title: photo.caption,
-  year: null,
-  cover: photo.isVideo ? null : photo.src,
-  video: photo.isVideo ? photo.src : null,
-  aspect: photo.width / photo.height,
-}));
+// The case studies shown big (left column), in lib/projects.ts's authoring
+// order. Which ones are small instead is the `small` flag on each project's
+// seed there.
+const BIG_TILES: Tile[] = PROJECTS.filter((p) => !p.small).map(projectTile);
+
+// The right column, small: the smaller case studies first (Spotify Guessr,
+// `small: true` in lib/projects.ts), then the teaser extra(s) — the ones
+// flagged `teaser` in lib/extras.ts (just the Birthday website for now),
+// each linking to its own spot on the Play page, no year, shaped to its
+// media. The rest of the extras are on the Play page only.
+const SMALL_TILES: Tile[] = [
+  ...PROJECTS.filter((p) => p.small).map(projectTile),
+  ...EXTRAS_PHOTOS.filter((photo) => photo.teaser).map((photo) => ({
+    id: `extra-${photo.id}`,
+    href: `/playground#extra-${photo.id}`,
+    title: photo.caption,
+    year: null,
+    cover: photo.isVideo ? null : photo.src,
+    video: photo.isVideo ? photo.src : null,
+    aspect: photo.width / photo.height,
+  })),
+];
 
 /** Each card's place in the arrival sweep: top to bottom down the stage,
  * left column first on a tie. A small card is about half a big one's
@@ -95,8 +104,9 @@ const SWEEP_ORDER = new Map<string, number>(
 /**
  * Work mode's stage (brief Part 2.4): "what's inside?", then two columns of
  * cards: the case studies big on the left (their videos play once on
- * screen), and a teaser extra (the Birthday website) small on the right, shaped to its
- * media (the rest are on the Play page). It scrolls inside the stage; at the bottom, a "jump to jar"
+ * screen), and the smaller ones (Spotify Guessr) small on the right, above a
+ * teaser extra (the Birthday website) shaped to its media (the rest of the
+ * extras are on the Play page). It scrolls inside the stage; at the bottom, a "jump to jar"
  * doodle goes straight back to the jar.
  *
  * Arriving, the cards sweep in one after another, top to bottom
@@ -114,9 +124,11 @@ export default function WorkGrid({
 }) {
   const reduced = useReducedMotion() ?? false;
   // A case study hovered in the sidebar: its card lifts, the others dim.
-  // "Extras" lifts the whole extras column.
-  const isolating = focusedId !== null && (focusedId === EXTRAS_ID || BIG_TILES.some((t) => t.id === focusedId));
-  const isLifted = (tile: Tile, small: boolean) => isolating && (small ? focusedId === EXTRAS_ID : tile.id === focusedId);
+  // "Extras" lifts the teaser extra(s).
+  const isolating =
+    focusedId !== null && (focusedId === EXTRAS_ID || [...BIG_TILES, ...SMALL_TILES].some((t) => t.id === focusedId));
+  const isLifted = (tile: Tile) =>
+    isolating && (tile.id === focusedId || (focusedId === EXTRAS_ID && tile.id.startsWith("extra-")));
 
 
   // The work view scrolls; the end doodle draws on when it's in view there.
@@ -152,7 +164,7 @@ export default function WorkGrid({
   );
 
   function card(tile: Tile, small: boolean) {
-    const lifted = isLifted(tile, small);
+    const lifted = isLifted(tile);
     const dimmed = isolating && !lifted;
     return (
       <motion.li
@@ -224,8 +236,8 @@ export default function WorkGrid({
         {copy.heading}
       </motion.h2>
 
-      {/* Two columns: the case studies big on the left (2/3), the extras
-       * small on the right (1/3), each stacked. */}
+      {/* Two columns: the bigger case studies on the left (2/3), the smaller
+       * ones and the teaser extra(s) small on the right (1/3), each stacked. */}
       <div className={styles.columns}>
         <ul className={styles.bigList}>{BIG_TILES.map((tile) => card(tile, false))}</ul>
         {/* The rest of the extras are on the Play page. */}

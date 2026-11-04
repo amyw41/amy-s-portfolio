@@ -16,6 +16,9 @@ export interface Project {
    * can tell "no video" apart from "video not loaded yet" at the type
    * level, and never renders an empty <video> for one. */
   video?: string;
+  /** Shown small in the home work view's right column (with the teaser
+   * extras) instead of big on the left. Set it on a project's seed below. */
+  small: boolean;
   /** Case-study gallery assets — empty until case-study pages exist.
    * TODO: populate once /projects/[slug] case-study pages are built. */
   gallery: string[];
@@ -36,6 +39,9 @@ interface ProjectSeed {
   category: ProjectCategory;
   hasVideo: boolean;
   year: number;
+  /** true: a small card in the home work view's right column, above the
+   * teaser extras; otherwise a big one on the left. */
+  small?: boolean;
 }
 
 /**
@@ -71,6 +77,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     category: "personal",
     hasVideo: false,
     year: 2026,
+    small: true,
   },
   {
     slug: "skinsprout",
@@ -90,6 +97,7 @@ export const PROJECTS: Project[] = PROJECT_SEEDS.map((seed) => ({
   year: seed.year,
   cover: coverPath(seed.slug),
   video: seed.hasVideo ? videoPath(seed.slug) : undefined,
+  small: seed.small ?? false,
   gallery: [], // TODO: case-study gallery assets
 }));
 
