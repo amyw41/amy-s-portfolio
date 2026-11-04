@@ -5,8 +5,10 @@
  * padding, so the line starts clearly above the name and ends clearly
  * below the mode toggle. */
 .sidebar {
-  /* Regular text size — everything but the name. */
+  /* Regular text size for menu headings and items. */
   --fs-body: 14px;
+  /* Intro paragraph text size. */
+  --fs-intro: 16px;
   /* The two big gaps (icons → intro, intro → menu): 48px @696 tall. */
   --section-gap: clamp(24px, 6.9dvh, 96px);
   /* Between the menu's groups, and above each list item. */
@@ -50,7 +52,7 @@
  * --section-gap is the two big gaps: icons → intro, intro → menu. */
 .intro {
   margin: var(--section-gap) 0 0;
-  font-size: var(--fs-body);
+  font-size: var(--fs-intro);
   font-weight: 500;
   line-height: 1.45;
   color: #000;

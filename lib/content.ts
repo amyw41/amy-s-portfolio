@@ -32,7 +32,7 @@ export const content = {
     sidebar: {
       // The intro is one paragraph: the name, then this sentence.
       name: "Amy Wang",
-      intro: "is a designer who builds as the user. She adds creativity to intuitive experiences and loves to overthink interactions!",
+      intro: "is a designer who builds as the user. She adds charm to intuitive experiences and loves to overthink interactions!",
       // Accessible names for the icon-only links row under the intro.
       social: {
         label: "Social links",
