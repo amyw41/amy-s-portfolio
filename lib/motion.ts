@@ -158,6 +158,9 @@ export const HOVER_CLOSE_DELAY_MS = 150;
 export const OVAL_DRAW_S = 0.35;
 export const CHEVRON_TURN_S = 0.2;
 export const CHEVRON_OPEN_DEG = 180;
+// A Works row's ↗ turns ARROW_HOVER_DEG (to point straight right) while the
+// row is hovered, over CHEVRON_TURN_S like the chevron.
+export const ARROW_HOVER_DEG = 45;
 export const DROPDOWN_OPEN_S = 0.28;
 export const DROPDOWN_CLOSE_S = 0.18;
 export const DROPDOWN_ITEM_STAGGER_S = 0.035;

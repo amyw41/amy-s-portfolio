@@ -20,7 +20,7 @@ Values are given at the 1536×696 laptop size. Layout spacing scales with the wi
 | Token | Value |
 |---|---|
 | Text | #000 |
-| Case-study description | 55% black |
+| Works arrow (↗) | 55% black |
 | Hover circle | 45% black |
 | Mobile tap cue | 45% black, black on hover |
 | Divider line | #000 |
@@ -60,7 +60,7 @@ Sidebar, top to bottom:
 2. **Intro:** one paragraph, the name then the description ("Amy Wang is a designer who…"), medium weight, black.
 3. **Menu:** three groups, all on one left edge, each a dropdown:
    - **Experience:** Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo (plain text).
-   - **Works:** each case study as its name then " - description" in full (55% black), wrapping onto extra lines under the name.
+   - **Works:** each case study as its name then a small hand-drawn ↗ (9px, 1px pen line, low wobble, 55% black), 4px after it. No description. Hovering the row turns the arrow 45° to point straight right (→).
    - **Extra:** About Me (/about), Play (/playground).
 
 - **Dropdown headings** (Experience, Works, Extra): text + chevron (14px). On load Experience and Works are open; Extra starts closed. Closed points down, open points up.
@@ -92,6 +92,7 @@ Sidebar, top to bottom:
 |---|---|
 | Hover circle draw | 350ms ease-out |
 | Chevron turn | 200ms, 180° |
+| Works arrow | ↗ turns 45° to → while its row is hovered, 200ms ease-out (same as the chevron); back on leave; reduced motion: instant |
 | Dropdown open | 280ms ease-out; items fade down from 6px above, 35ms apart |
 | Dropdown close | 180ms ease-in, all at once |
 | Buzz | 10 drawings per second, cycling 3 |

@@ -140,8 +140,27 @@
   }
 }
 
-.itemDescription {
+/* The ↗ after a case study's name (UpRightArrow in Sidebar.tsx): 4px
+ * after it, sitting about on the text's x-height, in the same grey the
+ * descriptions used. Turns to point straight right (→) while the row is
+ * hovered; angle and speed come from lib/motion.ts via --arrow-turn(-ms). */
+.itemArrow {
+  display: inline-block;
+  margin-left: 4px;
+  vertical-align: 0.05em;
+  overflow: visible;
   color: rgba(0, 0, 0, 0.55);
+}
+
+.itemLink:hover .itemArrow,
+.itemLink:focus-visible .itemArrow {
+  transform: rotate(var(--arrow-turn));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .itemArrow {
+    transition: transform calc(var(--arrow-turn-ms) * var(--slow, 1)) ease-out;
+  }
 }
 
 /* Hand-drawn oval around a hovered heading (DrawnOval in Sidebar.tsx), in a

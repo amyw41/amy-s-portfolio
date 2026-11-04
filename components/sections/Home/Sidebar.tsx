@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useId, useMemo, useState, type FocusEvent, type ReactNode } from "react";
+import { memo, useId, useMemo, useState, type CSSProperties, type FocusEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
 import { ChevronDown, Mail } from "lucide-react";
@@ -8,6 +8,7 @@ import styles from "./Sidebar.module.css";
 import { content } from "@/lib/content";
 import { PROJECTS } from "@/lib/projects";
 import {
+  ARROW_HOVER_DEG,
   CHEVRON_OPEN_DEG,
   CHEVRON_TURN_S,
   DROPDOWN_CLOSE_S,
@@ -17,7 +18,7 @@ import {
   OVAL_DRAW_S,
   slowTransition,
 } from "@/lib/motion";
-import { buildWobblyPillPath, LINE_STROKE_WIDTH, PILL_VIEW_BOX } from "@/lib/wobbly";
+import { buildWobblyLinePath, buildWobblyPillPath, LINE_STROKE_WIDTH, PILL_VIEW_BOX } from "@/lib/wobbly";
 import BuzzPath from "@/components/ui/BuzzPath";
 
 const copy = content.en.sidebar;
@@ -208,18 +209,53 @@ function DropdownGroup({
   );
 }
 
-/** A case study under Works: the name, then " - description" in full,
- * wrapping onto extra lines under the name. Hovering or keyboard-focusing
- * it isolates that project on the stage (onFocusChange → Home). */
+// The ↗ after each case study's name: two hand-ruled strokes (shaft, then
+// the head's corner) in an ARROW_SIZE box, low wobble like the jar's ink.
+const ARROW_SIZE = 9;
+const ARROW_STROKE = 1;
+const ARROW_PATHS = [
+  buildWobblyLinePath(120, [1, ARROW_SIZE - 1], [ARROW_SIZE - 1, 1], 0.2),
+  buildWobblyLinePath(121, [2.5, 1], [ARROW_SIZE - 1, 1], 0.15) +
+    " " +
+    buildWobblyLinePath(122, [ARROW_SIZE - 1, 1], [ARROW_SIZE - 1, ARROW_SIZE - 2.5], 0.15),
+];
+
+// The hover turn's angle and speed, for the CSS (Sidebar.module.css).
+const ARROW_VARS = {
+  "--arrow-turn": `${ARROW_HOVER_DEG}deg`,
+  "--arrow-turn-ms": `${CHEVRON_TURN_S * 1000}ms`,
+} as CSSProperties;
+
+function UpRightArrow() {
+  return (
+    <svg
+      className={styles.itemArrow}
+      style={ARROW_VARS}
+      width={ARROW_SIZE}
+      height={ARROW_SIZE}
+      viewBox={`0 0 ${ARROW_SIZE} ${ARROW_SIZE}`}
+      fill="none"
+      aria-hidden="true"
+    >
+      {ARROW_PATHS.map((d, i) => (
+        <path key={i} d={d} stroke="currentColor" strokeWidth={ARROW_STROKE} strokeLinecap="round" strokeLinejoin="round" />
+      ))}
+    </svg>
+  );
+}
+
+/** A case study under Works: the name, then a small hand-drawn ↗ that
+ * turns to point straight right while the row is hovered (the project's
+ * description is in the data but no longer shown here). Hovering
+ * or keyboard-focusing it isolates that project on the stage
+ * (onFocusChange → Home). */
 function CaseStudyRow({
   href,
   label,
-  description,
   onFocusChange,
 }: {
   href: string;
   label: string;
-  description: string;
   onFocusChange: (active: boolean) => void;
 }) {
   return (
@@ -234,7 +270,7 @@ function CaseStudyRow({
       onBlur={() => onFocusChange(false)}
     >
       <span className={styles.itemName}>{label}</span>
-      <span className={styles.itemDescription}> - {description}</span>
+      <UpRightArrow />
     </Link>
   );
 }
@@ -277,7 +313,6 @@ export default memo(function Sidebar({ onCaseFocus }: SidebarProps) {
               key={link.href}
               href={link.href}
               label={link.label}
-              description={link.description}
               onFocusChange={(active) => onCaseFocus(active ? link.id : null)}
             />
           ))}
