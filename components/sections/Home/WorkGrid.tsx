@@ -68,7 +68,7 @@ const BIG_TILES: Tile[] = PROJECTS.map((p) => ({
 }));
 
 // The teaser extra(s) (small, right column): the ones flagged `teaser` in
-// lib/extras.ts (just Relish for now), in its order. The rest are on the Play page only. Each
+// lib/extras.ts (just the Birthday website for now), in its order. The rest are on the Play page only. Each
 // links to its own spot there; no year. Each card takes its media's shape.
 const SMALL_TILES: Tile[] = EXTRAS_PHOTOS.filter((photo) => photo.teaser).map((photo) => ({
   id: `extra-${photo.id}`,
@@ -95,7 +95,7 @@ const SWEEP_ORDER = new Map<string, number>(
 /**
  * Work mode's stage (brief Part 2.4): "what's inside?", then two columns of
  * cards: the case studies big on the left (their videos play once on
- * screen), and a teaser extra (Relish) small on the right, shaped to its
+ * screen), and a teaser extra (the Birthday website) small on the right, shaped to its
  * media (the rest are on the Play page). It scrolls inside the stage; at the bottom, a "jump to jar"
  * doodle goes straight back to the jar.
  *
