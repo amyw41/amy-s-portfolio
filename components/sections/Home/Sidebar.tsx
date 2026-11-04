@@ -261,7 +261,7 @@ function CaseStudyRow({
   return (
     <Link
       href={href}
-      className={styles.itemLink}
+      className={`${styles.itemLink} ${styles.caseLink}`}
       onPointerEnter={() => onFocusChange(true)}
       onPointerLeave={() => onFocusChange(false)}
       onFocus={(e) => {

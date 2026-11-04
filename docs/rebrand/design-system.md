@@ -60,7 +60,7 @@ Sidebar, top to bottom:
 2. **Intro:** one paragraph, the name then the description, medium weight, black. On desktop it breaks onto exactly three lines: "Amy Wang is a designer who builds as the / user. She adds creativity to intuitive experiences / and loves to overthink interactions!" On mobile it wraps naturally.
 3. **Menu:** three groups, all on one left edge, each a dropdown:
    - **Experience:** Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo (plain text).
-   - **Works:** each case study as its name then a small hand-drawn ↗ (9px, 1px pen line, low wobble, 55% black), 4px after it. No description. Hovering the row turns the arrow 45° to point straight right (→).
+   - **Works:** each case study as its name then a small hand-drawn ↗ (9px, 1px pen line, low wobble, 55% black), 4px after it. No description. Hovering the row (name, arrow or anywhere on it) only turns the arrow 45° to point straight right (→): the text doesn't change colour. (About Me / Play under Extra, which have no arrow, still grey to 55% on hover.)
    - **Extra:** About Me (/about), Play (/playground).
 
 - **Dropdown headings** (Experience, Works, Extra): text + chevron (14px). On load Experience and Works are open; Extra starts closed. Closed points down, open points up.

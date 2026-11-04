@@ -154,6 +154,12 @@
   color: rgba(0, 0, 0, 0.55);
 }
 
+/* A Works row's hover is just its arrow turning: the text doesn't grey. */
+.caseLink:hover,
+.caseLink:focus-visible {
+  color: inherit;
+}
+
 .itemLink:hover .itemArrow,
 .itemLink:focus-visible .itemArrow {
   transform: rotate(var(--arrow-turn));
