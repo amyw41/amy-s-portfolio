@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import styles from "./ScrollHint.module.css";
 import { content } from "@/lib/content";
@@ -8,7 +7,6 @@ import { EASE_OUT, SCROLL_HINT_DRAW_S, SCROLL_HINT_LABEL_S, SCROLL_HINT_OUT_S, s
 import { buildWobblyCurvePath, buildWobblyLinePath, LINE_STROKE_WIDTH, type CurveSegment } from "@/lib/wobbly";
 
 const copy = content.en.sidebar.modes;
-const MotionLink = motion.create(Link);
 /** How long a stroke's show/hide flip takes: effectively instant. */
 const STROKE_FLIP_S = 0.01;
 
@@ -42,8 +40,6 @@ const HEAD = [
  *   — mobile has its tap cues.
  * - "jump to jar" at the bottom of the work list (`up`: the arrow points up,
  *   label under it; Home/WorkGrid.tsx, every screen size).
- * - "more in play" under the work list's teaser extras (`right`: the arrow
- *   points right, beside the label; a link, `href`, to the Play page).
  * While `shown`, the arrow pen-draws on and the label fades in; when it
  * stops being shown it fades straight out. Also a button (`onActivate`).
  * Reduced motion: it just appears.
@@ -54,17 +50,10 @@ export default function ScrollHint({
   label = copy.scrollHint,
   ariaLabel = copy.toWorkLabel,
   up = false,
-  right = false,
-  href,
   className = styles.besideJar,
 }: {
   shown: boolean;
-  /** Clicked (when it's a button — without `href`). */
-  onActivate?: () => void;
-  /** Makes it a link instead of a button. */
-  href?: string;
-  /** Arrow points right, beside the label. */
-  right?: boolean;
+  onActivate: () => void;
   label?: string;
   ariaLabel?: string;
   /** Arrow points up (from under the label) instead of down. */
@@ -77,20 +66,17 @@ export default function ScrollHint({
   const fadeIn = reduced ? { duration: 0 } : slowTransition({ duration: SCROLL_HINT_LABEL_S, ease: EASE_OUT });
   const fadeOut = reduced ? { duration: 0 } : slowTransition({ duration: SCROLL_HINT_OUT_S, ease: "easeOut" as const });
 
-  // A link (to another page) or a button (an action on this one).
-  const Root = (href ? MotionLink : motion.button) as typeof motion.button;
-  const rootProps = href ? { href } : { type: "button" as const, onClick: onActivate };
-
   return (
-    <Root
-      className={`${styles.hint} ${up ? styles.up : ""} ${right ? styles.right : ""} ${className}`}
+    <motion.button
+      type="button"
+      className={`${styles.hint} ${up ? styles.up : ""} ${className}`}
       aria-label={ariaLabel}
       tabIndex={shown ? 0 : -1}
       initial={false}
       animate={{ opacity: shown ? 1 : 0 }}
       transition={shown ? { duration: 0 } : fadeOut}
       style={{ pointerEvents: shown ? "auto" : "none" }}
-      {...rootProps}
+      onClick={onActivate}
     >
       <motion.span
         className={styles.label}
@@ -127,6 +113,6 @@ export default function ScrollHint({
           />
         ))}
       </svg>
-    </Root>
+    </motion.button>
   );
 }

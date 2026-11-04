@@ -67,8 +67,8 @@ const BIG_TILES: Tile[] = PROJECTS.map((p) => ({
   aspect: null,
 }));
 
-// The teaser extras (small, right column): the ones flagged `teaser` in
-// lib/extras.ts, in its order. The rest are on the Play page only. Each
+// The teaser extra(s) (small, right column): the ones flagged `teaser` in
+// lib/extras.ts (just Relish for now), in its order. The rest are on the Play page only. Each
 // links to its own spot there; no year. Each card takes its media's shape.
 const SMALL_TILES: Tile[] = EXTRAS_PHOTOS.filter((photo) => photo.teaser).map((photo) => ({
   id: `extra-${photo.id}`,
@@ -95,9 +95,8 @@ const SWEEP_ORDER = new Map<string, number>(
 /**
  * Work mode's stage (brief Part 2.4): "what's inside?", then two columns of
  * cards: the case studies big on the left (their videos play once on
- * screen), and three teaser extras small on the right, shaped to their
- * media, with a "more in play" doodle under them (the rest are on the Play
- * page). It scrolls inside the stage; at the bottom, a "jump to jar"
+ * screen), and a teaser extra (Relish) small on the right, shaped to its
+ * media (the rest are on the Play page). It scrolls inside the stage; at the bottom, a "jump to jar"
  * doodle goes straight back to the jar.
  *
  * Arriving, the cards sweep in one after another, top to bottom
@@ -124,9 +123,6 @@ export default function WorkGrid({
   const viewRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const endInView = useInView(endRef, { root: viewRef, amount: 0.6 });
-  // "more in play", under the teaser extras: draws on the same way.
-  const moreRef = useRef<HTMLDivElement>(null);
-  const moreInView = useInView(moreRef, { root: viewRef, amount: 0.6 });
 
   const variants = useMemo<{ view: Variants; tile: Variants }>(
     () => ({
@@ -232,20 +228,8 @@ export default function WorkGrid({
        * small on the right (1/3), each stacked. */}
       <div className={styles.columns}>
         <ul className={styles.bigList}>{BIG_TILES.map((tile) => card(tile, false))}</ul>
-        <div className={styles.smallColumn}>
-          <ul className={styles.smallList}>{SMALL_TILES.map((tile) => card(tile, true))}</ul>
-          {/* The rest of the extras are on the Play page. */}
-          <div ref={moreRef} className={styles.more}>
-            <ScrollHint
-              shown={moreInView}
-              href="/playground#extras"
-              label={content.en.sidebar.modes.moreInPlay}
-              ariaLabel={content.en.sidebar.modes.moreInPlayLabel}
-              right
-              className={styles.moreInPlay}
-            />
-          </div>
-        </div>
+        {/* The rest of the extras are on the Play page. */}
+        <ul className={styles.smallList}>{SMALL_TILES.map((tile) => card(tile, true))}</ul>
       </div>
 
       {/* The end of the list: a doodle that takes you back to the jar. It

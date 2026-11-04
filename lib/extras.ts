@@ -21,7 +21,7 @@ export interface ExtrasPhoto {
   id: string;
   /** Shown as one of the teasers in the home work view's right column
    * (Home/WorkGrid.tsx; the rest are on the Play page only). Swap which
-   * three by moving `teaser: true`. */
+   * one(s) by moving `teaser: true` (just Relish for now). */
   teaser?: boolean;
   src: string;
   caption: string;
@@ -78,7 +78,6 @@ export const EXTRAS_PHOTOS: ExtrasPhoto[] = [
   },
   {
     id: "after-hours",
-    teaser: true,
     src: "/images/projects/extras/After Hours.png",
     caption: "After Hours Poster @ UWCS Club",
     width: 2488,
@@ -87,7 +86,6 @@ export const EXTRAS_PHOTOS: ExtrasPhoto[] = [
   },
   {
     id: "rust",
-    teaser: true,
     src: "/images/projects/extras/rust.png",
     caption: "Rust Poster @ UWCS Club",
     width: 2488,

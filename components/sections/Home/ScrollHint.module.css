@@ -40,23 +40,6 @@
   margin: 0 0 6px 4%;
 }
 
-/* Arrow pointing right, beside the label ("more in play"): the same
- * drawing turned a quarter, in a box sized to its turned shape. */
-.right {
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-  text-decoration: none;
-}
-
-.right .arrow {
-  width: 30px;
-  margin: 0;
-  transform: rotate(-90deg);
-  /* Turned, the 60×100 drawing is 50px wide and 30px tall: reserve that. */
-  margin-inline: 10px;
-}
-
 /* Small lowercase label in the annotation hand (Gaegu Light, lib/fonts.ts),
  * like a menu board's captions. Gaegu runs small, so 19px reads about like
  * the 14-16px body; its own airy spacing, not Geist's tight tracking. */
