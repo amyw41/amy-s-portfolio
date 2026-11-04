@@ -129,6 +129,15 @@ export const JAR_ITEMS_DELAY_MS = 0;
 export const JAR_ITEMS_SPAWN_LEAD = 0;
 export const JAR_ITEMS_SPAWN_GAP = 6;
 export const JAR_ITEMS_SPAWN_SPEED = 14;
+// The clink (Hero/jar-sound.ts, Hero/useJarPhysics.ts): one short clink per
+// item's first touch of the jar's glass as they fall in; and as the jar is
+// lowered away (jostled), up to JAR_BOUNCE_CLINKS clinks from glass contacts
+// in the JAR_BOUNCE_CLINK_WINDOW_MS after. Never closer together than
+// JAR_CLINK_MIN_GAP_MS; each JAR_CLINK_S long.
+export const JAR_BOUNCE_CLINK_WINDOW_MS = 700;
+export const JAR_BOUNCE_CLINKS = 3;
+export const JAR_CLINK_MIN_GAP_MS = 60;
+export const JAR_CLINK_S = 0.22;
 export const HEADING_DROP_PX = 48;
 export const HEADING_DROP_S = 0.45;
 // Ease with a little overshoot past the end before settling (back-out).

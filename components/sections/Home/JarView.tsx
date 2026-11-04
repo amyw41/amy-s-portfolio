@@ -49,6 +49,9 @@ interface JarViewProps {
   onSettledChange?: (settled: boolean) => void;
   /** The "scroll down!" doodle beside the jar was clicked: go to the work. */
   onHintActivate?: () => void;
+  /** An item hit the jar's glass (strength 0-1) — see JarStage's onImpact.
+   * Home plays the clink. */
+  onImpact?: (strength: number) => void;
 }
 
 /** Fully off the stage, above or below: the view is the stage's own height,
@@ -80,7 +83,7 @@ const OFF_STAGE = "110%";
  *
  * Reduced motion: plain fades, items appear already settled.
  */
-export default function JarView({ entering, isolatedId, onSettledChange, onHintActivate }: JarViewProps) {
+export default function JarView({ entering, isolatedId, onSettledChange, onHintActivate, onImpact }: JarViewProps) {
   const reduced = useReducedMotion() ?? false;
   const [scope, animate] = useAnimate<HTMLDivElement>();
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -262,6 +265,7 @@ export default function JarView({ entering, isolatedId, onSettledChange, onHintA
           spawnGap={JAR_ITEMS_SPAWN_GAP}
           spawnSpeed={JAR_ITEMS_SPAWN_SPEED}
           onReady={handleReady}
+          onImpact={onImpact}
         />
         <ScrollHint shown={hintShown} onActivate={() => onHintActivate?.()} />
       </div>

@@ -8,6 +8,7 @@ import { getOutlineMask } from "@/lib/outline";
 import { PLACEMENT_ORDER, LAYER_ORDER, TARGET_X_FRACTION } from "./jar-layout";
 import type { JarItemDef } from "./items.manifest";
 import { JAR_PHYSICS_DELAY_MS } from "./motion-timing";
+import { JAR_BOUNCE_CLINK_WINDOW_MS, JAR_BOUNCE_CLINKS } from "@/lib/motion";
 
 const { Engine, Bodies, Body, Composite, Constraint, Events, Sleeping } = Matter;
 
@@ -235,6 +236,15 @@ interface ReplayFrame {
  * the jar's size and on-screen position — see the deterministic-settle
  * block for why the same key always gives the same recording. */
 const fallCache = new Map<string, ReplayFrame[][]>();
+/** An item's first contact with the jar's glass (floor or wall) during the
+ * fall: the step it happened on (= replay frame index) and how hard, 0-1.
+ * Recorded while the fall is precomputed, cached with it (same key), and
+ * replayed as onImpact calls on the matching frames. */
+interface GlassImpact {
+  tick: number;
+  strength: number;
+}
+const impactCache = new Map<string, GlassImpact[]>();
 
 /** Dilated click masks (setup's clickMasks), for the rest of the visit,
  * keyed by src + crop + dilation radius. Dilating a full-resolution mask is
@@ -299,6 +309,12 @@ export interface JarPhysicsOptions {
   /** Downward speed the items spawn with, px/step at REFERENCE_WIDTH — as
    * if dropped from higher up, without the wait. Default 0. */
   spawnSpeed?: number;
+  /** Called when an item hits the jar's glass, with how hard (0-1): each
+   * item's first contact during the fall (on the replay's matching frame),
+   * and the first few contacts after a jostle (the items bouncing as the
+   * jar is lowered away). Nothing else — dragging or settling — calls it.
+   * For the clink sound. */
+  onImpact?: (strength: number) => void;
 }
 
 export function useJarPhysics(
@@ -316,9 +332,15 @@ export function useJarPhysics(
     spawnLead = SPAWN_LEAD,
     spawnGap = SPAWN_GAP,
     spawnSpeed = 0,
+    onImpact,
   }: JarPhysicsOptions = {},
 ) {
   const [ready, setReady] = useState(false);
+  // Read from inside setup's closures, which outlive any one render.
+  const onImpactRef = useRef(onImpact);
+  useEffect(() => {
+    onImpactRef.current = onImpact;
+  });
   // Set by setup once the world exists; a no-op before that (and after
   // cleanup).
   const jostleRef = useRef<(strength: number) => void>(() => {});
@@ -558,10 +580,42 @@ export function useJarPhysics(
         const otherIsLandedItem = otherId !== undefined && hasEnteredJar.get(otherId) === true;
         if (otherIsFloor || otherIsLandedItem) landedIds.add(id);
       }
+      // ---- glass impacts (for the clink) ----------------------------------
+      // The jar's own bodies, by id: an item touching one of these is
+      // touching glass. Item-on-item contacts don't count.
+      let glassIds = new Set<number>();
+      // While the fall is being precomputed: the step being run, so contacts
+      // can be recorded against it (null otherwise).
+      let recordingTick: number | null = null;
+      const recordedImpacts: GlassImpact[] = [];
+      const recordedHit = new Set<string>();
+      // After a jostle: a short window in which glass contacts are live
+      // clinks (the items bouncing as the jar is lowered), a few at most,
+      // each item once.
+      let liveWindowUntil = 0;
+      let liveClinksLeft = 0;
+      const liveHit = new Set<string>();
+      function handleGlassPair(body: Matter.Body, other: Matter.Body) {
+        const id = bodyIdToItemId.get(body.id);
+        if (!id || !glassIds.has(other.id)) return;
+        const strength = Math.min(1, Math.hypot(body.velocity.x, body.velocity.y) / (MAX_BODY_SPEED * scale));
+        if (recordingTick !== null) {
+          if (recordedHit.has(id)) return;
+          recordedHit.add(id);
+          recordedImpacts.push({ tick: recordingTick, strength });
+        } else if (performance.now() < liveWindowUntil && liveClinksLeft > 0 && !liveHit.has(id)) {
+          liveHit.add(id);
+          liveClinksLeft--;
+          onImpactRef.current?.(strength);
+        }
+      }
+
       const handleCollisionStart = (event: Matter.IEventCollision<Matter.Engine>) => {
         for (const pair of event.pairs) {
           handleLandingPair(pair.bodyA, pair.bodyB);
           handleLandingPair(pair.bodyB, pair.bodyA);
+          handleGlassPair(pair.bodyA, pair.bodyB);
+          handleGlassPair(pair.bodyB, pair.bodyA);
         }
       };
       Events.on(engine, "collisionStart", handleCollisionStart);
@@ -569,6 +623,7 @@ export function useJarPhysics(
 
       function buildWalls(w: number, h: number, s: number) {
         wallBodies = createJarWallBodies(JAR_INTERIOR_POINTS, w, h, JAR_WALL_THICKNESS * s);
+        glassIds = new Set(wallBodies.map((b) => b.id));
         Composite.add(world, wallBodies);
         setDebugWalls(computeJarWallRects(JAR_INTERIOR_POINTS, w, h, JAR_WALL_THICKNESS * s));
         pinReleaseYPx = PIN_RELEASE_Y_FRACTION * h;
@@ -1153,6 +1208,7 @@ export function useJarPhysics(
         .join(",")}`;
       const cachedFall = instant ? undefined : fallCache.get(fallKey);
       let history: ReplayFrame[][] = [];
+      let impacts: GlassImpact[] = impactCache.get(fallKey) ?? [];
       if (cachedFall) {
         history = cachedFall;
         const settled = cachedFall[cachedFall.length - 1];
@@ -1165,6 +1221,7 @@ export function useJarPhysics(
         });
       } else {
         for (let i = 0; i < 1200; i++) {
+          recordingTick = i;
           stepPhysics();
           if (!instant) {
             history.push(
@@ -1178,7 +1235,12 @@ export function useJarPhysics(
           }
           if (physicsItems.every(({ body }) => body.isSleeping)) break;
         }
-        if (!instant && history.length > 0) fallCache.set(fallKey, history);
+        recordingTick = null;
+        if (!instant && history.length > 0) {
+          fallCache.set(fallKey, history);
+          impactCache.set(fallKey, recordedImpacts.slice());
+          impacts = recordedImpacts.slice();
+        }
       }
       if (debugPerf) {
         console.log(
@@ -1444,6 +1506,8 @@ export function useJarPhysics(
       let replayInProgress = false;
       // Where the replay has got to (replayTick advances these).
       let replayIndex = 0;
+      // The next recorded glass contact to play as a clink.
+      let nextImpact = 0;
       let replayAccumulator = 0;
       // The live bodies are at the END of the precomputed fall (precompute
       // ran the real engine to the settled pile), so starting the live loop
@@ -1485,6 +1549,10 @@ export function useJarPhysics(
       // knocks around and resettles — used as the jar is lowered away (brief
       // Part 2.4). Needs the live engine, so it ends a replay first.
       jostleRef.current = (strength: number) => {
+        // The bounce that follows is heard: open the live-clink window.
+        liveWindowUntil = performance.now() + JAR_BOUNCE_CLINK_WINDOW_MS;
+        liveClinksLeft = JAR_BOUNCE_CLINKS;
+        liveHit.clear();
         skipReplayOnInteraction();
         for (const { id, body } of physicsItems) {
           if (body.isStatic) continue;
@@ -1526,6 +1594,11 @@ export function useJarPhysics(
           while (replayAccumulator >= STEP_MS && replayIndex < history.length - 1) {
             replayIndex++;
             replayAccumulator -= STEP_MS;
+          }
+          // Glass contacts recorded in the fall, on the frame they happened.
+          while (nextImpact < impacts.length && impacts[nextImpact].tick <= replayIndex) {
+            onImpactRef.current?.(impacts[nextImpact].strength);
+            nextImpact++;
           }
           // Same interpolation as the live loop, but simpler: the next
           // frame already exists, so there's no lookahead risk.

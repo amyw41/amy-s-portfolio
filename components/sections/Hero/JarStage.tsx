@@ -51,6 +51,8 @@ interface JarStageProps {
   spawnLead?: number;
   spawnGap?: number;
   spawnSpeed?: number;
+  /** Passed to useJarPhysics: an item hit the jar's glass (for the clink). */
+  onImpact?: (strength: number) => void;
   /** Called once the items exist and have started falling in. */
   onReady?: () => void;
 }
@@ -70,6 +72,7 @@ export default memo(function JarStage({
   spawnLead,
   spawnGap,
   spawnSpeed,
+  onImpact,
   onReady,
 }: JarStageProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -77,7 +80,7 @@ export default memo(function JarStage({
     containerRef,
     items,
     textPlatformsRef,
-    { start, outlines, entranceDelayMs, spawnLead, spawnGap, spawnSpeed },
+    { start, outlines, entranceDelayMs, spawnLead, spawnGap, spawnSpeed, onImpact },
   );
 
   const onReadyRef = useRef(onReady);

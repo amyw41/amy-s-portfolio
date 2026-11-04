@@ -1,104 +1,104 @@
-/** Glass-jar clatter played over the load-in fall: starts when the first item
- * lands and fades out when the last one does.
+import { JAR_CLINK_MIN_GAP_MS, JAR_CLINK_S } from "@/lib/motion";
+
+/** The glass clink: one short clink per item hitting the jar's glass (see
+ * useJarPhysics's onImpact) — as the items fall in, and as they bounce when
+ * the jar is lowered away. Nothing else makes a sound.
  *
- * Web Audio rather than an <audio> element so the fade-out is a scheduled
- * gain ramp (iOS ignores HTMLMediaElement.volume) and the clip can loop
- * seamlessly if the fall outlasts it.
+ * Web Audio, decoded once up front, so each clink starts instantly and many
+ * can overlap. Each is the clip's first JAR_CLINK_S from its first sound
+ * (skipping any silence at the start of the file), at a volume set by how
+ * hard the hit was and a slightly different pitch each time, never closer
+ * together than JAR_CLINK_MIN_GAP_MS (so a pile landing at once is a patter,
+ * not a roar).
  *
- * Browsers block audio until the visitor has interacted with the page, so on
- * a cold first visit the AudioContext starts suspended and the fall plays
- * silently. That's handled by simply not playing: resume() is attempted, and
- * the clip only starts if it resolves before the last landing. */
+ * Browsers block audio until the visitor has clicked, tapped or pressed a
+ * key on the page, so until then clinks are silently skipped; the first such
+ * gesture unlocks it. */
 
 const SRC = "/sounds/jar-drop.mp3";
-const FADE_IN_S = 0.03;
-const FADE_OUT_S = 0.4;
 const VOLUME = 0.8;
+/** Quietest clink (a feather-light touch), as a share of VOLUME. */
+const MIN_LEVEL = 0.35;
+/** Pitch varies by up to this much either way. */
+const PITCH_SPREAD = 0.08;
+/** How long the clink's tail fades over. */
+const FADE_OUT_S = 0.08;
 
 export type JarSound = {
-  /** First item landed. `expectedSpanS` is how long until the last lands. */
-  start(expectedSpanS: number): void;
-  /** Last item landed (or replay was cut short): fade out. */
-  stop(): void;
+  /** An item hit the glass, `strength` 0-1. */
+  clink(strength: number): void;
   dispose(): void;
 };
+
+/** Where the clip's first sound starts, s: the first sample louder than a
+ * small share of its peak, less a hair of lead-in. */
+function findOnset(buffer: AudioBuffer): number {
+  const data = buffer.getChannelData(0);
+  let peak = 0;
+  for (let i = 0; i < data.length; i++) peak = Math.max(peak, Math.abs(data[i]));
+  const threshold = peak * 0.1;
+  for (let i = 0; i < data.length; i++) {
+    if (Math.abs(data[i]) >= threshold) return Math.max(0, i / buffer.sampleRate - 0.005);
+  }
+  return 0;
+}
 
 export function createJarSound(): JarSound {
   let ctx: AudioContext | null = null;
   let buffer: AudioBuffer | null = null;
-  let source: AudioBufferSourceNode | null = null;
-  let gain: GainNode | null = null;
-  // True between start() and stop(): a late resume() only plays inside it.
-  let wanted = false;
+  let onset = 0;
+  let lastClinkAt = -Infinity;
   let disposed = false;
+
+  // The first click, tap or key press lets audio play.
+  const unlock = () => {
+    ctx?.resume().catch(() => {});
+    if (ctx?.state === "running") removeUnlock();
+  };
+  const unlockEvents = ["pointerdown", "keydown", "touchend"] as const;
+  const removeUnlock = () => unlockEvents.forEach((e) => window.removeEventListener(e, unlock));
 
   try {
     ctx = new AudioContext();
+    unlockEvents.forEach((e) => window.addEventListener(e, unlock));
     fetch(SRC)
       .then((res) => (res.ok ? res.arrayBuffer() : Promise.reject(new Error(`${res.status}`))))
       .then((data) => ctx!.decodeAudioData(data))
       .then((decoded) => {
         buffer = decoded;
+        onset = findOnset(decoded);
       })
       .catch(() => {
-        // Missing file or undecodable: the fall just plays silently.
+        // Missing file or undecodable: the jar is just silent.
       });
   } catch {
     ctx = null;
   }
 
-  function play(expectedSpanS: number) {
-    if (!ctx || !buffer || disposed || !wanted || source) return;
-    const now = ctx.currentTime;
-    gain = ctx.createGain();
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(VOLUME, now + FADE_IN_S);
-    gain.connect(ctx.destination);
-    source = ctx.createBufferSource();
-    source.buffer = buffer;
-    // Loop only if the fall outlasts the clip; stop() ends it either way.
-    source.loop = buffer.duration < expectedSpanS + FADE_OUT_S;
-    source.connect(gain);
-    source.start(now);
-  }
-
   return {
-    start(expectedSpanS) {
-      if (!ctx || disposed) return;
-      wanted = true;
-      if (ctx.state === "running") {
-        play(expectedSpanS);
-        return;
-      }
-      // Autoplay policy: without a prior user gesture this either rejects or
-      // stays pending. Either way nothing plays, which is the intended
-      // fallback.
-      ctx
-        .resume()
-        .then(() => play(expectedSpanS))
-        .catch(() => {});
-    },
-    stop() {
-      wanted = false;
-      if (!ctx || !source || !gain) return;
+    clink(strength) {
+      if (!ctx || !buffer || disposed || ctx.state !== "running") return;
+      const nowMs = ctx.currentTime * 1000;
+      if (nowMs - lastClinkAt < JAR_CLINK_MIN_GAP_MS) return;
+      lastClinkAt = nowMs;
+
       const now = ctx.currentTime;
-      gain.gain.cancelScheduledValues(now);
-      gain.gain.setValueAtTime(gain.gain.value, now);
-      gain.gain.linearRampToValueAtTime(0, now + FADE_OUT_S);
-      try {
-        source.stop(now + FADE_OUT_S);
-      } catch {
-        // Already stopped.
-      }
+      const level = VOLUME * (MIN_LEVEL + (1 - MIN_LEVEL) * Math.max(0, Math.min(1, strength)));
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(level, now);
+      gain.gain.setValueAtTime(level, now + JAR_CLINK_S - FADE_OUT_S);
+      gain.gain.linearRampToValueAtTime(0, now + JAR_CLINK_S);
+      gain.connect(ctx.destination);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.playbackRate.value = 1 + (Math.random() * 2 - 1) * PITCH_SPREAD;
+      source.connect(gain);
+      source.start(now, onset, JAR_CLINK_S);
+      source.onended = () => gain.disconnect();
     },
     dispose() {
       disposed = true;
-      wanted = false;
-      try {
-        source?.stop();
-      } catch {
-        // Already stopped.
-      }
+      removeUnlock();
       ctx?.close().catch(() => {});
     },
   };

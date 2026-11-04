@@ -13,7 +13,6 @@ import { createJarSound, type JarSound } from "@/components/sections/Hero/jar-so
 import { content } from "@/lib/content";
 import { gaegu, geist } from "@/lib/fonts";
 import { buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
-import { JAR_ANTICIPATE_S, JAR_DROP_OUT_S, slowMs } from "@/lib/motion";
 
 const copy = content.en.sidebar;
 
@@ -43,34 +42,24 @@ export default function Home() {
   // just being there on first load. Read by JarView once, when it mounts.
   const [jarEntering, setJarEntering] = useState(false);
 
-  // The jar clink for jar → work. Created up front so its audio is decoded
-  // by the time anyone clicks; the click itself is the user gesture that
-  // lets it play.
+  // The glass clink, created up front so its audio is decoded before the
+  // first item lands. It only ever plays when an item hits the jar's glass
+  // (the physics reports those — see useJarPhysics's onImpact): as they fall
+  // in, and as they bounce when the jar is lowered away. Reduced motion:
+  // silent.
   const soundRef = useRef<JarSound | null>(null);
   useEffect(() => {
     const sound = createJarSound();
     soundRef.current = sound;
     return () => sound.dispose();
   }, []);
-
-  // Whether the jar has fully arrived (landed, items in) — JarView reports
-  // it. Leaving a jar that hasn't is an interrupted arrival: it just drops
-  // away quickly, so no clink.
-  const jarSettledRef = useRef(true);
-  const handleJarSettled = useCallback((settled: boolean) => {
-    jarSettledRef.current = settled;
+  const handleImpact = useCallback((strength: number) => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    soundRef.current?.clink(strength);
   }, []);
 
   function changeMode(next: HomeMode) {
     if (next === mode) return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    // Switching back mid-exit: cut the clink off with it.
-    if (next === "jar") soundRef.current?.stop();
-    if (next === "work" && !reduced && jarSettledRef.current && soundRef.current) {
-      const spanMs = slowMs((JAR_ANTICIPATE_S + JAR_DROP_OUT_S) * 1000);
-      soundRef.current.start(spanMs / 1000);
-      window.setTimeout(() => soundRef.current?.stop(), spanMs);
-    }
     setJarEntering(next === "jar");
     setMode(next);
   }
@@ -120,7 +109,7 @@ export default function Home() {
               key="jar"
               entering={jarEntering}
               isolatedId={focusedCase}
-              onSettledChange={handleJarSettled}
+              onImpact={handleImpact}
               onHintActivate={() => changeMode("work")}
             />
           ) : (
