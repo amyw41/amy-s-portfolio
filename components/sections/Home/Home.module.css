@@ -80,6 +80,8 @@
    * here. The 70cqw term only binds on a narrow stage. */
   width: min(calc(min(85cqh, 592px) * 1600 / 2257), 70cqw);
   flex: 0 0 auto;
+  /* The "scroll down!" doodle (ScrollHint) is placed against this box. */
+  position: relative;
   /* The jar's landing/anticipation squash (JarView) pivots on its base. */
   transform-origin: 50% 100%;
   will-change: transform;

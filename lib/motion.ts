@@ -144,6 +144,16 @@ export const MODE_TRANSITION_MS =
 export const SCROLL_CUE_BOB_PX = 3;
 export const SCROLL_CUE_BOB_S = 1.8;
 export const SCROLL_CUE_FADE_S = 0.4;
+// The "scroll down!" doodle beside the jar (Home/ScrollHint.tsx, desktop):
+// once the items have settled (SCROLL_HINT_DELAY_S after they start
+// falling — JarStage only reports the start), its curly arrow pen-draws on over
+// SCROLL_HINT_DRAW_S (ease-out) as its label fades in over
+// SCROLL_HINT_LABEL_S; switching to work fades it out over SCROLL_HINT_OUT_S
+// before the jar moves.
+export const SCROLL_HINT_DELAY_S = 1.4;
+export const SCROLL_HINT_DRAW_S = 0.6;
+export const SCROLL_HINT_LABEL_S = 0.3;
+export const SCROLL_HINT_OUT_S = 0.15;
 
 // Hover-intent leave delay for the project hover preview (step 6, brief
 // Part 3.1) — the brief's own name for it.

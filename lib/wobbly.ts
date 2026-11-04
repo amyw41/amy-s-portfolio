@@ -313,3 +313,45 @@ export function buildCrayonStrokes(seed: number, width: number, height: number, 
   }
   return strokes;
 }
+
+// ---------- curves ----------
+
+type Point = [number, number];
+/** One cubic Bézier segment: start, two control points, end. */
+export type CurveSegment = [Point, Point, Point, Point];
+
+/** A hand-drawn curve through cubic Bézier `segments` (each starting where
+ * the last ended), as one pen stroke: sampled and nudged up to about
+ * `amplitude` px either side, the same gentle two-wave wobble as
+ * buildWobblyLinePath. For doodles like the scroll hint's curly arrow. */
+export function buildWobblyCurvePath(seed: number, segments: CurveSegment[], amplitude = 1): string {
+  const pts: Point[] = [];
+  const stepsPer = 24;
+  segments.forEach(([p0, c1, c2, p3], si) => {
+    for (let i = si === 0 ? 0 : 1; i <= stepsPer; i++) {
+      const t = i / stepsPer;
+      const u = 1 - t;
+      const a = u * u * u, b = 3 * u * u * t, c = 3 * u * t * t, d = t * t * t;
+      pts.push([a * p0[0] + b * c1[0] + c * c2[0] + d * p3[0], a * p0[1] + b * c1[1] + c * c2[1] + d * p3[1]]);
+    }
+  });
+  // Arc length so far, for a wobble that's even along the stroke.
+  let length = 0;
+  const along = pts.map((p, i) => (i === 0 ? 0 : (length += Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]))));
+  const phaseA = hash(seed, 901) * Math.PI * 2;
+  const phaseB = hash(seed, 902) * Math.PI * 2;
+  const out = pts.map((p, i) => {
+    const prev = pts[Math.max(0, i - 1)];
+    const next = pts[Math.min(pts.length - 1, i + 1)];
+    const dx = next[0] - prev[0];
+    const dy = next[1] - prev[1];
+    const len = Math.hypot(dx, dy) || 1;
+    const t = along[i] / (length || 1);
+    const taper = Math.min(1, t / 0.06, (1 - t) / 0.06);
+    const s = along[i];
+    const offset =
+      amplitude * taper * (0.7 * Math.sin((s / LINE_WAVELENGTH_1) * Math.PI * 2 + phaseA) + 0.3 * Math.sin((s / LINE_WAVELENGTH_2) * Math.PI * 2 + phaseB));
+    return [p[0] + (-dy / len) * offset, p[1] + (dx / len) * offset] as Point;
+  });
+  return smoothPathFromPoints(out);
+}

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAnimate, usePresence, useReducedMotion, type AnimationPlaybackControls } from "framer-motion";
 import styles from "./Home.module.css";
 import JarStage from "@/components/sections/Hero/JarStage";
+import ScrollHint from "./ScrollHint";
 import { JAR_ITEMS } from "@/components/sections/Hero/items.manifest";
 import {
   EASE_IN,
@@ -23,6 +24,7 @@ import {
   JAR_LAND_SCALE_Y,
   JAR_MOVES_STOP_MOTION,
   JAR_RETURN_S,
+  SCROLL_HINT_DELAY_S,
   slowMs,
   stopMotion,
 } from "@/lib/motion";
@@ -45,6 +47,8 @@ interface JarViewProps {
   /** Told whether the jar has fully arrived (landed, items in). Home uses it
    * to only play the clink when leaving a settled jar. */
   onSettledChange?: (settled: boolean) => void;
+  /** The "scroll down!" doodle beside the jar was clicked: go to the work. */
+  onHintActivate?: () => void;
 }
 
 /** Fully off the stage, above or below: the view is the stage's own height,
@@ -76,7 +80,7 @@ const OFF_STAGE = "110%";
  *
  * Reduced motion: plain fades, items appear already settled.
  */
-export default function JarView({ entering, isolatedId, onSettledChange }: JarViewProps) {
+export default function JarView({ entering, isolatedId, onSettledChange, onHintActivate }: JarViewProps) {
   const reduced = useReducedMotion() ?? false;
   const [scope, animate] = useAnimate<HTMLDivElement>();
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -107,14 +111,35 @@ export default function JarView({ entering, isolatedId, onSettledChange }: JarVi
     runningRef.current.forEach((c) => c.stop());
     runningRef.current = [];
   };
-  const reportSettled = () => onSettledChange?.(landedRef.current && itemsReadyRef.current && !leavingRef.current);
+  // The "scroll down!" doodle: drawn on a beat after the jar has settled,
+  // gone the moment it starts leaving.
+  const [hintShown, setHintShown] = useState(false);
+  const hintTimerRef = useRef<number | undefined>(undefined);
+  const syncHint = (settled: boolean) => {
+    window.clearTimeout(hintTimerRef.current);
+    if (settled) hintTimerRef.current = window.setTimeout(() => setHintShown(true), slowMs(SCROLL_HINT_DELAY_S * 1000));
+    else setHintShown(false);
+  };
+  useEffect(() => () => window.clearTimeout(hintTimerRef.current), []);
+  const reportSettled = () => {
+    const settled = landedRef.current && itemsReadyRef.current && !leavingRef.current;
+    onSettledChange?.(settled);
+    syncHint(settled);
+  };
   // Stable, so the memoised JarStage doesn't re-render (all 13 items) every
   // time this view does — e.g. the moment it starts leaving.
   const handleReady = useCallback(() => {
     itemsReadyRef.current = true;
     readyWaitersRef.current.forEach((resolve) => resolve());
     readyWaitersRef.current = [];
-    onSettledChange?.(landedRef.current && itemsReadyRef.current && !leavingRef.current);
+    const settled = landedRef.current && itemsReadyRef.current && !leavingRef.current;
+    onSettledChange?.(settled);
+    // Only ever shows it from here (the timer's setState is stable); hiding
+    // goes through reportSettled.
+    if (settled) {
+      window.clearTimeout(hintTimerRef.current);
+      hintTimerRef.current = window.setTimeout(() => setHintShown(true), slowMs(SCROLL_HINT_DELAY_S * 1000));
+    }
   }, [onSettledChange]);
 
   // Arriving.
@@ -238,6 +263,7 @@ export default function JarView({ entering, isolatedId, onSettledChange }: JarVi
           spawnSpeed={JAR_ITEMS_SPAWN_SPEED}
           onReady={handleReady}
         />
+        <ScrollHint shown={hintShown} onActivate={() => onHintActivate?.()} />
       </div>
     </div>
   );

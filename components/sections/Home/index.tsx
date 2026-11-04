@@ -116,7 +116,13 @@ export default function Home() {
          * out, then the jar drops in). */}
         <AnimatePresence mode="wait" initial={false}>
           {mode === "jar" ? (
-            <JarView key="jar" entering={jarEntering} isolatedId={focusedCase} onSettledChange={handleJarSettled} />
+            <JarView
+              key="jar"
+              entering={jarEntering}
+              isolatedId={focusedCase}
+              onSettledChange={handleJarSettled}
+              onHintActivate={() => changeMode("work")}
+            />
           ) : (
             <WorkGrid key="work" focusedId={focusedCase} />
           )}
