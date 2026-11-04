@@ -33,7 +33,7 @@ Horizontal spacing scales with the window's width (vw), vertical spacing with it
 | Token | Value |
 |---|---|
 | Frame | full window width, 100dvh tall, no outer padding; the sidebar is always flush with the window's left edge |
-| Sidebar width | `clamp(393px, 25.8vw, 490px)` (396px @1536) — just wide enough that the intro's "experiences" sits on its second line, with a few px of slack; holds from 1280 to 1920 wide |
+| Sidebar width | `clamp(401px, 26.2vw, 500px)` (402px @1536) — just wide enough (~6px slack) for the intro's longest line to fit on one line between the paddings; holds from 1280 to 1920 wide |
 | Divider | hand-drawn black line, 0.6px (the jar's ink weight), gently wobbling up to ~1.4px either side of straight, buzzing; inset `clamp(8px, 2.3dvh, 28px)` (16px @696) from the top and bottom of the screen (a plain 1px rule on mobile) |
 | Sidebar padding, left/right | `clamp(20px, 2.083vw, 56px)` (32px @1536) |
 | Sidebar padding, top/bottom | `clamp(24px, 6.9dvh, 80px)` (48px @696; the divider starts 32px above the name there) |
@@ -57,7 +57,7 @@ Everything flows from the top with fixed gaps; opening a group pushes what's bel
 Sidebar, top to bottom:
 
 1. **Social icons:** X, LinkedIn, mail. Plain black, ~18–20px, no border.
-2. **Intro:** one paragraph, the name then the description ("Amy Wang is a designer who…"), medium weight, black.
+2. **Intro:** one paragraph, the name then the description, medium weight, black. On desktop it breaks onto exactly three lines: "Amy Wang is a designer who builds as the / user. She adds creativity to intuitive experiences / and loves to overthink interactions!" On mobile it wraps naturally.
 3. **Menu:** three groups, all on one left edge, each a dropdown:
    - **Experience:** Design @ Blueprint, Campus @ Notion, Management Eng @ Waterloo (plain text).
    - **Works:** each case study as its name then a small hand-drawn ↗ (9px, 1px pen line, low wobble, 55% black), 4px after it. No description. Hovering the row turns the arrow 45° to point straight right (→).

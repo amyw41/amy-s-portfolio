@@ -275,6 +275,29 @@ function CaseStudyRow({
   );
 }
 
+// Where the intro breaks onto its next line on desktop, so it reads as
+// Amy laid it out: "…builds as the / user. She adds creativity to intuitive
+// experiences / and loves to overthink interactions!" (the sidebar is sized
+// so the longest line fits). On mobile the breaks are hidden and it wraps
+// naturally. A phrase that's no longer in the copy just gets no break.
+const INTRO_BREAKS_AFTER = ["builds as the", "intuitive experiences"];
+
+function introLines(text: string): ReactNode[] {
+  const parts: ReactNode[] = [];
+  let rest = text;
+  INTRO_BREAKS_AFTER.forEach((phrase, i) => {
+    const at = rest.indexOf(phrase);
+    if (at === -1) return;
+    const end = at + phrase.length;
+    // The space stays: dropped at the start of a line on desktop, and
+    // between the words on mobile, where the break is hidden.
+    parts.push(rest.slice(0, end), <br key={i} className={styles.introBreak} />);
+    rest = rest.slice(end);
+  });
+  parts.push(rest);
+  return parts;
+}
+
 // Memoised: Home re-renders on every mode switch, and re-rendering every
 // motion component in here at that moment was a visible hitch. Its only
 // prop is a stable state setter.
@@ -298,9 +321,7 @@ export default memo(function Sidebar({ onCaseFocus }: SidebarProps) {
       </ul>
 
       {/* The name and description as one paragraph — no separate title. */}
-      <h1 className={styles.intro}>
-        {copy.name} {copy.intro}
-      </h1>
+      <h1 className={styles.intro}>{introLines(`${copy.name} ${copy.intro}`)}</h1>
 
       <nav className={styles.menu} aria-label="Main">
         {/* Experience and Works start open; Extra opens on click. */}

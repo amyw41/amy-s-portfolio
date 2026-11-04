@@ -21,12 +21,14 @@
   --stage-pad-x: clamp(24px, 3.125vw, 80px);
   /* Home page tracking for Geist — one place to tune it. */
   --home-tracking: -0.6px;
-  /* 396px @1536 wide: just wide enough (plus a few px of slack) that the
-   * intro's "experiences" sits on its second line. Never under 393px, so
-   * that still holds on narrower windows (1280, 1440), and the intro
-   * doesn't wrap onto so many lines that the sidebar outgrows a short
-   * window (e.g. 150% browser zoom). */
-  --sidebar-width: clamp(393px, 25.8vw, 490px);
+  /* 402px @1536 wide: just wide enough (plus ~6px of slack) that the
+   * intro's longest line — "user. She adds creativity to intuitive
+   * experiences", 331px at 16px — fits between the --pad-x paddings, so
+   * its forced line breaks (Sidebar.tsx) are the only ones. The padding
+   * grows with the window too, so the min is what keeps it fitting on
+   * narrower windows (1280, 1440); it also stops the sidebar outgrowing a
+   * short window (e.g. 150% browser zoom). */
+  --sidebar-width: clamp(401px, 26.2vw, 500px);
   display: grid;
   grid-template-columns: var(--sidebar-width) 1px minmax(0, 1fr);
   width: 100%;
