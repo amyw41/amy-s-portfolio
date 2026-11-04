@@ -25,6 +25,15 @@ const nextConfig: NextConfig = {
         destination: "/:slug",
         permanent: true,
       },
+      // The Extras case study's pieces now live on the Play page, in its
+      // "little design things" section (components/sections/Playground/
+      // ExtrasSection.tsx) — old /extras links land there. Temporary (307),
+      // so it's easy to undo if the Extras page ever comes back.
+      {
+        source: "/extras",
+        destination: "/playground#extras",
+        permanent: false,
+      },
     ];
   },
 };

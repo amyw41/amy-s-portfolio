@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import CircleToggle from "@/components/ui/CircleToggle";
 import PlateCircle from "./PlateCircle";
 import PhotoTile from "./PhotoTile";
+import ExtrasSection from "./ExtrasSection";
 import { useElementWidth } from "./useElementWidth";
 import { computeJustifiedLayout, estimateCaptionHeight, getCaptionFont, getColumnWidth } from "./justifiedLayout";
 import {
@@ -255,6 +256,8 @@ export default function Playground() {
             ))}
           </div>
         </div>
+
+        <ExtrasSection />
       </div>
     </section>
   );

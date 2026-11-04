@@ -66,6 +66,9 @@ export const content = {
         scrollHint: "scroll down!",
         // The doodle at the bottom of the work list (goes back to the jar).
         jumpToJar: "jump to jar",
+        // The doodle under the work view's teaser extras (to the Play page).
+        moreInPlay: "more in play",
+        moreInPlayLabel: "See all the little design things on the Play page",
       },
       // Work-mode stage heading — the grid itself arrives in step 4.
       workHeading: "what's inside?",
@@ -164,6 +167,9 @@ export const content = {
         plate: "plate view",
         collage: "collage view",
       },
+      // The section under the plates with every extra (lib/extras.ts) —
+      // posters, logos, little sites. /extras redirects here.
+      extrasHeading: "little design things",
     },
   },
 } as const;

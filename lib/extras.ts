@@ -15,6 +15,14 @@
 export type ExtrasCategory = "graphic-design" | "designathon" | "other";
 
 export interface ExtrasPhoto {
+  /** Its anchor on the Play page's "little design things" section
+   * (/playground#extra-<id>) — where the home work view's teaser cards
+   * link. */
+  id: string;
+  /** Shown as one of the teasers in the home work view's right column
+   * (Home/WorkGrid.tsx; the rest are on the Play page only). Swap which
+   * three by moving `teaser: true`. */
+  teaser?: boolean;
   src: string;
   caption: string;
   /** Intrinsic pixel size — drives the gallery's own natural-aspect-ratio
@@ -58,6 +66,7 @@ export const EXTRAS_CATEGORIES: { id: ExtrasCategory; label: string; color: stri
 // 4. Relish, Nina, IISE keep filling in by shortest-column from there.
 export const EXTRAS_PHOTOS: ExtrasPhoto[] = [
   {
+    id: "birthday-website",
     src: "/images/projects/extras/bday.mp4",
     // CHECK: guessed from the filename — say the word and I'll swap it for
     // whatever this video actually is.
@@ -68,6 +77,8 @@ export const EXTRAS_PHOTOS: ExtrasPhoto[] = [
     isVideo: true,
   },
   {
+    id: "after-hours",
+    teaser: true,
     src: "/images/projects/extras/After Hours.png",
     caption: "After Hours Poster @ UWCS Club",
     width: 2488,
@@ -75,6 +86,8 @@ export const EXTRAS_PHOTOS: ExtrasPhoto[] = [
     category: "graphic-design",
   },
   {
+    id: "rust",
+    teaser: true,
     src: "/images/projects/extras/rust.png",
     caption: "Rust Poster @ UWCS Club",
     width: 2488,
@@ -82,6 +95,8 @@ export const EXTRAS_PHOTOS: ExtrasPhoto[] = [
     category: "graphic-design",
   },
   {
+    id: "relish",
+    teaser: true,
     src: "/images/projects/extras/relish.png",
     caption: "Relish @ Figma Make-a-thon 2026 (Waterloo)",
     width: 3348,
@@ -89,6 +104,7 @@ export const EXTRAS_PHOTOS: ExtrasPhoto[] = [
     category: "designathon",
   },
   {
+    id: "nina",
     src: "/images/projects/extras/nina.png",
     caption: "Nina Café & Fleurs",
     width: 1440,
@@ -96,6 +112,7 @@ export const EXTRAS_PHOTOS: ExtrasPhoto[] = [
     category: "other",
   },
   {
+    id: "iise",
     src: "/images/projects/extras/iise.png",
     caption: "IISE Conference 2026 Logo",
     width: 976,

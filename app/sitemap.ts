@@ -5,7 +5,9 @@ const BASE = "https://amyz.wang";
 
 // Case studies live at the site root (app/[slug]/), so those are the URLs
 // listed here rather than the /projects/[slug] duplicates.
-const CASE_STUDY_SLUGS = ["cybersea", "spotify", "skinsprout", "extras"];
+// No "extras": /extras redirects to the Play page's "little design things"
+// section now (next.config.ts).
+const CASE_STUDY_SLUGS = ["cybersea", "spotify", "skinsprout"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const paths = [
