@@ -1093,9 +1093,19 @@ export function useJarPhysics(
 
       }
 
+      // The container's layout box, ignoring CSS transforms: whoever holds
+      // the jar may squash or move it (Home's landing squash plays while the
+      // items fall in), and a transformed rect read then — e.g. by the
+      // ResizeObserver's first callback — looked like a resize, rebuilt the
+      // world at the squashed size, and the items jumped when the live loop
+      // took over from the replay. The squash pivots on the jar's base, so
+      // the top comes from the (unmoved) bottom edge less the layout height.
       function measure() {
         const rect = container!.getBoundingClientRect();
-        return { w: rect.width, h: rect.height, top: rect.top };
+        const style = getComputedStyle(container!);
+        const w = parseFloat(style.width) || rect.width;
+        const h = parseFloat(style.height) || rect.height;
+        return { w, h, top: rect.bottom - h };
       }
 
       // Bodies are only ever created once the container has actually been
