@@ -65,6 +65,12 @@ export const JAR_LIFT_PX = 12;
 export const JAR_LIFT_SCALE = 1.04;
 export const JAR_LIFT_IN_MS = 250;
 export const JAR_LIFT_OUT_MS = 200;
+// While a jar item is isolated, whatever covers it goes see-through where
+// it overlaps: a copy of the item drawn on top of the pile at
+// JAR_SEE_THROUGH_OPACITY (where nothing covers it, the copy sits on the
+// item itself and changes nothing), fading in/out over JAR_SEE_THROUGH_MS.
+export const JAR_SEE_THROUGH_OPACITY = 0.55;
+export const JAR_SEE_THROUGH_MS = 200;
 export const TILE_LIFT_PX = 6;
 
 // The jar / work toggle (Home/ModeToggle.tsx): the newly picked side is

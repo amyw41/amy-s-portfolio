@@ -111,3 +111,23 @@
 .dimActive {
   opacity: var(--dim-white);
 }
+
+/* The see-through copy of an isolated item (JarStage): above every item in
+ * the pile, so wherever something covers the item, the copy shows it
+ * through; elsewhere it sits exactly on the item and changes nothing.
+ * Opacity and timing come from lib/motion.ts via --see-through(-ms). */
+.ghost {
+  z-index: 100000;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ghostVisible {
+  opacity: var(--see-through, 0.55);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ghost {
+    transition: opacity calc(var(--see-through-ms, 200ms) * var(--slow, 1)) ease;
+  }
+}
