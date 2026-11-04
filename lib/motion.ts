@@ -73,6 +73,9 @@ export const JAR_LIFT_OUT_MS = 300;
 // item itself and changes nothing). It, and the other items' dimming, fade
 // in and out with the lift (JAR_LIFT_IN_MS / JAR_LIFT_OUT_MS).
 export const JAR_SEE_THROUGH_OPACITY = 0.55;
+// How strongly the other items are washed out while one is isolated (a
+// white wash at this opacity) — lighter than the site's --dim-white (0.44).
+export const JAR_ISOLATE_DIM = 0.2;
 export const TILE_LIFT_PX = 6;
 
 // The jar / work toggle (Home/ModeToggle.tsx): the newly picked side is

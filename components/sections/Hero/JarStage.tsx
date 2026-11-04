@@ -12,6 +12,7 @@ import {
   JAR_LIFT_OUT_MS,
   JAR_LIFT_PX,
   JAR_LIFT_SCALE,
+  JAR_ISOLATE_DIM,
   JAR_SEE_THROUGH_OPACITY,
 } from "@/lib/motion";
 
@@ -129,7 +130,13 @@ export default memo(function JarStage({
   }, [ghostId, ready]);
 
   return (
-    <div ref={containerRef} className={styles.stage} style={LIFT_VARS}>
+    <div
+      ref={containerRef}
+      className={styles.stage}
+      // Isolating dims the other items more lightly than the highlight
+      // toggles' --dim-white.
+      style={isolating ? { ...LIFT_VARS, "--dim-white": JAR_ISOLATE_DIM } as CSSProperties : LIFT_VARS}
+    >
       <Image
         src="/images/drawings/jar.svg"
         alt=""
