@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useRef, useState, type CSSProperties, type MutableRefObject, type RefObject } from "react";
+import { memo, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MutableRefObject, type RefObject } from "react";
 import Image from "next/image";
 import styles from "./JarStage.module.css";
 import JarItem from "./JarItem";
@@ -12,7 +12,6 @@ import {
   JAR_LIFT_OUT_MS,
   JAR_LIFT_PX,
   JAR_LIFT_SCALE,
-  JAR_SEE_THROUGH_MS,
   JAR_SEE_THROUGH_OPACITY,
 } from "@/lib/motion";
 
@@ -23,7 +22,6 @@ const LIFT_VARS = {
   "--lift-in-ms": `${JAR_LIFT_IN_MS}ms`,
   "--lift-out-ms": `${JAR_LIFT_OUT_MS}ms`,
   "--see-through": JAR_SEE_THROUGH_OPACITY,
-  "--see-through-ms": `${JAR_SEE_THROUGH_MS}ms`,
 } as CSSProperties;
 
 interface JarStageProps {
@@ -107,8 +105,11 @@ export default memo(function JarStage({
 
   // Keeps the copy exactly on the real item: its transform is written by
   // the physics, so mirror every change to it (rare once the pile has
-  // settled — no per-frame work while nothing moves).
-  useEffect(() => {
+  // settled — no per-frame work while nothing moves). A layout effect, so
+  // it's in place before the copy is first painted; it's only "armed"
+  // (shown, and allowed to rise — JarItem.module.css) the frame after, so
+  // it rises with the item instead of appearing already up.
+  useLayoutEffect(() => {
     const ghost = ghostRef.current;
     const real = ghostId ? containerRef.current?.querySelector<HTMLElement>(`[data-jar-item="${ghostId}"]`) : null;
     if (!ghost || !real) return;
@@ -118,7 +119,13 @@ export default memo(function JarStage({
     sync();
     const observer = new MutationObserver(sync);
     observer.observe(real, { attributes: true, attributeFilter: ["style"] });
-    return () => observer.disconnect();
+    const arm = requestAnimationFrame(() => {
+      ghost.dataset.armed = "";
+    });
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(arm);
+    };
   }, [ghostId, ready]);
 
   return (

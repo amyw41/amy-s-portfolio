@@ -28,14 +28,19 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
+  /* Settling back: a gentle ease-in-out. */
   .lift {
-    transition: transform calc(var(--lift-out-ms, 200ms) * var(--slow, 1)) ease-in;
+    transition: transform calc(var(--lift-out-ms, 300ms) * var(--slow, 1)) cubic-bezier(0.65, 0, 0.35, 1);
   }
 
+  /* Rising: a soft ease-out. */
   .lifted .lift {
-    transform: translateY(calc(var(--lift-px, 12px) * -1)) scale(var(--lift-scale, 1.04));
-    transition: transform calc(var(--lift-in-ms, 250ms) * var(--slow, 1)) cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform calc(var(--lift-in-ms, 400ms) * var(--slow, 1)) cubic-bezier(0.22, 1, 0.36, 1);
   }
+}
+
+.lifted .lift {
+  transform: translateY(calc(var(--lift-px, 12px) * -1)) scale(var(--lift-scale, 1.04));
 }
 
 /* Was overflow:hidden, clipping the full (padded) source image down to the
@@ -104,12 +109,21 @@
   -webkit-mask-position: center;
   -webkit-mask-size: contain;
   opacity: 0;
-  transition: opacity 250ms ease-out;
+  /* Undimming eases out like the lift settling; JarStage sets the timings
+   * (lib/motion.ts), 250ms where nobody does. */
+  transition: opacity calc(var(--lift-out-ms, 250ms) * var(--slow, 1)) cubic-bezier(0.65, 0, 0.35, 1);
   pointer-events: none;
 }
 
 .dimActive {
   opacity: var(--dim-white);
+  transition: opacity calc(var(--lift-in-ms, 250ms) * var(--slow, 1)) cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dimOverlay {
+    transition: none;
+  }
 }
 
 /* The see-through copy of an isolated item (JarStage): above every item in
@@ -126,8 +140,22 @@
   opacity: var(--see-through, 0.55);
 }
 
+/* Until JarStage has put the copy in place (data-armed), it's hidden and
+ * unlifted with no transitions — so it never shows at the corner before its
+ * position is set, and it rises with the item instead of snapping up. */
+.ghost:not([data-armed]),
+.ghost:not([data-armed]) .lift {
+  opacity: 0;
+  transform: none;
+  transition: none;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .ghost {
-    transition: opacity calc(var(--see-through-ms, 200ms) * var(--slow, 1)) ease;
+    transition: opacity calc(var(--lift-out-ms, 300ms) * var(--slow, 1)) cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  .ghostVisible {
+    transition: opacity calc(var(--lift-in-ms, 400ms) * var(--slow, 1)) cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
