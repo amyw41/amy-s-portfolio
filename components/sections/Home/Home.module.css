@@ -13,22 +13,23 @@
 .frame {
   /* Divider inset from the top and bottom of the screen: 16px @696 tall. */
   --frame-gap: clamp(8px, 2.3dvh, 28px);
-  /* Sidebar text's left/right padding: 32px @1536 wide. */
-  --pad-x: clamp(20px, 2.083vw, 56px);
+  /* Sidebar text's left/right padding: 28px @1536 wide, and no wider on a
+   * bigger screen (the sidebar stays its laptop width there, so its text
+   * area must too). */
+  --pad-x: clamp(18px, 1.823vw, 28px);
   /* Sidebar text's (and the work stage's) top/bottom padding: 48px @696. */
   --pad-y: clamp(24px, 6.9dvh, 80px);
-  /* Stage content's left/right padding (work mode): 48px @1536. */
-  --stage-pad-x: clamp(24px, 3.125vw, 80px);
+  /* Stage content's left/right padding (work mode): 42px @1536. */
+  --stage-pad-x: clamp(21px, 2.734vw, 70px);
   /* Home page tracking for Geist — one place to tune it. */
   --home-tracking: -0.6px;
-  /* 402px @1536 wide: just wide enough (plus ~6px of slack) that the
-   * intro's longest line — "user. She adds creativity to intuitive
-   * experiences", 331px at 16px — fits between the --pad-x paddings, so
-   * its forced line breaks (Sidebar.tsx) are the only ones. The padding
-   * grows with the window too, so the min is what keeps it fitting on
-   * narrower windows (1280, 1440); it also stops the sidebar outgrowing a
-   * short window (e.g. 150% browser zoom). */
-  --sidebar-width: clamp(401px, 26.2vw, 500px);
+  /* The same 373px on every desktop window: just wide enough (plus ~6px of
+   * slack) that the intro's longest line — "user. She adds charm to
+   * intuitive experiences", 311px at 16px — fits between the 28px --pad-x
+   * paddings, so its forced line breaks (Sidebar.tsx) are the only ones.
+   * Bigger screens give all their extra width to the stage; on smaller ones
+   * --pad-x shrinks, so the line still fits. */
+  --sidebar-width: 373px;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1px minmax(0, 1fr);
   width: 100%;

@@ -34,9 +34,9 @@ Horizontal spacing scales with the window's width (vw), vertical spacing with it
 | Token | Value |
 |---|---|
 | Frame | full window width, 100dvh tall, no outer padding; the sidebar is always flush with the window's left edge |
-| Sidebar width | `clamp(401px, 26.2vw, 500px)` (402px @1536) — just wide enough (~6px slack) for the intro's longest line to fit on one line between the paddings; holds from 1280 to 1920 wide |
+| Sidebar width | 373px on every desktop window — just wide enough (~6px slack) for the intro's longest line to fit between the paddings. Bigger screens give all their extra width to the stage |
 | Divider | hand-drawn black line, 0.6px (the jar's ink weight), gently wobbling up to ~1.4px either side of straight, buzzing; inset `clamp(8px, 2.3dvh, 28px)` (16px @696) from the top and bottom of the screen (a plain 1px rule on mobile) |
-| Sidebar padding, left/right | `clamp(20px, 2.083vw, 56px)` (32px @1536) |
+| Sidebar padding, left/right | `clamp(18px, 1.823vw, 28px)` (28px @1536, and no wider on bigger screens) |
 | Sidebar padding, top/bottom | `clamp(24px, 6.9dvh, 80px)` (48px @696; the divider starts 32px above the name there) |
 | Mobile breakpoint | below 768px the sidebar stacks above the stage |
 
@@ -81,7 +81,7 @@ Sidebar, top to bottom:
 
 ## Work mode (stage)
 
-- **Padding:** top/bottom same as the sidebar's (`clamp(24px, 6.9dvh, 80px)`, so the heading lines up with the name across the divider); left/right `clamp(24px, 3.125vw, 80px)` (48px @1536); 24px 16px on mobile.
+- **Padding:** top/bottom same as the sidebar's (`clamp(24px, 6.9dvh, 80px)`, so the heading lines up with the name across the divider); left/right `clamp(21px, 2.734vw, 70px)` (42px @1536); 24px 16px on mobile.
 - **Heading** "what's inside?": 24px, weight 400 (22px on mobile).
 - **Grid:** 32px below the heading (no filters), two top-aligned columns 24px apart: the case studies on the left (2/3 of the stage), stacked big, 32px apart; and a teaser extra on the right (1/3), small — the one(s) flagged `teaser: true` in lib/extras.ts (just the Birthday website now) — linking to its spot on the Play page (/playground#extra-<id>); every other extra is only on the Play page. Under a 720px-wide stage the extras drop below the case studies. The work view scrolls inside the stage (thin, faint scrollbar). At the bottom, 48px below the cards and centred: the "jump to jar" annotation (an up-pointing curly arrow over the label), which goes straight back to the jar; it draws on when it scrolls into view.
 - **Tile:** 3:2 cover, 8px corners; 10px gap to the caption. Caption: title 14px weight 400 black, year 14px weight 300 at 55% black, on one line. A case study with a video plays it over the cover once the card is on screen (muted, looped; paused off screen; reduced motion: cover only). Extras' small cards take their media's own shape (portrait posters show whole, not cropped); caption 13px, no year, the name may wrap.
