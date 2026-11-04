@@ -29,12 +29,12 @@ function scrollsItself(target: EventTarget | null, root: HTMLElement, dir: 1 | -
 }
 
 /**
- * Scroll to switch mode (brief Part 2.4), on the desktop layout: every
- * scroll gesture flips it, whichever way it goes — wheel, trackpad, a swipe
- * on a touch screen, or ↓ / ↑ / PageDown / PageUp / Space. jar → work →
- * jar… Input over the sidebar never switches. If the work grid overflows
- * (small windows), it scrolls first, and a gesture only flips once the grid
- * is at its edge in that direction — so all of it stays reachable.
+ * Scroll to switch mode (brief Part 2.4), on the desktop layout, one way
+ * each: scrolling down on the jar (wheel, trackpad, a swipe up on a touch
+ * screen, ↓ / PageDown / Space) goes to the work; on the work, scrolling
+ * moves the list, and scrolling up from its top (↑ / PageUp / Shift+Space)
+ * goes back to the jar. Scrolling up on the jar, or down at the bottom of
+ * the work, does nothing. Input over the sidebar never switches.
  *
  * One gesture, one switch: travel adds up to SCROLL_SWITCH_THRESHOLD_PX,
  * then switching is locked until the transition is done (plus
@@ -74,9 +74,11 @@ export function useScrollSwitch(
     // switch.
     let scrolledInside = false;
 
-    /** Flips the mode; returns whether it did. */
-    const trySwitch = () => {
-      const next: HomeMode = modeRef.current === "jar" ? "work" : "jar";
+    /** Switches if `dir` leads anywhere from this mode (down: jar → work;
+     * up: work → jar); returns whether it did. */
+    const trySwitch = (dir: 1 | -1) => {
+      const next: HomeMode | null = modeRef.current === "jar" ? (dir === 1 ? "work" : null) : dir === -1 ? "jar" : null;
+      if (!next) return false;
       onSwitchRef.current(next);
       lockedUntil = performance.now() + slowMs(MODE_TRANSITION_MS + SCROLL_SWITCH_SETTLE_MS);
       travel = 0;
@@ -116,7 +118,7 @@ export function useScrollSwitch(
       // Changing direction starts the count again.
       if (Math.sign(travel) !== dir) travel = 0;
       travel += dy;
-      if (Math.abs(travel) >= SCROLL_SWITCH_THRESHOLD_PX) trySwitch();
+      if (Math.abs(travel) >= SCROLL_SWITCH_THRESHOLD_PX) trySwitch(dir);
     };
 
     let touchY: number | null = null;
@@ -130,7 +132,7 @@ export function useScrollSwitch(
       const dy = touchY - e.touches[0].clientY;
       const dir = dy > 0 ? 1 : -1;
       if (Math.abs(dy) < SCROLL_SWITCH_THRESHOLD_PX || ignored(e.target) || scrollsItself(e.target, root, dir)) return;
-      trySwitch();
+      trySwitch(dir);
     };
 
     const onKeyDown = (e: KeyboardEvent) => {
@@ -158,7 +160,7 @@ export function useScrollSwitch(
         return;
       }
       if (performance.now() < lockedUntil) return;
-      if (trySwitch()) e.preventDefault();
+      if (trySwitch(dir)) e.preventDefault();
     };
 
     // Not passive: a spent gesture's tail and input during the lock are

@@ -124,7 +124,7 @@ export default function Home() {
               onHintActivate={() => changeMode("work")}
             />
           ) : (
-            <WorkGrid key="work" focusedId={focusedCase} />
+            <WorkGrid key="work" focusedId={focusedCase} onJumpToJar={() => changeMode("jar")} />
           )}
         </AnimatePresence>
       </section>

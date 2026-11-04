@@ -64,6 +64,8 @@ export const content = {
         toJarLabel: "Back to the jar",
         // The doodle beside the jar on desktop (also a shortcut to the work).
         scrollHint: "scroll down!",
+        // The doodle at the bottom of the work list (goes back to the jar).
+        jumpToJar: "jump to jar",
       },
       // Work-mode stage heading — the grid itself arrives in step 4.
       workHeading: "what's inside?",

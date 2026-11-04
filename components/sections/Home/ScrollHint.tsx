@@ -31,15 +31,34 @@ const HEAD = [
 ];
 
 /**
- * A little doodle beside the jar, in the style of a café's hand-drawn menu
- * board: "scroll down!" in small lowercase, over a thin curly arrow. Sits
- * inside the jar's wrapper (Home/JarView.tsx), so it moves and scales with
- * the jar. Once the items have settled the arrow pen-draws on and the label
- * fades in; switching to work fades it straight out. Also a button: it
- * switches to the work. Desktop only (CSS) — mobile has its tap cues.
+ * A little doodle annotation, in the style of a café's hand-drawn menu
+ * board: a small lowercase label and a thin curly arrow. Two of them:
+ * - "scroll down!" beside the jar (default; Home/JarView.tsx puts it in the
+ *   jar's wrapper, so it moves and scales with the jar). Desktop only (CSS)
+ *   — mobile has its tap cues.
+ * - "jump to jar" at the bottom of the work list (`up`: the arrow points up,
+ *   label under it; Home/WorkGrid.tsx, every screen size).
+ * While `shown`, the arrow pen-draws on and the label fades in; when it
+ * stops being shown it fades straight out. Also a button (`onActivate`).
  * Reduced motion: it just appears.
  */
-export default function ScrollHint({ shown, onActivate }: { shown: boolean; onActivate: () => void }) {
+export default function ScrollHint({
+  shown,
+  onActivate,
+  label = copy.scrollHint,
+  ariaLabel = copy.toWorkLabel,
+  up = false,
+  className = styles.besideJar,
+}: {
+  shown: boolean;
+  onActivate: () => void;
+  label?: string;
+  ariaLabel?: string;
+  /** Arrow points up (from under the label) instead of down. */
+  up?: boolean;
+  /** Where it sits; defaults to beside the jar. */
+  className?: string;
+}) {
   const reduced = useReducedMotion() ?? false;
   const draw = reduced ? { duration: 0 } : slowTransition({ duration: SCROLL_HINT_DRAW_S, ease: EASE_OUT });
   const fadeIn = reduced ? { duration: 0 } : slowTransition({ duration: SCROLL_HINT_LABEL_S, ease: EASE_OUT });
@@ -48,8 +67,8 @@ export default function ScrollHint({ shown, onActivate }: { shown: boolean; onAc
   return (
     <motion.button
       type="button"
-      className={styles.hint}
-      aria-label={copy.toWorkLabel}
+      className={`${styles.hint} ${up ? styles.up : ""} ${className}`}
+      aria-label={ariaLabel}
       tabIndex={shown ? 0 : -1}
       initial={false}
       animate={{ opacity: shown ? 1 : 0 }}
@@ -63,7 +82,7 @@ export default function ScrollHint({ shown, onActivate }: { shown: boolean; onAc
         animate={{ opacity: shown ? 1 : 0 }}
         transition={shown ? fadeIn : { duration: 0 }}
       >
-        {copy.scrollHint}
+        {label}
       </motion.span>
       <svg className={styles.arrow} viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} fill="none" aria-hidden="true">
         {[ARROW, ...HEAD].map((d, i) => (

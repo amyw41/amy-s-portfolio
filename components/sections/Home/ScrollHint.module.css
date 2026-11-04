@@ -1,12 +1,5 @@
-/* The "scroll down!" doodle (ScrollHint.tsx): just right of the jar, about
- * level with its lower half. Positioned and sized in % of the jar's wrapper,
- * so it scales with the jar (and so with the stage). */
+/* A doodle annotation (ScrollHint.tsx): label and curly arrow. */
 .hint {
-  position: absolute;
-  left: calc(100% + 5%);
-  top: 50%;
-  width: 26%;
-  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -17,6 +10,34 @@
   font-family: inherit;
   letter-spacing: inherit;
   color: #000;
+}
+
+/* "scroll down!": just right of the jar, about level with its lower half.
+ * Positioned and sized in % of the jar's wrapper, so it scales with the jar
+ * (and so with the stage). Desktop only: on mobile the tap cues do this. */
+.besideJar {
+  position: absolute;
+  left: calc(100% + 5%);
+  top: 50%;
+  width: 26%;
+  z-index: 1;
+}
+
+@media (max-width: 767px) {
+  .besideJar {
+    display: none;
+  }
+}
+
+/* Arrow pointing up, label under it ("jump to jar"): the arrow is the same
+ * drawing flipped, so the pen still starts at the label. */
+.up {
+  flex-direction: column-reverse;
+}
+
+.up .arrow {
+  transform: scaleY(-1);
+  margin: 0 0 6px 4%;
 }
 
 /* Small lowercase label in the annotation hand (Gaegu Light, lib/fonts.ts),
@@ -43,11 +64,4 @@
   outline: 2px solid #000;
   outline-offset: 4px;
   border-radius: 4px;
-}
-
-/* Desktop only: on mobile the tap cues do this job. */
-@media (max-width: 767px) {
-  .hint {
-    display: none;
-  }
 }

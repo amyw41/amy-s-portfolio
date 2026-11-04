@@ -21,15 +21,17 @@
   color: #000;
 }
 
-.filters {
+/* The end of the list: the "jump to jar" doodle (ScrollHint), centred,
+ * with room under it. */
+.end {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-  margin-top: 14px;
-  /* CircleToggle's label is calc(var(--fs-small) + 1px); home text runs
-   * 2px smaller than the rest of the site (same as Home.module.css's
-   * .toggles). */
-  --fs-small: calc(clamp(12px, 1.13vw, 17px) - 2px);
+  justify-content: center;
+  margin-top: 48px;
+  padding-bottom: 8px;
+}
+
+.jumpToJar {
+  width: 120px;
 }
 
 /* Two columns, top-aligned: the case studies big on the left (2/3 of the

@@ -1,18 +1,18 @@
 "use client";
 
-import { useMemo, useState, type CSSProperties } from "react";
+import { useMemo, useRef, type CSSProperties } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
 import styles from "./WorkGrid.module.css";
-import CircleToggle from "@/components/ui/CircleToggle";
-import { PROJECTS, PROJECT_CATEGORY_COLOR, type ProjectCategory } from "@/lib/projects";
+import AutoplayVideo from "@/components/sections/Projects/AutoplayVideo";
+import ScrollHint from "./ScrollHint";
+import { PROJECTS } from "@/lib/projects";
 import { content } from "@/lib/content";
 import { EXTRAS_PHOTOS } from "@/lib/extras";
 import {
   EASE_IN,
   EASE_OUT,
-  GRID_REORDER_S,
   GRID_STAGGER,
   GRID_TILE_RISE_PX,
   GRID_TILE_S,
@@ -38,7 +38,6 @@ const LIFT_VARS = {
   "--lift-out-ms": `${JAR_LIFT_OUT_MS}ms`,
 } as CSSProperties;
 
-const CATEGORY_ORDER: ProjectCategory[] = ["work", "personal", "hackathon"];
 /** The sidebar's Works list hovers "extras" for the Extras page: that lifts
  * the whole extras column. */
 const EXTRAS_ID = "extras";
@@ -48,9 +47,12 @@ interface Tile {
   href: string;
   title: string;
   year: number | null;
-  category: ProjectCategory | null;
   cover: string | null;
   video: string | null;
+  /** width / height of the media, for a card shaped to it (the extras —
+   * portrait posters show whole instead of cropped). null: the standard
+   * 3:2 cover. */
+  aspect: number | null;
 }
 
 // The case studies (big, left column), in lib/projects.ts's authoring order.
@@ -59,22 +61,23 @@ const BIG_TILES: Tile[] = PROJECTS.map((p) => ({
   href: `/${p.slug}`,
   title: p.title,
   year: p.year,
-  category: p.category,
   cover: p.cover,
-  video: null,
+  // Plays over the cover once the card's on screen (AutoplayVideo).
+  video: p.video ?? null,
+  aspect: null,
 }));
 
 // Each extra from the Extras page (small, right column), in lib/extras.ts's
 // order. They have no page of their own, so each links to the Extras page;
-// no year, and none of the work/personal/hackathon categories.
+// no year. Each card takes its media's own shape.
 const SMALL_TILES: Tile[] = EXTRAS_PHOTOS.map((photo, i) => ({
   id: `extra-${i}`,
   href: "/extras",
   title: photo.caption,
   year: null,
-  category: null,
   cover: photo.isVideo ? null : photo.src,
   video: photo.isVideo ? photo.src : null,
+  aspect: photo.width / photo.height,
 }));
 
 /** Each card's place in the arrival sweep: top to bottom down the stage,
@@ -90,47 +93,36 @@ const SWEEP_ORDER = new Map<string, number>(
 );
 
 /**
- * Work mode's stage (brief Part 2.4): "what's inside?", the category
- * filters, then two columns of cards: the case studies big on the left, and
- * each extra (from the Extras page) small on the right. It scrolls inside
- * the stage when it's taller than the screen.
+ * Work mode's stage (brief Part 2.4): "what's inside?", then two columns of
+ * cards: the case studies big on the left (their videos play once on
+ * screen), and each extra (from the Extras page) small on the right, shaped
+ * to its media. It scrolls inside the stage; at the bottom, a "jump to jar"
+ * doodle goes straight back to the jar.
  *
- * Filtering works like the old Projects section: matching tiles move to the
- * front (a stable partition of the default order, so turning every filter
- * off restores it exactly) and the rest dim. Tiles slide to their new
- * places via Framer's `layout`.
- *
- * Arriving, the tiles sweep in one after another from the top left
- * (GRID_STAGGER apart, SWEEP_ORDER). Leaving (back to jar), the whole view slides up and
- * fades out at once — Home/index.tsx waits for that before showing the jar.
+ * Arriving, the cards sweep in one after another, top to bottom
+ * (GRID_STAGGER apart, SWEEP_ORDER). Leaving (back to jar), the whole view
+ * slides up and fades out at once — Home/index.tsx waits for that before
+ * showing the jar.
  */
-export default function WorkGrid({ focusedId = null }: { focusedId?: string | null }) {
+export default function WorkGrid({
+  focusedId = null,
+  onJumpToJar,
+}: {
+  focusedId?: string | null;
+  /** The "jump to jar" doodle at the bottom was clicked. */
+  onJumpToJar?: () => void;
+}) {
   const reduced = useReducedMotion() ?? false;
-  const [active, setActive] = useState<Set<ProjectCategory>>(() => new Set());
-
-  function toggleCategory(category: ProjectCategory) {
-    setActive((prev) => {
-      const next = new Set(prev);
-      if (next.has(category)) next.delete(category);
-      else next.add(category);
-      return next;
-    });
-  }
-
-  // The case studies, matching ones first (filters); the extras never match
-  // a filter, so they dim while any is on.
-  const ordered = useMemo(() => {
-    const matches = (t: Tile) => active.size === 0 || (t.category !== null && active.has(t.category));
-    return BIG_TILES.map((tile, index) => ({ tile, index, match: matches(tile) }))
-      .sort((a, b) => Number(b.match) - Number(a.match) || a.index - b.index)
-      .map(({ tile, match }) => ({ tile, dimmed: !match }));
-  }, [active]);
-
   // A case study hovered in the sidebar: its card lifts, the others dim.
   // "Extras" lifts the whole extras column.
   const isolating = focusedId !== null && (focusedId === EXTRAS_ID || BIG_TILES.some((t) => t.id === focusedId));
   const isLifted = (tile: Tile, small: boolean) => isolating && (small ? focusedId === EXTRAS_ID : tile.id === focusedId);
 
+
+  // The work view scrolls; the end doodle draws on when it's in view there.
+  const viewRef = useRef<HTMLDivElement>(null);
+  const endRef = useRef<HTMLDivElement>(null);
+  const endInView = useInView(endRef, { root: viewRef, amount: 0.6 });
 
   const variants = useMemo<{ view: Variants; tile: Variants }>(
     () => ({
@@ -159,28 +151,27 @@ export default function WorkGrid({ focusedId = null }: { focusedId?: string | nu
     [reduced],
   );
 
-  function card(tile: Tile, small: boolean, filteredOut: boolean) {
+  function card(tile: Tile, small: boolean) {
     const lifted = isLifted(tile, small);
-    const dimmed = isolating ? !lifted : filteredOut;
+    const dimmed = isolating && !lifted;
     return (
       <motion.li
         key={tile.id}
         className={styles.tileItem}
-        // Only the case studies reorder (filters).
-        layout={reduced || small ? false : "position"}
         custom={SWEEP_ORDER.get(tile.id) ?? 0}
         variants={variants.tile}
         initial="hidden"
         animate="shown"
-        transition={{ layout: slowTransition({ duration: GRID_REORDER_S, ease: EASE_OUT }) }}
       >
         <Link
           href={tile.href}
           className={`${styles.tile} ${small ? styles.small : ""} ${dimmed ? styles.dimmed : ""} ${lifted ? styles.lifted : ""}`}
           style={LIFT_VARS}
         >
-          <span className={styles.cover}>
-            {tile.cover ? (
+          <span className={styles.cover} style={tile.aspect ? { aspectRatio: tile.aspect } : undefined}>
+            {tile.cover && tile.video ? (
+              <AutoplayVideo src={tile.video} poster={tile.cover} />
+            ) : tile.cover ? (
               <Image
                 src={tile.cover}
                 alt=""
@@ -214,6 +205,7 @@ export default function WorkGrid({ focusedId = null }: { focusedId?: string | nu
     // data-scroll-switch-target: the box useScrollSwitch checks before a key
     // press switches back to the jar (only once it's scrolled to the top).
     <motion.div
+      ref={viewRef}
       className={styles.work}
       variants={variants.view}
       initial="shown"
@@ -231,23 +223,25 @@ export default function WorkGrid({ focusedId = null }: { focusedId?: string | nu
       >
         {copy.heading}
       </motion.h2>
-      <div className={styles.filters}>
-        {CATEGORY_ORDER.map((category) => (
-          <CircleToggle
-            key={category}
-            label={copy.filters[category]}
-            color={PROJECT_CATEGORY_COLOR[category]}
-            active={active.has(category)}
-            onToggle={() => toggleCategory(category)}
-          />
-        ))}
-      </div>
 
       {/* Two columns: the case studies big on the left (2/3), the extras
        * small on the right (1/3), each stacked. */}
       <div className={styles.columns}>
-        <ul className={styles.bigList}>{ordered.map(({ tile, dimmed }) => card(tile, false, dimmed))}</ul>
-        <ul className={styles.smallList}>{SMALL_TILES.map((tile) => card(tile, true, active.size > 0))}</ul>
+        <ul className={styles.bigList}>{BIG_TILES.map((tile) => card(tile, false))}</ul>
+        <ul className={styles.smallList}>{SMALL_TILES.map((tile) => card(tile, true))}</ul>
+      </div>
+
+      {/* The end of the list: a doodle that takes you back to the jar. It
+       * draws on once it scrolls into view. */}
+      <div ref={endRef} className={styles.end}>
+        <ScrollHint
+          shown={endInView}
+          onActivate={() => onJumpToJar?.()}
+          label={content.en.sidebar.modes.jumpToJar}
+          ariaLabel={content.en.sidebar.modes.toJarLabel}
+          up
+          className={styles.jumpToJar}
+        />
       </div>
     </motion.div>
   );

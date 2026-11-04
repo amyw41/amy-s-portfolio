@@ -74,7 +74,7 @@ Top to bottom, everything on one left edge:
 
 Everything flows down from the top: opening a list pushes what's below it down. Headings get the hand-drawn hover circle; every group has a chevron; on load Experience and Works are open, Extra closed.
 
-There's **no jar / work toggle**: scrolling switches mode. Every scroll on the stage, up or down, flips it: jar → work → jar… There's no hint on desktop. On mobile, where the page scrolls normally, two small tap cues do the switching instead ("work" on the jar, "jar" at the top of the grid). See 2.4 and the design system.
+There's **no jar / work toggle**: scrolling switches mode, one way each. Scroll down on the jar to get to the work; on the work, scroll up from the top to go back to the jar (or click "jump to jar" at the bottom). A small hand-drawn "scroll down!" doodle sits beside the jar on desktop. On mobile, where the page scrolls normally, two small tap cues do the switching ("work" on the jar, "jar" at the top of the grid). See 2.4 and the design system.
 
 ### 2.3 Stage: jar mode (the default)
 
@@ -85,7 +85,7 @@ There's **no jar / work toggle**: scrolling switches mode. Every scroll on the s
 
 ### 2.4 Switching modes
 
-**jar → work** (scroll on the stage, either way; on mobile, tap the "work" cue):
+**jar → work** (scroll down on the stage; on mobile, tap the "work" cue):
 
 1. **The jar is lowered off the table**, cartoon style:
    - **Anticipation:** the jar lifts about 10px and squashes slightly (scaleY 0.96) for about 120ms.
@@ -94,10 +94,10 @@ There's **no jar / work toggle**: scrolling switches mode. Every scroll on the s
    - **Clink sound:** play the jar sound (`components/sections/Hero/jar-sound.ts`, `public/sounds/jar-drop.mp3`) when switching. Browsers only let sound play after a click, tap or key press on the page, so it's silent if the visitor has only scrolled so far. Add a mute option later.
 2. **"what's inside?" comes down from the top** as the jar leaves, like the camera panning down into the jar. It drops from above the stage with a little overshoot and settles at the top.
 3. **The cards load in:** one by one, top to bottom down the stage across both columns, fast: about 40ms between cards, each 300ms.
-   - Two columns: the big case studies (CyberSea, Spotify Guessr, SkinSprout) stacked on the left, taking 2/3; each extra from the Extras page stacked smaller on the right, 1/3 (no single Extras card). Cards are thumbnails with the title (and year, for case studies) underneath. The pills under the heading are the category filters (work / personal / hackathon). The view scrolls inside the stage; scrolling moves it first, and only flips back to the jar from its top or bottom edge.
+   - Two columns: the big case studies (CyberSea, Spotify Guessr, SkinSprout) stacked on the left, taking 2/3, their videos playing once on screen; each extra from the Extras page stacked smaller on the right, 1/3, each card shaped to its media (posters show whole). Cards are thumbnails with the title (and year, for case studies) underneath. No category filters. The view scrolls inside the stage; at the bottom a "jump to jar" doodle goes back to the jar.
    - Clicking a tile opens the case study with the same zoom as the menu (3.2).
 
-**work → jar** (scroll on the stage again, either way; on mobile, tap the "jar" cue):
+**work → jar** (scroll up from the top of the work, or click "jump to jar" at the bottom; on mobile, tap the "jar" cue):
 
 1. The grid and heading slide up and fade out together (200ms, no stagger, so leaving is quicker than arriving).
 2. **The jar drops down from above** onto the "table".
@@ -359,5 +359,5 @@ None of these block steps 1–6. The default is listed for each.
 3. **Projects in the jar.** Decided: they stay in, so hovering a case study can lift its item (3.1).
 4. **Highlight toggles.** Decided: removed. Hovering a case study isolates its item instead (3.1).
 5. **Intro copy** for the sidebar. Placeholder: the current tagline.
-6. **Scroll instead of a toggle** for switching modes. Decided: doing it — every scroll flips between the jar and the work grid, whichever way (see 2.4 and the design system). The crayon toggle is kept in the repo, unused.
+6. **Scroll instead of a toggle** for switching modes. Decided: doing it, one way each — scroll down on the jar for the work, scroll up from the top of the work for the jar (see 2.4 and the design system). The crayon toggle is kept in the repo, unused.
 7. **Sound.** Default: the jar clink plays when switching modes. A small mute button may be worth adding.
