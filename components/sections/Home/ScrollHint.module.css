@@ -29,17 +29,6 @@
   }
 }
 
-/* Arrow pointing up, label under it ("jump to jar"): the arrow is the same
- * drawing flipped, so the pen still starts at the label. */
-.up {
-  flex-direction: column-reverse;
-}
-
-.up .arrow {
-  transform: scaleY(-1);
-  margin: 0 0 6px 4%;
-}
-
 /* Small lowercase label in the annotation hand (Gaegu Light, lib/fonts.ts),
  * like a menu board's captions. Gaegu runs small, so 19px reads about like
  * the 14-16px body; its own airy spacing, not Geist's tight tracking. */
