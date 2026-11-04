@@ -84,9 +84,9 @@ Sidebar, top to bottom:
 - **Padding:** top/bottom same as the sidebar's (`clamp(24px, 6.9dvh, 80px)`, so the heading lines up with the name across the divider); left/right `clamp(24px, 3.125vw, 80px)` (48px @1536); 24px 16px on mobile.
 - **Heading** "what's inside?": 24px, weight 400 (22px on mobile).
 - **Filters:** the circle toggles (work / personal project / hackathon), 14px from the heading, 20px apart.
-- **Grid:** 32px below the filters; 4 across with 24px column / 32px row gaps (2 across once the stage is under 720px wide).
-- **Tile:** 3:2 cover, 8px corners; 10px gap to the caption. Caption: title 14px weight 400 black, year 14px weight 300 at 55% black, on one line.
-- **Filtered-out tile:** white wash over the cover (`--dim-white`, 44%) and caption at 45% opacity.
+- **Grid:** 32px below the filters, two top-aligned columns 24px apart: the case studies on the left (2/3 of the stage), stacked big, 32px apart; and each extra from the Extras page (no Extras card any more) on the right (1/3), stacked small, 24px apart, each linking to the Extras page. Under a 720px-wide stage the extras drop below the case studies, 2 across. The work view scrolls inside the stage (thin, faint scrollbar).
+- **Tile:** 3:2 cover, 8px corners; 10px gap to the caption. Caption: title 14px weight 400 black, year 14px weight 300 at 55% black, on one line. Extras' small cards: the same, caption 13px, no year, and the name may wrap.
+- **Filtered-out tile:** white wash over the cover (`--dim-white`, 44%) and caption at 45% opacity. The extras aren't in the work / personal / hackathon categories, so they dim while any filter is on.
 
 ## Motion
 
@@ -100,7 +100,7 @@ Sidebar, top to bottom:
 | Buzz | 10 drawings per second, cycling 3 |
 | Stop-motion moves | 12 fps — currently only for the intro; the jar's moves run smooth (`JAR_MOVES_STOP_MOTION = false`) |
 | Easing | out [0.22, 1, 0.36, 1]; in [0.55, 0, 1, 0.45]; in-out [0.65, 0, 0.35, 1] |
-| Grid tiles in | each 300ms ease-out: rise 12px, scale 0.97 → 1, fade in; 40ms apart, top left first |
+| Grid tiles in | each 300ms ease-out: rise 12px, scale 0.97 → 1, fade in; 40ms apart, top to bottom down the stage across both columns (left first on a tie) |
 | Grid reorder (filters) | tiles slide to new places, 350ms ease-out |
 | Leaving work mode | heading + grid slide up 12px and fade out together, 200ms ease-in; then the jar shows |
 | Works hover lift | in 250ms ease-out, back 200ms ease-in |

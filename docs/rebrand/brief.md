@@ -93,8 +93,8 @@ There's **no jar / work toggle**: scrolling switches mode. Every scroll on the s
    - **Items react:** right as it starts moving, every item gets a small upward kick, so they lag behind, knock together, and resettle inside the jar as it goes. This is real physics, using the existing engine.
    - **Clink sound:** play the jar sound (`components/sections/Hero/jar-sound.ts`, `public/sounds/jar-drop.mp3`) when switching. Browsers only let sound play after a click, tap or key press on the page, so it's silent if the visitor has only scrolled so far. Add a mute option later.
 2. **"what's inside?" comes down from the top** as the jar leaves, like the camera panning down into the jar. It drops from above the stage with a little overshoot and settles at the top.
-3. **The grid loads in:** project tiles appear one by one in a **diagonal sweep** from top left, like a gradient washing across. It's fast: about 40ms between tiles, each tile 300ms.
-   - Grid tiles are your project thumbnails, with title and year underneath. The two pills under the heading in the sketch are the category filters (work / personal / hackathon, the existing filters).
+3. **The cards load in:** one by one, top to bottom down the stage across both columns, fast: about 40ms between cards, each 300ms.
+   - Two columns: the big case studies (CyberSea, Spotify Guessr, SkinSprout) stacked on the left, taking 2/3; each extra from the Extras page stacked smaller on the right, 1/3 (no single Extras card). Cards are thumbnails with the title (and year, for case studies) underneath. The pills under the heading are the category filters (work / personal / hackathon). The view scrolls inside the stage; scrolling moves it first, and only flips back to the jar from its top or bottom edge.
    - Clicking a tile opens the case study with the same zoom as the menu (3.2).
 
 **work → jar** (scroll on the stage again, either way; on mobile, tap the "jar" cue):
