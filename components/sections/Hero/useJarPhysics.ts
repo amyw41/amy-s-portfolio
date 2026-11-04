@@ -245,6 +245,12 @@ interface GlassImpact {
   strength: number;
 }
 const impactCache = new Map<string, GlassImpact[]>();
+/** A frame-to-frame move below this (px/step at REFERENCE_WIDTH) is a
+ * settling jiggle, not a fall: the pile counts as settled once every item
+ * moves less. */
+const SETTLE_MOVE_PX = 1.5;
+/** Glass contacts gentler than this (0-1) are micro-touches: no clink. */
+const MIN_CLINK_STRENGTH = 0.08;
 
 /** Dilated click masks (setup's clickMasks), for the rest of the visit,
  * keyed by src + crop + dilation radius. Dilating a full-resolution mask is
@@ -315,6 +321,10 @@ export interface JarPhysicsOptions {
    * jar is lowered away). Nothing else — dragging or settling — calls it.
    * For the clink sound. */
   onImpact?: (strength: number) => void;
+  /** The pile has settled (the fall's replay reached the point where nothing
+   * moves more than a jiggle): no more clinks until the next fall or jostle,
+   * and any still ringing should stop. */
+  onImpactsEnd?: () => void;
 }
 
 export function useJarPhysics(
@@ -333,13 +343,16 @@ export function useJarPhysics(
     spawnGap = SPAWN_GAP,
     spawnSpeed = 0,
     onImpact,
+    onImpactsEnd,
   }: JarPhysicsOptions = {},
 ) {
   const [ready, setReady] = useState(false);
   // Read from inside setup's closures, which outlive any one render.
   const onImpactRef = useRef(onImpact);
+  const onImpactsEndRef = useRef(onImpactsEnd);
   useEffect(() => {
     onImpactRef.current = onImpact;
+    onImpactsEndRef.current = onImpactsEnd;
   });
   // Set by setup once the world exists; a no-op before that (and after
   // cleanup).
@@ -1242,6 +1255,17 @@ export function useJarPhysics(
           impacts = recordedImpacts.slice();
         }
       }
+      // When the pile has settled: the first frame after which no item moves
+      // more than a jiggle per step. Glass contacts from then on (late
+      // jiggles, items nudging a wall as they come to rest) and feather-light
+      // touches are silent — the clink is for things landing.
+      let settleTick = history.length;
+      for (let k = history.length - 1; k > 0; k--) {
+        const moved = history[k].some((p, i) => Math.hypot(p.x - history[k - 1][i].x, p.y - history[k - 1][i].y) > SETTLE_MOVE_PX * scale);
+        if (moved) break;
+        settleTick = k;
+      }
+      impacts = impacts.filter((hit) => hit.tick < settleTick && hit.strength >= MIN_CLINK_STRENGTH);
       if (debugPerf) {
         console.log(
           `[jar][debug=perf] precompute (${history.length} ticks${cachedFall ? ", cached" : ""}): ${(performance.now() - precomputeStart).toFixed(1)}ms`,
@@ -1508,6 +1532,7 @@ export function useJarPhysics(
       let replayIndex = 0;
       // The next recorded glass contact to play as a clink.
       let nextImpact = 0;
+      let settleReported = false;
       let replayAccumulator = 0;
       // The live bodies are at the END of the precomputed fall (precompute
       // ran the real engine to the settled pile), so starting the live loop
@@ -1595,10 +1620,15 @@ export function useJarPhysics(
             replayIndex++;
             replayAccumulator -= STEP_MS;
           }
-          // Glass contacts recorded in the fall, on the frame they happened.
+          // Glass contacts recorded in the fall, on the frame they happened;
+          // then, once the pile has settled, the sound stops.
           while (nextImpact < impacts.length && impacts[nextImpact].tick <= replayIndex) {
             onImpactRef.current?.(impacts[nextImpact].strength);
             nextImpact++;
+          }
+          if (!settleReported && replayIndex >= settleTick) {
+            settleReported = true;
+            onImpactsEndRef.current?.();
           }
           // Same interpolation as the live loop, but simpler: the next
           // frame already exists, so there's no lookahead risk.

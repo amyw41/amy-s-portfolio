@@ -23,10 +23,14 @@ const MIN_LEVEL = 0.35;
 const PITCH_SPREAD = 0.08;
 /** How long the clink's tail fades over. */
 const FADE_OUT_S = 0.08;
+/** How quickly a still-ringing clink fades once the pile has settled. */
+const SILENCE_FADE_S = 0.08;
 
 export type JarSound = {
   /** An item hit the glass, `strength` 0-1. */
   clink(strength: number): void;
+  /** The pile has settled: fade out any clink still ringing, quickly. */
+  silence(): void;
   dispose(): void;
 };
 
@@ -49,6 +53,8 @@ export function createJarSound(): JarSound {
   let onset = 0;
   let lastClinkAt = -Infinity;
   let disposed = false;
+  // The clinks still ringing, so silence() can fade them.
+  const ringing = new Set<GainNode>();
 
   // The first click, tap or key press lets audio play.
   const unlock = () => {
@@ -94,7 +100,20 @@ export function createJarSound(): JarSound {
       source.playbackRate.value = 1 + (Math.random() * 2 - 1) * PITCH_SPREAD;
       source.connect(gain);
       source.start(now, onset, JAR_CLINK_S);
-      source.onended = () => gain.disconnect();
+      ringing.add(gain);
+      source.onended = () => {
+        ringing.delete(gain);
+        gain.disconnect();
+      };
+    },
+    silence() {
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      for (const gain of ringing) {
+        gain.gain.cancelScheduledValues(now);
+        gain.gain.setValueAtTime(gain.gain.value, now);
+        gain.gain.linearRampToValueAtTime(0, now + SILENCE_FADE_S);
+      }
     },
     dispose() {
       disposed = true;

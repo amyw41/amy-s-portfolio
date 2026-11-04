@@ -57,6 +57,8 @@ export default function Home() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     soundRef.current?.clink(strength);
   }, []);
+  // The pile has settled: nothing more until the next fall or bounce.
+  const handleImpactsEnd = useCallback(() => soundRef.current?.silence(), []);
 
   function changeMode(next: HomeMode) {
     if (next === mode) return;
@@ -110,6 +112,7 @@ export default function Home() {
               entering={jarEntering}
               isolatedId={focusedCase}
               onImpact={handleImpact}
+              onImpactsEnd={handleImpactsEnd}
               onHintActivate={() => changeMode("work")}
             />
           ) : (

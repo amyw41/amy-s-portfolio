@@ -52,6 +52,8 @@ interface JarViewProps {
   /** An item hit the jar's glass (strength 0-1) — see JarStage's onImpact.
    * Home plays the clink. */
   onImpact?: (strength: number) => void;
+  /** The pile has settled: the clinks stop. */
+  onImpactsEnd?: () => void;
 }
 
 /** Fully off the stage, above or below: the view is the stage's own height,
@@ -83,7 +85,7 @@ const OFF_STAGE = "110%";
  *
  * Reduced motion: plain fades, items appear already settled.
  */
-export default function JarView({ entering, isolatedId, onSettledChange, onHintActivate, onImpact }: JarViewProps) {
+export default function JarView({ entering, isolatedId, onSettledChange, onHintActivate, onImpact, onImpactsEnd }: JarViewProps) {
   const reduced = useReducedMotion() ?? false;
   const [scope, animate] = useAnimate<HTMLDivElement>();
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -266,6 +268,7 @@ export default function JarView({ entering, isolatedId, onSettledChange, onHintA
           spawnSpeed={JAR_ITEMS_SPAWN_SPEED}
           onReady={handleReady}
           onImpact={onImpact}
+          onImpactsEnd={onImpactsEnd}
         />
         <ScrollHint shown={hintShown} onActivate={() => onHintActivate?.()} />
       </div>
