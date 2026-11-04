@@ -61,9 +61,6 @@ export default function Home() {
     jarSettledRef.current = settled;
   }, []);
 
-  // Which ways the scroll cues have been used, so each hint can bow out.
-  const [cueUsed, setCueUsed] = useState<Record<HomeMode, boolean>>({ jar: false, work: false });
-
   function changeMode(next: HomeMode) {
     if (next === mode) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -76,7 +73,6 @@ export default function Home() {
     }
     setJarEntering(next === "jar");
     setMode(next);
-    setCueUsed((used) => (used[next] ? used : { ...used, [next]: true }));
   }
 
   // Scrolling is the switch (no toggle): down for work, up for the jar.
@@ -111,8 +107,9 @@ export default function Home() {
 
       <section className={styles.stage}>
         {/* The crayon toggle (ModeToggle.tsx) is kept in the repo but no
-         * longer shown: scrolling switches, and these cues say so. */}
-        <ScrollCue mode={mode} used={cueUsed} onActivate={changeMode} />
+         * longer shown: scrolling switches. On mobile, where it doesn't,
+         * these tap cues do. */}
+        <ScrollCue mode={mode} onActivate={changeMode} />
         {/* mode="wait": one view at a time — the leaving one finishes its
          * exit before the next starts (jar → work: the jar drops away, then
          * "what's inside?" and the grid come in; work → jar: the grid slides

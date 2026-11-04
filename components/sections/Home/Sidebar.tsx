@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState, type FocusEvent, type ReactNode } from "react";
+import { memo, useId, useMemo, useState, type FocusEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
 import { ChevronDown, Mail } from "lucide-react";
@@ -239,7 +239,10 @@ function CaseStudyRow({
   );
 }
 
-export default function Sidebar({ onCaseFocus }: SidebarProps) {
+// Memoised: Home re-renders on every mode switch, and re-rendering every
+// motion component in here at that moment was a visible hitch. Its only
+// prop is a stable state setter.
+export default memo(function Sidebar({ onCaseFocus }: SidebarProps) {
   return (
     <aside className={styles.sidebar}>
       <ul className={styles.socialRow} aria-label={copy.social.label}>
@@ -295,4 +298,4 @@ export default function Sidebar({ onCaseFocus }: SidebarProps) {
       </nav>
     </aside>
   );
-}
+});

@@ -40,24 +40,13 @@ function Chevron({ up }: { up: boolean }) {
 }
 
 /**
- * The hint that you can scroll between modes, now there's no toggle: on
- * the jar, "scroll" over a down chevron at the bottom of the stage. It bobs
- * gently and is also a button (tap or keyboard) that switches. On the
- * desktop layout it fades away once it's been used, and the work grid has
- * no hint (any scroll flips back). On mobile, where the page scrolls
- * normally, the cues are the switch and stay: "work" on the jar, and an up
- * chevron over "jar" at the top of the grid.
+ * Mobile's jar / work switch. On the desktop layout scrolling switches and
+ * there's no hint at all (CSS hides these). On mobile the page scrolls
+ * normally, so these tap buttons are the switch: "work" over a down chevron
+ * at the bottom of the jar, and an up chevron over "jar" at the top right
+ * of the grid. Each bobs gently the way it points.
  */
-export default function ScrollCue({
-  mode,
-  used,
-  onActivate,
-}: {
-  mode: HomeMode;
-  /** Which directions have been used (switched to that mode) already. */
-  used: Record<HomeMode, boolean>;
-  onActivate: (next: HomeMode) => void;
-}) {
+export default function ScrollCue({ mode, onActivate }: { mode: HomeMode; onActivate: (next: HomeMode) => void }) {
   const vars = {
     "--cue-fade": `${SCROLL_CUE_FADE_S}s`,
     "--cue-bob-s": `${SCROLL_CUE_BOB_S}s`,
@@ -70,16 +59,13 @@ export default function ScrollCue({
       <button
         key={to}
         type="button"
-        className={`${styles.cue} ${down ? styles.down : styles.up} ${shown ? "" : styles.hidden} ${used[to] ? styles.used : ""}`}
+        className={`${styles.cue} ${down ? styles.down : styles.up} ${shown ? "" : styles.hidden}`}
         style={vars}
         aria-label={down ? copy.toWorkLabel : copy.toJarLabel}
         tabIndex={shown ? 0 : -1}
         onClick={() => onActivate(to)}
       >
-        {/* On mobile the page scrolls normally, so the down cue is a tap
-         * target: it names where it goes ("work") instead of "scroll". */}
-        <span className={down ? styles.desktopOnly : undefined}>{down ? copy.toWork : copy.toJar}</span>
-        {down && <span className={styles.mobileOnly}>{copy.work}</span>}
+        <span>{down ? copy.work : copy.toJar}</span>
         <Chevron up={!down} />
       </button>
     );

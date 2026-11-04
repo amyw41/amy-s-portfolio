@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties, type MutableRefObject, type RefObject } from "react";
+import { memo, useEffect, useRef, type CSSProperties, type MutableRefObject, type RefObject } from "react";
 import Image from "next/image";
 import styles from "./JarStage.module.css";
 import JarItem from "./JarItem";
@@ -47,7 +47,9 @@ interface JarStageProps {
   onReady?: () => void;
 }
 
-export default function JarStage({
+// Memoised: whoever holds the jar (Home's JarView) re-renders as it moves
+// between modes, and re-rendering every item then was wasted work.
+export default memo(function JarStage({
   items,
   projectsOn,
   favouritesOn,
@@ -157,4 +159,4 @@ export default function JarStage({
       )}
     </div>
   );
-}
+});

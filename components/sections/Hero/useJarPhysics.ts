@@ -53,6 +53,10 @@ const MAX_POINTER_SPEED = 25;
  * can pick up an enormous solver-correction velocity in one step and rocket
  * out of the jar. Set above ordinary fall speed so it never limits that. */
 const MAX_BODY_SPEED = 24;
+/** Below this much movement since the last frame (px / rad), an item's
+ * transform isn't rewritten — a settled pile costs nothing per frame. */
+const POSE_EPSILON_PX = 0.01;
+const POSE_EPSILON_RAD = 0.0001;
 
 /** Caps angular velocity in rad/step. Not scaled by container size, since
  * rotation rate is unitless. frictionAir bleeds off spin over time but does
@@ -1297,7 +1301,7 @@ export function useJarPhysics(
         // tick (`prev`) and the body's current pose. Painting only on ticks
         // instead reads as judder above 60Hz: most frames repaint an
         // unchanged transform, then one jumps a whole tick of motion.
-        let prev = physicsItems.map(({ body }) => ({ x: body.position.x, y: body.position.y, angle: body.angle }));
+        const prev = physicsItems.map(({ body }) => ({ x: body.position.x, y: body.position.y, angle: body.angle }));
         function renderInterpolated(alpha: number) {
           for (let i = 0; i < physicsItems.length; i++) {
             const { id, body, halfWidth, halfHeight } = physicsItems[i];
@@ -1307,6 +1311,10 @@ export function useJarPhysics(
             const x = p.x + (body.position.x - p.x) * alpha;
             const y = p.y + (body.position.y - p.y) * alpha;
             const angle = p.angle + (body.angle - p.angle) * alpha;
+            // Settled items don't move: skip rewriting the same transform,
+            // which would still cost a style recalc every frame.
+            const last = renderedPose.get(id);
+            if (last && Math.abs(last.x - x) < POSE_EPSILON_PX && Math.abs(last.y - y) < POSE_EPSILON_PX && Math.abs(last.angle - angle) < POSE_EPSILON_RAD) continue;
             el.style.transform = `translate3d(${x - halfWidth}px, ${y - halfHeight}px, 0) rotate(${angle}rad)`;
             renderedPose.set(id, { x, y, angle });
           }
@@ -1318,7 +1326,13 @@ export function useJarPhysics(
           while (accumulator >= STEP_MS) {
             // Snapshot before stepping: this is the endpoint interpolation
             // renders from.
-            prev = physicsItems.map(({ body }) => ({ x: body.position.x, y: body.position.y, angle: body.angle }));
+            // Overwritten in place, not reallocated every step.
+            for (let i = 0; i < physicsItems.length; i++) {
+              const { position, angle } = physicsItems[i].body;
+              prev[i].x = position.x;
+              prev[i].y = position.y;
+              prev[i].angle = angle;
+            }
             stepPhysics();
             // Skip interpolating across a respawn teleport (see teleportedIds).
             if (teleportedIds.size > 0) {

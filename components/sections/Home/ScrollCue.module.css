@@ -1,5 +1,6 @@
-/* The scroll cues (ScrollCue.tsx): bottom centre of the stage on the jar,
- * top centre on the work grid. Above both views. Small, grey, quiet. */
+/* Mobile's jar / work tap cues (ScrollCue.tsx): bottom centre of the stage
+ * on the jar, top right on the work grid. Above both views. Small, grey,
+ * quiet. Not shown at all on the desktop layout, where scrolling switches. */
 .cue {
   position: absolute;
   left: 50%;
@@ -38,17 +39,13 @@
   bottom: 12px;
 }
 
+/* Top right, clear of the "what's inside?" heading. */
 .up {
   top: 12px;
+  right: 16px;
+  left: auto;
+  translate: none;
   flex-direction: column-reverse;
-}
-
-/* On the desktop layout any scroll flips back, so the work grid needs no
- * hint; the up cue is mobile's way back only. */
-@media (min-width: 768px) {
-  .up {
-    display: none;
-  }
 }
 
 .chevron {
@@ -63,34 +60,9 @@
   pointer-events: none;
 }
 
-/* Already used once: on the desktop layout scrolling is the switch, so the
- * hint bows out. On mobile the cue is the switch, so it stays. */
 @media (min-width: 768px) {
-  .used {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-  }
-}
-
-.mobileOnly {
-  display: none;
-}
-
-@media (max-width: 767px) {
-  .desktopOnly {
+  .cue {
     display: none;
-  }
-
-  .mobileOnly {
-    display: inline;
-  }
-
-  /* Top right, clear of the "what's inside?" heading. */
-  .up {
-    left: auto;
-    right: 16px;
-    translate: none;
   }
 }
 

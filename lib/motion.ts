@@ -138,9 +138,9 @@ export const MODE_TRANSITION_MS =
     JAR_ANTICIPATE_S + JAR_DROP_OUT_S + HEADING_DROP_S,
     WORK_EXIT_S + JAR_DROP_IN_S + JAR_LAND_S,
   ) * 1000;
-// The scroll cue (Home/ScrollCue.tsx): bobs SCROLL_CUE_BOB_PX in the
-// direction it points, one bob every SCROLL_CUE_BOB_S; fades out over
-// SCROLL_CUE_FADE_S once it has been used.
+// Mobile's tap cues (Home/ScrollCue.tsx; desktop has none): each bobs
+// SCROLL_CUE_BOB_PX the way it points, one bob every SCROLL_CUE_BOB_S, and
+// fades over SCROLL_CUE_FADE_S as the mode changes.
 export const SCROLL_CUE_BOB_PX = 3;
 export const SCROLL_CUE_BOB_S = 1.8;
 export const SCROLL_CUE_FADE_S = 0.4;

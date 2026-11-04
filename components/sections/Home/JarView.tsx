@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAnimate, usePresence, useReducedMotion, type AnimationPlaybackControls } from "framer-motion";
 import styles from "./Home.module.css";
 import JarStage from "@/components/sections/Hero/JarStage";
@@ -108,6 +108,14 @@ export default function JarView({ entering, isolatedId, onSettledChange }: JarVi
     runningRef.current = [];
   };
   const reportSettled = () => onSettledChange?.(landedRef.current && itemsReadyRef.current && !leavingRef.current);
+  // Stable, so the memoised JarStage doesn't re-render (all 13 items) every
+  // time this view does — e.g. the moment it starts leaving.
+  const handleReady = useCallback(() => {
+    itemsReadyRef.current = true;
+    readyWaitersRef.current.forEach((resolve) => resolve());
+    readyWaitersRef.current = [];
+    onSettledChange?.(landedRef.current && itemsReadyRef.current && !leavingRef.current);
+  }, [onSettledChange]);
 
   // Arriving.
   useEffect(() => {
@@ -228,12 +236,7 @@ export default function JarView({ entering, isolatedId, onSettledChange }: JarVi
           spawnLead={JAR_ITEMS_SPAWN_LEAD}
           spawnGap={JAR_ITEMS_SPAWN_GAP}
           spawnSpeed={JAR_ITEMS_SPAWN_SPEED}
-          onReady={() => {
-            itemsReadyRef.current = true;
-            readyWaitersRef.current.forEach((resolve) => resolve());
-            readyWaitersRef.current = [];
-            reportSettled();
-          }}
+          onReady={handleReady}
         />
       </div>
     </div>

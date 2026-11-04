@@ -74,7 +74,7 @@ Top to bottom, everything on one left edge:
 
 Everything flows down from the top: opening a list pushes what's below it down. Headings get the hand-drawn hover circle; every group has a chevron; on load Experience and Works are open, Extra closed.
 
-There's **no jar / work toggle**: scrolling switches mode. Every scroll on the stage, up or down, flips it: jar → work → jar… A small hand-drawn cue on the jar says so ("scroll" with a down chevron at the bottom); it fades once it's been used, and the work grid has none. On mobile, where the page scrolls normally, the cues are tap targets instead ("work" on the jar, "jar" at the top of the grid). See 2.4 and the design system.
+There's **no jar / work toggle**: scrolling switches mode. Every scroll on the stage, up or down, flips it: jar → work → jar… There's no hint on desktop. On mobile, where the page scrolls normally, two small tap cues do the switching instead ("work" on the jar, "jar" at the top of the grid). See 2.4 and the design system.
 
 ### 2.3 Stage: jar mode (the default)
 
@@ -124,7 +124,7 @@ Hovering a case study in the sidebar's **Works** list (or tabbing to it) **isola
 
 ### 3.2 Clicking: zoom into the case study
 
-1. **Everything else disappears first** (about 350ms). The rest of the jar (or the other grid tiles), the scroll cue, and the menu items all fade and drop a little (8–12px), staggered quickly. The clicked project's lifted jar item (or its grid tile) stays.
+1. **Everything else disappears first** (about 350ms). The rest of the jar (or the other grid tiles), mobile's tap cue, and the menu items all fade and drop a little (8–12px), staggered quickly. The clicked project's lifted jar item (or its grid tile) stays.
 2. **The sidebar shrinks.** It narrows from its full width to a thin rail (about 64px):
    - **The name retracts into the top-left corner**, becoming the logo. The logo design is still to come (Part 7); until then, use a placeholder like "aw".
    - The rail then shows **the case study's contents**: numbered sections 1, 2, 3, 4…, which jump to each section.
@@ -189,7 +189,7 @@ Sketch: `01-intro-spill.png`, and the top left of `00-full-reference.png`. Total
 | 2.0 – 3.0 | **The unravel.** The tip of the right strand is the needle. It travels **down toward the bottom of the page, near the left side**, tracing the start of its route. Behind it, the line gets pulled out of the drawing: the jar visibly unwinds from the far end, like a thread pulled through a needle, until nothing is left but the line. The liquid fill fades as the jar unravels. |
 | ~3.0 | **The split.** At a fork point the pulled line splits into **two strands**. |
 | 3.0 – 3.8 | **Strand A** turns and goes **up**, becoming the sidebar divider: it settles into the squiggly line, with padding top and bottom, and starts buzzing. **Strand B** travels into the stage and **draws the real jar's outline** with the pen-stroke reveal, so the jar is literally drawn by the same thread. Both strands finish together at about 3.8s. |
-| 3.8 → | Strand B's outline **cross-fades into the real jar art**, then the items fall in (existing physics). At the same time the sidebar loads top to bottom: name, intro, links, Experience, Works / About / Play (the scroll cue fades in with the stage). Each one fades and rises 8px, 70ms apart. |
+| 3.8 → | Strand B's outline **cross-fades into the real jar art**, then the items fall in (existing physics). At the same time the sidebar loads top to bottom: name, intro, links, Experience, Works / About / Play (on mobile, the tap cue fades in with the stage). Each one fades and rises 8px, 70ms apart. |
 
 **How the unravel works.** Put this in the step 8 prompt word for word.
 
