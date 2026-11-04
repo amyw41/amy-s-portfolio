@@ -33,7 +33,7 @@ Horizontal spacing scales with the window's width (vw), vertical spacing with it
 | Token | Value |
 |---|---|
 | Frame | full window width, 100dvh tall, no outer padding; the sidebar is always flush with the window's left edge |
-| Sidebar width | `clamp(300px, 20vw, 380px)` (307px @1536) |
+| Sidebar width | `clamp(393px, 25.8vw, 490px)` (396px @1536) — just wide enough that the intro's "experiences" sits on its second line, with a few px of slack; holds from 1280 to 1920 wide |
 | Divider | hand-drawn black line, 0.6px (the jar's ink weight), gently wobbling up to ~1.4px either side of straight, buzzing; inset `clamp(8px, 2.3dvh, 28px)` (16px @696) from the top and bottom of the screen (a plain 1px rule on mobile) |
 | Sidebar padding, left/right | `clamp(20px, 2.083vw, 56px)` (32px @1536) |
 | Sidebar padding, top/bottom | `clamp(24px, 6.9dvh, 80px)` (48px @696; the divider starts 32px above the name there) |

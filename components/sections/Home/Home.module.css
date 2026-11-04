@@ -21,10 +21,12 @@
   --stage-pad-x: clamp(24px, 3.125vw, 80px);
   /* Home page tracking for Geist — one place to tune it. */
   --home-tracking: -0.6px;
-  /* 307px @1536 wide; never under 300px, so the intro and descriptions
-   * don't wrap onto so many lines that the sidebar outgrows a short
+  /* 396px @1536 wide: just wide enough (plus a few px of slack) that the
+   * intro's "experiences" sits on its second line. Never under 393px, so
+   * that still holds on narrower windows (1280, 1440), and the intro
+   * doesn't wrap onto so many lines that the sidebar outgrows a short
    * window (e.g. 150% browser zoom). */
-  --sidebar-width: clamp(300px, 20vw, 380px);
+  --sidebar-width: clamp(393px, 25.8vw, 490px);
   display: grid;
   grid-template-columns: var(--sidebar-width) 1px minmax(0, 1fr);
   width: 100%;
