@@ -1,7 +1,8 @@
 # Intro brief v2: the overflowing jar
 
 Ground rules:
-- Stop motion everywhere: one 12fps clock, on twos. Every frame must be visibly different so the motion reads. Lines don't boil; ink and foam do.
+- Stop motion everywhere: one 12fps clock, on twos. Every frame must be visibly different so the motion reads.
+- Line boil, the "squiggly shakiness" (Amy's reference: a hand-drawn loading animation by anthea_irl on X): everything in the intro boils. That covers the jar lines, the ink edge, the foam, the bubbles and the strands. On each 12fps frame, redraw every line with a fresh, small, seeded wobble: about 0.6–1px of displacement along its normal, varying smoothly along the line, so it looks shaky and alive rather than like jittery noise. During the last 0.3s of the trace, ease the boil to zero so the final frame is exactly the real artwork and the pixel diff stays clean. Make it one constant, INTRO_BOIL_PX.
 - One pen speed: all line drawing (the small jar, the rainbow arcs, the divider, the real jar) runs at the same screen px/s, set from the small jar's draw time. Keep it in one constant, INTRO_PEN_PX_PER_S.
 - Exact artwork: whatever ends on the page is drawn on from the real artwork's own SVG paths. That means every stroke of the jar drawing, including the rim's inner opening and the lid double edge, plus the real divider path. No morph and no blend: the drawn line is the real jar and divider.
 - Black only: solid black ink, thin line in the jar's stroke weight.
