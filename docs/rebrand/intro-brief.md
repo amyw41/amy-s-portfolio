@@ -67,9 +67,11 @@ Done when:
 
 ## v3 proposal: one line that spirals, and text that "finds its font"
 
-Amy's ideas (Nov 2026), written up before building. Everything else in v2 stays: the stop-motion clock, the boil, one pen speed, and the exact artwork at the end.
+Amy's ideas (Nov 2026), written up before building. Everything else in v2 stays: the stop-motion clock, the boil, one pen speed, the foam, the two rainbow strands, and the exact artwork at the end.
 
-### A. The spiral (replaces the two rainbow strands)
+### A. The spiral (parked: not planned)
+> **Parked.** Amy: "if ur doing the foam then we dont need the spiral, this is just two diff ideas". The intro keeps the foam, then the two rainbow strands (v2). This is kept only as an alternative to the foam overflow.
+
 Amy: "have a line come in do a loop make like a spiral and then separate into the two different sketches … more cohesive."
 
 1. **One line out.** As the foam settles, a single strand rises from the top of the foam, out of the middle of the rim, instead of two.
@@ -83,7 +85,7 @@ So the story reads as one continuous line: jar → overflow → one strand → s
 - **Thread:** a fixed visible length (INTRO_THREAD_PX) while travelling. During the split, the coil erases from its outer end at the same pen speed the strands are drawn.
 - **Time:** about +0.5s overall versus v2.
 
-### B. Text loading in
+### B. Text loading in (waiting for Amy's go-ahead)
 Amy: "the words about to load in before they actually do, like when you're changing fonts before it settles on one" or "a background that indicates where the text will be".
 
 **Option 1, the font flicker (recommended).** When the sidebar loads, each line of text flickers through other typefaces on the intro's 12fps clock before settling on Geist: Gaegu (the hand), a serif, a mono, Roboto. It's 4–6 drawings per line (about 0.4s), lines starting 70ms apart, top to bottom.
