@@ -74,7 +74,7 @@ Top to bottom, everything on one left edge:
 
 Everything flows down from the top: opening a list pushes what's below it down. Headings get the hand-drawn hover circle; every group has a chevron; on load Experience and Works are open, Extra closed.
 
-There's **no jar / work toggle**: scrolling switches mode, one way each. Scroll down on the jar to get to the work; on the work, scroll up from the top to go back to the jar (or click the "jump to jar" doodle beside the last card). A small hand-drawn "scroll down!" doodle sits beside the jar on desktop. On mobile, where the page scrolls normally, two small tap cues do the switching ("work" on the jar, "jar" at the top of the grid). See 2.4 and the design system.
+There's **no jar / work toggle**: scrolling switches mode, one way each. Scroll down on the jar to get to the work; on the work, scroll up from the top to go back to the jar (or click the small "jump to jar" doodle in the bottom-right corner). A small hand-drawn "scroll down!" doodle sits beside the jar on desktop. On mobile, where the page scrolls normally, two small tap cues do the switching ("work" on the jar, "jar" at the top of the grid). See 2.4 and the design system.
 
 ### 2.3 Stage: jar mode (the default)
 
@@ -94,10 +94,10 @@ There's **no jar / work toggle**: scrolling switches mode, one way each. Scroll 
    - **Clink sound:** the jar sound (`components/sections/Hero/jar-sound.ts`, `public/sounds/jar-drop.mp3`) only ever plays as glass clinks: one short clink each time an item first touches the jar's glass (floor or wall) as the items fall in, and a few (up to 3) as they bounce against the glass when the jar is lowered away here. Item-on-item contacts, settling, hovering and dragging are silent. Browsers only allow sound after a click, tap or key press on the page, so it's silent until then. Add a mute option later.
 2. **"what's inside?" comes down from the top** as the jar leaves, like the camera panning down into the jar. It drops from above the stage with a little overshoot and settles at the top.
 3. **The cards load in:** one by one, top to bottom down the stage across both columns, fast: about 40ms between cards, each 300ms.
-   - Two equal columns: CyberSea, Spotify Guessr, SkinSprout, all the same size, their videos playing once on screen; "jump to jar" (a doodle) in the empty cell beside SkinSprout, back to the jar. No extras on the home page for now — every extra lives on the Play page, in its "little design things" section; /extras redirects there. (The earlier 2/3 + 1/3 split is still built in: `WORK_LAYOUT` in Home/WorkGrid.tsx.) Cards are thumbnails with the title and year underneath. No category filters. The view scrolls inside the stage and ends in a thin black footer strip: "designed + built by amy (2026)" and the links.
+   - Two equal columns: CyberSea, Spotify Guessr, SkinSprout, all the same size, their videos playing once on screen; "jump to jar" (a small doodle) tucked into the bottom-right corner above the footer, back to the jar. No extras on the home page for now — every extra lives on the Play page, in its "little design things" section; /extras redirects there. (The earlier 2/3 + 1/3 split is still built in: `WORK_LAYOUT` in Home/WorkGrid.tsx.) Cards are thumbnails with the title and year underneath. No category filters. The view scrolls inside the stage and ends in a thin black footer strip: "designed + built by amy (2026)" and the links.
    - Clicking a tile opens the case study with the same zoom as the menu (3.2).
 
-**work → jar** (scroll up from the top of the work, or click the "jump to jar" doodle beside the last card; on mobile, tap the "jar" cue):
+**work → jar** (scroll up from the top of the work, or click the small "jump to jar" doodle in the bottom-right corner; on mobile, tap the "jar" cue):
 
 1. The grid and heading slide up and fade out together (200ms, no stagger, so leaving is quicker than arriving).
 2. **The jar drops down from above** onto the "table".

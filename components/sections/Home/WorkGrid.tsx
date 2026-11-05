@@ -96,7 +96,7 @@ const SMALL_TILES: Tile[] = [
  * Which work-view layout:
  * - "equal": every case study the same size, two equal columns, in
  *   lib/projects.ts's order (= the sidebar's), then any teaser extras; "jump
- *   to jar" in the next free cell. (Current.)
+ *   to jar" small in the bottom-right corner under them. (Current.)
  * - "split": the bigger case studies big on the left (2/3), the `small` ones
  *   and the teaser extras small on the right (1/3), "jump to jar" at the
  *   bottom of the right column. To go back to it: set this to "split", put
@@ -260,23 +260,21 @@ export default function WorkGrid({
 
       {WORK_LAYOUT === "equal" ? (
         // Two equal columns, every case study the same size; "jump to jar"
-        // in the next free cell, centred against the card beside it. It
-        // draws on once it scrolls into view.
-        <ul className={styles.equalGrid}>
-          {EQUAL_TILES.map((tile) => card(tile, false))}
-          <li className={styles.jumpCell}>
-            <div ref={jumpRef} className={styles.jump}>
-              <ScrollHint
-                shown={jumpInView}
-                onActivate={() => onJumpToJar?.()}
-                label={content.en.sidebar.modes.jumpToJar}
-                ariaLabel={content.en.sidebar.modes.toJarLabel}
-                up
-                className={styles.jumpToJar}
-              />
-            </div>
-          </li>
-        </ul>
+        // tucked into the bottom-right corner under them, just above the
+        // footer. It draws on once it scrolls into view.
+        <>
+          <ul className={styles.equalGrid}>{EQUAL_TILES.map((tile) => card(tile, false))}</ul>
+          <div ref={jumpRef} className={styles.jumpCorner}>
+            <ScrollHint
+              shown={jumpInView}
+              onActivate={() => onJumpToJar?.()}
+              label={content.en.sidebar.modes.jumpToJar}
+              ariaLabel={content.en.sidebar.modes.toJarLabel}
+              up
+              className={styles.jumpToJarSmall}
+            />
+          </div>
+        </>
       ) : (
         // Two columns: the bigger case studies on the left (2/3), the smaller
         // ones and the teaser extra(s) small on the right (1/3), each stacked.

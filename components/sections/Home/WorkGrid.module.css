@@ -85,8 +85,7 @@
 }
 
 /* "equal" layout (WorkGrid.tsx's WORK_LAYOUT): two equal columns, every
- * case study the same size, 32px between rows and 24px between columns;
- * "jump to jar" in the next free cell, centred against the card beside it.
+ * case study the same size, 32px between rows and 24px between columns.
  * One column on a narrow stage. */
 .equalGrid {
   display: grid;
@@ -98,15 +97,16 @@
   list-style: none;
 }
 
-.jumpCell {
-  align-self: center;
+/* "jump to jar", tucked away: small, in the bottom-right corner under the
+ * cards, just above the footer strip. */
+.jumpCorner {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
+  margin: 24px 0 -24px;
 }
 
-.jumpCell .jump {
-  margin: 0;
-  padding: 0;
+.jumpToJarSmall {
+  width: 90px;
 }
 
 @container (max-width: 720px) {
