@@ -120,23 +120,21 @@ One sound: a short glass clink (the first 0.22s of `public/sounds/jar-drop.mp3` 
 
 ## Intro
 
-The home page's opening (Home/Intro.tsx; brief: `docs/rebrand/intro-brief.md` v5): a rough, hand-sketched, HeyTea-style loading doodle that ends on the original jar drawing. `INTRO_STYLE` picks the version: `"line"` (current), `"sketch"` (the divider and the jar drawing on) or `"overflow"` (v2: small jar, ink, foam, rainbow strands).
+The home page's opening (Home/Intro.tsx; brief: `docs/rebrand/intro-brief.md` v7): a rough, hand-sketched, HeyTea-style loading doodle. One thin line spirals into a circle, is released like a paper ribbon, and ends on the original jar drawing. `INTRO_STYLE` picks the version: `"line"` (current), `"sketch"` or `"overflow"` (v2).
 
-- **Motion:** the line itself moves smoothly; the boil changes 12 times a second (stop motion).
-- **Boil:** every line wobbles, cycling 3 versions. It's a softer 0.5px while the line loops and splits, 0.8px while it draws, and it eases to still over the last 0.3s.
-- **Roughness:** gentle, low-frequency lumps only. About ±1px on the loop and ±3px on the strands' paths, fading to nothing at their ends so every join is smooth.
-- **Line weight:** the original jar drawing's ink (0.31% of the jar's width, about 1.3px on a laptop) for the dot's line and the strands. The divider keeps its own 0.6px.
-- **Pen speed:** 3000px/s for the strands, the divider and the jar. Each strand eases up to it over 0.35s from a slow start, then carries straight on into its drawing with no pause.
+- **Line weight:** the dot's line and both ribbons use the jar drawing's own weight as it shows on screen. That's measured at start from the artwork rendered at its size (its ink spread along its strokes): about 0.57px on a laptop, about the same as the divider's 0.6px. They're never scaled, with round caps and joins.
+- **Motion:** the line moves smoothly. The boil changes 12 times a second, cycling 3 versions: 0.5px until the right ribbon lands on the jar, then 0.8px, easing to still over the last 0.3s.
+- **Speed:** never stops. The loop is drawn slow at both ends (40% of its average speed), the ribbons set off at the speed the loop closed with and ease up to 900px/s, then up to 3000px/s once on their drawings.
 
 | Time (1536×696) | What happens |
 |---|---|
 | 0–0.25s | a small uneven dot at the exact centre of the window |
-| 0.25–1.1s | the pen draws a lazy, open loop outward from the dot: about 1¼ widely spaced turns, out to a radius of 6% of the window height (30–60px), the end running on a little. It starts slowly, glides, and slows a touch at the end. It never rotates |
-| 1.1s → | the line flows out of the loop as one gesture. The outer end carries on along the loop's own direction first, and the centre end follows 0.15s later. Each is followed by its half of the loop like thread, so the loop opens and straightens into two broad, curving strands, joined with no corners. The left one goes to the divider's foot and runs up the real divider path. The right one goes to the jar's left wall at mid-height, and one pen draws the original jar through its own strokes end to end: up the left wall, round the rim and lid lines, down the right wall, along the base and back. The drawing appears exactly where the pen has been |
-| ~2.3s | the boil stills and the lines are the page (the original artwork, unmasked, in the same box). The sidebar loads top to bottom (350ms each, 70ms apart, rising 8px), the items fall and "scroll down!" draws |
+| 0.25–1.0s | the pen spirals lazily outward (about one turn) and settles into one loose, slightly lumpy circle (radius 4.3% of the window height, 22–40px), coming round just past its start |
+| 1.0s → | the circle opens at the top and the bottom. The top end leaves first, heading right, with the spiral and the circle's left half trailing behind it as a ribbon. The bottom end follows 0.1s later, heading left, with the right half trailing. Each floats off on a soft wave (about 15px, decaying) and lands heading the way its drawing goes. The left ribbon runs up the divider from its foot; the right one lands on the jar's right wall level with the centre and traces the original drawing, one pen through its strokes. Each ribbon keeps its own length until it lands, then the line behind it stays |
+| ~2.8s | the boil stills and the lines are the page (the original artwork, unmasked, in its own box). The sidebar loads top to bottom (350ms each, 70ms apart, rising 8px), the items fall and "scroll down!" draws |
 
 - **When:** the full version plays once per visit and can't be skipped.
-- **Repeat visits and phones:** a 0.7s version with no dot or strands. The divider draws on top to bottom while the jar draws along its strokes, then the page carries on. A click or key skips it.
+- **Repeat visits and phones:** 0.7s. The divider draws top to bottom while the jar draws along its strokes from the left wall. A click or key skips it.
 - **Exits:** a resize mid-intro jumps to the end. There's no intro with reduced motion, on a visit straight to the work (`/#projects`) or on a trip back from a case study.
 - **Debug:** `?intro=1` replays the full version, `?intro=2` shows the repeat version, and `?slow=4` slows it.
 

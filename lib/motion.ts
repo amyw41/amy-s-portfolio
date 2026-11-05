@@ -128,26 +128,29 @@ export const JAR_RETURN_S = 0.25;
 // top to bottom, INTRO_SIDEBAR_STAGGER_S apart, rising INTRO_SIDEBAR_RISE_PX.
 // The short version (repeat visits, phones) is just the last beat, the jar's
 // drawing taking INTRO_SHORT_S.
-// Which intro plays (intro-brief.md): "line" (v5, current) — a rough dot at
-// the window's centre draws a loose spiral outward, its two ends pull apart
-// into strands, the left one drawing the divider and the right one drawing
-// the original jar with one pen through its own strokes (lib/jar-line.ts);
+// Which intro plays (intro-brief.md): "line" (v7, current) — a rough dot at
+// the window's centre spirals out into one loose circle, which opens at the
+// top and bottom and floats off as two ribbon tails, the left one drawing
+// the divider and the right one the original jar, one pen through its own
+// strokes (lib/jar-line.ts);
 // "sketch" — the divider and the jar drawing on; "overflow" (v2) — the
 // small jar, ink, foam and rainbow strands.
 export const INTRO_STYLE = "line" as "line" | "sketch" | "overflow";
-// v5's dot shows until INTRO_SPIRAL[0]; the spiral draws on over
-// INTRO_SPIRAL; then the strands travel at the pen's speed (easing in over
-// 0.15s), each a thread at least INTRO_STRAND_MIN_PX long. The short version
+// The dot shows until INTRO_SPIRAL[0]; the spiral-into-a-circle draws on
+// over INTRO_SPIRAL, slow at both ends but never stopped. The short version
 // (INTRO_SHORT_S) is just the divider and the jar drawing on together.
-export const INTRO_SPIRAL: [number, number] = [0.25, 1.1];
-// The split flows rather than snaps: each strand eases up to the pen's speed
-// over INTRO_STRAND_EASE_S, the left one leaving INTRO_STRAND_LAG_S after the
-// right; the boil is a softer INTRO_BOIL_SOFT_PX while the line loops and
-// splits. The line's own motion is smooth; only the boil steps at INTRO_FPS.
-export const INTRO_STRAND_EASE_S = 0.35;
-export const INTRO_STRAND_LAG_S = 0.15;
+export const INTRO_SPIRAL: [number, number] = [0.25, 1.0];
+// The release (v7): the circle opens and two ribbon tails float off, each
+// setting off at the speed the pen closed the circle with and easing (time
+// constant INTRO_STRAND_EASE_S) up to INTRO_RIBBON_PX_PER_S, then up to the
+// pen's speed once on its drawing — never stopping. The left tail leaves
+// INTRO_STRAND_LAG_S after the right. The boil is a softer
+// INTRO_BOIL_SOFT_PX until the right tail lands on the jar. The line's own
+// motion is smooth; only the boil steps at INTRO_FPS.
+export const INTRO_STRAND_EASE_S = 0.18;
+export const INTRO_STRAND_LAG_S = 0.1;
+export const INTRO_RIBBON_PX_PER_S = 900;
 export const INTRO_BOIL_SOFT_PX = 0.5;
-export const INTRO_STRAND_MIN_PX = 60;
 export const INTRO_FPS = 12;
 export const INTRO_BOIL_PX = 0.8;
 export const INTRO_BOIL_DRAWINGS = 3;

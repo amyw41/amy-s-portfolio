@@ -68,17 +68,20 @@ export function roughen(pts: Pt[], amp: number, seed: number, wavelength: number
   });
 }
 
-function build(): Pt[][] {
+/** The pen's route over the original jar, starting from the wall nearest a
+ * point: `side` -1 for the left wall, 1 for the right, at height `fy` (a
+ * fraction of the jar's height). In the jar art's box. */
+export function jarPenStrokes(side: -1 | 1 = -1, fy = JAR_PEN_START_Y): Pt[][] {
   const strokes: Pt[][] = JAR_STROKES.map((s) => s.map(([x, y]) => [x * JAR_ART_W, y * JAR_ART_H] as Pt));
-  // The start: the left-most ink point at the starting height.
-  const ty = JAR_PEN_START_Y * JAR_ART_H;
+  // The start: the outermost ink point on that side at that height.
+  const ty = Math.min(0.8, Math.max(0.3, fy)) * JAR_ART_H;
   let cs = 0;
   let ci = 0;
-  let bestX = Infinity;
+  let best = Infinity;
   strokes.forEach((st, k) =>
     st.forEach((p, i) => {
-      if (Math.abs(p[1] - ty) < 0.04 * JAR_ART_H && p[0] < bestX) {
-        bestX = p[0];
+      if (Math.abs(p[1] - ty) < 0.04 * JAR_ART_H && -side * p[0] < best) {
+        best = -side * p[0];
         cs = k;
         ci = i;
       }
@@ -114,5 +117,6 @@ function build(): Pt[][] {
   return out;
 }
 
-/** The pen's strokes over the original jar, in order (see above). */
-export const JAR_PEN_STROKES: Pt[][] = build();
+/** The pen's strokes over the original jar from the left wall, in order (see
+ * above). */
+export const JAR_PEN_STROKES: Pt[][] = jarPenStrokes();
