@@ -45,6 +45,16 @@
   color: #000;
 }
 
+/* Iridescent shimmer: the icon's SVG fill cycles through a pink → magenta →
+ * rose arc so it looks like foil catching the light. The filter chain
+ * re-renders the black icon in that hue range; the oscillation makes it feel
+ * "shiny" rather than just a static colour swap. */
+@media (prefers-reduced-motion: no-preference) {
+  .socialIcon:hover {
+    animation: shimmer-icon 1.8s ease-in-out infinite;
+  }
+}
+
 /* ---------- intro: name + description, one paragraph ---------- */
 
 /* The sidebar is one stack flowing down from the top, with fixed gaps (not
@@ -98,6 +108,18 @@
   letter-spacing: inherit;
   color: #000;
   text-decoration: none;
+}
+
+/* Gradient shimmer on hover: text shifts from black to a moving pink → rose
+ * gradient. background-clip:text needs color:transparent to show through;
+ * the animation slides the gradient's position for the "foil" shimmer. */
+.heading:hover {
+  color: transparent;
+  background: linear-gradient(90deg, #ff4d6d, #c44dff, #ff6b9d, #ff4d6d);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shimmer-text 2s linear infinite;
 }
 
 .chevron {

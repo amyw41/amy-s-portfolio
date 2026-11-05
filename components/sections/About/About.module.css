@@ -495,6 +495,22 @@
   border-color: #000;
 }
 
+/* Iridescent shimmer on the arrow icon: same filter animation as the social
+ * icons in the sidebar, re-coloring the arrow stroke pink-rose on hover. */
+@media (prefers-reduced-motion: no-preference) {
+  .navArrow:hover {
+    color: transparent;
+    border-color: rgba(232, 54, 93, 0.5);
+    animation: shimmer-icon-stroke 1.8s ease-in-out infinite;
+  }
+}
+
+@keyframes shimmer-icon-stroke {
+  0%   { color: #ff4d6d; border-color: rgba(255, 77, 109, 0.5); }
+  50%  { color: #c44dff; border-color: rgba(196, 77, 255, 0.5); }
+  100% { color: #ff4d6d; border-color: rgba(255, 77, 109, 0.5); }
+}
+
 /* Edge-faded mask, same construction as the /playground/[category] page's
  * own item track (CategoryDetail.module.css's .itemMask) so an item
  * sliding past the edge fades out instead of hard-clipping. */

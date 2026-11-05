@@ -80,6 +80,17 @@
   color: rgba(0, 0, 0, 0.8);
 }
 
+/* Gradient shimmer on hover — same pink → rose arc as the sidebar headings,
+ * subtle since the taskbar is a more utilitarian element than the sidebar. */
+.navLink:hover {
+  color: transparent;
+  background: linear-gradient(90deg, #ff4d6d, #c44dff, #ff6b9d, #ff4d6d);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shimmer-text 2s linear infinite;
+}
+
 /* Same hand-sketched hover oval as the hero's nav buttons (see
  * Hero.module.css's own .scribble for the full explanation). Shown
  * instantly on hover, no fade. No z-index (was -1): a negative z-index

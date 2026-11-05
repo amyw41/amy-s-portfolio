@@ -83,7 +83,12 @@
 
 .link:hover,
 .link:focus-visible {
-  color: #fff;
+  color: transparent;
+  background: linear-gradient(90deg, #ffb3c6, #ff4d6d, #f9a8d4, #ffb3c6);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shimmer-text 2s linear infinite;
 }
 
 /* The global a:focus-visible ring (globals.css) is ink-coloured — invisible
