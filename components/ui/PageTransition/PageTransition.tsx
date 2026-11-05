@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { FADE_IN_TRANSITION } from "@/lib/motion";
+import { useCaseZoom } from "@/components/ui/CaseZoom";
 
 // Wraps every route's content (rendered once, from the root layout, right
 // alongside Taskbar) so navigating between pages always fades the
@@ -24,11 +25,15 @@ import { FADE_IN_TRANSITION } from "@/lib/motion";
 // asked for.
 export default function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  // Zooming into a case study, or back home from one: that has its own
+  // motion, so no fade on top of it.
+  const zoom = useCaseZoom();
+  const ownMotion = !!zoom && (zoom.phase !== "idle" || zoom.returning);
 
   return (
     <motion.div
       key={pathname}
-      initial={{ opacity: 0 }}
+      initial={ownMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       // duration/ease matched to every other mount fade-in on the site
       // (Taskbar's own fade-in, and CaseStudyHero/TableOfContents in

@@ -114,6 +114,9 @@ const JarItem = forwardRef<HTMLDivElement, JarItemProps>(function JarItem(
     <div
       ref={ref}
       className={`${styles.item} ${lifted ? styles.lifted : ""}`}
+      // Lets the zoom into a case study (components/ui/CaseZoom) start
+      // from this item.
+      data-jar-item={item.id}
       style={{
         width,
         height,

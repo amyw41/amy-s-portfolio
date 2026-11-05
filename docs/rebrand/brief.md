@@ -134,6 +134,8 @@ Hovering a case study in the sidebar's **Works** list (or tabbing to it) **isola
 
 This is all one continuous motion. The thumbnail on the home page and on the case study is the same image in the same final spot, so the page change is invisible.
 
+Built (step 7b): `components/ui/CaseZoom` (root layout). A click on a work-view card zooms from its cover; a sidebar Works row zooms from the project's jar item (jar mode) or its card (work mode). The copy is the project's cover image, so it lands on the case study's thumbnail. Exact timings in the design system.
+
 ### 3.3 Case study page layout
 
 ```

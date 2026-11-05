@@ -20,6 +20,7 @@ import {
 } from "@/lib/motion";
 import { buildWobblyLinePath, buildWobblyPillPath, LINE_STROKE_WIDTH, PILL_VIEW_BOX } from "@/lib/wobbly";
 import BuzzPath from "@/components/ui/BuzzPath";
+import { useCaseZoom } from "@/components/ui/CaseZoom";
 
 const copy = content.en.sidebar;
 const links = content.en.footer.links;
@@ -258,10 +259,22 @@ function CaseStudyRow({
   label: string;
   onFocusChange: (active: boolean) => void;
 }) {
+  const zoom = useCaseZoom();
   return (
     <Link
       href={href}
       className={`${styles.itemLink} ${styles.caseLink}`}
+      // Zooms into the case study (components/ui/CaseZoom) from its jar
+      // item, or its work-view card; Extras (no item, no card) navigates.
+      onClick={(e) => {
+        if (!zoom || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+        const project = PROJECTS.find((p) => `/${p.slug}` === href);
+        if (!project) return;
+        const from =
+          document.querySelector<HTMLElement>(`[data-jar-item="${project.slug}"]`) ??
+          document.querySelector<HTMLElement>(`[data-work-card="${project.slug}"] [class*="cover"]`);
+        if (from && zoom.start({ href, slug: project.slug, from, src: project.cover })) e.preventDefault();
+      }}
       onPointerEnter={() => onFocusChange(true)}
       onPointerLeave={() => onFocusChange(false)}
       onFocus={(e) => {

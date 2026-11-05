@@ -10,6 +10,8 @@ import { FADE_IN_TRANSITION } from "@/lib/motion";
 import { buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
 import BuzzPath from "@/components/ui/BuzzPath";
 import FooterStrip from "@/components/ui/FooterStrip";
+import { useCaseZoom, ZOOM_TARGET_ATTR } from "@/components/ui/CaseZoom";
+import { usePathname } from "next/navigation";
 import layoutStyles from "./CaseStudyLayout.module.css";
 
 // Shared building blocks behind every written case study on the site
@@ -562,12 +564,17 @@ export function CaseStudyLayout({
   const heroIndex = all.findIndex((child) => isValidElement(child) && child.type === CaseStudyHero);
   const hero = heroIndex >= 0 ? (all[heroIndex] as ReactElement<HeroProps>) : null;
   const rest = all.filter((_, i) => i !== heroIndex);
+  // Arriving by the zoom from the home page: the thumbnail stays hidden
+  // while the zoom's copy grows into its spot, then takes over.
+  const zoom = useCaseZoom();
+  const slug = usePathname().replace(/^\//, "");
+  const thumbHidden = !!zoom && zoom.phase !== "idle" && zoom.slug === slug;
 
   return (
     <div className={`tw-scope ${layoutStyles.frame}`}>
       <aside className={layoutStyles.rail}>
         {/* Placeholder until the real logo exists (brief Part 7). */}
-        <Link href="/" className={layoutStyles.logo} aria-label="Amy Wang, home">
+        <Link href="/" className={layoutStyles.logo} aria-label="Amy Wang, home" onClick={() => zoom?.goHome()}>
           aw
         </Link>
         <RailContents sectionNav={sectionNav} />
@@ -596,7 +603,11 @@ export function CaseStudyLayout({
         )}
         <div className={layoutStyles.body}>
           {hero && (
-            <div className={layoutStyles.thumb}>
+            <div
+              className={layoutStyles.thumb}
+              {...{ [ZOOM_TARGET_ATTR]: slug }}
+              style={thumbHidden ? { visibility: "hidden" } : undefined}
+            >
               <CaseStudyImage
                 src={hero.props.heroSrc}
                 alt={hero.props.heroAlt}

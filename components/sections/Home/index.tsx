@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { AnimatePresence } from "framer-motion";
 import styles from "./Home.module.css";
 import Sidebar, { type HomeMode } from "./Sidebar";
@@ -12,6 +12,8 @@ import JarView from "./JarView";
 import { createJarSound, type JarSound } from "@/components/sections/Hero/jar-sound";
 import { content } from "@/lib/content";
 import { gaegu, geist } from "@/lib/fonts";
+import { useCaseZoom } from "@/components/ui/CaseZoom";
+import { ZOOM_DROP_PX, ZOOM_LEAVE_S, ZOOM_RETURN_S, ZOOM_STAGGER_S, slowMs } from "@/lib/motion";
 import { buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
 
 const copy = content.en.sidebar;
@@ -29,11 +31,48 @@ const DIVIDER_VARIANTS = [0, 1, 2].map((v) =>
   buildWobblyLinePath(7, [DIVIDER_BOX_W / 2, 0], [DIVIDER_BOX_W / 2, DIVIDER_BOX_H], DIVIDER_AMPLITUDE, v),
 );
 
+// The zoom's timings, for the CSS (Home.module.css .zoomOut/.zoomBack).
+const ZOOM_VARS = {
+  "--zoom-leave-ms": `${ZOOM_LEAVE_S * 1000}ms`,
+  "--zoom-return-ms": `${ZOOM_RETURN_S * 1000}ms`,
+  "--zoom-stagger-ms": `${ZOOM_STAGGER_S * 1000}ms`,
+  "--zoom-drop": `${ZOOM_DROP_PX}px`,
+} as CSSProperties;
+
 // Rebrand v2 home page (brief Part 2): one fixed screen — sidebar, divider,
 // stage. Replaces Hero + Projects on "/" (both kept in components/sections/
 // for now, just no longer rendered here).
 export default function Home() {
-  const [mode, setMode] = useState<HomeMode>("jar");
+  // Back from a case study by its logo: come back in the mode it was left
+  // in, the rail widening back into the sidebar (zoomStage below).
+  const zoom = useCaseZoom();
+  const [mode, setMode] = useState<HomeMode>(() => (zoom?.returning ? zoom.lastMode : "jar"));
+  useEffect(() => {
+    zoom?.setLastMode(mode);
+  }, [zoom, mode]);
+  // The zoom into a case study (and back): "out" — the sidebar narrowed to
+  // the case study's rail, everything else faded and dropped out (leaving,
+  // or the first frame back); "back" — widening and fading back in.
+  const [returnStage, setReturnStage] = useState<"collapsed" | "expanding" | "none">(() =>
+    zoom?.returning ? "collapsed" : "none",
+  );
+  useEffect(() => {
+    if (returnStage !== "collapsed") return;
+    // Two frames so the collapsed state paints first, then widen.
+    let raf = requestAnimationFrame(() => {
+      raf = requestAnimationFrame(() => setReturnStage("expanding"));
+    });
+    const done = window.setTimeout(() => {
+      setReturnStage("none");
+      zoom?.doneReturning();
+    }, slowMs(ZOOM_RETURN_S * 1000) + 100);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(done);
+    };
+  }, [returnStage, zoom]);
+  const zoomClass =
+    zoom?.phase === "leaving" ? styles.zoomOut : returnStage === "collapsed" ? styles.zoomCollapsed : returnStage === "expanding" ? styles.zoomBack : "";
   // The case study hovered/focused in the sidebar's Works list, isolated on
   // the stage: its jar item lifts and the rest dim (or, in work mode, its
   // grid tile).
@@ -83,7 +122,17 @@ export default function Home() {
   }, []);
 
   return (
-    <main ref={frameRef} className={`${geist.variable} ${gaegu.variable} ${styles.frame}`}>
+    <main
+      ref={frameRef}
+      className={`${geist.variable} ${gaegu.variable} ${styles.frame} ${zoomClass}`}
+      style={ZOOM_VARS}
+    >
+      {/* The case study's logo, appearing in the corner as the sidebar
+       * narrows into its rail (the name retracting into it), and fading as
+       * it widens back. */}
+      <span className={styles.zoomLogo} aria-hidden="true">
+        aw
+      </span>
       <Sidebar onCaseFocus={setFocusedCase} />
 
       <div className={styles.divider} aria-hidden="true">

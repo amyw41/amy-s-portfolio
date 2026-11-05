@@ -137,3 +137,95 @@
     overflow: clip;
   }
 }
+
+/* ---------- the zoom into a case study (components/ui/CaseZoom) ---------- */
+
+/* The case study's logo: hidden until the sidebar narrows into the case
+ * study's rail, then in the rail's corner (centred in its 64px, --pad-y
+ * down — where the case study draws it). */
+.zoomLogo {
+  position: absolute;
+  top: var(--pad-y);
+  left: 0;
+  z-index: 3;
+  width: 64px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
+  color: #000;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Leaving for a case study (.zoomOut, animated), or the first frame back
+ * from one (.zoomCollapsed, instant): the sidebar narrowed to the rail's
+ * 64px, its contents and the stage faded and dropped out, the logo in. */
+.zoomOut,
+.zoomCollapsed {
+  --sidebar-width: 64px;
+}
+
+.zoomOut .zoomLogo,
+.zoomCollapsed .zoomLogo {
+  opacity: 1;
+}
+
+.zoomOut > aside > *,
+.zoomCollapsed > aside > *,
+.zoomOut .stage,
+.zoomCollapsed .stage {
+  opacity: 0;
+  transform: translateY(var(--zoom-drop));
+}
+
+/* While narrowing/widening, the sidebar's contents keep their full width
+ * (clipped) instead of reflowing as the column changes. */
+.zoomOut > aside,
+.zoomCollapsed > aside,
+.zoomBack > aside {
+  overflow: hidden;
+}
+
+.zoomOut > aside > *,
+.zoomCollapsed > aside > *,
+.zoomBack > aside > * {
+  min-width: calc(373px - 2 * var(--pad-x));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .zoomOut {
+    transition: grid-template-columns calc(var(--zoom-leave-ms) * var(--slow, 1)) cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  /* Sidebar parts drop out a beat apart, top first; the stage with them. */
+  .zoomOut > aside > *,
+  .zoomOut .stage,
+  .zoomOut .zoomLogo {
+    transition:
+      opacity calc(var(--zoom-leave-ms) * var(--slow, 1)) ease,
+      transform calc(var(--zoom-leave-ms) * var(--slow, 1)) cubic-bezier(0.55, 0, 1, 0.45);
+  }
+
+  .zoomOut > aside > :nth-child(2) {
+    transition-delay: calc(var(--zoom-stagger-ms) * var(--slow, 1));
+  }
+
+  .zoomOut > aside > :nth-child(3) {
+    transition-delay: calc(var(--zoom-stagger-ms) * 2 * var(--slow, 1));
+  }
+
+  /* Back from a case study: the rail widens into the sidebar as everything
+   * fades back in. */
+  .zoomBack {
+    transition: grid-template-columns calc(var(--zoom-return-ms) * var(--slow, 1)) cubic-bezier(0.65, 0, 0.35, 1);
+  }
+
+  .zoomBack > aside > *,
+  .zoomBack .stage,
+  .zoomBack .zoomLogo {
+    transition:
+      opacity calc(var(--zoom-return-ms) * var(--slow, 1)) ease,
+      transform calc(var(--zoom-return-ms) * var(--slow, 1)) cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}

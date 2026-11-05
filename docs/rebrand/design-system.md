@@ -118,6 +118,17 @@ Every extra (lib/extras.ts: posters, logos, little sites) lives in its own secti
 
 One sound: a short glass clink (the first 0.22s of `public/sounds/jar-drop.mp3` from its first sound), decoded once with Web Audio. It plays only when an item hits the jar's glass (floor or wall): each item's first touch as the items fall in (on first load and every return; the recorded fall replays them on the right frames), and up to 3 as the items bounce when the jar is lowered away (within 700ms of the jostle, each item once). Volume follows how hard the hit was (35-100% of 0.8), pitch varies ±8%, and clinks are never closer than 60ms apart. The sound stops the moment the pile settles (the first frame after which nothing moves more than a 1.5px jiggle): contacts from then on, and feather-light touches, are silent, and a clink still ringing fades out in 80ms. Item-on-item contacts, hovering and dragging are silent; so is reduced motion. Browsers allow sound only after a click, tap or key press on the page; until then it's silent.
 
+## Zoom into a case study
+
+Clicking a case study — a work-view card, or its row in the sidebar's Works list (from its jar item in jar mode, or its card in work mode) — zooms into it (components/ui/CaseZoom, in the root layout so it lives across the route change):
+
+1. A copy of the clicked thumbnail (the project's cover) is laid exactly over it — same size, place and rotation — above everything.
+2. The home page leaves (350ms): the sidebar column narrows to the case study's 64px rail (ease-in-out) as its parts fade and drop 10px, 30ms apart, top first; the stage fades and drops with them; the "aw" logo fades in in the rail's corner. The divider slides left with the rail.
+3. The route changes underneath (no page fade for this arrival); the case study's thumbnail stays hidden while the copy grows from where it was into its exact spot (600ms, ease-in-out, rotation and corners settling), then takes over. The rest of the case study fades in.
+4. **Back:** the logo returns home in the mode it was left in: home starts collapsed (rail width, content hidden) and the rail widens back into the sidebar as everything fades back in (400ms).
+
+Phones and reduced motion: a plain page change. Extras and links elsewhere just navigate.
+
 ## Case-study page
 
 The frame around every case study (CaseStudyKit.tsx's `CaseStudyLayout`, styles in `CaseStudyLayout.module.css`), full window like home, Geist with -0.6px tracking (the kit's body/heading classes point at Geist on this route):

@@ -8,6 +8,7 @@ import styles from "./WorkGrid.module.css";
 import AutoplayVideo from "@/components/sections/Projects/AutoplayVideo";
 import ScrollHint from "./ScrollHint";
 import FooterStrip from "@/components/ui/FooterStrip";
+import { useCaseZoom } from "@/components/ui/CaseZoom";
 import { PROJECTS } from "@/lib/projects";
 import { content } from "@/lib/content";
 import { EXTRAS_PHOTOS } from "@/lib/extras";
@@ -156,6 +157,8 @@ export default function WorkGrid({
   const jumpRef = useRef<HTMLDivElement>(null);
   const jumpInView = useInView(jumpRef, { root: viewRef, amount: 0.6 });
 
+  const zoom = useCaseZoom();
+
   const variants = useMemo<{ view: Variants; tile: Variants }>(
     () => ({
       view: {
@@ -197,6 +200,15 @@ export default function WorkGrid({
       >
         <Link
           href={tile.href}
+          data-work-card={tile.id}
+          // A case study zooms in from its cover (components/ui/CaseZoom);
+          // extras (to the Play page) just navigate.
+          onClick={(e) => {
+            const cover = e.currentTarget.querySelector<HTMLElement>(`.${styles.cover}`);
+            if (!zoom || !cover || tile.id.startsWith("extra-") || !tile.cover) return;
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+            if (zoom.start({ href: tile.href, slug: tile.id, from: cover, src: tile.cover })) e.preventDefault();
+          }}
           className={`${styles.tile} ${small ? styles.small : ""} ${dimmed ? styles.dimmed : ""} ${lifted ? styles.lifted : ""}`}
           style={LIFT_VARS}
         >

@@ -109,6 +109,17 @@ export const JAR_LAND_S = 0.36;
 // exit (gone at once — no anticipation, no clink, no items); a jar called
 // back mid-exit rises back into place over JAR_RETURN_S.
 export const JAR_RETURN_S = 0.25;
+// Clicking a case study zooms into it (components/ui/CaseZoom, brief Part
+// 3.2): the home page fades and drops out (ZOOM_LEAVE_S, ZOOM_DROP_PX, its
+// parts ZOOM_STAGGER_S apart) while the sidebar narrows to the case study's
+// rail; then the clicked thumbnail grows into its spot on the case-study
+// page over ZOOM_GROW_S (ease-in-out). The logo back reverses it: the rail
+// widens back into the sidebar as home fades in over ZOOM_RETURN_S.
+export const ZOOM_LEAVE_S = 0.35;
+export const ZOOM_DROP_PX = 10;
+export const ZOOM_STAGGER_S = 0.03;
+export const ZOOM_GROW_S = 0.6;
+export const ZOOM_RETURN_S = 0.4;
 // The items drop in almost as soon as the jar lands (Home/JarView.tsx starts
 // them the moment it stops moving, then squashes): no wait before the fall
 // (JAR_ITEMS_DELAY_MS — the hero's own load-in waits ~315ms), and the replay
