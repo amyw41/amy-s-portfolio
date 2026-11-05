@@ -85,7 +85,6 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     category: "personal",
     hasVideo: true,
     year: 2026,
-    small: true,
   },
 ];
 

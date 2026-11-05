@@ -84,7 +84,38 @@
   }
 }
 
-/* Two columns, top-aligned: the case studies big on the left (2/3 of the
+/* "equal" layout (WorkGrid.tsx's WORK_LAYOUT): two equal columns, every
+ * case study the same size, 32px between rows and 24px between columns;
+ * "jump to jar" in the next free cell, centred against the card beside it.
+ * One column on a narrow stage. */
+.equalGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 32px 24px;
+  margin: 32px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jumpCell {
+  align-self: center;
+  display: flex;
+  justify-content: center;
+}
+
+.jumpCell .jump {
+  margin: 0;
+  padding: 0;
+}
+
+@container (max-width: 720px) {
+  .equalGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* "split" layout — Two columns, top-aligned: the case studies big on the left (2/3 of the
  * stage), each extra small on the right (1/3), each column stacked. Below a
  * narrow stage (it's a size container, Home.module.css .stage) the
  * extras drop under the case studies, two across. */

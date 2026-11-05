@@ -21,7 +21,7 @@ export interface ExtrasPhoto {
   id: string;
   /** Shown as one of the teasers in the home work view's right column
    * (Home/WorkGrid.tsx; the rest are on the Play page only). Swap which
-   * one(s) by moving `teaser: true` (just the Birthday website for now). */
+   * one(s) by moving `teaser: true` (none for now — the work view is the equal two-column grid; see WORK_LAYOUT in Home/WorkGrid.tsx). */
   teaser?: boolean;
   src: string;
   caption: string;
@@ -67,7 +67,6 @@ export const EXTRAS_CATEGORIES: { id: ExtrasCategory; label: string; color: stri
 export const EXTRAS_PHOTOS: ExtrasPhoto[] = [
   {
     id: "birthday-website",
-    teaser: true,
     src: "/images/projects/extras/bday.mp4",
     // CHECK: guessed from the filename — say the word and I'll swap it for
     // whatever this video actually is.

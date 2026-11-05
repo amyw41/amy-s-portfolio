@@ -92,16 +92,34 @@ const SMALL_TILES: Tile[] = [
   })),
 ];
 
+/**
+ * Which work-view layout:
+ * - "equal": every case study the same size, two equal columns, in
+ *   lib/projects.ts's order (= the sidebar's), then any teaser extras; "jump
+ *   to jar" in the next free cell. (Current.)
+ * - "split": the bigger case studies big on the left (2/3), the `small` ones
+ *   and the teaser extras small on the right (1/3), "jump to jar" at the
+ *   bottom of the right column. To go back to it: set this to "split", put
+ *   `small: true` on the smaller projects (lib/projects.ts) and
+ *   `teaser: true` on the extras to show (lib/extras.ts).
+ */
+const WORK_LAYOUT: "equal" | "split" = "equal";
+
+/** "equal": every card in one grid, in order. */
+const EQUAL_TILES: Tile[] = [...PROJECTS.map(projectTile), ...SMALL_TILES.filter((t) => t.id.startsWith("extra-"))];
+
 /** Each card's place in the arrival sweep: top to bottom down the stage,
  * left column first on a tie. A small card is about half a big one's
  * height, so small card j sits level with big card j / 2. */
 const SWEEP_ORDER = new Map<string, number>(
-  [
-    ...BIG_TILES.map((t, i) => ({ id: t.id, y: i * 2 })),
-    ...SMALL_TILES.map((t, j) => ({ id: t.id, y: j + 0.5 })),
-  ]
-    .sort((a, b) => a.y - b.y)
-    .map(({ id }, order) => [id, order]),
+  WORK_LAYOUT === "equal"
+    ? EQUAL_TILES.map((t, i) => [t.id, i] as [string, number])
+    : [
+        ...BIG_TILES.map((t, i) => ({ id: t.id, y: i * 2 })),
+        ...SMALL_TILES.map((t, j) => ({ id: t.id, y: j + 0.5 })),
+      ]
+        .sort((a, b) => a.y - b.y)
+        .map(({ id }, order) => [id, order] as [string, number]),
 );
 
 /**
@@ -240,27 +258,48 @@ export default function WorkGrid({
         {copy.heading}
       </motion.h2>
 
-      {/* Two columns: the bigger case studies on the left (2/3), the smaller
-       * ones and the teaser extra(s) small on the right (1/3), each stacked. */}
-      <div className={styles.columns}>
-        <ul className={styles.bigList}>{BIG_TILES.map((tile) => card(tile, false))}</ul>
-        {/* The rest of the extras are on the Play page. */}
-        <div className={styles.smallColumn}>
-          <ul className={styles.smallList}>{SMALL_TILES.map((tile) => card(tile, true))}</ul>
-          {/* The way back to the jar, in the column's empty space at the
-           * bottom. It draws on once it scrolls into view. */}
-          <div ref={jumpRef} className={styles.jump}>
-            <ScrollHint
-              shown={jumpInView}
-              onActivate={() => onJumpToJar?.()}
-              label={content.en.sidebar.modes.jumpToJar}
-              ariaLabel={content.en.sidebar.modes.toJarLabel}
-              up
-              className={styles.jumpToJar}
-            />
+      {WORK_LAYOUT === "equal" ? (
+        // Two equal columns, every case study the same size; "jump to jar"
+        // in the next free cell, centred against the card beside it. It
+        // draws on once it scrolls into view.
+        <ul className={styles.equalGrid}>
+          {EQUAL_TILES.map((tile) => card(tile, false))}
+          <li className={styles.jumpCell}>
+            <div ref={jumpRef} className={styles.jump}>
+              <ScrollHint
+                shown={jumpInView}
+                onActivate={() => onJumpToJar?.()}
+                label={content.en.sidebar.modes.jumpToJar}
+                ariaLabel={content.en.sidebar.modes.toJarLabel}
+                up
+                className={styles.jumpToJar}
+              />
+            </div>
+          </li>
+        </ul>
+      ) : (
+        // Two columns: the bigger case studies on the left (2/3), the smaller
+        // ones and the teaser extra(s) small on the right (1/3), each stacked.
+        <div className={styles.columns}>
+          <ul className={styles.bigList}>{BIG_TILES.map((tile) => card(tile, false))}</ul>
+          {/* The rest of the extras are on the Play page. */}
+          <div className={styles.smallColumn}>
+            <ul className={styles.smallList}>{SMALL_TILES.map((tile) => card(tile, true))}</ul>
+            {/* The way back to the jar, in the column's empty space at the
+             * bottom. It draws on once it scrolls into view. */}
+            <div ref={jumpRef} className={styles.jump}>
+              <ScrollHint
+                shown={jumpInView}
+                onActivate={() => onJumpToJar?.()}
+                label={content.en.sidebar.modes.jumpToJar}
+                ariaLabel={content.en.sidebar.modes.toJarLabel}
+                up
+                className={styles.jumpToJar}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* The end of the list: a thin black footer strip — the credit and
        * the links. */}
