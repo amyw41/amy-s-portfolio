@@ -333,27 +333,29 @@ export default function Intro({
       // The outside of each wall (top to bottom), for the foam to roll down.
       const leftWall = body.filter((p) => p[0] < cx && p[1] < bottom - hs * 0.06);
       const rightWall = body.filter((p) => p[0] > cx && p[1] < bottom - hs * 0.06).reverse();
-      const r0 = Math.max(2.5, hs * 0.035);
+      const r0 = Math.max(4, hs * 0.06);
 
-      // The foam: rows of open arcs piled on the rim, and waves of them down
-      // each side, each wave reaching further down and standing further out.
+      // The foam, like soap suds: wide, shallow, open arcs (cloud tops)
+      // piled on the rim, and waves of them down each side, each wave reaching
+      // further down and standing further out, with gaps.
       const foamList: Foam[] = [];
       const rand = rng(7);
       for (let row = 0; row < 3; row++) {
-        const span = (rimR[0] - rimL[0]) * (1 - row * 0.28);
-        const n = Math.max(2, Math.round(span / (r0 * 1.7)));
+        const span = (rimR[0] - rimL[0]) * (1.1 - row * 0.3);
+        const n = Math.max(2, Math.round(span / (r0 * 1.5)));
         for (let i = 0; i < n; i++) {
-          if (rand() < 0.15) continue;
+          if (rand() < 0.2) continue;
           const x = cx - span / 2 + (span * (i + 0.5)) / n + (rand() - 0.5) * r0 * 0.6;
-          const y = rimTop - row * r0 * 1.15 - (rand() - 0.3) * r0 * 0.4;
+          // Stacked over the dome, each row narrower, like a pile of suds.
+          const y = rimTop - hs * 0.025 - row * r0 * 0.7 - (rand() - 0.3) * r0 * 0.3;
           foamList.push({
             x,
             y,
             ax: x,
             ay: rimTop + row * 0.5,
-            r: r0 * (0.8 + rand() * 0.5),
+            r: r0 * (0.8 + rand() * 0.45),
             dir: -Math.PI / 2,
-            sweep: Math.PI * (0.8 + rand() * 0.45),
+            sweep: Math.PI * (0.55 + rand() * 0.3),
             wave: row,
             row,
           });
@@ -368,9 +370,9 @@ export default function Intro({
         const L = cum[cum.length - 1];
         for (let wave = 0; wave < INTRO_FOAM_WAVES; wave++) {
           const reach = L * (0.3 + (0.6 * (wave + 1)) / INTRO_FOAM_WAVES);
-          const out = r0 * (0.5 + wave * 0.45);
-          for (let s = rand() * r0; s < reach; s += r0 * (1.5 + rand() * 0.5)) {
-            if (rand() < 0.18) continue;
+          const out = r0 * (0.3 + wave * 0.35);
+          for (let s = rand() * r0; s < reach; s += r0 * (1.3 + rand() * 0.5)) {
+            if (rand() < 0.25) continue;
             const p = pointAt(path, cum, s);
             const p2 = pointAt(path, cum, s + 2);
             // Outward normal of the wall here.
@@ -388,9 +390,9 @@ export default function Intro({
               y: p[1] + ny * out,
               ax: p[0],
               ay: p[1],
-              r: r0 * (0.75 + rand() * 0.55),
-              dir: Math.atan2(ny - 0.6, nx),
-              sweep: Math.PI * (0.7 + rand() * 0.5),
+              r: r0 * (0.7 + rand() * 0.5),
+              dir: Math.atan2(ny - 1.3, nx),
+              sweep: Math.PI * (0.5 + rand() * 0.35),
               wave: wave + 1,
               row: wave,
             });
@@ -460,7 +462,7 @@ export default function Intro({
           const flat = clamp01(settle * 1.6 - b.row * 0.15);
           if (flat >= 1) continue;
           const rx = b.r * (1 + (r() - 0.5) * 0.16);
-          const ry = rx * (1 - flat);
+          const ry = rx * 0.72 * (1 - flat);
           const sweep = b.sweep * (r() < 0.15 ? 0.65 : 1);
           const a0 = b.dir - sweep / 2;
           const a1 = b.dir + sweep / 2;
