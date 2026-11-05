@@ -64,3 +64,36 @@ Done when:
 - **anthea_irl on X** (the first reference): the video wouldn't load in the browser I had, so I couldn't watch it.
 - **The jar artwork's SVG** is a single filled shape traced by potrace, not separate strokes. "Drawn on from the artwork's own paths" is done by revealing the artwork along strokes extracted from its ink (lib/jar-outline.ts), so the drawn result is the artwork itself.
 - **Landing point:** the right strand lands at the bottom of the jar's **right** wall, not the left. The left wall's foot sits right under the small jar, so an arc landing there had to cut straight down through it. The pen order is therefore: up the right wall, the rim and lid lines, down the left wall, across the base.
+
+## v3 proposal: one line that spirals, and text that "finds its font"
+
+Amy's ideas (Nov 2026), written up before building. Everything else in v2 stays: the stop-motion clock, the boil, one pen speed, and the exact artwork at the end.
+
+### A. The spiral (replaces the two rainbow strands)
+Amy: "have a line come in do a loop make like a spiral and then separate into the two different sketches … more cohesive."
+
+1. **One line out.** As the foam settles, a single strand rises from the top of the foam, out of the middle of the rim, instead of two.
+2. **The spiral.** It sweeps up and out, then curls into a spiral above the jar, in the middle of the screen. It's about 2 turns, tightening inward to a point, drawn at the pen speed in 12fps steps. The small jar and its ink fade out in steps while it curls.
+3. **The split.** From the spiral's centre the line separates into two strands that unwind outward in opposite directions. The spiral is used up as thread: its coils erase from the outside in as the strands pull away. One strand arcs down-left to the foot of the divider, the other down-right to the foot of the jar's right wall.
+4. **Trace.** As now: the left strand draws the divider bottom to top, and the right strand draws the real jar stroke by stroke. The last frame is exactly the page.
+
+So the story reads as one continuous line: jar → overflow → one strand → spiral → two drawings.
+
+- **Spiral:** an Archimedean spiral, outer radius about ⅙ of the window height, 2 turns, its tail joining the strand smoothly. Precompute it as one polyline, plus the two unwinding strands from its centre.
+- **Thread:** a fixed visible length (INTRO_THREAD_PX) while travelling. During the split, the coil erases from its outer end at the same pen speed the strands are drawn.
+- **Time:** about +0.5s overall versus v2.
+
+### B. Text loading in
+Amy: "the words about to load in before they actually do, like when you're changing fonts before it settles on one" or "a background that indicates where the text will be".
+
+**Option 1, the font flicker (recommended).** When the sidebar loads, each line of text flickers through other typefaces on the intro's 12fps clock before settling on Geist: Gaegu (the hand), a serif, a mono, Roboto. It's 4–6 drawings per line (about 0.4s), lines starting 70ms apart, top to bottom.
+- No layout shift. Each line keeps its final box, and the flickering versions are scaled to that box's width, so nothing reflows.
+- Only fonts already on the page are used (Geist, Gaegu, Roboto) plus the system serif and mono, so nothing extra downloads.
+- Reduced motion: text just fades in.
+- Why I recommend it: it's stop-motion and hand-made, the same family as the boil. It reads as the page being drawn, not as a loading screen.
+
+**Option 2, placeholders.** Before the text arrives, each line's spot shows a soft rounded bar the width of the line, drawn in the same boiling pen line. Each bar wipes into its text, top to bottom. This is clearer about where things will be, but it's closer to a familiar app "skeleton" look.
+
+**Could combine:** placeholder outlines draw first, then the text flickers in inside them. That's richer, but busier at a moment when the jar is also handing off. I'd start with Option 1 alone.
+
+Applies to: the sidebar on the full intro, and the short version. The case-study pages and the work grid stay as they are.
