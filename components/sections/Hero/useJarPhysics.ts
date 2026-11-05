@@ -325,6 +325,11 @@ export interface JarPhysicsOptions {
    * moves more than a jiggle): no more clinks until the next fall or jostle,
    * and any still ringing should stop. */
   onImpactsEnd?: () => void;
+  /** Start the fall's replay at the first frame where an item is in the
+   * window, skipping the stretch where they're all still falling above it:
+   * the same fall (and so the same settled pile) as from the default spawn
+   * heights, with the items arriving straight away. Default false. */
+  skipOffscreenFall?: boolean;
 }
 
 export function useJarPhysics(
@@ -344,6 +349,7 @@ export function useJarPhysics(
     spawnSpeed = 0,
     onImpact,
     onImpactsEnd,
+    skipOffscreenFall = false,
   }: JarPhysicsOptions = {},
 ) {
   const [ready, setReady] = useState(false);
@@ -1608,6 +1614,15 @@ export function useJarPhysics(
         startLiveLoop();
       } else {
         replayInProgress = true;
+        if (skipOffscreenFall) {
+          // The window's top edge is -containerTop in the container's own
+          // coordinates; start where the first item's bottom crosses it.
+          const firstVisible = history.findIndex((frame) =>
+            frame.some((p, i) => p.y + physicsItems[i].halfHeight > -containerTop),
+          );
+          if (firstVisible > 0) replayIndex = firstVisible;
+          while (nextImpact < impacts.length && impacts[nextImpact].tick < replayIndex) nextImpact++;
+        }
         // Clock starts on the first frame, not now: whatever runs between
         // here and that frame (React mounting the items) mustn't count as
         // replay time.

@@ -111,15 +111,11 @@ export const JAR_LAND_S = 0.36;
 export const JAR_RETURN_S = 0.25;
 // The items drop in almost as soon as the jar lands (Home/JarView.tsx starts
 // them the moment it stops moving, then squashes): no wait before the fall
-// (JAR_ITEMS_DELAY_MS — the hero's own load-in waits ~315ms); the first item
-// starts just off the top of the window (JAR_ITEMS_SPAWN_LEAD, px at the
-// physics' reference width) instead of 480px up; the items spawn closer
-// together (JAR_ITEMS_SPAWN_GAP, default 30) and already falling at
-// JAR_ITEMS_SPAWN_SPEED px/step, as if dropped from higher up.
+// (JAR_ITEMS_DELAY_MS — the hero's own load-in waits ~315ms), and the replay
+// skips the stretch where they're still above the window (useJarPhysics's
+// skipOffscreenFall). They spawn where they always did, so the settled pile
+// is the original one.
 export const JAR_ITEMS_DELAY_MS = 0;
-export const JAR_ITEMS_SPAWN_LEAD = 0;
-export const JAR_ITEMS_SPAWN_GAP = 6;
-export const JAR_ITEMS_SPAWN_SPEED = 14;
 // The clink (Hero/jar-sound.ts, Hero/useJarPhysics.ts): one short clink per
 // item's first touch of the jar's glass as they fall in; and as the jar is
 // lowered away (jostled), up to JAR_BOUNCE_CLINKS clinks from glass contacts

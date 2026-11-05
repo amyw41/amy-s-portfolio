@@ -101,7 +101,7 @@ There's **no jar / work toggle**: scrolling switches mode, one way each. Scroll 
 
 1. The grid and heading slide up and fade out together (200ms, no stagger, so leaving is quicker than arriving).
 2. **The jar drops down from above** onto the "table".
-3. **The items fill it straight away**: the moment the jar stops, the existing physics spawn and fall in from the top (no wait, already moving, close together), while the jar lands with a squash (scaleY 0.92, scaleX 1.04) and springs back.
+3. **The items fill it straight away**: the moment the jar stops, the existing physics spawn and fall in from the top (no wait; the replay skips the part where they're still above the window, so the settled pile is the original one), while the jar lands with a squash (scaleY 0.92, scaleX 1.04) and springs back.
 
 ---
 

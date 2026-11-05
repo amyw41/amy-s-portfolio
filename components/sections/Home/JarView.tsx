@@ -15,9 +15,6 @@ import {
   JAR_DROP_IN_S,
   JAR_DROP_OUT_S,
   JAR_ITEMS_DELAY_MS,
-  JAR_ITEMS_SPAWN_GAP,
-  JAR_ITEMS_SPAWN_LEAD,
-  JAR_ITEMS_SPAWN_SPEED,
   JAR_JOSTLE_STRENGTH,
   JAR_LAND_S,
   JAR_LAND_SCALE_X,
@@ -263,9 +260,7 @@ export default function JarView({ entering, isolatedId, onSettledChange, onHintA
           // Home never highlights a category, so no item is ever bordered.
           outlines={false}
           entranceDelayMs={JAR_ITEMS_DELAY_MS}
-          spawnLead={JAR_ITEMS_SPAWN_LEAD}
-          spawnGap={JAR_ITEMS_SPAWN_GAP}
-          spawnSpeed={JAR_ITEMS_SPAWN_SPEED}
+          skipOffscreenFall
           onReady={handleReady}
           onImpact={onImpact}
           onImpactsEnd={onImpactsEnd}

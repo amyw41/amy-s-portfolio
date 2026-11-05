@@ -52,6 +52,9 @@ interface JarStageProps {
    * and the pile has settled (the clinks stop). */
   onImpact?: (strength: number) => void;
   onImpactsEnd?: () => void;
+  /** Passed to useJarPhysics: start the replay where the items come into
+   * view. */
+  skipOffscreenFall?: boolean;
   /** Called once the items exist and have started falling in. */
   onReady?: () => void;
 }
@@ -73,6 +76,7 @@ export default memo(function JarStage({
   spawnSpeed,
   onImpact,
   onImpactsEnd,
+  skipOffscreenFall,
   onReady,
 }: JarStageProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -80,7 +84,7 @@ export default memo(function JarStage({
     containerRef,
     items,
     textPlatformsRef,
-    { start, outlines, entranceDelayMs, spawnLead, spawnGap, spawnSpeed, onImpact, onImpactsEnd },
+    { start, outlines, entranceDelayMs, spawnLead, spawnGap, spawnSpeed, onImpact, onImpactsEnd, skipOffscreenFall },
   );
 
   const onReadyRef = useRef(onReady);
