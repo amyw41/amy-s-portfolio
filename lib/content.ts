@@ -68,7 +68,7 @@ export const content = {
         jumpToJar: "jump to jar",
       },
       // Work-mode stage heading — the grid itself arrives in step 4.
-      workHeading: "what's inside?",
+      workHeading: "What's inside?",
     },
     // Separate from hero.nav above on purpose — same three destinations,
     // deliberately shorter labels ("work" not "my work", "about" not
@@ -81,7 +81,7 @@ export const content = {
       playground: "playground",
     },
     projects: {
-      heading: "what's inside?",
+      heading: "What's inside?",
       filters: {
         work: "work",
         personal: "personal project",
@@ -101,8 +101,7 @@ export const content = {
         email: { label: "Email", href: "mailto:amy.wang1@uwaterloo.ca" },
         twitter: { label: "X / Twitter", href: "https://twitter.com/apriberri" },
       },
-      heading: "thank you for dropping by !",
-      credit: "designed + built by amy (2026)",
+      credit: "Designed + built by Amy (2026)",
     },
     // Bio copy for the About page (components/sections/About/Bio.tsx).
     // Split into pieces instead of 4 flat paragraph strings because 2 of
