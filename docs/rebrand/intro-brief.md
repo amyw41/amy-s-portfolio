@@ -1,50 +1,59 @@
-# Intro brief: the overflowing jar
-Replaces step 8 / Part 4.2. (Beat 4 amended by Amy: foam, not drips.) Amy: "the jar is small in the center like a proper load in and the fill is just with black, it will just animate like how disney animates water overflowing out of a cup like you can see slowly one by one the layer is rising and then it moves out like in stop motion, and then the lines disconnect, one goes to the left to form the line and one goes to the right and becomes the jar EXACTLY like it exactly becomes the jar"
+# Intro brief v2: the overflowing jar
 
-## Sequence (~4.5s)
-1. Blank load-in (0–0.3s): white page only. No sidebar, divider or items.
-2. Small jar (0.3–0.9s): about 1/4 the real jar's height, centred on screen. It's the real jar's traced line scaled down, drawing on like a pen.
-3. Fill (0.9–2.2s): solid black ink rises inside in visible steps (stop motion), one layer at a time. The top surface is a wobbly line that sloshes slightly every frame, like a Disney water surface.
-4. Overflow (2.2–3.0s): ink reaches the rim and bulges above it in a cartoon surface-tension dome, then bubbles over like foam, drawn in line, not fill (Amy's reference: a line drawing of a faucet pouring into a sink of soap suds). Stacked scallop arcs pile over the rim and roll down both sides in several waves, many of the arcs open or broken. A few small stroked circle bubbles (3–10px) drift up around the jar with a slight wobble and pop, vanishing in one frame. The ink inside the jar stays solid black. Same thin black stroke as the jar. Stop motion, 12fps on twos.
-5. Disconnect (3.0–4.2s): the foam settles, the scallops flatten into the jar's line, the bubbles pop away and the ink drains. The jar line breaks at the bottom into two strands.
-   - LEFT strand: the tip leads like a needle, and the left half of the jar unspools behind it as thread. It travels left, then lands exactly on the sidebar divider.
-   - RIGHT strand: the right half stretches up and right, then morphs point for point into the real jar's outline at the real jar's size and position.
-6. Handoff (4.2–4.5s): the drawn line is pixel-identical to the real jar and divider, so they swap in with no visible jump. The sidebar fades in top to bottom, items fall in, and "scroll down!" draws as now.
+Ground rules:
+- Stop motion everywhere: one 12fps clock, on twos. Every frame must be visibly different so the motion reads. Lines don't boil; ink and foam do.
+- One pen speed: all line drawing (the small jar, the rainbow arcs, the divider, the real jar) runs at the same screen px/s, set from the small jar's draw time. Keep it in one constant, INTRO_PEN_PX_PER_S.
+- Exact artwork: whatever ends on the page is drawn on from the real artwork's own SVG paths. That means every stroke of the jar drawing, including the rim's inner opening and the lid double edge, plus the real divider path. No morph and no blend: the drawn line is the real jar and divider.
+- Black only: solid black ink, thin line in the jar's stroke weight.
 
-## Motion
-- Fill, foam and bubbles: 12fps on twos, so each frame is a new pose with slight boil, not a smooth tween.
-- Line travel and morph: smooth 60fps (constant INTRO_LINE_FPS).
-- Ink is pure black #000. Stroke = LINE_STROKE_WIDTH. No blue or any other colour.
-- The needle starts with an ease-in pull and settles softly. Nothing overshoots its final position.
+Sequence (~8s, skippable):
+1. Blank (0–0.3s): white page.
+2. Small jar (0.3–1.5s): the real jar drawing scaled to ~1/3 and centred, drawn on like a pen. Every stroke goes in a natural pen order: left wall, base, right wall, then the rim and lid lines.
+3. Fill (1.5–3.3s): black ink fills from the bottom in ~9 clear steps, each held 2 frames. The surface is a wavy line that sloshes side to side with a different wave shape each frame, plus a small meniscus at the glass. Each step should be an obvious rise.
+4. Spill (3.3–4.9s): the ink domes above the rim (2–3 frames). Then foam bubbles over and visibly travels: wide, shallow, open scallop arcs pile on the rim in rows, then roll down both outside walls in ~4 waves. Each wave starts at the rim and creeps further down each frame until it reaches the bottom on both sides. Small circle bubbles rise, drift and pop.
+5. Rainbow split (4.9–6.2s): the foam settles into two strands, one from the top of the foam on each side, never from random spots.
+   - They arc out slowly in stop motion like two halves of a rainbow: up and outward, then curving down toward the bottom of the screen.
+   - Meanwhile the small jar and its ink fade out in steps.
+   - The left arc lands at the bottom end of the sidebar divider.
+   - The right arc lands at the start point of the real jar's pen route (the bottom of its left wall).
+6. Trace (6.2–8.0s), at the same pen speed:
+   - The left strand draws the divider bottom to top along the real divider path.
+   - The right strand traces the real jar's strokes in pen order. At the end of a stroke it lifts and jumps to the next, never straying outside the drawing.
+   - At the end, every stroke of the real jar is drawn exactly in place.
+7. Handoff (8.0s+): nothing swaps, because the drawn paths are the real jar and divider. The sidebar fades in top to bottom, the items fall, and "scroll down!" draws.
 
-## Build
-1. Resample the traced one-line jar (047ba4d) by arc length to ~400 points.
-2. Small jar = the same points scaled ~0.25× around the viewport centre.
-3. Ink:
-   - Clip a path to the jar interior, built from the outline.
-   - The per-frame top edge is a seeded-noise wobbly polyline (deterministic).
-   - The level rises in ~8 discrete steps.
-   - Precompute every frame's d.
-4. Dome (~6 keyframes) and foam (~10 keyframes): precompute them and quantise to the 12fps clock. Build the foam as open scallop arcs from overlapping circles laid along the rim and walls, with seeded wobble and some gaps. Each wave adds a new row. Bubbles are small stroked circles that drift up, wobble and vanish in one frame.
-5. Disconnect:
-   - Split the points at the bottom centre.
-   - Left: a fixed-thread-length walk along a route from the jar to the bottom-left, then up the divider. Measure the divider path from the DOM on mount, consume points from the far end, and end exactly on the divider.
-   - Right: per-point interpolation from small-jar to the real jar's traced outline at its measured on-screen box, with a slight stagger along the line so it reads as stretching, not scaling.
-6. Handoff:
-   - Assert the paths match the targets within 0.5px.
-   - Swap the real jar and divider in and the intro layer out in the same frame.
-   - Then start the sidebar fade and the item drop.
-7. Rendering: one SVG overlay, with d written in rAF. No React state per frame. Precompute everything before the first frame, and preload jar item images during the intro.
+Build:
+1. Load the real jar artwork's SVG paths (every stroke, page coordinates measured from the DOM) and the real divider path. Choose a pen order and a direction for each stroke.
+2. Draw on with stroke-dasharray/dashoffset on these exact paths, stepped at 12fps at INTRO_PEN_PX_PER_S. The small jar is the same paths scaled ~1/3 around the screen centre, at the same on-screen pen speed.
+3. Fill: a black shape clipped to the jar interior, ~9 discrete level steps, with a seeded-noise wavy top (a new seed each frame, deterministic across loads).
+4. Spill:
+   - Dome: ~3 precomputed frames.
+   - Foam: rows of wide, shallow, open arcs along the rim and outside walls, each wave revealed further down each frame.
+   - Bubbles: small stroked circles that rise, wobble and pop in one frame.
+5. Rainbow:
+   - Two precomputed curves from the foam tops: an outward arch curving down to the landing points (the divider bottom and the jar's first stroke start).
+   - The strand draws along the curve at pen speed in 12fps steps.
+   - Its tail erases behind it like thread, keeping a fixed visible length of ~120px.
+6. Trace:
+   - The left head continues straight into the divider draw.
+   - The right head continues into the jar's first stroke, then each stroke in order.
+   - The thread tail is used up, so only the artwork stays.
+7. Rendering:
+   - One SVG overlay exactly over the real jar and divider, with attributes written in rAF.
+   - No React state per frame, and everything precomputed before frame 1.
+   - At the end the overlay equals the real paths, so a same-frame visibility toggle shows no change.
+   - Preload jar item images.
 
-## Kept rules
-- Full version once per session. After that, a 1s short version: the small jar draws, then morphs straight into the jar and divider.
+Kept:
+- The full version plays once per session. Otherwise there's a 1.5s short version: just beat 6, fast.
+- Phones get the short version only.
 - No intro with reduced motion or when returning from a case study.
 - A click or any key skips.
-- ?intro=1 replays and ?slow=4 slows it down.
-- Phones get the short version only.
+- ?intro=1 replays and ?slow=4 slows.
 
-## Done when
-- The ink rises in clear steps, domes and bubbles over in waves of line-drawn foam with popping bubbles, and looks hand-animated.
-- The left strand lands exactly on the divider and the right strand becomes the real jar exactly, with no jump at the handoff frame.
-- It's smooth at 1536×696 and 1920×1080 with a 4× CPU slowdown.
-- design-system.md has an "Intro" motion section, and brief.md links to intro-brief.md.
+Done when:
+- The fill visibly rises step by step, and the foam visibly spills and travels down both sides.
+- The split leaves from the foam tops as two slow rainbow arcs in stop motion.
+- The trace is the real artwork: a pixel diff of the final frame against the page with no intro shows nothing.
+- All line drawing runs at the same pen speed.
+- design-system.md's Intro section is updated.
