@@ -17,6 +17,7 @@ import {
   INTRO_FOAM_CREEP_S,
   INTRO_FOAM_WAVES,
   INTRO_FPS,
+  INTRO_FULL_SEQUENCE,
   INTRO_PEN_PX_PER_S,
   INTRO_SHORT_S,
   INTRO_SMALL_SCALE,
@@ -261,7 +262,11 @@ export default function Intro({
       if (!bubbles || !clipRim || !clipBody || !clipNeck || !threadL || !threadR || !divClip || !divSvg || !divPath) return;
       if (!realImg || !realMask || !thicken || !jarEl) return;
       const setupStart = performance.now();
-      const full = variant === "full";
+      // The whole story (small jar, ink, foam, rainbow strands) only when
+      // INTRO_FULL_SEQUENCE is on; otherwise the full version is just the
+      // sketch: the divider and the jar drawing on at the pen's speed.
+      const full = variant === "full" && INTRO_FULL_SEQUENCE;
+      const sketch = variant === "full" && !INTRO_FULL_SEQUENCE;
 
       // ---- the real jar, and the small one centred on screen ----
       const J = jarEl.getBoundingClientRect();
@@ -349,11 +354,12 @@ export default function Intro({
       const pileTop = rimTop - hs * 0.025 - 2 * r0 * 0.7 - r0 * 0.7;
 
       // The clock: lines take as long as they are, at the pen's speed.
-      const speed = full ? INTRO_PEN_PX_PER_S : Math.max(penReal.total, LD) / INTRO_SHORT_S;
+      const speed = full || sketch ? INTRO_PEN_PX_PER_S : Math.max(penReal.total, LD) / INTRO_SHORT_S;
       const tDraw0 = full ? INTRO_BLANK_S : 0;
       const tFill0 = full ? tDraw0 + penSmall.total / speed : 0;
       const tSpill0 = tFill0 + (full ? INTRO_FILL_S : 0);
-      const tR0 = tSpill0 + (full ? INTRO_SPILL_S : 0);
+      // When the lines start: after the story, or after the blank page.
+      const tR0 = full ? tSpill0 + INTRO_SPILL_S : sketch ? INTRO_BLANK_S : 0;
       const fadeS = (INTRO_FADE_STEPS * 2) / INTRO_FPS;
 
       // The two strands: rainbow halves from the foam tops, up and out, then

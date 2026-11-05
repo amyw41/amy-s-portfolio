@@ -120,6 +120,8 @@ One sound: a short glass clink (the first 0.22s of `public/sounds/jar-drop.mp3` 
 
 ## Intro
 
+> **Currently sketch only** (`INTRO_FULL_SEQUENCE = false`): the full version is a blank page (0.3s), then the divider and the jar drawing on at 900px/s with the boil (about 3.9s in all at 1536×696). The table below is the whole story, kept for when the flag goes back on.
+
 The home page's opening (Home/Intro.tsx; the brief is `docs/rebrand/intro-brief.md` v2). One stop-motion clock: **12 drawings a second**. Every line **boils**: a smooth turbulence wobble of about 0.8px (`INTRO_BOIL_PX`), cycling 3 versions a drawing at a time like a hand-drawn boil loop, easing to nothing over the last 0.3s so the last drawing is exactly the page. **One pen speed** for every line drawn: 900px/s (`INTRO_PEN_PX_PER_S`), so the line-drawing beats last as long as their lines are. Pure black, no colour.
 
 The jar is drawn from the real artwork (`jar.svg`): the drawing is revealed along its own strokes (`JAR_STROKES` in `lib/jar-outline.ts`, its ink walked into 15 strokes by `scripts/trace-jar-outline.py`, with a pen wide enough to cover every ink pixel). The divider is a copy of the real divider path, drawn on from the bottom. At the end both are the real thing, in place, so the swap to the page shows nothing.

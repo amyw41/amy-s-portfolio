@@ -128,6 +128,11 @@ export const JAR_RETURN_S = 0.25;
 // top to bottom, INTRO_SIDEBAR_STAGGER_S apart, rising INTRO_SIDEBAR_RISE_PX.
 // The short version (repeat visits, phones) is just the last beat, the jar's
 // drawing taking INTRO_SHORT_S.
+// Off for now (Amy: "only keep the sketch of the jar and line"): the full
+// version is just the sketch — a blank page, then the divider and the jar
+// drawing on at the pen's speed, boiling. true brings back the small jar,
+// ink, foam and rainbow strands before it.
+export const INTRO_FULL_SEQUENCE = false;
 export const INTRO_FPS = 12;
 export const INTRO_BOIL_PX = 0.8;
 export const INTRO_BOIL_DRAWINGS = 3;

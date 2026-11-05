@@ -1,5 +1,7 @@
 # Intro brief v2: the overflowing jar
 
+> **For now: sketch only.** Amy: "only keep the sketch of the jar and line for now, i think that looks better". The intro is a blank page, then the divider and the real jar drawing on stroke by stroke at the pen speed, boiling and settling still at the end (about 3.9s at 1536×696). Repeat visits and phones still get the 1.4s short version. The small jar, ink, foam and rainbow strands stay in the code behind `INTRO_FULL_SEQUENCE = false` (lib/motion.ts).
+
 Ground rules:
 - Stop motion everywhere: one 12fps clock, on twos. Every frame must be visibly different so the motion reads.
 - Line boil, the "squiggly shakiness" (Amy's reference: a hand-drawn loading animation by anthea_irl on X): everything in the intro boils. That covers the jar lines, the ink edge, the foam, the bubbles and the strands. On each 12fps frame, redraw every line with a fresh, small, seeded wobble: about 0.6–1px of displacement along its normal, varying smoothly along the line, so it looks shaky and alive rather than like jittery noise. During the last 0.3s of the trace, ease the boil to zero so the final frame is exactly the real artwork and the pixel diff stays clean. Make it one constant, INTRO_BOIL_PX.
