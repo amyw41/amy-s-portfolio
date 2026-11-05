@@ -37,12 +37,6 @@ interface JarItemProps {
    * sidebar). Purely visual — an inner wrapper's transform, so the physics
    * body and the outer div's physics-driven transform are untouched. */
   lifted?: boolean;
-  /** The see-through copy JarStage draws over the pile while this item is
-   * isolated: above every item, faded, never hit-tested. Not registered with
-   * the physics (JarStage copies the real item's transform onto it). */
-  ghost?: boolean;
-  /** Fades the ghost in (true) or out (false). */
-  ghostVisible?: boolean;
 }
 
 const JarItem = forwardRef<HTMLDivElement, JarItemProps>(function JarItem(
@@ -62,8 +56,6 @@ const JarItem = forwardRef<HTMLDivElement, JarItemProps>(function JarItem(
     dimmed,
     bordered,
     lifted = false,
-    ghost = false,
-    ghostVisible = false,
   },
   ref,
 ) {
@@ -121,10 +113,7 @@ const JarItem = forwardRef<HTMLDivElement, JarItemProps>(function JarItem(
   return (
     <div
       ref={ref}
-      className={`${styles.item} ${lifted ? styles.lifted : ""} ${ghost ? styles.ghost : ""} ${ghostVisible ? styles.ghostVisible : ""}`}
-      // Lets JarStage find an item's element (for its see-through copy).
-      data-jar-item={ghost ? undefined : item.id}
-      aria-hidden={ghost || undefined}
+      className={`${styles.item} ${lifted ? styles.lifted : ""}`}
       style={{
         width,
         height,

@@ -59,23 +59,14 @@ export const GRID_REORDER_S = 0.35;
 
 // Hovering a case study in the sidebar's Works list isolates it: its jar
 // item rises JAR_LIFT_PX and scales to JAR_LIFT_SCALE over JAR_LIFT_IN_MS
-// (soft ease-out), settling back over JAR_LIFT_OUT_MS (ease-in-out), while
-// every other item dims on the same timings. CSS transitions, so a hover
+// (soft ease-out), settling back over JAR_LIFT_OUT_MS (ease-in-out); nothing
+// else in the jar changes. CSS transitions, so a hover
 // that changes mid-way carries on from where it is, never snapping. In work
 // mode its grid tile lifts TILE_LIFT_PX instead and the other tiles dim.
 export const JAR_LIFT_PX = 12;
 export const JAR_LIFT_SCALE = 1.04;
 export const JAR_LIFT_IN_MS = 400;
 export const JAR_LIFT_OUT_MS = 300;
-// While a jar item is isolated, whatever covers it goes see-through where
-// it overlaps: a copy of the item drawn on top of the pile at
-// JAR_SEE_THROUGH_OPACITY (where nothing covers it, the copy sits on the
-// item itself and changes nothing). It, and the other items' dimming, fade
-// in and out with the lift (JAR_LIFT_IN_MS / JAR_LIFT_OUT_MS).
-export const JAR_SEE_THROUGH_OPACITY = 0.55;
-// How strongly the other items are washed out while one is isolated (a
-// white wash at this opacity) — lighter than the site's --dim-white (0.44).
-export const JAR_ISOLATE_DIM = 0.2;
 export const TILE_LIFT_PX = 6;
 
 // The jar / work toggle (Home/ModeToggle.tsx): the newly picked side is

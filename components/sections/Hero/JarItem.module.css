@@ -125,37 +125,3 @@
     transition: none;
   }
 }
-
-/* The see-through copy of an isolated item (JarStage): above every item in
- * the pile, so wherever something covers the item, the copy shows it
- * through; elsewhere it sits exactly on the item and changes nothing.
- * Opacity and timing come from lib/motion.ts via --see-through(-ms). */
-.ghost {
-  z-index: 100000;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.ghostVisible {
-  opacity: var(--see-through, 0.55);
-}
-
-/* Until JarStage has put the copy in place (data-armed), it's hidden and
- * unlifted with no transitions — so it never shows at the corner before its
- * position is set, and it rises with the item instead of snapping up. */
-.ghost:not([data-armed]),
-.ghost:not([data-armed]) .lift {
-  opacity: 0;
-  transform: none;
-  transition: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .ghost {
-    transition: opacity calc(var(--lift-out-ms, 300ms) * var(--slow, 1)) cubic-bezier(0.65, 0, 0.35, 1);
-  }
-
-  .ghostVisible {
-    transition: opacity calc(var(--lift-in-ms, 400ms) * var(--slow, 1)) cubic-bezier(0.22, 1, 0.36, 1);
-  }
-}

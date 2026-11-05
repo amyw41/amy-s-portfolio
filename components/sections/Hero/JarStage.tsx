@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type MutableRefObject, type RefObject } from "react";
+import { memo, useEffect, useRef, type CSSProperties, type MutableRefObject, type RefObject } from "react";
 import Image from "next/image";
 import styles from "./JarStage.module.css";
 import JarItem from "./JarItem";
@@ -12,8 +12,6 @@ import {
   JAR_LIFT_OUT_MS,
   JAR_LIFT_PX,
   JAR_LIFT_SCALE,
-  JAR_ISOLATE_DIM,
-  JAR_SEE_THROUGH_OPACITY,
 } from "@/lib/motion";
 
 // JarItem's lift transition reads these (JarItem.module.css .lift).
@@ -22,7 +20,6 @@ const LIFT_VARS = {
   "--lift-scale": JAR_LIFT_SCALE,
   "--lift-in-ms": `${JAR_LIFT_IN_MS}ms`,
   "--lift-out-ms": `${JAR_LIFT_OUT_MS}ms`,
-  "--see-through": JAR_SEE_THROUGH_OPACITY,
 } as CSSProperties;
 
 interface JarStageProps {
@@ -104,44 +101,12 @@ export default memo(function JarStage({
 
   const isolating = isolatedId !== null && items.some((item) => item.id === isolatedId);
 
-  // The see-through copy: drawn for the isolated item, and kept (fading
-  // out) for the last one once the hover ends.
-  const [ghostId, setGhostId] = useState<string | null>(null);
-  if (isolating && isolatedId !== ghostId) setGhostId(isolatedId);
-  const ghostRef = useRef<HTMLDivElement>(null);
-
-  // Keeps the copy exactly on the real item: its transform is written by
-  // the physics, so mirror every change to it (rare once the pile has
-  // settled — no per-frame work while nothing moves). A layout effect, so
-  // it's in place before the copy is first painted; it's only "armed"
-  // (shown, and allowed to rise — JarItem.module.css) the frame after, so
-  // it rises with the item instead of appearing already up.
-  useLayoutEffect(() => {
-    const ghost = ghostRef.current;
-    const real = ghostId ? containerRef.current?.querySelector<HTMLElement>(`[data-jar-item="${ghostId}"]`) : null;
-    if (!ghost || !real) return;
-    const sync = () => {
-      ghost.style.transform = real.style.transform;
-    };
-    sync();
-    const observer = new MutationObserver(sync);
-    observer.observe(real, { attributes: true, attributeFilter: ["style"] });
-    const arm = requestAnimationFrame(() => {
-      ghost.dataset.armed = "";
-    });
-    return () => {
-      observer.disconnect();
-      cancelAnimationFrame(arm);
-    };
-  }, [ghostId, ready]);
 
   return (
     <div
       ref={containerRef}
       className={styles.stage}
-      // Isolating dims the other items more lightly than the highlight
-      // toggles' --dim-white.
-      style={isolating ? { ...LIFT_VARS, "--dim-white": JAR_ISOLATE_DIM } as CSSProperties : LIFT_VARS}
+      style={LIFT_VARS}
     >
       <Image
         src="/images/drawings/jar.svg"
@@ -166,7 +131,8 @@ export default memo(function JarStage({
             if (!info) return null;
             const base = getJarItemVisualState(item.category, projectsOn, favouritesOn);
             const lifted = isolating && item.id === isolatedId;
-            const dimmed = isolating ? !lifted : base.dimmed;
+            // Isolating only lifts the item: nothing else changes.
+            const dimmed = base.dimmed;
             const bordered = base.bordered;
             return (
               <JarItem
@@ -190,34 +156,6 @@ export default memo(function JarStage({
               />
             );
           })}
-          {(() => {
-            const item = ghostId ? items.find((i) => i.id === ghostId) : undefined;
-            const info = item ? renderInfo[item.id] : undefined;
-            if (!item || !info) return null;
-            return (
-              <JarItem
-                key={`ghost-${item.id}`}
-                item={item}
-                ref={ghostRef}
-                width={info.divW}
-                height={info.divH}
-                imgWidth={info.imgW}
-                imgHeight={info.imgH}
-                imgLeft={info.imgLeft}
-                imgTop={info.imgTop}
-                ringLeft={info.ringLeft}
-                ringTop={info.ringTop}
-                ringWidth={info.ringWidth}
-                ringHeight={info.ringHeight}
-                outlineMask={null}
-                dimmed={false}
-                bordered={false}
-                lifted={isolating && item.id === isolatedId}
-                ghost
-                ghostVisible={isolating && item.id === isolatedId}
-              />
-            );
-          })()}
         </div>
       )}
 
