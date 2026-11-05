@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react";
 import type { HomeMode } from "./Sidebar";
 import {
   MODE_TRANSITION_MS,
+  SCROLL_BACK_GAP_MS,
+  SCROLL_BACK_THRESHOLD_PX,
   SCROLL_GESTURE_GAP_MS,
   SCROLL_SWITCH_SETTLE_MS,
   SCROLL_SWITCH_THRESHOLD_PX,
@@ -43,6 +45,14 @@ function scrollsItself(target: EventTarget | null, root: HTMLElement, dir: 1 | -
  * doesn't scroll the grid that's just arriving either. A gesture that scrolled the grid can't also switch:
  * reaching its top takes a fresh scroll up to go back to the jar.
  *
+ * Going back up is meant to be easy: from the top of the work, a small
+ * upward flick (SCROLL_BACK_THRESHOLD_PX) is enough, and a gesture going the
+ * other way from the last one always counts as a new one — so a flick up
+ * isn't lost in the inertial tail of the scroll that just opened the work,
+ * or in the lock while it arrives (switches can be reversed mid-way). After
+ * the grid has been scrolled up to its top, a short pause
+ * (SCROLL_BACK_GAP_MS) is all it takes before the next flick switches.
+ *
  * `sidebarSelector` marks the area to leave alone; `onSwitch` gets the mode
  * to switch to.
  */
@@ -73,12 +83,18 @@ export function useScrollSwitch(
     // The current gesture scrolled something else (the grid): it can't
     // switch.
     let scrolledInside = false;
+    // Which way the current gesture is going (1 down, -1 up, 0 none yet).
+    let gestureDir = 0;
 
     /** Switches if `dir` leads anywhere from this mode (down: jar → work;
      * up: work → jar); returns whether it did. */
     const trySwitch = (dir: 1 | -1) => {
       const next: HomeMode | null = modeRef.current === "jar" ? (dir === 1 ? "work" : null) : dir === -1 ? "jar" : null;
       if (!next) return false;
+      if (process.env.NODE_ENV !== "production") {
+        const w = window as unknown as { __scrollSwitches?: string[] };
+        (w.__scrollSwitches ??= []).push(next);
+      }
       onSwitchRef.current(next);
       lockedUntil = performance.now() + slowMs(MODE_TRANSITION_MS + SCROLL_SWITCH_SETTLE_MS);
       travel = 0;
@@ -93,15 +109,28 @@ export function useScrollSwitch(
     const onWheel = (e: WheelEvent) => {
       const now = performance.now();
       if (ignored(e.target)) return;
-      // Gaps are timed by when the input happened, not when it's handled:
-      // events queued behind a busy frame (the grid mounting) would look
-      // spaced out and end the gesture early.
-      if (e.timeStamp - lastWheel > SCROLL_GESTURE_GAP_MS) {
+      // Lines/pages → roughly px.
+      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1);
+      if (dy === 0) return;
+      const dir = dy > 0 ? 1 : -1;
+      const back = modeRef.current === "work" && dir === -1;
+      // A new gesture: after a pause (a shorter one to go back up), or as
+      // soon as the input turns round — an inertial tail never reverses, so
+      // a flick the other way is always meant. Gaps are timed by when the
+      // input happened, not when it's handled: events queued behind a busy
+      // frame (the grid mounting) would look spaced out and end the gesture
+      // early.
+      const gap = back ? SCROLL_BACK_GAP_MS : SCROLL_GESTURE_GAP_MS;
+      const reversed = gestureDir !== 0 && dir !== gestureDir;
+      if (e.timeStamp - lastWheel > gap || reversed) {
         spent = false;
         scrolledInside = false;
         travel = 0;
+        // A reversal can undo a switch that's still arriving.
+        if (reversed) lockedUntil = 0;
       }
       lastWheel = e.timeStamp;
+      gestureDir = dir;
       // A spent gesture's tail, or anything while the switch is still
       // locked, is swallowed: it would otherwise scroll the grid that's
       // only just arriving.
@@ -109,16 +138,13 @@ export function useScrollSwitch(
         e.preventDefault();
         return;
       }
-      // Lines/pages → roughly px.
-      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1);
-      if (dy === 0) return;
-      const dir = dy > 0 ? 1 : -1;
       if (scrollsItself(e.target, root, dir)) scrolledInside = true;
       if (scrolledInside) return;
-      // Changing direction starts the count again.
-      if (Math.sign(travel) !== dir) travel = 0;
       travel += dy;
-      if (Math.abs(travel) >= SCROLL_SWITCH_THRESHOLD_PX) trySwitch(dir);
+      if (Math.abs(travel) >= (back ? SCROLL_BACK_THRESHOLD_PX : SCROLL_SWITCH_THRESHOLD_PX)) {
+        trySwitch(dir);
+        e.preventDefault();
+      }
     };
 
     let touchY: number | null = null;
@@ -131,7 +157,8 @@ export function useScrollSwitch(
       // A finger moving up scrolls down.
       const dy = touchY - e.touches[0].clientY;
       const dir = dy > 0 ? 1 : -1;
-      if (Math.abs(dy) < SCROLL_SWITCH_THRESHOLD_PX || ignored(e.target) || scrollsItself(e.target, root, dir)) return;
+      const need = modeRef.current === "work" && dir === -1 ? SCROLL_BACK_THRESHOLD_PX : SCROLL_SWITCH_THRESHOLD_PX;
+      if (Math.abs(dy) < need || ignored(e.target) || scrollsItself(e.target, root, dir)) return;
       trySwitch(dir);
     };
 
@@ -140,7 +167,7 @@ export function useScrollSwitch(
       const dir =
         e.key === "ArrowDown" || e.key === "PageDown" || (e.key === " " && !e.shiftKey)
           ? 1
-          : e.key === "ArrowUp" || e.key === "PageUp" || (e.key === " " && e.shiftKey)
+          : e.key === "ArrowUp" || e.key === "PageUp" || e.key === "Home" || (e.key === " " && e.shiftKey)
             ? -1
             : 0;
       if (dir === 0) return;
@@ -155,7 +182,8 @@ export function useScrollSwitch(
       if (grid && scrollsItself(grid.firstElementChild ?? grid, root, dir)) {
         // The grid isn't focused, so the key wouldn't scroll it: do it here.
         const page = e.key === "PageDown" || e.key === "PageUp" || e.key === " ";
-        grid.scrollBy({ top: dir * (page ? grid.clientHeight * 0.85 : 60), behavior: "smooth" });
+        if (e.key === "Home") grid.scrollTo({ top: 0, behavior: "smooth" });
+        else grid.scrollBy({ top: dir * (page ? grid.clientHeight * 0.85 : 60), behavior: "smooth" });
         e.preventDefault();
         return;
       }

@@ -195,6 +195,12 @@ export const EASE_OVERSHOOT = [0.34, 1.4, 0.64, 1] as const;
 export const SCROLL_SWITCH_THRESHOLD_PX = 50;
 export const SCROLL_SWITCH_SETTLE_MS = 300;
 export const SCROLL_GESTURE_GAP_MS = 200;
+// Going back up from the top of the work is easier: a flick of
+// SCROLL_BACK_THRESHOLD_PX switches, and a pause of SCROLL_BACK_GAP_MS ends
+// the gesture that scrolled the grid up to its top. A flick that reverses the
+// last gesture always counts as new (useScrollSwitch.ts).
+export const SCROLL_BACK_THRESHOLD_PX = 24;
+export const SCROLL_BACK_GAP_MS = 150;
 export const MODE_TRANSITION_MS =
   Math.max(
     JAR_ANTICIPATE_S + JAR_DROP_OUT_S + HEADING_DROP_S,
