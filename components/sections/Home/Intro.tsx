@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { flushSync } from "react-dom";
 import styles from "./Intro.module.css";
 import { JAR_OUTLINE, JAR_OUTLINE_BODY_START, JAR_PEN_WIDTH, JAR_STROKES } from "@/lib/jar-outline";
+import { JAR_ART_H, JAR_ART_W, JAR_LINE, roughen } from "@/lib/jar-line";
 import { LINE_STROKE_WIDTH } from "@/lib/wobbly";
 import {
   INTRO_BLANK_S,
@@ -17,11 +18,8 @@ import {
   INTRO_FOAM_CREEP_S,
   INTRO_FOAM_WAVES,
   INTRO_FPS,
-  INTRO_CIRCLE,
-  INTRO_CIRCLE_R_VH,
-  INTRO_DOT,
+  INTRO_SPIRAL,
   INTRO_SHORT_DOT_S,
-  INTRO_SPLIT,
   INTRO_STRAND_MIN_PX,
   INTRO_STYLE,
   INTRO_PEN_PX_PER_S,
@@ -188,6 +186,7 @@ export default function Intro({
   const threadLRef = useRef<SVGPathElement>(null);
   const threadRRef = useRef<SVGPathElement>(null);
   const dotRef = useRef<SVGPathElement>(null);
+  const jarLineRef = useRef<SVGPathElement>(null);
   const divClipRef = useRef<SVGRectElement>(null);
   const divSvgRef = useRef<SVGSVGElement>(null);
   const divPathRef = useRef<SVGPathElement>(null);
@@ -217,6 +216,7 @@ export default function Intro({
     const threadL = threadLRef.current;
     const threadR = threadRRef.current;
     const dot = dotRef.current;
+    const jarLine = jarLineRef.current;
     const divClip = divClipRef.current;
     const divSvg = divSvgRef.current;
     const divPath = divPathRef.current;
@@ -237,19 +237,26 @@ export default function Intro({
       if (svg) svg.style.visibility = "hidden";
       callbacks.current.onDone();
     };
+    // A click or key skips the short version only — the first full intro
+    // plays through. A resize mid-intro jumps to the end.
     const skip = () => finish();
-    window.addEventListener("pointerdown", skip);
-    window.addEventListener("keydown", skip);
+    const canSkip = variant === "short";
+    if (canSkip) {
+      window.addEventListener("pointerdown", skip);
+      window.addEventListener("keydown", skip);
+    }
+    window.addEventListener("resize", skip);
     const cleanup = () => {
       cancelled = true;
       cancelAnimationFrame(raf);
       window.removeEventListener("pointerdown", skip);
       window.removeEventListener("keydown", skip);
+      window.removeEventListener("resize", skip);
     };
     if (
       !svg || !boilGroup || !noise || !displace || !smallGroup || !smallImg || !smallMask || !ink || !dome || !foam ||
       !bubbles || !clipRim || !clipBody || !clipNeck || !threadL || !threadR || !divClip || !divSvg || !divPath ||
-      !realImg || !realMask || !thicken || !dot || !jarEl
+      !realImg || !realMask || !thicken || !dot || !jarLine || !jarEl
     ) {
       finish();
       return cleanup;
@@ -268,7 +275,7 @@ export default function Intro({
     function start() {
       if (!svg || !boilGroup || !noise || !displace || !smallGroup || !smallImg || !smallMask || !ink || !dome || !foam) return;
       if (!bubbles || !clipRim || !clipBody || !clipNeck || !threadL || !threadR || !divClip || !divSvg || !divPath) return;
-      if (!realImg || !realMask || !thicken || !dot || !jarEl) return;
+      if (!realImg || !realMask || !thicken || !dot || !jarLine || !jarEl) return;
       const setupStart = performance.now();
       // Which full version (INTRO_STYLE): the v2 story (small jar, ink,
       // foam, rainbow strands), or just the sketch (the divider and the jar
@@ -348,157 +355,91 @@ export default function Intro({
         divClip.setAttribute("height", String(span * p));
       };
 
-      // ---- v3, "line": one line becomes everything ----
+      // ---- v4, "line": one rough line becomes everything ----
       if (INTRO_STYLE === "line") {
         smallGroup.style.display = "none";
+        realImg.style.display = "none";
         const short = variant === "short";
-        const dist = (a: Pt, b: Pt) => Math.hypot(a[0] - b[0], a[1] - b[1]);
         const fps = INTRO_FPS;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
 
-        // The jar's strokes, split where the right strand touches its left
-        // wall (about mid-height) into two pens flowing opposite ways: up
-        // (the wall, the neck, then the rim and lid lines) and down (the
-        // wall, the base, up the right wall).
-        const strokesPx: Pt[][] = JAR_STROKES.map((st) => st.map((p) => toReal(p as Pt)));
-        const ty = J.top + 0.55 * h;
-        let cs = 0;
-        let ci = 0;
-        let bestX = Infinity;
-        strokesPx.forEach((st, k) =>
-          st.forEach((p, i) => {
-            if (Math.abs(p[1] - ty) < 0.04 * h && p[0] < bestX) {
-              bestX = p[0];
-              cs = k;
-              ci = i;
-            }
-          }),
-        );
-        const host = strokesPx[cs];
-        const contact: Pt = host[ci];
-        const partA = host.slice(0, ci + 1).reverse();
-        const partB = host.slice(ci);
-        const upFirst = partA[partA.length - 1][1] < partB[partB.length - 1][1] ? partA : partB;
-        const downFirst = upFirst === partA ? partB : partA;
-        const others = strokesPx.filter((_, k) => k !== cs);
-        const meanY = (st: Pt[]) => st.reduce((a, p) => a + p[1], 0) / st.length;
-        const upper = others.filter((st) => meanY(st) < J.top + 0.24 * h);
-        const lower = others.filter((st) => meanY(st) >= J.top + 0.24 * h);
-        // Each pen goes on to whichever stroke starts nearest where it is.
-        const chain = (first: Pt[], pool: Pt[][]) => {
-          const out = [first];
-          let end = first[first.length - 1];
-          const left = pool.slice();
-          while (left.length) {
-            let bi = 0;
-            let rev = false;
-            let bd = Infinity;
-            left.forEach((st, i) => {
-              const d0 = dist(end, st[0]);
-              const d1 = dist(end, st[st.length - 1]);
-              if (d0 < bd) [bd, bi, rev] = [d0, i, false];
-              if (d1 < bd) [bd, bi, rev] = [d1, i, true];
-            });
-            let st = left.splice(bi, 1)[0];
-            if (rev) st = st.slice().reverse();
-            out.push(st);
-            end = st[st.length - 1];
-          }
-          return out;
-        };
-        const penUp = makePen(chain(upFirst, upper));
-        const penDown = makePen(chain(downFirst, lower));
-        const jarLen = Math.max(penUp.total, penDown.total);
-
-        // Where the line starts: between the divider and the jar, level with
-        // where it will touch the jar (phones: above the jar).
-        const C0: Pt = D0
-          ? [(D0[0] + contact[0]) / 2, Math.min(contact[1], window.innerHeight * 0.55)]
-          : [window.innerWidth / 2, Math.max(J.top - 0.1 * h, window.innerHeight * 0.2)];
-        const R = Math.max(18, Math.min(40, INTRO_CIRCLE_R_VH * window.innerHeight));
-
-        // The doodled circle: a curl that opens into a "c", then an open
-        // circle whose gap chases round while it drifts on a wobbly orbit.
-        const fC0 = Math.round(INTRO_CIRCLE[0] * fps);
-        const fC1 = Math.round(INTRO_CIRCLE[1] * fps);
-        const centreAt = (k: number): Pt => {
-          const r = rng(500 + k);
-          const a = k * 0.55;
-          return [C0[0] + 0.4 * R * Math.cos(a) + (r() - 0.5) * 3, C0[1] + 0.28 * R * Math.sin(a) + (r() - 0.5) * 3];
-        };
-        const circleFrames: Pt[][] = [];
-        for (let k = 0; k < fC1 - fC0; k++) {
-          const u = (k + 1) / (fC1 - fC0);
-          const e = 1 - (1 - u) ** 2;
-          const c = centreAt(k);
-          const span = Math.PI * 2 * (0.25 + 0.6 * e);
-          const rk = R * (0.25 + 0.75 * e);
-          const phase = k * 0.9;
-          const pts: Pt[] = [];
-          for (let i = 0; i <= 48; i++) {
-            const th = phase + (span * i) / 48;
-            const rr = rk * (1 - 0.35 * (1 - u) * (i / 48));
-            pts.push([c[0] + rr * Math.cos(th), c[1] + rr * Math.sin(th)]);
-          }
-          circleFrames.push(pts);
+        // One stroke weight for every line: the divider's, never scaled.
+        const lineW = realDivider ? parseFloat(getComputedStyle(realDivider).strokeWidth) || LINE_STROKE_WIDTH : LINE_STROKE_WIDTH;
+        for (const el of [threadL, threadR, jarLine]) {
+          el.setAttribute("stroke-width", String(lineW));
+          el.setAttribute("vector-effect", "non-scaling-stroke");
         }
 
-        // Open and split: the gap swings to the bottom and widens into a wide
-        // ∩ with curled ends; then it parts at the top into two strands, each
-        // with its curl at the free end, pulling apart left and right.
-        const fS0 = fC1;
-        const fS1 = Math.round(INTRO_SPLIT[1] * fps);
-        const nOpen = Math.max(2, Math.floor((fS1 - fS0) / 2));
-        const cEnd = centreAt(fC1 - fC0);
-        // One half of the ∩, from its top down one side, then its curl.
-        const halfArc = (side: number, gap: number, wide: number, pull: number, curl: number): Pt[] => {
-          const pts: Pt[] = [];
-          for (let i = 0; i <= 24; i++) {
-            const th = -Math.PI / 2 + (side * (Math.PI - gap / 2) * i) / 24;
-            pts.push([cEnd[0] + side * pull + R * wide * Math.cos(th), cEnd[1] + R * Math.sin(th)]);
-          }
-          const end = pts[pts.length - 1];
-          const rc = R * 0.28 * curl;
-          if (rc > 0.5) {
-            const cc: Pt = [end[0] + side * rc, end[1]];
-            for (let i = 1; i <= 8; i++) {
-              const th = side < 0 ? (1.2 * Math.PI * i) / 8 : Math.PI - (1.2 * Math.PI * i) / 8;
-              pts.push([cc[0] + rc * Math.cos(th), cc[1] + rc * Math.sin(th)]);
-            }
-          }
-          return pts;
-        };
-        const splitFrames: { L: Pt[]; R: Pt[]; whole: boolean }[] = [];
-        for (let k = 0; k < fS1 - fS0; k++) {
-          if (k < nOpen) {
-            const u = (k + 1) / nOpen;
-            const gap = Math.PI * (0.3 + 0.6 * u);
-            splitFrames.push({ L: halfArc(-1, gap, 1 + 0.4 * u, 0, u), R: halfArc(1, gap, 1 + 0.4 * u, 0, u), whole: true });
-          } else {
-            const u = (k - nOpen + 1) / (fS1 - fS0 - nOpen);
-            splitFrames.push({ L: halfArc(-1, Math.PI * 0.9, 1.4, R * 0.7 * u, 1), R: halfArc(1, Math.PI * 0.9, 1.4, R * 0.7 * u, 1), whole: false });
-          }
-        }
+        // The jar: the same one-line jar the page shows (lib/jar-line.ts),
+        // placed on the real jar's box. It starts on the left wall.
+        const jarPx: Pt[] = JAR_LINE.map(([x, y]) => [J.left + (x / JAR_ART_W) * w, J.top + (y / JAR_ART_H) * h]);
+        const cJar = lengths(jarPx);
+        const Ljar = cJar[cJar.length - 1];
+        const contact = jarPx[0];
 
-        // The strands: each its half of the ∩ (tail at the break, head at the
-        // curl), then its route — left down to the divider's foot, right
-        // across to the jar's wall. A window of fixed length slides along at
-        // pen speed; once the head is on the divider or the jar, the line it
-        // leaves behind is the drawing itself.
-        const lastSplit = splitFrames[splitFrames.length - 1];
-        const bodyL: Pt[] = short ? [C0, [C0[0] - 0.5, C0[1]]] : lastSplit.L;
-        const bodyR: Pt[] = short ? [C0, [C0[0] + 0.5, C0[1]]] : lastSplit.R;
+        // The dot, at the exact centre of the window: a small uneven blob.
+        const C0: Pt = [vw / 2, vh / 2];
+        const blobR = rng(31);
+        const blob: Pt[] = Array.from({ length: 9 }, (_, i) => {
+          const a = (i / 9) * Math.PI * 2;
+          const r = 2 + (blobR() - 0.4) * 1.1;
+          return [C0[0] + r * Math.cos(a), C0[1] + r * Math.sin(a) * 0.85];
+        });
+        const blobD = `${polyD(blob)}Z`;
+
+        // The spiral: drawn outward from the dot, about 2 uneven turns, each
+        // a different lumpy width, the end running on a little.
+        const R = Math.max(20, Math.min(40, 0.036 * vh));
+        const sr = rng(47);
+        const p1 = sr() * 6;
+        const p2 = sr() * 6;
+        const turns = 2.1;
+        const spiralRaw: Pt[] = [];
+        for (let i = 0; i <= 170; i++) {
+          const u = i / 170;
+          const th = u * turns * Math.PI * 2 + 0.4;
+          const lump = 1 + 0.17 * Math.sin(2.3 * th + p1) + 0.08 * Math.sin(5.1 * th + p2);
+          let r = R * u ** 0.85 * lump;
+          if (u > 0.88) r *= 1 + (u - 0.88) * 1.6; // the overshoot
+          spiralRaw.push([C0[0] + r * Math.cos(th), C0[1] + r * Math.sin(th) * 0.92]);
+        }
+        const spiral = roughen(spiralRaw, 1.6, 53, 26);
+        const cSpiral = lengths(spiral);
+        const Lspiral = cSpiral[cSpiral.length - 1];
+
+        // The split: the line's two ends pull away. The centre end leads the
+        // left strand (its inner half trailing), the outer end the right one.
+        const mid = Math.floor(spiral.length / 2);
+        const bodyL: Pt[] = short ? [C0, [C0[0] - 0.5, C0[1]]] : spiral.slice(0, mid + 1).reverse();
+        const bodyR: Pt[] = short ? [C0, [C0[0] + 0.5, C0[1]]] : spiral.slice(mid);
         const headL = bodyL[bodyL.length - 1];
         const headR = bodyR[bodyR.length - 1];
+        // Wobbly travel paths: left down to the divider's foot, right to the
+        // jar's left wall (arriving from below, to go on up the wall).
         const routeL: Pt[] = D0
-          ? bezier(headL, [headL[0] - 30, headL[1] + 60], [D0[0] + 0.45 * (headL[0] - D0[0]), D0[1] + 10], D0, 60)
+          ? roughen(
+              bezier(
+                headL,
+                [headL[0] - 0.3 * (headL[0] - D0[0]), headL[1] + 0.15 * (D0[1] - headL[1])],
+                [D0[0] + 0.35 * (headL[0] - D0[0]), D0[1] - 0.05 * (D0[1] - headL[1])],
+                D0,
+                80,
+              ),
+              4,
+              61,
+              120,
+            )
           : [];
-        const routeR: Pt[] = bezier(
-          headR,
-          [headR[0] + 0.35 * (contact[0] - headR[0]), headR[1] + 12],
-          [headR[0] + 0.7 * (contact[0] - headR[0]), contact[1] - 10],
-          contact,
-          60,
+        const routeR: Pt[] = roughen(
+          bezier(headR, [headR[0] + 50, headR[1] + 30], [contact[0] - 30, contact[1] + 45], contact, 80),
+          4,
+          67,
+          110,
         );
+        // Keep the ends exactly on their targets.
+        if (routeL.length) routeL[routeL.length - 1] = D0 as Pt;
+        routeR[routeR.length - 1] = contact;
         const pathL = D0 ? [...bodyL, ...routeL.slice(1)] : [];
         const pathR = [...bodyR, ...routeR.slice(1)];
         const cPathL = lengths(pathL);
@@ -509,45 +450,41 @@ export default function Intro({
         const LpR = cPathR[cPathR.length - 1];
         const WL = Math.max(LbL, INTRO_STRAND_MIN_PX);
         const WR = Math.max(LbR, INTRO_STRAND_MIN_PX);
-        const t0s = short ? INTRO_SHORT_DOT_S : INTRO_SPLIT[1];
-        const travel = Math.max(D0 ? LpL - LbL + LD : 0, LpR - LbR + jarLen);
-        const lineSpeed = short ? travel / Math.max(0.3, INTRO_SHORT_S - INTRO_SHORT_DOT_S) : INTRO_PEN_PX_PER_S;
-        const lineEnd = t0s + travel / lineSpeed;
-        const dotEnd = short ? INTRO_SHORT_DOT_S : INTRO_DOT[1];
-        const circleD = (c: Pt, r: number) =>
-          `M${f1(c[0] - r)},${f1(c[1])}a${f1(r)},${f1(r)} 0 1 0 ${f1(2 * r)},0a${f1(r)},${f1(r)} 0 1 0 ${f1(-2 * r)},0`;
+
+        // The clock. The strands set off with a soft ease, then go at the
+        // pen's speed.
+        const tSplit = short ? INTRO_SHORT_DOT_S : INTRO_SPIRAL[1];
+        const travel = Math.max(D0 ? LpL - LbL + LD : 0, LpR - LbR + Ljar);
+        const EASE_S = short ? 0 : 0.3;
+        const v = short ? travel / Math.max(0.3, INTRO_SHORT_S - INTRO_SHORT_DOT_S) : INTRO_PEN_PX_PER_S;
+        const distAt = (tau: number) => (tau <= 0 ? 0 : tau < EASE_S ? (v * tau * tau) / (2 * EASE_S) : v * (tau - EASE_S / 2));
+        const lineEnd = tSplit + travel / v + EASE_S / 2;
+        const dotEnd = short ? INTRO_SHORT_DOT_S : INTRO_SPIRAL[0];
 
         const renderLine = (t: number) => {
           const f = Math.floor(t * fps + 1e-6);
-          dot.setAttribute("d", t < dotEnd ? circleD(short ? C0 : centreAt(0), 2) : "");
+          dot.setAttribute("d", t < dotEnd ? blobD : "");
           threadL.setAttribute("d", "");
           threadR.setAttribute("d", "");
+          jarLine.setAttribute("d", "");
           let s = -1;
-          if (!short && f >= fC0 && f < fC1) {
-            threadR.setAttribute("d", polyD(circleFrames[f - fC0]));
-          } else if (!short && f >= fS0 && f < fS1) {
-            const sf = splitFrames[f - fS0];
-            if (sf.whole) threadR.setAttribute("d", polyD([...sf.L.slice().reverse(), ...sf.R.slice(1)]));
-            else {
-              threadL.setAttribute("d", polyD(sf.L));
-              threadR.setAttribute("d", polyD(sf.R));
-            }
-          } else if (t >= t0s) {
-            s = (t - t0s) * lineSpeed;
+          if (!short && t >= INTRO_SPIRAL[0] && t < tSplit) {
+            const p = clamp01((t - INTRO_SPIRAL[0]) / (INTRO_SPIRAL[1] - INTRO_SPIRAL[0]));
+            const e = p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2;
+            threadR.setAttribute("d", slice(spiral, cSpiral, 0, Math.max(1, e * Lspiral)));
+          } else if (t >= tSplit) {
+            s = distAt(t - tSplit);
             if (D0) {
               const hL = LbL + s;
               threadL.setAttribute("d", slice(pathL, cPathL, Math.max(0, hL - WL), Math.min(hL, LpL)));
             }
             const hR = LbR + s;
             threadR.setAttribute("d", slice(pathR, cPathR, Math.max(0, hR - WR), Math.min(hR, LpR)));
+            // On the jar the line stays where it has been: that's the jar.
+            const sj = hR - LpR;
+            if (sj > 0) jarLine.setAttribute("d", sj >= Ljar ? polyD(jarPx) : slice(jarPx, cJar, 0, sj));
           }
           drawDivider(s >= 0 ? LbL + s - LpL : -1);
-          const q = s >= 0 ? LbR + s - LpR : -1;
-          if (q >= jarLen - 0.5) realImg.removeAttribute("mask");
-          else {
-            realImg.setAttribute("mask", "url(#intro-mask-real)");
-            realMask.setAttribute("d", q > 0 ? penD(penUp, q) + penD(penDown, q) : "");
-          }
           // The boil, easing out at the end so the last drawing is the page.
           const boil = INTRO_BOIL_PX * clamp01((lineEnd - t) / INTRO_BOIL_OUT_S);
           if (boil > 0.01) {
@@ -893,6 +830,7 @@ export default function Intro({
           <path ref={bubblesRef} className={styles.line} strokeWidth={LINE_STROKE_WIDTH} />
         </g>
         <path ref={dotRef} className={styles.ink} />
+        <path ref={jarLineRef} className={styles.line} />
         <path ref={threadLRef} className={styles.line} strokeWidth={THREAD_WIDTH} />
         <path ref={threadRRef} className={styles.line} strokeWidth={THREAD_WIDTH} />
         <g clipPath="url(#intro-divider-clip)">

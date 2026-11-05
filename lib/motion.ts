@@ -128,22 +128,18 @@ export const JAR_RETURN_S = 0.25;
 // top to bottom, INTRO_SIDEBAR_STAGGER_S apart, rising INTRO_SIDEBAR_RISE_PX.
 // The short version (repeat visits, phones) is just the last beat, the jar's
 // drawing taking INTRO_SHORT_S.
-// Which intro plays (intro-brief.md): "line" (v3, current) — a dot becomes
-// a doodled circle that opens and splits into two strands, the left one
-// running up the divider, the right one forking at the jar's wall and
-// flowing round its outline; "sketch" — just the divider and the jar drawing
-// on; "overflow" (v2) — the small jar, ink, foam and rainbow strands.
+// Which intro plays (intro-brief.md): "line" (v4, current) — a rough dot at
+// the window's centre draws a loose spiral outward, its two ends pull apart
+// into strands, the left one drawing the divider and the right one tracing
+// the jar as one continuous line (the one-line jar, lib/jar-line.ts, that
+// stays on the page); "sketch" — the divider and the jar artwork drawing on;
+// "overflow" (v2) — the small jar, ink, foam and rainbow strands.
 export const INTRO_STYLE = "line" as "line" | "sketch" | "overflow";
-// v3's opening, as [start, end] seconds: the dot, the doodled circle (its
-// radius INTRO_CIRCLE_R_VH of the window height, drifting round a small
-// orbit while its open end chases itself), the open-and-split. Then the
-// strands travel at the pen's speed, each a thread at least
-// INTRO_STRAND_MIN_PX long. The short version shows the dot for
+// v4's dot shows until INTRO_SPIRAL[0]; the spiral draws on over INTRO_SPIRAL;
+// then the strands travel at the pen's speed (easing in), each a thread at
+// least INTRO_STRAND_MIN_PX long. The short version shows the dot for
 // INTRO_SHORT_DOT_S, then the strands go straight to the divider and jar.
-export const INTRO_DOT: [number, number] = [0, 0.5];
-export const INTRO_CIRCLE: [number, number] = [0.5, 1.7];
-export const INTRO_SPLIT: [number, number] = [1.7, 2.4];
-export const INTRO_CIRCLE_R_VH = 0.045;
+export const INTRO_SPIRAL: [number, number] = [0.4, 1.8];
 export const INTRO_STRAND_MIN_PX = 60;
 export const INTRO_SHORT_DOT_S = 0.15;
 export const INTRO_FPS = 12;
