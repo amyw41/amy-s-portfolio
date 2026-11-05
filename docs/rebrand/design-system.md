@@ -120,24 +120,16 @@ One sound: a short glass clink (the first 0.22s of `public/sounds/jar-drop.mp3` 
 
 ## Intro
 
-The home page's opening (Home/Intro.tsx; brief: `docs/rebrand/intro-brief.md` v7): a rough, hand-sketched, HeyTea-style loading doodle. One thin line spirals into a circle, is released like a paper ribbon, and ends on the original jar drawing. `INTRO_STYLE` picks the version: `"line"` (current), `"sketch"` or `"overflow"` (v2).
+The home page's load-in (Home/Intro.tsx; `docs/rebrand/intro-brief.md`). It's the same on every visit, the first included:
 
-- **Line weight:** the dot's line and both ribbons use the jar drawing's own weight as it shows on screen. That's measured at start from the artwork rendered at its size (its ink spread along its strokes): about 0.57px on a laptop, about the same as the divider's 0.6px. They're never scaled, with round caps and joins.
-- **Motion:** the line moves smoothly. The boil changes 12 times a second, cycling 3 versions: 0.5px until the right ribbon lands on the jar, then 0.8px, easing to still over the last 0.3s.
-- **Speed:** one timeline, one velocity curve, never stopping. From the dot the pen goes at 600px/s, ±22% with the stroke (quicker going down, slower going up), until it lands on the jar, then picks up to 3000px/s. That keeps it within 64% of its peak the whole way. The left ribbon moves the same way from the instant the loop opens. `?debug=1` logs it.
-- **Roughness:** only Amy's own: the loop and ribbons are bent by the wobble measured from her jar strokes (about 0.9px RMS, about 50px wavelength). There's no other added noise.
+- **What draws:** over 0.7s the divider draws on top to bottom (a copy of the real divider path, revealed downward) while the original jar draws along its own strokes, one pen through the drawing from the left wall (lib/jar-line.ts). The real artwork is revealed exactly where the pen has been.
+- **Boil:** the stop-motion boil (about 0.8px, 12 drawings a second, cycling 3 versions) eases to still over the last 0.3s, so the last frame is the page itself: the original artwork, unmasked, in its own box.
+- **After:** the sidebar loads top to bottom (350ms each, 70ms apart, rising 8px), the items fall and "scroll down!" draws.
+- **Skip:** a click or any key ends it at once. A resize mid-intro jumps to the end.
+- **No intro:** with reduced motion, on a visit straight to the work (`/#projects`) or on a trip back from a case study.
+- **Debug:** `?intro=1` or `?intro=2` replays it; `?slow=4` slows it.
 
-| Time (1536×696) | What happens |
-|---|---|
-| 0–0.25s | a small uneven dot at the exact centre of the window |
-| 0.25–0.83s | the pen spirals out from the dot, its turns unevenly spaced, into one loose hand loop: slightly elliptical (1.1 × 0.9), tilted 20°, its radius drifting (radius 4.3% of the window height, 22–40px). It doesn't close: it passes about 8px outside its start |
-| 0.83s → | without slowing, the pen carries straight on off the top into the right ribbon, with the loop's left half trailing behind it. At the same instant the loop opens at the bottom, and the line before the cut (the spiral and the loop's first part) leaves heading left as the left ribbon. Each floats off on a soft wave (about 15px, decaying) and lands heading the way its drawing goes. The left ribbon runs up the divider from its foot; the right one lands on the jar's right wall level with the centre and traces the original drawing, one pen through its strokes. Each ribbon keeps its own length until it lands, then the line behind it stays |
-| ~2.7s | the boil stills and the lines are the page (the original artwork, unmasked, in its own box). The sidebar loads top to bottom (350ms each, 70ms apart, rising 8px), the items fall and "scroll down!" draws |
-
-- **When:** the full version plays once per visit and can't be skipped.
-- **Repeat visits and phones:** 0.7s. The divider draws top to bottom while the jar draws along its strokes from the left wall. A click or key skips it.
-- **Exits:** a resize mid-intro jumps to the end. There's no intro with reduced motion, on a visit straight to the work (`/#projects`) or on a trip back from a case study.
-- **Debug:** `?intro=1` replays the full version, `?intro=2` shows the repeat version, and `?slow=4` slows it.
+The spiral-and-ribbons intro was removed on 2026-11-05 (it's in git history at 5a22690). `INTRO_STYLE` still has the older "sketch" and "overflow" versions.
 
 ## Zoom into a case study
 

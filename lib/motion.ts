@@ -128,28 +128,13 @@ export const JAR_RETURN_S = 0.25;
 // top to bottom, INTRO_SIDEBAR_STAGGER_S apart, rising INTRO_SIDEBAR_RISE_PX.
 // The short version (repeat visits, phones) is just the last beat, the jar's
 // drawing taking INTRO_SHORT_S.
-// Which intro plays (intro-brief.md): "line" (v7, current) — a rough dot at
-// the window's centre spirals out into one loose circle, which opens at the
-// top and bottom and floats off as two ribbon tails, the left one drawing
-// the divider and the right one the original jar, one pen through its own
-// strokes (lib/jar-line.ts);
-// "sketch" — the divider and the jar drawing on; "overflow" (v2) — the
-// small jar, ink, foam and rainbow strands.
+// Which intro plays (intro-brief.md): "line" (current) — the load-in: the
+// divider draws top to bottom while the original jar draws along its own
+// strokes (lib/jar-line.ts), together over INTRO_SHORT_S, on every visit;
+// "sketch" — the divider and the jar drawing on, slower; "overflow" (v2) —
+// the small jar, ink, foam and rainbow strands. (The spiral-and-ribbons
+// intro was removed on 2026-11-05; it's in git history at 5a22690.)
 export const INTRO_STYLE = "line" as "line" | "sketch" | "overflow";
-// The dot shows until INTRO_SPIRAL[0]; the spiral-into-a-circle draws on
-// from INTRO_SPIRAL[0] on one continuous timeline. The short version
-// (INTRO_SHORT_S) is just the divider and the jar drawing on together.
-export const INTRO_SPIRAL: [number, number] = [0.25, 1.0];
-// The gesture (v8) runs on one timeline with one velocity curve: from the
-// dot the pen goes at INTRO_GESTURE_PX_PER_S, swinging ±INTRO_GESTURE_SWING
-// with the stroke (quicker going down, slower going up), never slowing to
-// close the loop, until it lands on the jar; then it picks up to
-// INTRO_PEN_PX_PER_S. The left ribbon moves the same way from the instant
-// the loop opens. The boil is a softer INTRO_BOIL_SOFT_PX until the pen
-// lands. The line's own motion is smooth; only the boil steps at INTRO_FPS.
-export const INTRO_GESTURE_PX_PER_S = 600;
-export const INTRO_GESTURE_SWING = 0.22;
-export const INTRO_BOIL_SOFT_PX = 0.5;
 export const INTRO_FPS = 12;
 export const INTRO_BOIL_PX = 0.8;
 export const INTRO_BOIL_DRAWINGS = 3;

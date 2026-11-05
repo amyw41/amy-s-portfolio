@@ -1,3 +1,18 @@
+# Intro: the simple load-in (current, 2026-11-05)
+
+Amy: "remove the spiral and only have the simpler load in".
+
+The spiral-and-ribbons intro (v4–v7.1 below) was removed on 2026-11-05. Its code is in git history at 5a22690. The intro on every visit, the first included, is now the simple load-in:
+- **What draws:** the divider draws top to bottom while the original jar draws along its own strokes (one pen through the drawing, from the left wall), together in 0.7s, with the stop-motion boil easing to still at the end.
+- **The handoff:** the last frame is the page itself. Then the sidebar fades in, the items fall and "scroll down!" draws.
+- **Skipping:** a click or any key skips it.
+- **No intro:** with reduced motion, or coming back from a case study.
+- **Debug:** `?intro=1` or `?intro=2` replays it; `?slow=4` slows it.
+
+The briefs below are kept for history.
+
+---
+
 # Intro brief v7.1: no pause, and a hand's imperfection
 
 Amy on v7: "still feels a bit forced imperfection but its actually perfect and theres still a pause before it separates ... its not up to my standard". She chose to keep refining the code spiral.
