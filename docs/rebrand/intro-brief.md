@@ -43,6 +43,12 @@ Done when:
 - Nothing appears without the line travelling there.
 - The final frame is exact, it plays smoothly at 1536×696 and 1920×1080, and the design-system Intro section is updated.
 
+## As built (v3)
+- **Where the dot starts:** halfway between the divider and the jar's left wall, level with where the right strand will touch the jar, not at the stage's centre. The jar sits in the stage's centre, so a dot there would start on top of the jar, and the right strand couldn't "travel right" to its wall.
+- **Where the ∩ parts:** at its top (its ends are at the bottom, curled). Each strand's curl leads.
+- **Length:** about 6.0s at 1536×696 and 6.1s at 1920×1080, mostly the rim and lid lines at 600px/s.
+- **Switches:** `INTRO_STYLE` in lib/motion.ts picks "line" (v3), "sketch" (just the drawing on) or "overflow" (v2).
+
 ---
 
 # Intro brief v2: the overflowing jar

@@ -120,25 +120,22 @@ One sound: a short glass clink (the first 0.22s of `public/sounds/jar-drop.mp3` 
 
 ## Intro
 
-> **Currently sketch only** (`INTRO_FULL_SEQUENCE = false`): the full version is a blank page (0.3s), then the divider and the jar drawing on at 900px/s with the boil (about 3.9s in all at 1536×696). The table below is the whole story, kept for when the flag goes back on.
+The home page's opening (Home/Intro.tsx; brief: `docs/rebrand/intro-brief.md` v3). One line becomes everything. `INTRO_STYLE` picks the version: `"line"` (v3, current), `"sketch"` (just the divider and jar drawing on) or `"overflow"` (v2: small jar, ink, foam, rainbow strands).
 
-The home page's opening (Home/Intro.tsx; the brief is `docs/rebrand/intro-brief.md` v2). One stop-motion clock: **12 drawings a second**. Every line **boils**: a smooth turbulence wobble of about 0.8px (`INTRO_BOIL_PX`), cycling 3 versions a drawing at a time like a hand-drawn boil loop, easing to nothing over the last 0.3s so the last drawing is exactly the page. **One pen speed** for every line drawn: 900px/s (`INTRO_PEN_PX_PER_S`), so the line-drawing beats last as long as their lines are. Pure black, no colour.
+- **Clock:** stop motion, 12 drawings a second.
+- **Boil:** every line wobbles about 0.8px (`INTRO_BOIL_PX`), cycling 3 versions, and eases to still over the last 0.3s.
+- **Pen speed:** 600px/s (`INTRO_PEN_PX_PER_S`) for everything that travels.
+- **Colour:** black only. The strands are 1.2px.
 
-The jar is drawn from the real artwork (`jar.svg`): the drawing is revealed along its own strokes (`JAR_STROKES` in `lib/jar-outline.ts`, its ink walked into 15 strokes by `scripts/trace-jar-outline.py`, with a pen wide enough to cover every ink pixel). The divider is a copy of the real divider path, drawn on from the bottom. At the end both are the real thing, in place, so the swap to the page shows nothing.
-
-| Beat | What happens |
+| Time | What happens |
 |---|---|
-| 0–0.3s | blank white page |
-| small jar (~1.15s) | the jar artwork at ⅓ size, centred, draws on: up the right wall, the rim and lid lines, down the left wall, across the base (its line thickened back to the full-size weight) |
-| fill (1.8s) | black ink fills it in 9 steps, each held 2 drawings; its top is a wavy line sloshing side to side (a new wave every drawing) with a little meniscus at the glass |
-| spill (1.6s) | the ink domes over the rim (3 drawings), then foam bubbles over in line: wide, shallow, open arcs pile three rows on the rim, then roll down both sides in 4 waves, each creeping from the rim to the bottom over 0.6s, a little further out than the last; small bubbles (3–10px) rise, wobble and pop |
-| rainbow (~0.6s) | two strands, 120px of thread each, leave the foam tops and arc up and out like the halves of a rainbow, down to the foot of the divider (left) and the bottom of the jar's right wall (right); the small jar fades out in 4 steps |
-| trace (~3.5s) | the left strand draws the divider bottom to top, the right one draws the real jar stroke by stroke, in the order above, lifting between strokes |
-| swap | nothing visibly changes: the page's divider and jar appear on the same frame the intro goes; the sidebar loads top to bottom (350ms each, 70ms apart, rising 8px); the items fall and "scroll down!" draws |
+| 0–0.5s | a 4px dot, halfway between the divider and the jar, level with where the line will touch the jar |
+| 0.5–1.7s | the dot unspools into a curl, a "c", then an open circle (radius 4.5% of the window height, 18–40px); its gap chases round while it drifts on a small wobbly orbit |
+| 1.7–2.4s | the gap swings to the bottom and widens into a wide ∩ with curled ends, then the ∩ parts at the top into two strands pulling apart |
+| 2.4s → | each strand travels as a thread (its half of the ∩, curl leading). The left one goes down to the divider's foot and runs up the real divider path. The right one goes across to the jar's left wall at about mid-height and forks: one head flows up the wall and round the neck, rim and lid lines, the other down the wall, across the base and up the right wall. The jar artwork appears only where a head has passed, along its own strokes |
+| end (~6.0s at 1536×696) | the last drawing is the real divider and jar; they swap in on the same frame with no visible change. The sidebar loads top to bottom (350ms each, 70ms apart, rising 8px), the items fall and "scroll down!" draws |
 
-About 9s at 1536×696; longer on bigger screens, where the jar is bigger.
-
-- **When:** the full version once per visit; after that and on phones a 1.4s short version (just the trace: the divider and the jar draw, fast; phones have no divider); none for reduced motion, a visit straight to the work (`/#projects`) or a trip back from a case study. `?intro=1` replays the full version; `?slow=4` slows it.
+- **When:** the full version plays once per visit. After that, and on phones, there's a 1.4s short version: the dot, then the strands go straight onto the divider and jar (phones have no divider, so a single strand flows onto the jar). There's no intro with reduced motion, on a visit straight to the work (`/#projects`) or on a trip back from a case study. `?intro=1` replays the full version; `?slow=4` slows it.
 - **Skip:** a click or any key ends it at once.
 
 ## Zoom into a case study
