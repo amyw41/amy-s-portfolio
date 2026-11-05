@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import Matter from "matter-js";
 import { JAR_INTERIOR_POINTS, JAR_WALL_THICKNESS, computeJarWallRects, createJarWallBodies, type JarWallRect } from "./jar-shape";
-import { computeAlphaBBox, dilateAlphaMask, ALPHA_THRESHOLD, type AlphaBBox } from "./alpha-bbox";
+import { computeAlphaBBox, dilateAlphaMask, type AlphaBBox } from "./alpha-bbox";
 import { getOutlineMask } from "@/lib/outline";
 import { PLACEMENT_ORDER, LAYER_ORDER, TARGET_X_FRACTION } from "./jar-layout";
 import type { JarItemDef } from "./items.manifest";
@@ -54,6 +54,11 @@ const MAX_POINTER_SPEED = 25;
  * can pick up an enormous solver-correction velocity in one step and rocket
  * out of the jar. Set above ordinary fall speed so it never limits that. */
 const MAX_BODY_SPEED = 24;
+/** How opaque (0-255) a pixel must be to be grabbable: ~10%, so faint
+ * halos and soft shadows around an item don't count. Stricter than
+ * ALPHA_THRESHOLD, which sizes the physics shapes (and so the pile) and
+ * stays as it is. */
+const CLICK_ALPHA_THRESHOLD = 26;
 /** Below this much movement since the last frame (px / rad), an item's
  * transform isn't rewritten — a settled pile costs nothing per frame. */
 const POSE_EPSILON_PX = 0.01;
@@ -468,10 +473,12 @@ export function useJarPhysics(
       // The array itself has to grow by `radius` on every side rather than
       // dilating in place: the ring reaches beyond the tight bbox, and a
       // same-size dilation would clip it right where it starts.
+      // No ring is ever drawn when outlines are off (home's jar), so there
+      // the clickable area is just the item's own visible pixels.
       const clickMasks = Object.fromEntries(
         items.map((item) => {
           const bbox = bboxes[item.id];
-          const radius = Math.round(dilationRadii[item.id] ?? 0);
+          const radius = outlines ? Math.round(dilationRadii[item.id] ?? 0) : 0;
           if (radius <= 0) {
             return [item.id, { mask: bbox.alphaMask, width: bbox.bboxW, height: bbox.bboxH, padR: 0 }];
           }
@@ -816,7 +823,7 @@ export function useJarPhysics(
             const py = Math.floor((localY + info.divH / 2) / pixelScale) + click.padR;
             if (px < 0 || py < 0 || px >= click.width || py >= click.height) continue;
             const alpha = click.mask[py * click.width + px];
-            if (alpha <= ALPHA_THRESHOLD) continue;
+            if (alpha <= CLICK_ALPHA_THRESHOLD) continue;
           } else if (Math.abs(localX) > info.divW / 2 || Math.abs(localY) > info.divH / 2) {
             continue;
           }
@@ -931,8 +938,12 @@ export function useJarPhysics(
       // reducedMotion suppresses — tracking itself always runs, since
       // dragging still works there.
       const cursorRef = { current: null as { x: number; y: number; prevX: number; prevY: number } | null };
-      // Cached rather than measured per mousemove (a layout read on every
-      // event); recomputed on scroll/resize instead, when it can change.
+      // Re-measured on every pointer event (trackPointer below), not just on
+      // scroll/resize: the jar also moves without either — the page settling
+      // after setup, or coming back from a case study, where the stage starts
+      // shifted and offset by the return animation — and a stale rect put
+      // every grab tens of px off the items. One layout read per pointer
+      // event; nothing while idle.
       let stageRect = container.getBoundingClientRect();
       const refreshStageRect = () => {
         stageRect = container.getBoundingClientRect();
@@ -945,6 +956,7 @@ export function useJarPhysics(
       });
 
       const trackPointer = (clientX: number, clientY: number) => {
+        refreshStageRect();
         const x = clientX - stageRect.left;
         const y = clientY - stageRect.top;
         const prev = cursorRef.current;
