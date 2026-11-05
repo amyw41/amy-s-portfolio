@@ -25,10 +25,10 @@
 
 /* The end of the list: a thin black strip, the full width of the stage
  * (it undoes the view's side padding) and flush with its bottom — the
- * credit on the left, "jump to jar" in the middle, the links on the right. */
+ * credit on the left, the links on the right. */
 .footer {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 16px;
   height: 38px;
@@ -51,7 +51,7 @@
   white-space: nowrap;
 }
 
-/* "jump to jar" and the links: white, a faint underline on hover. */
+/* The links: white, a faint underline on hover. */
 .footerLink {
   display: inline-flex;
   align-items: center;
@@ -84,11 +84,6 @@
   }
 }
 
-.upArrow {
-  display: block;
-  overflow: visible;
-}
-
 /* Two columns, top-aligned: the case studies big on the left (2/3 of the
  * stage), each extra small on the right (1/3), each column stacked. Below a
  * narrow stage (it's a size container, Home.module.css .stage) the
@@ -113,6 +108,28 @@
 
 .smallList {
   gap: 24px;
+}
+
+/* The right column: the small cards, then "jump to jar" at the bottom of
+ * its empty space — stretched to the left column's height, with the doodle
+ * level with the bottom of the last big card's image (above its caption). */
+.smallColumn {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  min-width: 0;
+  padding-bottom: 34px;
+}
+
+.jump {
+  display: flex;
+  justify-content: center;
+  margin-top: auto;
+  padding-top: 32px;
+}
+
+.jumpToJar {
+  width: 120px;
 }
 
 @container (max-width: 720px) {
@@ -224,7 +241,7 @@
 }
 
 @media (max-width: 767px) {
-  /* The strip stacks: credit, jump to jar, links. */
+  /* The strip stacks: credit, links. */
   .footer {
     grid-template-columns: 1fr;
     justify-items: center;

@@ -38,6 +38,8 @@ const HEAD = [
  * - "scroll down!" beside the jar (default; Home/JarView.tsx puts it in the
  *   jar's wrapper, so it moves and scales with the jar). Desktop only (CSS)
  *   — mobile has its tap cues.
+ * - "jump to jar" at the bottom of the work view's right column (`up`: the
+ *   arrow points up, label under it; Home/WorkGrid.tsx).
  * While `shown`, the arrow pen-draws on and the label fades in; when it
  * stops being shown it fades straight out. Also a button (`onActivate`).
  * Reduced motion: it just appears.
@@ -47,12 +49,15 @@ export default function ScrollHint({
   onActivate,
   label = copy.scrollHint,
   ariaLabel = copy.toWorkLabel,
+  up = false,
   className = styles.besideJar,
 }: {
   shown: boolean;
   onActivate: () => void;
   label?: string;
   ariaLabel?: string;
+  /** Arrow points up (from under the label) instead of down. */
+  up?: boolean;
   /** Where it sits; defaults to beside the jar. */
   className?: string;
 }) {
@@ -64,7 +69,7 @@ export default function ScrollHint({
   return (
     <motion.button
       type="button"
-      className={`${styles.hint} ${className}`}
+      className={`${styles.hint} ${up ? styles.up : ""} ${className}`}
       aria-label={ariaLabel}
       tabIndex={shown ? 0 : -1}
       initial={false}

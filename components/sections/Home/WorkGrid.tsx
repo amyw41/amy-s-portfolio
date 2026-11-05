@@ -1,14 +1,14 @@
 "use client";
 
-import { useMemo, type CSSProperties } from "react";
+import { useMemo, useRef, type CSSProperties } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
 import styles from "./WorkGrid.module.css";
 import AutoplayVideo from "@/components/sections/Projects/AutoplayVideo";
+import ScrollHint from "./ScrollHint";
 import { PROJECTS } from "@/lib/projects";
 import { content } from "@/lib/content";
-import { buildWobblyLinePath } from "@/lib/wobbly";
 import { EXTRAS_PHOTOS } from "@/lib/extras";
 import {
   EASE_IN,
@@ -32,34 +32,6 @@ const copy = content.en.projects;
 const footerCopy = content.en.footer;
 const copyFooterLinksLabel = content.en.sidebar.social.label;
 const FOOTER_LINKS = [footerCopy.links.linkedin, footerCopy.links.email, footerCopy.links.twitter];
-
-// The footer's tiny hand-drawn ↑ before "jump to jar": a shaft and an open
-// head, low wobble, in the strip's white.
-const UP_ARROW_W = 8;
-const UP_ARROW_H = 10;
-const UP_ARROW = [
-  buildWobblyLinePath(140, [UP_ARROW_W / 2, UP_ARROW_H - 0.5], [UP_ARROW_W / 2, 1], 0.15),
-  buildWobblyLinePath(141, [1, UP_ARROW_W / 2 - 0.5], [UP_ARROW_W / 2, 1], 0.1) +
-    " " +
-    buildWobblyLinePath(142, [UP_ARROW_W / 2, 1], [UP_ARROW_W - 1, UP_ARROW_W / 2 - 0.5], 0.1),
-];
-
-function UpArrow() {
-  return (
-    <svg
-      className={styles.upArrow}
-      width={UP_ARROW_W}
-      height={UP_ARROW_H}
-      viewBox={`0 0 ${UP_ARROW_W} ${UP_ARROW_H}`}
-      fill="none"
-      aria-hidden="true"
-    >
-      {UP_ARROW.map((d, i) => (
-        <path key={i} d={d} stroke="currentColor" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round" />
-      ))}
-    </svg>
-  );
-}
 
 // A sidebar-hovered tile's lift (WorkGrid.module.css .lifted) — same timing
 // as the jar item's.
@@ -138,7 +110,8 @@ const SWEEP_ORDER = new Map<string, number>(
  * screen), and the smaller ones (SkinSprout) small on the right, above a
  * teaser extra (the Birthday website) shaped to its media (the rest of the
  * extras are on the Play page). It scrolls inside the stage; at the bottom,
- * a thin black footer strip has the credit, "jump to jar" and the links.
+ * a thin black footer strip has the credit and the links; "jump to jar"
+ * sits at the bottom of the right column.
  *
  * Arriving, the cards sweep in one after another, top to bottom
  * (GRID_STAGGER apart, SWEEP_ORDER). Leaving (back to jar), the whole view
@@ -150,7 +123,7 @@ export default function WorkGrid({
   onJumpToJar,
 }: {
   focusedId?: string | null;
-  /** "jump to jar" in the footer strip was clicked. */
+  /** "jump to jar" (bottom of the right column) was clicked. */
   onJumpToJar?: () => void;
 }) {
   const reduced = useReducedMotion() ?? false;
@@ -161,6 +134,11 @@ export default function WorkGrid({
   const isLifted = (tile: Tile) =>
     isolating && (tile.id === focusedId || (focusedId === EXTRAS_ID && tile.id.startsWith("extra-")));
 
+
+  // The work view scrolls; "jump to jar" draws on when it's in view there.
+  const viewRef = useRef<HTMLDivElement>(null);
+  const jumpRef = useRef<HTMLDivElement>(null);
+  const jumpInView = useInView(jumpRef, { root: viewRef, amount: 0.6 });
 
   const variants = useMemo<{ view: Variants; tile: Variants }>(
     () => ({
@@ -243,6 +221,7 @@ export default function WorkGrid({
     // data-scroll-switch-target: the box useScrollSwitch checks before a key
     // press switches back to the jar (only once it's scrolled to the top).
     <motion.div
+      ref={viewRef}
       className={styles.work}
       variants={variants.view}
       initial="shown"
@@ -266,22 +245,27 @@ export default function WorkGrid({
       <div className={styles.columns}>
         <ul className={styles.bigList}>{BIG_TILES.map((tile) => card(tile, false))}</ul>
         {/* The rest of the extras are on the Play page. */}
-        <ul className={styles.smallList}>{SMALL_TILES.map((tile) => card(tile, true))}</ul>
+        <div className={styles.smallColumn}>
+          <ul className={styles.smallList}>{SMALL_TILES.map((tile) => card(tile, true))}</ul>
+          {/* The way back to the jar, in the column's empty space at the
+           * bottom. It draws on once it scrolls into view. */}
+          <div ref={jumpRef} className={styles.jump}>
+            <ScrollHint
+              shown={jumpInView}
+              onActivate={() => onJumpToJar?.()}
+              label={content.en.sidebar.modes.jumpToJar}
+              ariaLabel={content.en.sidebar.modes.toJarLabel}
+              up
+              className={styles.jumpToJar}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* The end of the list: a thin black footer strip — the credit, a way
-       * back to the jar, and the links. */}
+      {/* The end of the list: a thin black footer strip — the credit and
+       * the links. */}
       <footer className={styles.footer}>
         <span className={styles.credit}>{footerCopy.credit}</span>
-        <button
-          type="button"
-          className={styles.footerLink}
-          aria-label={content.en.sidebar.modes.toJarLabel}
-          onClick={() => onJumpToJar?.()}
-        >
-          <UpArrow />
-          {content.en.sidebar.modes.jumpToJar}
-        </button>
         <nav className={styles.footerLinks} aria-label={copyFooterLinksLabel}>
           {FOOTER_LINKS.map((link, i) => (
             <span key={link.href}>
