@@ -180,6 +180,8 @@ Built (step 7b): `components/ui/CaseZoom` (root layout). A click on a work-view 
 
 ### 4.2 Intro: overflow and unravel
 
+> **Replaced by [intro-brief.md](intro-brief.md).** The original plan is kept below for reference.
+
 Sketch: `01-intro-spill.png`, and the top left of `00-full-reference.png`. Total about **4 seconds**. **Click or any key skips it.** It plays in full **once per visit** (sessionStorage); later loads in the same visit get a 1-second short version: the divider draws, the sidebar fades in, the jar drops.
 
 **The key technique: the intro jar is one continuous line.** You draw the intro jar (with the liquid and both overflowing strands) as **a single unbroken stroke**, like a one-line drawing. The line starts at the tip of the left strand, goes up over the lip, around the whole jar, and ends at the tip of the right strand. Export it as an SVG with one `<path>` that has a stroke, not a filled shape (see Part 5). That one line is what gets pulled straight.
@@ -347,7 +349,7 @@ Each step works on its own and can be checked before moving on. Copy the prompt,
 
 > Read brief Part 4.2 carefully, especially "How the unravel works", and 4.1's stop-motion timing. The intro jar is public/images/drawings/intro-jar.svg (one stroked path from the left strand tip to the right strand tip) and intro-jar-inside.svg (the interior fill). Build the intro as a single timeline: the jar appears, liquid rises clipped to the inside, two strands overflow, then the right strand tip becomes the needle and pulls the whole line out (fixed thread length, consumed from the far end as the needle travels down-left). Around 3.0s the pulled line splits at a fork point into two strands (two paths sharing a start point, each growing from the fork): strand A goes up the divider route and ends exactly on the divider BuzzPath; strand B travels into the stage and draws the jar's outline from public/images/drawings/jar-outline.svg (one stroked path matching jar.svg, placed exactly over the real jar). Both finish together around 3.8s. Then strand B's outline cross-fades into the real jar art and its items fall, while the sidebar loads top to bottom. Read "How the split works" too. Render on the 12fps clock. Click or any key skips. Full version once per session, 1s short version otherwise, none for reduced motion. Write the path's d directly each frame, not through React state. Check with ?slow=4 and ?intro=1. Commit.
 
-*Built (step 8), without the hand-drawn SVGs: the jar's line is traced from `jar.png` in code (`scripts/trace-jar-outline.py` → `lib/jar-outline.ts`) and the intro jar, strands, thread and split are generated from it (`Home/Intro.tsx`). Smooth rather than 12fps stop motion (stop motion read as choppy elsewhere). Exact timeline in the design system.*
+*Built (step 8), then rebuilt to a new brief: **[intro-brief.md](intro-brief.md)** replaces Part 4.2 (a small jar fills with black ink in stop motion, bubbles over as line-drawn foam, then its line splits into the divider and the real jar). All drawn in code from the jar traced from `jar.png` (`scripts/trace-jar-outline.py` → `lib/jar-outline.ts`, `Home/Intro.tsx`); exact timeline in the design system.*
 
 **Step 9: Polish**
 

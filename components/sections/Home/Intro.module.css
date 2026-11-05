@@ -11,7 +11,7 @@
   pointer-events: none;
 }
 
-/* The pen line: black ink, like the jar's. */
+/* The pen line: black, the jar's and divider's own stroke. */
 .line {
   fill: none;
   stroke: #000;
@@ -19,9 +19,8 @@
   stroke-linejoin: round;
 }
 
-/* The liquid inside the jar: a soft wash of the site's blue. */
-.liquid {
-  fill: var(--c-blue);
-  fill-opacity: 0.22;
+/* The ink inside the jar (and its dome over the rim): solid black. */
+.ink {
+  fill: #000;
   stroke: none;
 }

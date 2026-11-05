@@ -16,7 +16,7 @@ import { gaegu, geist } from "@/lib/fonts";
 import { useCaseZoom } from "@/components/ui/CaseZoom";
 import {
   INTRO_FORCE_KEY,
-  INTRO_HANDOFF,
+  INTRO_JAR_BLEND_S,
   INTRO_SEEN_KEY,
   INTRO_SIDEBAR_RISE_PX,
   INTRO_SIDEBAR_STAGGER_S,
@@ -51,7 +51,7 @@ const ZOOM_VARS = {
   "--zoom-stagger-ms": `${ZOOM_STAGGER_S * 1000}ms`,
   "--zoom-drop": `${ZOOM_DROP_PX}px`,
   // The intro's hand-over (Home.module.css .introHidden/.introReveal).
-  "--intro-handoff-ms": `${(INTRO_HANDOFF[1] - INTRO_HANDOFF[0]) * 1000}ms`,
+  "--intro-blend-ms": `${INTRO_JAR_BLEND_S * 1000}ms`,
   "--intro-stagger-ms": `${INTRO_SIDEBAR_STAGGER_S * 1000}ms`,
   "--intro-rise": `${INTRO_SIDEBAR_RISE_PX}px`,
 } as CSSProperties;

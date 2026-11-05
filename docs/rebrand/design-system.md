@@ -120,19 +120,21 @@ One sound: a short glass clink (the first 0.22s of `public/sounds/jar-drop.mp3` 
 
 ## Intro
 
-The home page's opening (Home/Intro.tsx), drawn over the page with lines generated in code from the traced jar (`lib/jar-outline.ts`, made by `scripts/trace-jar-outline.py` from `jar.png`), placed exactly on the real jar and divider. 1px black ink; smooth (not stop-motion). The page under it is hidden until the hand-over.
+The home page's opening (Home/Intro.tsx; the brief is `docs/rebrand/intro-brief.md`), drawn over a blank page with lines generated in code from the traced jar (`lib/jar-outline.ts`, made by `scripts/trace-jar-outline.py` from `jar.png`, resampled to 400 points). Lines are the divider's stroke (`LINE_STROKE_WIDTH`, 0.6px), pure black; the ink is solid #000. No colour.
 
-| Time (s) | What happens |
-|---|---|
-| 0–0.9 | the jar's traced line pen-draws (ease-out) |
-| 0.7–1.6 | liquid rises inside it, clipped to the jar's body (`--c-blue` at 22%, a gently waving surface) |
-| 1.5–2.1 | two strands spill over the rim's left end and the neck's right |
-| 2.1–3.1 | the right strand's tip pulls the whole line out like thread — down, under the jar, across to the divider's foot and up the divider — the jar unravelling from the far end; the liquid drains in the first 0.5s |
-| 3.0–3.8 | at the divider's foot the line splits: the stretch under the jar draws back in, leaving the line on the divider, while a branch grows back up into the stage and redraws the jar |
-| 3.7–4.1 | hand-over: the drawn lines fade out as the real divider and jar fade in; the sidebar loads top to bottom (350ms each, 70ms apart, rising 8px); then the items fall |
+| Time (s) | What happens | Clock |
+|---|---|---|
+| 0–0.3 | blank white page (no sidebar, divider or items) | — |
+| 0.3–0.9 | a small jar (¼ the real jar's size, centred in the window) pen-draws, ease-out | smooth |
+| 0.9–2.2 | black ink fills it in 8 visible steps (a new layer every other frame); its top is a wobbly line that sloshes a little every frame | 12fps |
+| 2.2–2.5 | the ink domes up over the rim (surface tension) | 12fps |
+| 2.4–3.0 | foam bubbles over, drawn in line: open scallop arcs pile on the rim and roll down both sides in 4 waves, each reaching further and standing further out, some arcs broken or missing; small stroked bubbles (3–10px) drift up around the jar, wobbling, and vanish in one frame | 12fps |
+| 3.0–3.4 | the foam flattens back onto the jar's line (outer waves first), the dome goes, the ink drains in steps | 12fps |
+| 3.3–4.2 | the line breaks at the bottom centre. Left: the tip is pulled down, left and up the divider, the rim and left half unspooling behind it like thread, ending exactly on the divider. Right: the right half travels and stretches onto the real jar's right side (neck first), then its free end runs round the base, up the left wall and round the rim until it is the real jar's outline. Ease-in-out, no overshoot | 60fps |
+| 4.2 | swap: the real divider appears on the same frame, under its exact copy; the jar's drawing blends in over 150ms as the traced line fades (the drawing has a few more lines round the rim than one traced line); the sidebar loads top to bottom (350ms each, 70ms apart, rising 8px); the items fall and "scroll down!" draws as usual | — |
 
-- **When:** the full version once per visit; a short version (about 1s: the jar and divider just draw, then hand over) after that and on phones; none for reduced motion, a visit straight to the work (`/#projects`) or a trip back from a case study. `?intro=1` replays the full version; `?slow=4` slows it.
-- **Skip:** a click or any key ends it at once.
+- **When:** the full version once per visit; a short version (about 1s: the small jar draws, then goes straight into the divider and jar) after that and on phones (where there's no divider, the whole small jar becomes the jar); none for reduced motion, a visit straight to the work (`/#projects`) or a trip back from a case study. `?intro=1` replays the full version; `?slow=4` slows it.
+- **Skip:** a click or any key ends it at once (the same swap).
 
 ## Zoom into a case study
 

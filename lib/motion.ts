@@ -109,23 +109,45 @@ export const JAR_LAND_S = 0.36;
 // exit (gone at once — no anticipation, no clink, no items); a jar called
 // back mid-exit rises back into place over JAR_RETURN_S.
 export const JAR_RETURN_S = 0.25;
-// The intro (Home/Intro.tsx, brief Part 4.2), as [start, end] seconds on its
-// own clock: the traced jar line draws (INTRO_DRAW), liquid rises inside it
-// (INTRO_FILL), two strands spill over (INTRO_SPILL), the right strand's tip
-// pulls the whole line out like thread — down, under the jar, up the divider
-// (INTRO_PULL) — then the line splits at the divider's foot and one branch
-// redraws the jar (INTRO_SPLIT), and the drawn lines hand over to the real
-// jar and divider (INTRO_HANDOFF). The sidebar then loads top to bottom,
+// The intro (Home/Intro.tsx, docs/rebrand/intro-brief.md), as [start, end]
+// seconds on its own clock. A blank page until INTRO_DRAW, when a small jar
+// (INTRO_SMALL_SCALE of the real one, centred on screen) pen-draws; black ink
+// fills it in INTRO_FILL_STEPS visible steps (INTRO_FILL), bulges into a dome
+// above the rim (INTRO_DOME) and bubbles over as line-drawn foam, rolling
+// down both sides in INTRO_FOAM_WAVES waves with small bubbles popping
+// (INTRO_FOAM); the foam flattens into the jar's line and the ink drains
+// (INTRO_SETTLE); then the
+// line breaks at the bottom (INTRO_BREAK): the left half is pulled out as
+// thread onto the divider, the right half stretches into the real jar
+// (INTRO_MORPH_STAGGER spreads it along the line). The real jar and divider
+// swap in at INTRO_HANDOFF[0]; the sidebar then loads top to bottom,
 // INTRO_SIDEBAR_STAGGER_S apart, rising INTRO_SIDEBAR_RISE_PX.
-// INTRO_SHORT is the whole short version (repeat visits, phones): the jar
-// and divider just draw, then hand over.
-export const INTRO_DRAW: [number, number] = [0, 0.9];
-export const INTRO_FILL: [number, number] = [0.7, 1.6];
-export const INTRO_SPILL: [number, number] = [1.5, 2.1];
-export const INTRO_PULL: [number, number] = [2.1, 3.1];
-export const INTRO_SPLIT: [number, number] = [3.0, 3.8];
-export const INTRO_HANDOFF: [number, number] = [3.7, 4.1];
-export const INTRO_SHORT: { draw: [number, number]; handoff: [number, number] } = { draw: [0, 0.7], handoff: [0.6, 1.0] };
+// Ink, dome, foam and bubbles are drawn on the stop-motion clock (INTRO_INK_FPS, a
+// new pose every frame); the line's travel and morph at INTRO_LINE_FPS.
+// INTRO_SHORT is the short version (repeat visits, phones): the small jar
+// draws, then goes straight into the jar and divider.
+export const INTRO_DRAW: [number, number] = [0.3, 0.9];
+export const INTRO_FILL: [number, number] = [0.9, 2.2];
+export const INTRO_FILL_STEPS = 8;
+export const INTRO_DOME: [number, number] = [2.2, 2.5];
+export const INTRO_FOAM: [number, number] = [2.4, 3.0];
+export const INTRO_FOAM_WAVES = 4;
+export const INTRO_SETTLE: [number, number] = [3.0, 3.4];
+export const INTRO_BREAK: [number, number] = [3.3, 4.2];
+export const INTRO_HANDOFF: [number, number] = [4.2, 4.5];
+export const INTRO_SHORT: { draw: [number, number]; break: [number, number]; handoff: number } = {
+  draw: [0, 0.4],
+  break: [0.4, 0.95],
+  handoff: 0.95,
+};
+// At the swap the divider changes on the same frame (the drawn line is
+// exactly on it); the jar blends over INTRO_JAR_BLEND_S, since its drawing
+// has a few more lines round the rim than the one traced line.
+export const INTRO_JAR_BLEND_S = 0.15;
+export const INTRO_SMALL_SCALE = 0.25;
+export const INTRO_MORPH_STAGGER = 0.3;
+export const INTRO_INK_FPS = 12;
+export const INTRO_LINE_FPS = 60;
 export const INTRO_SIDEBAR_STAGGER_S = 0.07;
 export const INTRO_SIDEBAR_RISE_PX = 8;
 // Clicking a case study zooms into it (components/ui/CaseZoom, brief Part
