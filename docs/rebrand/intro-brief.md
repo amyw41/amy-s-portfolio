@@ -1,3 +1,61 @@
+# Intro brief v3: one line becomes the page
+
+Amy's reference: a screen recording of her own sketch (IMG_6768.mov, 5.3s, Nov 2026). She said "the end is very jarring cuz i didnt wanna draw the full thing but yeah this is the flow", and noted:
+- it starts as a circle and moves around;
+- it should be in the stop-motion, squiggly style the intro has now;
+- the lines follow the outline of the jar to become the jar, rather than sketching it outright.
+
+What the recording shows, in order:
+1. A dot appears in the middle of a blank page and drifts around a little.
+2. It grows into a short arc, then a "C", which curls into a spiral of about 1¼ turns.
+3. The spiral opens up and comes apart into two strands.
+4. One strand goes left and up to become the divider (her arrow points up). The other runs right along the floor and climbs into the jar (her arrow points right at the jar's foot), becoming its outline.
+
+This replaces v2's opening (the small jar, ink, foam and rainbow strands). Those stay in the code behind a switch, as now.
+
+## Ground rules (kept from v2)
+- **Stop motion:** one 12fps clock. Every drawing is a new pose.
+- **Boil:** every line and the dot boil. That's about 0.8px of smooth wobble, cycling 3 versions (INTRO_BOIL_PX), easing to still over the last 0.3s.
+- **One pen speed** (INTRO_PEN_PX_PER_S) for everything that travels. It's lowered to about 600px/s so the curl reads at the pace of her sketch.
+- **Exact ending:** the last drawing is the real jar artwork and the real divider path, in place. The swap to the page shows nothing.
+- **Colour:** black only, at the jar's line weight.
+
+## Sequence (~5.5s at 1536×696)
+1. **Blank** (0.3s).
+2. **The dot** (~0.8s): a small black dot (about 3px) appears at the centre of the window and wanders once round a small circle (radius about 3% of the window height), a pose per drawing, ending where the spiral starts.
+3. **The curl:** the dot becomes the pen tip and draws a spiral at pen speed. It starts as a small arc, opens to a "C", then curls inward for about 1¼ turns, outer radius about 7% of the window height. The outer end sits lower right, the inner end inside.
+4. **The split:** the spiral's line separates at its midpoint into two strands. Each is pulled out by its free end and keeps its length, so its body follows the head along the same path like thread. The spiral uncoils as the strands pull away, never jumping.
+   - **Left strand** (the inner end leads): out of the coil, down and left to the foot of the divider.
+   - **Right strand** (the outer end leads): down to the floor (the line the jar stands on), then right along the floor with a slight hand wobble to the foot of the jar's left wall.
+5. **Becoming the drawings:** the strands carry on at pen speed onto their outlines, and the line becomes the drawing where it passes.
+   - **Divider:** the left head runs up the real divider path, bottom to top.
+   - **Jar:** the right head follows the jar's outline in one continuous run: up the left wall, round the rim (over the top and back under), across the lid's lower edge to the right, down the right wall, and back along the base to where it came in.
+   - **No lifting:** the jar's artwork appears right behind the moving head as it passes each part. That includes the rim's inner opening and the lid's double edge, which appear while the head is going round the rim. So the line follows the outline instead of sketching strokes one by one with jumps.
+   - **Tails:** each strand's tail follows its head onto the drawing and is used up, leaving only the artwork.
+6. **Hand-over:** the boil settles. The real divider and jar swap in on the same frame and nothing visibly changes. Then the sidebar loads, the items fall and "scroll down!" draws, as now.
+
+## Build notes
+- **Spiral:** a precomputed polyline. The radius shrinks linearly over 1¼ turns, from the dot's last position.
+- **Thread:** each strand is one path (its half of the spiral, then its route) with a moving window of fixed length. The window's head advances at pen speed in 12fps steps.
+- **Jar head path:** built from the traced one-line outline (`JAR_OUTLINE`), reordered into the loop above: left wall up, rim loop, lid's lower edge, right wall down, base back. The lid's lower edge is the one piece the traced line doesn't have; it's taken from the artwork's own stroke.
+- **Reveal:** every point of the artwork's strokes (`JAR_STROKES`) is matched to the nearest point on the head path. A stroke point shows once the head has passed it, so the artwork appears in step with the moving line. At the end the mask comes off and it's the artwork itself.
+- **Divider:** drawn on with the copy of the real divider path, bottom to top, as now.
+- **Rendering:** one SVG overlay, attributes written per drawing, everything precomputed. The boil is the turbulence filter cycling 3 seeds, as now.
+
+## Kept
+- **Repeats:** the full version plays once per visit. Repeat visits and phones get a 1.4s short version: just beat 5, fast, with the same continuous jar path. Phones have no divider.
+- **Exits:** a click or any key skips. There's no intro with reduced motion or when coming back from a case study.
+- **Debug:** `?intro=1` replays it; `?slow=4` slows it.
+- **The v2 opening** (small jar, ink, foam, rainbow) stays behind the switch.
+
+## Done when
+- The dot drifts, curls into a spiral, and the spiral comes apart into two strands without any jump.
+- The left strand becomes the divider. The right strand runs along the floor and follows the jar's outline continuously, with the artwork appearing behind it.
+- The last drawing is exactly the page, so the swap shows nothing.
+- It's stop motion and boiling throughout, and checked at 1536×696, 1920×1080 and 390×844.
+
+---
+
 # Intro brief v2: the overflowing jar
 
 > **For now: sketch only.** Amy: "only keep the sketch of the jar and line for now, i think that looks better". The intro is a blank page, then the divider and the real jar drawing on stroke by stroke at the pen speed, boiling and settling still at the end (about 3.9s at 1536×696). Repeat visits and phones still get the 1.4s short version. The small jar, ink, foam and rainbow strands stay in the code behind `INTRO_FULL_SEQUENCE = false` (lib/motion.ts).
