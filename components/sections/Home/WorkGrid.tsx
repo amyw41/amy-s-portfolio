@@ -102,7 +102,7 @@ const projectTile = (p: (typeof PROJECTS)[number]): Tile => ({
 // seed there.
 const BIG_TILES: Tile[] = PROJECTS.filter((p) => !p.small).map(projectTile);
 
-// The right column, small: the smaller case studies first (Spotify Guessr,
+// The right column, small: the smaller case studies first (SkinSprout,
 // `small: true` in lib/projects.ts), then the teaser extra(s) — the ones
 // flagged `teaser` in lib/extras.ts (just the Birthday website for now),
 // each linking to its own spot on the Play page, no year, shaped to its
@@ -135,7 +135,7 @@ const SWEEP_ORDER = new Map<string, number>(
 /**
  * Work mode's stage (brief Part 2.4): "what's inside?", then two columns of
  * cards: the case studies big on the left (their videos play once on
- * screen), and the smaller ones (Spotify Guessr) small on the right, above a
+ * screen), and the smaller ones (SkinSprout) small on the right, above a
  * teaser extra (the Birthday website) shaped to its media (the rest of the
  * extras are on the Play page). It scrolls inside the stage; at the bottom,
  * a thin black footer strip has the credit, "jump to jar" and the links.

@@ -77,7 +77,6 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     category: "personal",
     hasVideo: false,
     year: 2026,
-    small: true,
   },
   {
     slug: "skinsprout",
@@ -86,6 +85,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     category: "personal",
     hasVideo: true,
     year: 2026,
+    small: true,
   },
 ];
 
