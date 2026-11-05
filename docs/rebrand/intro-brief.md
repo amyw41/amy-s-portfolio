@@ -1,3 +1,19 @@
+# Intro brief v5.1: a looser loop, a smoother split
+
+Amy on v5: "the split is a bit too jarring, and it doesnt feel very natural or smooth. also i think the swirls are a bit too tight and too many, it should be more of a natural flow state type of vibe".
+
+Following smooth line-animation principles (one continuous gesture, slow in / slow out, follow-through, overlapping action, no sharp turns):
+- **The loop:** about 1¼ widely spaced turns instead of about 2, out to a radius of 6% of the window height. Only gentle lumps, no jitter. The pen starts slowly, glides, and slows a touch before the split. It's drawn over 0.25–1.1s.
+- **The split:**
+  - Each strand leaves along the loop's own direction. The outer end goes first (follow-through) and the centre end follows 0.15s later (overlap).
+  - Each strand eases up from slow to the pen's speed over 0.35s, then carries straight into its drawing with no pause.
+  - The paths are broad curves whose directions match at every join: out of the loop, into the divider's foot (arriving heading up), and into the jar's first stroke.
+  - The hand wobble fades to nothing at each join.
+- **Motion:** the line now moves smoothly, and only the boil steps at 12fps. The boil is a softer 0.5px while the line loops and splits.
+- **Length:** about 2.3s at 1536×696 and 1920×1080.
+
+---
+
 # Intro brief v5: quick, and it ends on the original jar
 
 Amy's notes on v4:

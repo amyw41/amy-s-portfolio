@@ -139,7 +139,14 @@ export const INTRO_STYLE = "line" as "line" | "sketch" | "overflow";
 // INTRO_SPIRAL; then the strands travel at the pen's speed (easing in over
 // 0.15s), each a thread at least INTRO_STRAND_MIN_PX long. The short version
 // (INTRO_SHORT_S) is just the divider and the jar drawing on together.
-export const INTRO_SPIRAL: [number, number] = [0.25, 1.0];
+export const INTRO_SPIRAL: [number, number] = [0.25, 1.1];
+// The split flows rather than snaps: each strand eases up to the pen's speed
+// over INTRO_STRAND_EASE_S, the left one leaving INTRO_STRAND_LAG_S after the
+// right; the boil is a softer INTRO_BOIL_SOFT_PX while the line loops and
+// splits. The line's own motion is smooth; only the boil steps at INTRO_FPS.
+export const INTRO_STRAND_EASE_S = 0.35;
+export const INTRO_STRAND_LAG_S = 0.15;
+export const INTRO_BOIL_SOFT_PX = 0.5;
 export const INTRO_STRAND_MIN_PX = 60;
 export const INTRO_FPS = 12;
 export const INTRO_BOIL_PX = 0.8;

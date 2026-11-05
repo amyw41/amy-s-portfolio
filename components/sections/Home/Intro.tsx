@@ -11,6 +11,7 @@ import {
   INTRO_BOIL_DRAWINGS,
   INTRO_BOIL_OUT_S,
   INTRO_BOIL_PX,
+  INTRO_BOIL_SOFT_PX,
   INTRO_DOME_FRAMES,
   INTRO_FADE_STEPS,
   INTRO_FILL_S,
@@ -19,6 +20,8 @@ import {
   INTRO_FOAM_WAVES,
   INTRO_FPS,
   INTRO_SPIRAL,
+  INTRO_STRAND_EASE_S,
+  INTRO_STRAND_LAG_S,
   INTRO_STRAND_MIN_PX,
   INTRO_STYLE,
   INTRO_PEN_PX_PER_S,
@@ -381,58 +384,76 @@ export default function Intro({
         });
         const blobD = `${polyD(blob)}Z`;
 
-        // The spiral: drawn outward from the dot, about 2 uneven turns, each
-        // a different lumpy width, the end running on a little.
-        const R = Math.max(20, Math.min(40, 0.036 * vh));
+        // Hand wobble that fades to nothing at a path's ends, so joins stay
+        // exactly where they are and keep their direction.
+        const roughTaper = (pts: Pt[], amp: number, seed: number, wl: number): Pt[] => {
+          const r = roughen(pts, amp, seed, wl);
+          const c = lengths(pts);
+          const L = c[c.length - 1];
+          return pts.map((p, i) => {
+            const k = Math.min(1, c[i] / 60, (L - c[i]) / 60);
+            return [p[0] + (r[i][0] - p[0]) * k, p[1] + (r[i][1] - p[1]) * k];
+          });
+        };
+        const unit = (a: Pt, b: Pt): Pt => {
+          const l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+          return [(b[0] - a[0]) / l, (b[1] - a[1]) / l];
+        };
+
+        // The spiral: a lazy, open loop drawn outward from the dot — about
+        // 1¼ turns, widely spaced, with gentle lumps (no jitter), the end
+        // running on a little.
+        const R = Math.max(30, Math.min(60, 0.06 * vh));
         const sr = rng(47);
         const p1 = sr() * 6;
         const p2 = sr() * 6;
-        const turns = 2.1;
+        const turns = 1.2;
         const spiralRaw: Pt[] = [];
-        for (let i = 0; i <= 170; i++) {
-          const u = i / 170;
+        for (let i = 0; i <= 120; i++) {
+          const u = i / 120;
           const th = u * turns * Math.PI * 2 + 0.4;
-          const lump = 1 + 0.17 * Math.sin(2.3 * th + p1) + 0.08 * Math.sin(5.1 * th + p2);
-          let r = R * u ** 0.85 * lump;
-          if (u > 0.88) r *= 1 + (u - 0.88) * 1.6; // the overshoot
-          spiralRaw.push([C0[0] + r * Math.cos(th), C0[1] + r * Math.sin(th) * 0.92]);
+          const lump = 1 + 0.08 * Math.sin(1.4 * th + p1) + 0.04 * Math.sin(2.7 * th + p2);
+          let r = R * (0.12 + 0.88 * u ** 0.9) * lump;
+          if (u > 0.85) r *= 1 + (u - 0.85) * 0.8; // the run-on
+          spiralRaw.push([C0[0] + r * Math.cos(th), C0[1] + r * Math.sin(th) * 0.9]);
         }
-        const spiral = roughen(spiralRaw, 1.6, 53, 26);
+        const spiral = roughTaper(spiralRaw, 1, 53, 80);
         const cSpiral = lengths(spiral);
         const Lspiral = cSpiral[cSpiral.length - 1];
 
-        // The split: the line's two ends pull away. The centre end leads the
-        // left strand (its inner half trailing), the outer end the right one.
+        // The split, as one flowing gesture: the outer end carries on along
+        // the loop's own direction and sweeps round to the jar's wall,
+        // arriving heading up it; a moment later the centre end slides out
+        // the way the loop began and arcs down to the divider's foot, arriving
+        // heading up it. Each strand is followed by its half of the loop, so
+        // the loop opens up and straightens into the strands as they go.
         const mid = Math.floor(spiral.length / 2);
         const bodyL: Pt[] = spiral.slice(0, mid + 1).reverse();
         const bodyR: Pt[] = spiral.slice(mid);
         const headL = bodyL[bodyL.length - 1];
         const headR = bodyR[bodyR.length - 1];
-        // Wobbly travel paths: left down to the divider's foot, right to the
-        // jar's left wall (arriving from below, to go on up the wall).
-        const routeL: Pt[] = D0
-          ? roughen(
-              bezier(
-                headL,
-                [headL[0] - 0.3 * (headL[0] - D0[0]), headL[1] + 0.15 * (D0[1] - headL[1])],
-                [D0[0] + 0.35 * (headL[0] - D0[0]), D0[1] - 0.05 * (D0[1] - headL[1])],
-                D0,
-                80,
-              ),
-              4,
-              61,
-              120,
-            )
-          : [];
-        const routeR: Pt[] = roughen(
-          bezier(headR, [headR[0] + 50, headR[1] + 30], [contact[0] - 30, contact[1] + 45], contact, 80),
-          4,
+        const dirL = unit(spiral[3], spiral[0]);
+        const dirR = unit(spiral[spiral.length - 4], spiral[spiral.length - 1]);
+        const dirJar = unit(jarPen.strokes[0][0], jarPen.strokes[0][Math.min(3, jarPen.strokes[0].length - 1)]);
+        let routeL: Pt[] = [];
+        if (D0) {
+          const k = 0.45 * Math.hypot(D0[0] - headL[0], D0[1] - headL[1]);
+          const arrive: Pt = [D0[0] + 0.35 * k, Math.min(D0[1] + 0.8 * k, vh - 4)];
+          routeL = roughTaper(bezier(headL, [headL[0] + dirL[0] * k, headL[1] + dirL[1] * k], arrive, D0, 90), 3, 61, 160);
+        }
+        const kR = 0.45 * Math.hypot(contact[0] - headR[0], contact[1] - headR[1]);
+        const routeR = roughTaper(
+          bezier(
+            headR,
+            [headR[0] + dirR[0] * kR, headR[1] + dirR[1] * kR],
+            [contact[0] - dirJar[0] * kR, contact[1] - dirJar[1] * kR],
+            contact,
+            90,
+          ),
+          3,
           67,
-          110,
+          160,
         );
-        // Keep the ends exactly on their targets.
-        if (routeL.length) routeL[routeL.length - 1] = D0 as Pt;
-        routeR[routeR.length - 1] = contact;
         const pathL = D0 ? [...bodyL, ...routeL.slice(1)] : [];
         const pathR = [...bodyR, ...routeR.slice(1)];
         const cPathL = lengths(pathL);
@@ -444,16 +465,20 @@ export default function Intro({
         const WL = Math.max(LbL, INTRO_STRAND_MIN_PX);
         const WR = Math.max(LbR, INTRO_STRAND_MIN_PX);
 
-        // The clock. The strands set off with a soft ease, then go at the
-        // pen's speed.
+        // The clock. Each strand sets off slowly and gathers speed up to the
+        // pen's (over INTRO_STRAND_EASE_S), then carries straight on into its
+        // drawing; the left one leaves INTRO_STRAND_LAG_S after the right.
         const tSplit = INTRO_SPIRAL[1];
-        const travel = Math.max(D0 ? LpL - LbL + LD : 0, LpR - LbR + Ljar);
-        const EASE_S = 0.15;
+        const E = INTRO_STRAND_EASE_S;
         const v = INTRO_PEN_PX_PER_S;
-        const distAt = (tau: number) => (tau <= 0 ? 0 : tau < EASE_S ? (v * tau * tau) / (2 * EASE_S) : v * (tau - EASE_S / 2));
+        const distAt = (tau: number) => (tau <= 0 ? 0 : tau < E ? (v * tau * tau) / (2 * E) : v * (tau - E / 2));
+        const timeFor = (d: number) => E / 2 + d / v;
+        const tL0 = tSplit + INTRO_STRAND_LAG_S;
         // The short version (repeat visits, phones) is just the drawings: the
         // divider top to bottom and the jar along its strokes, together.
-        const lineEnd = short ? INTRO_SHORT_S : tSplit + travel / v + EASE_S / 2;
+        const lineEnd = short
+          ? INTRO_SHORT_S
+          : Math.max(tSplit + timeFor(LpR - LbR + Ljar), D0 ? tL0 + timeFor(LpL - LbL + LD) : 0);
         const dotEnd = short ? 0 : INTRO_SPIRAL[0];
         const drawJar = (q: number) => {
           if (q >= Ljar - 0.5) realImg.removeAttribute("mask");
@@ -463,35 +488,43 @@ export default function Intro({
           }
         };
 
+        // Smooth motion; the boil changes on the stop-motion clock.
         const renderLine = (t: number) => {
           const f = Math.floor(t * fps + 1e-6);
           dot.setAttribute("d", t < dotEnd ? blobD : "");
           threadL.setAttribute("d", "");
           threadR.setAttribute("d", "");
-          let s = -1;
           if (short) {
             const p = clamp01(t / INTRO_SHORT_S);
             drawDivider(p * LD, true);
             drawJar(p * Ljar);
-          } else if (t >= INTRO_SPIRAL[0] && t < tSplit) {
-            const p = clamp01((t - INTRO_SPIRAL[0]) / (INTRO_SPIRAL[1] - INTRO_SPIRAL[0]));
-            const e = p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2;
-            threadR.setAttribute("d", slice(spiral, cSpiral, 0, Math.max(1, e * Lspiral)));
-          } else if (t >= tSplit) {
-            s = distAt(t - tSplit);
-            if (D0) {
-              const hL = LbL + s;
-              threadL.setAttribute("d", slice(pathL, cPathL, Math.max(0, hL - WL), Math.min(hL, LpL)));
+          } else {
+            let sL = -1;
+            let sR = -1;
+            if (t >= INTRO_SPIRAL[0] && t < tSplit) {
+              // The pen starts slowly, glides, and slows a touch at the end.
+              const p = clamp01((t - INTRO_SPIRAL[0]) / (INTRO_SPIRAL[1] - INTRO_SPIRAL[0]));
+              const e = p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 2;
+              threadR.setAttribute("d", slice(spiral, cSpiral, 0, Math.max(1, e * Lspiral)));
+            } else if (t >= tSplit) {
+              sR = distAt(t - tSplit);
+              sL = distAt(t - tL0);
+              if (D0) {
+                const hL = LbL + sL;
+                threadL.setAttribute("d", slice(pathL, cPathL, Math.max(0, hL - WL), Math.min(hL, LpL)));
+              }
+              const hR = LbR + sR;
+              threadR.setAttribute("d", slice(pathR, cPathR, Math.max(0, hR - WR), Math.min(hR, LpR)));
             }
-            const hR = LbR + s;
-            threadR.setAttribute("d", slice(pathR, cPathR, Math.max(0, hR - WR), Math.min(hR, LpR)));
+            drawDivider(sL > 0 ? LbL + sL - LpL : -1);
+            drawJar(sR >= 0 ? LbR + sR - LpR : -1);
           }
-          if (!short) {
-            drawDivider(s >= 0 ? LbL + s - LpL : -1);
-            drawJar(s >= 0 ? LbR + s - LpR : -1);
-          }
-          // The boil, easing out at the end so the last drawing is the page.
-          const boil = INTRO_BOIL_PX * clamp01((lineEnd - t) / INTRO_BOIL_OUT_S);
+          // The boil: softer while the line loops and splits, then the full
+          // wobble while it draws, easing out at the end so the last drawing
+          // is the page.
+          const calm = short ? 1 : clamp01((t - tSplit - 0.3) / 0.3);
+          const amount = INTRO_BOIL_SOFT_PX + (INTRO_BOIL_PX - INTRO_BOIL_SOFT_PX) * calm;
+          const boil = amount * clamp01((lineEnd - t) / INTRO_BOIL_OUT_S);
           if (boil > 0.01) {
             noise.setAttribute("seed", String((f % INTRO_BOIL_DRAWINGS) + 1));
             displace.setAttribute("scale", String(2 * boil));
@@ -511,16 +544,11 @@ export default function Intro({
         }
         const slowL = slowMs(1000) / 1000;
         const tStart = performance.now();
-        let lastLF = -1;
         const lineFrame = (now: number) => {
           if (finished || cancelled) return;
-          const f = Math.floor(((now - tStart) / 1000 / slowL) * fps);
-          if (f !== lastLF) {
-            lastLF = f;
-            if (renderLine(f / fps)) {
-              finish();
-              return;
-            }
+          if (renderLine((now - tStart) / 1000 / slowL)) {
+            finish();
+            return;
           }
           raf = requestAnimationFrame(lineFrame);
         };
