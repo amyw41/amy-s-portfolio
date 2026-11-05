@@ -1,3 +1,24 @@
+# Intro brief v7.1: no pause, and a hand's imperfection
+
+Amy on v7: "still feels a bit forced imperfection but its actually perfect and theres still a pause before it separates ... its not up to my standard". She chose to keep refining the code spiral.
+
+1. **No pause.**
+   - The whole gesture runs on one arc-length timeline with one velocity curve: the dot, the spiral, the loop, the release, and the right ribbon into the jar.
+   - The pen never slows to close the loop. Its speed only swings with the stroke (quicker going down, slower going up, ±22% around 600px/s) until it lands on the jar, then picks up to 3000px/s.
+   - The left ribbon is the other end of the same line: it starts moving at the instant the loop opens, at the same speed.
+   - **Check:** `?debug=1` logs the pen's speed every frame, plus the minimum and peak once. After the dot and until it lands on the jar, the speed is 468–732px/s, a minimum of 64% of the peak. The release is at 0.83s and the landing at 1.53s (1536×696).
+2. **Imperfection from a gesture, not noise.**
+   - The loop is a slightly elliptical hand loop (1.1 × 0.9), tilted 20°.
+   - Its radius drifts slowly and never repeats.
+   - It doesn't close: it passes about 8px outside its start and carries straight on into the right ribbon.
+   - The spiral's turns are unevenly spaced.
+   - **Amy's own wobble:** I measured how far her jar strokes stray from a smoothed copy of themselves: about 0.9px RMS on a laptop, with a wavelength of about 50px (`JAR_WOBBLE` in lib/jar-line.ts). The loop and ribbons are bent by that same signal, her actual hand data scaled to the jar's size. All other added noise is gone. The boil (frame-to-frame shake) stays.
+   - Unchanged: the line weight matched to the jar, the paper-ribbon wave, the dot at the centre, and the original jar at the end.
+
+Length: about 2.7s at 1536×696 and 2.9s at 1920×1080.
+
+---
+
 # Intro brief v7: one thin line, released like a paper ribbon
 
 *Replaces v4–v6. Written 2026-11-05 after Amy watched v6 (bf6d631).*

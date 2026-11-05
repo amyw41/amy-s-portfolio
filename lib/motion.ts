@@ -137,19 +137,18 @@ export const JAR_RETURN_S = 0.25;
 // small jar, ink, foam and rainbow strands.
 export const INTRO_STYLE = "line" as "line" | "sketch" | "overflow";
 // The dot shows until INTRO_SPIRAL[0]; the spiral-into-a-circle draws on
-// over INTRO_SPIRAL, slow at both ends but never stopped. The short version
+// from INTRO_SPIRAL[0] on one continuous timeline. The short version
 // (INTRO_SHORT_S) is just the divider and the jar drawing on together.
 export const INTRO_SPIRAL: [number, number] = [0.25, 1.0];
-// The release (v7): the circle opens and two ribbon tails float off, each
-// setting off at the speed the pen closed the circle with and easing (time
-// constant INTRO_STRAND_EASE_S) up to INTRO_RIBBON_PX_PER_S, then up to the
-// pen's speed once on its drawing — never stopping. The left tail leaves
-// INTRO_STRAND_LAG_S after the right. The boil is a softer
-// INTRO_BOIL_SOFT_PX until the right tail lands on the jar. The line's own
-// motion is smooth; only the boil steps at INTRO_FPS.
-export const INTRO_STRAND_EASE_S = 0.18;
-export const INTRO_STRAND_LAG_S = 0.1;
-export const INTRO_RIBBON_PX_PER_S = 900;
+// The gesture (v8) runs on one timeline with one velocity curve: from the
+// dot the pen goes at INTRO_GESTURE_PX_PER_S, swinging ±INTRO_GESTURE_SWING
+// with the stroke (quicker going down, slower going up), never slowing to
+// close the loop, until it lands on the jar; then it picks up to
+// INTRO_PEN_PX_PER_S. The left ribbon moves the same way from the instant
+// the loop opens. The boil is a softer INTRO_BOIL_SOFT_PX until the pen
+// lands. The line's own motion is smooth; only the boil steps at INTRO_FPS.
+export const INTRO_GESTURE_PX_PER_S = 600;
+export const INTRO_GESTURE_SWING = 0.22;
 export const INTRO_BOIL_SOFT_PX = 0.5;
 export const INTRO_FPS = 12;
 export const INTRO_BOIL_PX = 0.8;

@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { flushSync } from "react-dom";
 import styles from "./Intro.module.css";
 import { JAR_OUTLINE, JAR_OUTLINE_BODY_START, JAR_PEN_WIDTH, JAR_STROKES } from "@/lib/jar-outline";
-import { JAR_ART_H, JAR_ART_W, JAR_PEN_STROKES, jarPenStrokes, roughen } from "@/lib/jar-line";
+import { JAR_ART_H, JAR_ART_W, JAR_PEN_STROKES, JAR_WOBBLE, JAR_WOBBLE_STEP, jarPenStrokes } from "@/lib/jar-line";
 import { LINE_STROKE_WIDTH } from "@/lib/wobbly";
 import {
   INTRO_BLANK_S,
@@ -20,9 +20,8 @@ import {
   INTRO_FOAM_WAVES,
   INTRO_FPS,
   INTRO_SPIRAL,
-  INTRO_STRAND_EASE_S,
-  INTRO_STRAND_LAG_S,
-  INTRO_RIBBON_PX_PER_S,
+  INTRO_GESTURE_PX_PER_S,
+  INTRO_GESTURE_SWING,
   INTRO_STYLE,
   INTRO_PEN_PX_PER_S,
   INTRO_SHORT_S,
@@ -356,7 +355,7 @@ export default function Intro({
         divClip.setAttribute("height", String(span * p));
       };
 
-      // ---- v7, "line": one thin line, released like a paper ribbon ----
+      // ---- v8, "line": one thin line, released like a paper ribbon ----
       if (INTRO_STYLE === "line") {
         smallGroup.style.display = "none";
         const short = variant === "short";
@@ -418,118 +417,155 @@ export default function Intro({
         });
         const blobD = `${polyD(blob)}Z`;
 
-        // Hand wobble that fades to nothing at a path's ends, so joins stay
-        // exactly where they are and keep their direction.
-        const roughTaper = (pts: Pt[], amp: number, seed: number, wl: number): Pt[] => {
-          const r = roughen(pts, amp, seed, wl);
+        // Amy's hand (lib/jar-line.ts): her jar strokes' own wobble, scaled
+        // to the jar's size on screen. `hand` bends a path across itself by
+        // that signal, read from `from` along it, fading at both ends so
+        // joins stay put. It's the only roughness the line gets.
+        const artPx = w / JAR_ART_W;
+        const wob = JAR_WOBBLE.length ? JAR_WOBBLE : [0];
+        const hand = (pts: Pt[], from: number): Pt[] => {
           const c = lengths(pts);
           const L = c[c.length - 1];
           return pts.map((p, i) => {
-            const k = Math.min(1, c[i] / 60, (L - c[i]) / 60);
-            return [p[0] + (r[i][0] - p[0]) * k, p[1] + (r[i][1] - p[1]) * k];
+            const k = Math.min(1, c[i] / 40, (L - c[i]) / 40);
+            const idx = from + c[i] / artPx / JAR_WOBBLE_STEP;
+            const i0 = Math.floor(idx) % wob.length;
+            const f = idx - Math.floor(idx);
+            const off = (wob[i0] * (1 - f) + wob[(i0 + 1) % wob.length] * f) * artPx * k;
+            const t = unit(pts[Math.max(0, i - 1)], pts[Math.min(pts.length - 1, i + 1)]);
+            return [p[0] - t[1] * off, p[1] + t[0] * off];
           });
         };
 
-        // The line: a lazy spiral (about one turn) out of the dot that
-        // settles into one loose circle, coming round just past its start.
-        // Angles grow clockwise on screen; the spiral meets the circle at
-        // the bottom, and the circle will open there and at the top.
+        // The gesture, like a hand: an unevenly spaced spiral out of the dot
+        // swings into one loose loop — a little elliptical, tilted about 20°,
+        // its radius drifting — that doesn't quite close: it passes ~8px
+        // outside its start and carries straight on, off the top, into the
+        // right ribbon. (Angles grow clockwise on screen.)
         const R = Math.max(22, Math.min(40, 0.043 * vh));
-        const sr = rng(47);
-        const ph = sr() * 6;
-        const thJoin = Math.PI * 0.45 + Math.PI * 2; // the bottom, a turn in
-        const thTop = thJoin + Math.PI; // the top of the circle
-        const thEnd = thJoin + Math.PI * 2 + 0.35; // just past the start
+        const gr = rng(47);
+        const tilt = (20 * Math.PI) / 180;
+        const [ex, ey] = [1.1, 0.9];
+        // A slow, non-repeating drift of the radius: random heights at
+        // irregular angles, eased between.
+        const driftKnots: { th: number; v: number }[] = [];
+        for (let th = -2; th < 30; th += 1.1 + gr() * 0.9) driftKnots.push({ th, v: (gr() * 2 - 1) * 0.07 });
+        const drift = (th: number) => {
+          let k = 0;
+          while (k < driftKnots.length - 2 && driftKnots[k + 1].th < th) k++;
+          const a = driftKnots[k];
+          const b = driftKnots[k + 1];
+          const e = (1 - Math.cos(Math.PI * clamp01((th - a.th) / (b.th - a.th)))) / 2;
+          return a.v + (b.v - a.v) * e;
+        };
+        const place = (th: number, r: number): Pt => {
+          const x = ex * r * Math.cos(th);
+          const y = ey * r * Math.sin(th);
+          return [C0[0] + x * Math.cos(tilt) - y * Math.sin(tilt), C0[1] + x * Math.sin(tilt) + y * Math.cos(tilt)];
+        };
+        const thEnd = Math.PI * 1.5 + Math.PI * 4; // the top, two turns in
+        const thJoin = thEnd - Math.PI * 2 - 0.55; // the loop passes its start by 0.55 rad
+        const thBottom = thEnd - Math.PI; // where the loop will open
+        const thStart = thJoin - Math.PI * 2;
+        const ph = gr() * 6;
         const lineRaw: Pt[] = [];
-        const nSp = 70;
-        for (let i = 0; i <= nSp; i++) {
-          const u = i / nSp;
-          const th = thJoin - Math.PI * 2 * (1 - u);
-          const r = R * (0.15 + 0.85 * u ** 0.8) * (1 + 0.05 * Math.sin(1.7 * th + ph));
-          lineRaw.push([C0[0] + r * Math.cos(th), C0[1] + r * Math.sin(th)]);
+        let iB = 0;
+        const nLine = 200;
+        for (let i = 0; i <= nLine; i++) {
+          const th = thStart + ((thEnd - thStart) * i) / nLine;
+          let r: number;
+          if (th < thJoin) {
+            // The spiral: uneven spacing as it winds out.
+            const u = (th - thStart) / (thJoin - thStart);
+            const uu = clamp01(u + 0.07 * Math.sin(2.3 * Math.PI * u + ph));
+            r = R * (0.18 + 0.82 * uu ** 0.85);
+          } else {
+            // The loop, swinging slightly wide at the end (passing outside
+            // its start, ~8px).
+            const late = clamp01((th - (thEnd - 0.9)) / 0.9);
+            r = R * (1 + drift(th)) + 8 * late * late;
+          }
+          if (iB === 0 && th >= thBottom) iB = lineRaw.length;
+          lineRaw.push(place(th, r));
         }
-        const nRing = 80;
-        let iTop = 0;
-        for (let i = 1; i <= nRing; i++) {
-          const th = thJoin + ((thEnd - thJoin) * i) / nRing;
-          if (iTop === 0 && th >= thTop) iTop = lineRaw.length;
-          const r = R * (1 + 0.05 * Math.sin(1.7 * th + ph) + 0.03 * (th - thJoin) / (Math.PI * 2));
-          lineRaw.push([C0[0] + r * Math.cos(th), C0[1] + r * Math.sin(th)]);
-        }
-        const line = roughTaper(lineRaw, 0.8, 53, 70);
+        const line = hand(lineRaw, 0);
         const cLine = lengths(line);
         const Lline = cLine[cLine.length - 1];
+        const sB = cLine[iB];
 
-        // The release: the circle opens at the top and at the bottom. The
-        // top end leads the right strand (the spiral and the circle's left
-        // half trailing behind it), heading right and up; the circle's other
-        // end, at the bottom, leads the left strand (the right half
-        // trailing), heading left. Each floats off like a paper ribbon on a
-        // soft decaying wave and lands heading the way its drawing goes.
-        const bodyR = line.slice(0, iTop + 1);
-        const bodyL = line.slice(iTop);
-        const headR = bodyR[bodyR.length - 1];
-        const headL = bodyL[bodyL.length - 1];
-        const dirR = unit(bodyR[bodyR.length - 3], headR);
-        const dirL = unit(bodyL[bodyL.length - 3], headL);
-        const ribbon = (p0: Pt, d0: Pt, p3: Pt, d3: Pt, amp: number, seed: number): Pt[] => {
+        // The release, from the same line: the loop opens at the bottom. The
+        // pen carries on off the top into the right ribbon (the loop's left
+        // half trailing behind); the line before the cut — the spiral and the
+        // loop's first part — leaves from the bottom, heading the way the pen
+        // was going there (left), into the left ribbon. Both are on the move
+        // from the same instant, at the same speed. Each floats on a soft
+        // decaying wave and lands heading the way its drawing goes.
+        const bodyL = line.slice(0, iB + 1);
+        const headR = line[line.length - 1];
+        const headL = line[iB];
+        const dirR = unit(line[line.length - 3], headR);
+        const dirL = unit(line[iB - 2], headL);
+        const ribbon = (p0: Pt, d0: Pt, p3: Pt, d3: Pt, amp: number, from: number): Pt[] => {
           const k = 0.42 * Math.hypot(p3[0] - p0[0], p3[1] - p0[1]);
           const base = bezier(p0, [p0[0] + d0[0] * k, p0[1] + d0[1] * k], [p3[0] - d3[0] * k, p3[1] - d3[1] * k], p3, 120);
-          // The wave: across the path, zero (and flat) at both ends.
           const waved = base.map((p, i) => {
             const u = i / (base.length - 1);
-            const a = base[Math.max(0, i - 1)];
-            const b = base[Math.min(base.length - 1, i + 1)];
-            const t = unit(a, b);
+            const t = unit(base[Math.max(0, i - 1)], base[Math.min(base.length - 1, i + 1)]);
             const off = amp * Math.sin(3 * Math.PI * u) * Math.sin(Math.PI * u) * (1 - 0.6 * u);
             return [p[0] - t[1] * off, p[1] + t[0] * off] as Pt;
           });
-          return roughTaper(waved, 2, seed, 150);
+          return hand(waved, from);
         };
-        const routeR = ribbon(headR, dirR, land, dirJar, -16, 67);
-        let routeL: Pt[] = [];
-        let dirDiv: Pt = [0, -1];
-        if (D0 && divBox) dirDiv = [0, -1];
-        if (D0) routeL = ribbon(headL, dirL, D0, dirDiv, 14, 61);
+        const routeR = ribbon(headR, dirR, land, dirJar, -16, 400);
+        const routeL: Pt[] = D0 ? ribbon(headL, dirL, D0, [0, -1], 14, 900) : [];
+        const pathR = [...line, ...routeR.slice(1)];
         const pathL = D0 ? [...bodyL, ...routeL.slice(1)] : [];
-        const pathR = [...bodyR, ...routeR.slice(1)];
-        const cPathL = lengths(pathL);
         const cPathR = lengths(pathR);
-        const LbL = lengths(bodyL)[bodyL.length - 1];
-        const LbR = lengths(bodyR)[bodyR.length - 1];
-        const LpL = pathL.length ? cPathL[cPathL.length - 1] : 0;
+        const cPathL = lengths(pathL);
         const LpR = cPathR[cPathR.length - 1];
+        const LpL = pathL.length ? cPathL[cPathL.length - 1] : 0;
+        const WR = Lline - sB;
 
-        // The clock. The pen draws the line over INTRO_SPIRAL, slow at both
-        // ends but never stopped; then each strand sets off at the speed the
-        // pen closed the circle with, eases up to the ribbon's speed, then
-        // up to the pen's on its drawing — speed never drops to 0.
-        const [t0, t1] = INTRO_SPIRAL;
-        const A = 0.6;
-        const drawn = (p: number) => Lline * (p - (A * Math.sin(2 * Math.PI * p)) / (2 * Math.PI));
-        const vClose = (Lline / (t1 - t0)) * (1 - A);
-        const tR0 = t1;
-        const tL0 = t1 + INTRO_STRAND_LAG_S;
+        // One timeline, one velocity curve: the pen sets off from the dot at
+        // gesture speed and never slows to close the loop — its speed only
+        // swings with the stroke (quicker going down, slower going up, like a
+        // hand) until it lands on the jar, then picks up to the pen's
+        // drawing speed. The left ribbon moves the same way from the instant
+        // the loop opens.
+        const t0 = INTRO_SPIRAL[0];
         const DT = 1 / 240;
-        const travel = (startLen: number, routeEnd: number, total: number) => {
-          const out: number[] = [startLen];
-          let s = startLen;
-          let v = vClose;
-          while (s < total && out.length < 20000) {
-            const target = s < routeEnd ? INTRO_RIBBON_PX_PER_S : INTRO_PEN_PX_PER_S;
-            v += ((target - v) * DT) / INTRO_STRAND_EASE_S;
-            s = Math.min(total, s + v * DT);
-            out.push(s);
-          }
-          return out;
+        const speedOn = (pts: Pt[], c: number[], s: number) => {
+          const a = pointAt(pts, c, s - 2);
+          const b = pointAt(pts, c, s + 2);
+          return INTRO_GESTURE_PX_PER_S * (1 + INTRO_GESTURE_SWING * unit(a, b)[1]);
         };
-        const runR = travel(LbR, LpR, LpR + Ljar);
-        const runL = D0 ? travel(LbL, LpL, LpL + LD) : [0];
-        const at = (run: number[], tau: number) => (tau <= 0 ? run[0] : run[Math.min(run.length - 1, Math.floor(tau / DT))]);
+        const run = (pts: Pt[], c: number[], s0: number, landAt: number, total: number) => {
+          const s: number[] = [s0];
+          const v: number[] = [];
+          let cur = s0;
+          let vel = speedOn(pts, c, s0);
+          while (cur < total && s.length < 40000) {
+            vel = cur < landAt ? speedOn(pts, c, cur) : vel + ((INTRO_PEN_PX_PER_S - vel) * DT) / 0.2;
+            v.push(vel);
+            cur = Math.min(total, cur + vel * DT);
+            s.push(cur);
+          }
+          return { s, v };
+        };
+        const runR = run(pathR, cPathR, 0, LpR, LpR + Ljar);
+        const iRelease = runR.s.findIndex((x) => x >= Lline);
+        const tRelease = t0 + iRelease * DT;
+        const runL = D0 ? run(pathL, cPathL, sB, LpL, LpL + LD) : { s: [0], v: [] as number[] };
+        const at = (r: { s: number[] }, tau: number) => (tau <= 0 ? r.s[0] : r.s[Math.min(r.s.length - 1, Math.floor(tau / DT))]);
+        const iLand = runR.s.findIndex((x) => x >= LpR);
+        const tLand = t0 + iLand * DT;
+        // The speed check: from the dot until the pen lands on the jar.
+        const flight = runR.v.slice(0, Math.max(1, iLand));
+        const vPeak = Math.max(...flight);
+        const vMin = Math.min(...flight);
         // The short version (repeat visits, phones) is just the drawings: the
         // divider top to bottom and the jar along its strokes, together.
-        const lineEnd = short ? INTRO_SHORT_S : Math.max(tR0 + runR.length * DT, D0 ? tL0 + runL.length * DT : 0);
-        const tLand = tR0 + runR.findIndex((s) => s >= LpR) * DT;
+        const lineEnd = short ? INTRO_SHORT_S : Math.max(t0 + runR.s.length * DT, D0 ? tRelease + runL.s.length * DT : 0);
         const dotEnd = short ? 0 : t0;
         const drawJar = (q: number) => {
           if (q >= Ljar - 0.5) realImg.removeAttribute("mask");
@@ -538,6 +574,11 @@ export default function Intro({
             realMask.setAttribute("d", q > 0 ? penD(jarPen, q) : "");
           }
         };
+        const debug = new URLSearchParams(window.location.search).get("debug") === "1";
+        if (debug && !short) {
+          console.info(`intro: pen speed after the dot, until it lands on the jar — min ${vMin.toFixed(0)}px/s, peak ${vPeak.toFixed(0)}px/s (${((100 * vMin) / vPeak).toFixed(0)}% of peak)`);
+        }
+        let lastLog = -1;
 
         // Smooth motion; the boil changes on the stop-motion clock.
         const renderLine = (t: number) => {
@@ -550,22 +591,30 @@ export default function Intro({
             drawDivider(p * LD, true);
             drawJar(p * Ljar);
           } else {
-            let hL = -1;
-            let hR = -1;
-            if (t >= t0 && t < tR0) {
-              threadR.setAttribute("d", slice(line, cLine, 0, Math.max(1, drawn(clamp01((t - t0) / (t1 - t0))))));
-            } else if (t >= tR0) {
-              // Each strand a ribbon of its own length; once its head is on
-              // its drawing, the line behind stays.
-              hR = at(runR, t - tR0);
-              threadR.setAttribute("d", slice(pathR, cPathR, Math.max(0, hR - LbR), Math.min(hR, LpR)));
-              if (D0) {
-                hL = at(runL, t - tL0);
-                threadL.setAttribute("d", slice(pathL, cPathL, Math.max(0, hL - LbL), Math.min(hL, LpL)));
+            let sR = -1;
+            let sL = -1;
+            if (t >= t0) {
+              sR = at(runR, t - t0);
+              if (sR < Lline) {
+                // Still drawing the loop: one line from the dot.
+                threadR.setAttribute("d", slice(pathR, cPathR, 0, Math.max(1, sR)));
+              } else {
+                // Released: each ribbon keeps its own length until it lands,
+                // then the line behind it stays.
+                threadR.setAttribute("d", slice(pathR, cPathR, Math.max(sB, sR - WR), Math.min(sR, LpR)));
+                if (D0) {
+                  sL = at(runL, t - tRelease);
+                  threadL.setAttribute("d", slice(pathL, cPathL, Math.max(0, sL - sB), Math.min(sL, LpL)));
+                }
               }
             }
-            drawDivider(hL >= 0 ? hL - LpL : -1);
-            drawJar(hR >= 0 ? hR - LpR : -1);
+            drawDivider(sL >= 0 ? sL - LpL : -1);
+            drawJar(sR >= 0 ? sR - LpR : -1);
+            if (debug && f !== lastLog && t >= t0) {
+              lastLog = f;
+              const i = Math.min(runR.v.length - 1, Math.floor((t - t0) / DT));
+              console.log(`intro t=${t.toFixed(3)}s pen ${runR.v[i]?.toFixed(0)}px/s`);
+            }
           }
           // The boil: softer while the line loops and floats, the full
           // wobble on the jar, easing out at the end so the last drawing is
@@ -587,10 +636,17 @@ export default function Intro({
             __introSetupMs?: number;
             __introEnd?: number;
             __introLineW?: number;
+            __introSpeed?: { min: number; peak: number; release: number; land: number };
+            __introWobble?: { rms: number; wavelength: number };
           };
           dev.__introSetupMs = performance.now() - setupStart;
           dev.__introEnd = lineEnd;
           dev.__introLineW = lineW;
+          dev.__introSpeed = { min: vMin, peak: vPeak, release: tRelease, land: tLand };
+          const rms = Math.sqrt(wob.reduce((p, q) => p + q * q, 0) / wob.length) * artPx;
+          let crossings = 0;
+          for (let i = 1; i < wob.length; i++) if ((wob[i - 1] < 0) !== (wob[i] < 0)) crossings++;
+          dev.__introWobble = { rms, wavelength: ((2 * wob.length) / Math.max(1, crossings)) * JAR_WOBBLE_STEP * artPx };
           dev.__introAt = (secs: number) => {
             cancelAnimationFrame(raf);
             renderLine(secs);

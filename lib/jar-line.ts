@@ -120,3 +120,63 @@ export function jarPenStrokes(side: -1 | 1 = -1, fy = JAR_PEN_START_Y): Pt[][] {
 /** The pen's strokes over the original jar from the left wall, in order (see
  * above). */
 export const JAR_PEN_STROKES: Pt[][] = jarPenStrokes();
+
+/**
+ * Amy's hand, measured: how far her jar strokes stray from a smoothed copy
+ * of themselves. Each long stroke (JAR_STROKES) is walked every
+ * JAR_WOBBLE_STEP art units; at each step the offset across the stroke from
+ * a heavily smoothed version (±JAR_WOBBLE_SMOOTH) is recorded. The strokes'
+ * signals are joined end to end. The intro bends its loop and ribbons by this
+ * same signal (scaled to the jar's size), so their wobble is hers.
+ * In art units.
+ */
+export const JAR_WOBBLE_STEP = 8;
+const JAR_WOBBLE_SMOOTH = 120;
+
+function measureWobble(): number[] {
+  const out: number[] = [];
+  for (const st of JAR_STROKES) {
+    const pts: Pt[] = st.map(([x, y]) => [x * JAR_ART_W, y * JAR_ART_H] as Pt);
+    const cum = lengths(pts);
+    const L = cum[cum.length - 1];
+    if (L < JAR_WOBBLE_SMOOTH * 3) continue;
+    const n = Math.floor(L / JAR_WOBBLE_STEP);
+    const samples: Pt[] = [];
+    let j = 0;
+    for (let k = 0; k <= n; k++) {
+      const s = k * JAR_WOBBLE_STEP;
+      while (j < cum.length - 2 && cum[j + 1] < s) j++;
+      const f = (s - cum[j]) / (cum[j + 1] - cum[j] || 1);
+      samples.push([pts[j][0] + (pts[j + 1][0] - pts[j][0]) * f, pts[j][1] + (pts[j + 1][1] - pts[j][1]) * f]);
+    }
+    const w = Math.round(JAR_WOBBLE_SMOOTH / JAR_WOBBLE_STEP);
+    const seg: number[] = [];
+    for (let k = w; k < samples.length - w; k++) {
+      let sx = 0;
+      let sy = 0;
+      for (let m = -w; m <= w; m++) {
+        sx += samples[k + m][0];
+        sy += samples[k + m][1];
+      }
+      sx /= 2 * w + 1;
+      sy /= 2 * w + 1;
+      const a = samples[k - 1];
+      const b = samples[k + 1];
+      const tl = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+      // Signed offset across the stroke.
+      seg.push(((samples[k][0] - sx) * -(b[1] - a[1]) + (samples[k][1] - sy) * (b[0] - a[0])) / tl);
+    }
+    // Fade each stroke's signal in and out so the joins between strokes
+    // don't step.
+    const fade = Math.min(8, Math.floor(seg.length / 4));
+    seg.forEach((v, k) => {
+      const e = Math.min(1, k / fade, (seg.length - 1 - k) / fade);
+      out.push(v * (1 - Math.cos(Math.PI * Math.max(0, e))) / 2);
+    });
+  }
+  // Take out any lean so the signal wanders around zero.
+  const mean = out.reduce((p, q) => p + q, 0) / (out.length || 1);
+  return out.map((v) => v - mean);
+}
+
+export const JAR_WOBBLE: number[] = measureWobble();
