@@ -229,3 +229,41 @@
       transform calc(var(--zoom-return-ms) * var(--slow, 1)) cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
+
+/* ---------- the intro (Intro.tsx) ---------- */
+
+/* While the intro draws (and before it's decided whether there is one):
+ * the sidebar's parts, the divider and the jar are hidden — the intro's own
+ * lines stand in for the divider and the jar. */
+.introHidden > aside > *,
+.introHidden .divider,
+.introHidden [data-intro-jar] {
+  opacity: 0;
+}
+
+.introHidden > aside > * {
+  transform: translateY(var(--intro-rise));
+}
+
+/* At the hand-over: the real divider and jar fade in under the intro's
+ * fading lines, and the sidebar loads top to bottom, a beat apart. */
+@media (prefers-reduced-motion: no-preference) {
+  .introReveal .divider,
+  .introReveal [data-intro-jar] {
+    transition: opacity calc(var(--intro-handoff-ms) * var(--slow, 1)) ease;
+  }
+
+  .introReveal > aside > * {
+    transition:
+      opacity calc(350ms * var(--slow, 1)) ease,
+      transform calc(350ms * var(--slow, 1)) cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .introReveal > aside > :nth-child(2) {
+    transition-delay: calc(var(--intro-stagger-ms) * var(--slow, 1));
+  }
+
+  .introReveal > aside > :nth-child(3) {
+    transition-delay: calc(var(--intro-stagger-ms) * 2 * var(--slow, 1));
+  }
+}

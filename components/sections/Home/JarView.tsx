@@ -51,6 +51,8 @@ interface JarViewProps {
   onImpact?: (strength: number) => void;
   /** The pile has settled: the clinks stop. */
   onImpactsEnd?: () => void;
+  /** Keep the items from falling in yet (the intro is still drawing). */
+  holdItems?: boolean;
 }
 
 /** Fully off the stage, above or below: the view is the stage's own height,
@@ -82,7 +84,7 @@ const OFF_STAGE = "110%";
  *
  * Reduced motion: plain fades, items appear already settled.
  */
-export default function JarView({ entering, isolatedId, onSettledChange, onHintActivate, onImpact, onImpactsEnd }: JarViewProps) {
+export default function JarView({ entering, isolatedId, onSettledChange, onHintActivate, onImpact, onImpactsEnd, holdItems = false }: JarViewProps) {
   const reduced = useReducedMotion() ?? false;
   const [scope, animate] = useAnimate<HTMLDivElement>();
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -245,7 +247,8 @@ export default function JarView({ entering, isolatedId, onSettledChange, onHintA
       // place before the first animation frame.
       style={entering ? (reduced ? { opacity: 0 } : { transform: `translateY(-${OFF_STAGE})` }) : undefined}
     >
-      <div ref={wrapperRef} className={styles.jarWrapper}>
+      {/* data-intro-jar: where the intro (Intro.tsx) draws its jar. */}
+      <div ref={wrapperRef} className={styles.jarWrapper} data-intro-jar>
         {/* Unmounted (not hidden) in work mode: useJarPhysics sizes
          * everything off this box's measured width, and a hidden
          * (display:none) box measures 0 — remounting rebuilds the world
@@ -255,7 +258,7 @@ export default function JarView({ entering, isolatedId, onSettledChange, onHintA
           projectsOn={false}
           favouritesOn={false}
           isolatedId={isolatedId}
-          start={start}
+          start={start && !holdItems}
           jostleRef={jostleRef}
           // Home never highlights a category, so no item is ever bordered.
           outlines={false}

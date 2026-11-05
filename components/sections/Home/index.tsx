@@ -9,11 +9,24 @@ import ScrollCue from "./ScrollCue";
 import { useScrollSwitch } from "./useScrollSwitch";
 import BuzzPath from "@/components/ui/BuzzPath";
 import JarView from "./JarView";
+import Intro from "./Intro";
 import { createJarSound, type JarSound } from "@/components/sections/Hero/jar-sound";
 import { content } from "@/lib/content";
 import { gaegu, geist } from "@/lib/fonts";
 import { useCaseZoom } from "@/components/ui/CaseZoom";
-import { ZOOM_DROP_PX, ZOOM_LEAVE_S, ZOOM_RETURN_S, ZOOM_STAGGER_S, slowMs } from "@/lib/motion";
+import {
+  INTRO_FORCE_KEY,
+  INTRO_HANDOFF,
+  INTRO_SEEN_KEY,
+  INTRO_SIDEBAR_RISE_PX,
+  INTRO_SIDEBAR_STAGGER_S,
+  ZOOM_DROP_PX,
+  ZOOM_LEAVE_S,
+  ZOOM_RETURN_S,
+  ZOOM_STAGGER_S,
+  isIntroForced,
+  slowMs,
+} from "@/lib/motion";
 import { buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
 
 const copy = content.en.sidebar;
@@ -37,6 +50,10 @@ const ZOOM_VARS = {
   "--zoom-return-ms": `${ZOOM_RETURN_S * 1000}ms`,
   "--zoom-stagger-ms": `${ZOOM_STAGGER_S * 1000}ms`,
   "--zoom-drop": `${ZOOM_DROP_PX}px`,
+  // The intro's hand-over (Home.module.css .introHidden/.introReveal).
+  "--intro-handoff-ms": `${(INTRO_HANDOFF[1] - INTRO_HANDOFF[0]) * 1000}ms`,
+  "--intro-stagger-ms": `${INTRO_SIDEBAR_STAGGER_S * 1000}ms`,
+  "--intro-rise": `${INTRO_SIDEBAR_RISE_PX}px`,
 } as CSSProperties;
 
 // Rebrand v2 home page (brief Part 2): one fixed screen — sidebar, divider,
@@ -121,10 +138,49 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, []);
 
+  // The intro (Intro.tsx, brief Part 4.2): the full version once per visit,
+  // a short one after that and on phones, none for reduced motion, a visit
+  // straight to the work (#projects) or a trip back from a case study. The
+  // page starts hidden ("pending") until that's decided — there's no window
+  // to decide it with on the server — and comes in at the intro's hand-over
+  // (introRevealed), staggered top to bottom; the jar items wait for it.
+  const [intro, setIntro] = useState<"pending" | "full" | "short" | "none">(() =>
+    zoom?.returning ? "none" : "pending",
+  );
+  const [introRevealed, setIntroRevealed] = useState(false);
+  useEffect(() => {
+    if (intro !== "pending") return;
+    const timer = window.setTimeout(() => {
+      let seen = false;
+      try {
+        seen = sessionStorage.getItem(INTRO_SEEN_KEY) === "1";
+      } catch {
+        // Storage blocked: treat it as a first visit.
+      }
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const phone = !window.matchMedia("(min-width: 768px)").matches;
+      if (reduced || window.location.hash === "#projects") setIntro("none");
+      else setIntro(phone || (seen && !isIntroForced()) ? "short" : "full");
+    });
+    return () => window.clearTimeout(timer);
+  }, [intro]);
+  const handleIntroDone = useCallback(() => {
+    if (intro === "full") {
+      try {
+        sessionStorage.setItem(INTRO_SEEN_KEY, "1");
+        sessionStorage.removeItem(INTRO_FORCE_KEY);
+      } catch {
+        // Storage blocked: it just plays again next time.
+      }
+    }
+    setIntro("none");
+  }, [intro]);
+  const introClass = intro === "none" ? "" : introRevealed ? styles.introReveal : styles.introHidden;
+
   return (
     <main
       ref={frameRef}
-      className={`${geist.variable} ${gaegu.variable} ${styles.frame} ${zoomClass}`}
+      className={`${geist.variable} ${gaegu.variable} ${styles.frame} ${zoomClass} ${introClass}`}
       style={ZOOM_VARS}
     >
       {/* The case study's logo, appearing in the corner as the sidebar
@@ -135,7 +191,12 @@ export default function Home() {
       </span>
       <Sidebar onCaseFocus={setFocusedCase} />
 
-      <div className={styles.divider} aria-hidden="true">
+      {(intro === "full" || intro === "short") && (
+        <Intro variant={intro} onReveal={() => setIntroRevealed(true)} onDone={handleIntroDone} />
+      )}
+
+      {/* data-intro-divider: the intro's line ends exactly on this. */}
+      <div className={styles.divider} aria-hidden="true" data-intro-divider>
         <BuzzPath
           className={styles.dividerLine}
           variants={DIVIDER_VARIANTS}
@@ -163,6 +224,7 @@ export default function Home() {
               onImpact={handleImpact}
               onImpactsEnd={handleImpactsEnd}
               onHintActivate={() => changeMode("work")}
+              holdItems={intro !== "none" && !introRevealed}
             />
           ) : (
             <WorkGrid key="work" focusedId={focusedCase} onJumpToJar={() => changeMode("jar")} />

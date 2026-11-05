@@ -118,6 +118,22 @@ Every extra (lib/extras.ts: posters, logos, little sites) lives in its own secti
 
 One sound: a short glass clink (the first 0.22s of `public/sounds/jar-drop.mp3` from its first sound), decoded once with Web Audio. It plays only when an item hits the jar's glass (floor or wall): each item's first touch as the items fall in (on first load and every return; the recorded fall replays them on the right frames), and up to 3 as the items bounce when the jar is lowered away (within 700ms of the jostle, each item once). Volume follows how hard the hit was (35-100% of 0.8), pitch varies ±8%, and clinks are never closer than 60ms apart. The sound stops the moment the pile settles (the first frame after which nothing moves more than a 1.5px jiggle): contacts from then on, and feather-light touches, are silent, and a clink still ringing fades out in 80ms. Item-on-item contacts, hovering and dragging are silent; so is reduced motion. Browsers allow sound only after a click, tap or key press on the page; until then it's silent.
 
+## Intro
+
+The home page's opening (Home/Intro.tsx), drawn over the page with lines generated in code from the traced jar (`lib/jar-outline.ts`, made by `scripts/trace-jar-outline.py` from `jar.png`), placed exactly on the real jar and divider. 1px black ink; smooth (not stop-motion). The page under it is hidden until the hand-over.
+
+| Time (s) | What happens |
+|---|---|
+| 0–0.9 | the jar's traced line pen-draws (ease-out) |
+| 0.7–1.6 | liquid rises inside it, clipped to the jar's body (`--c-blue` at 22%, a gently waving surface) |
+| 1.5–2.1 | two strands spill over the rim's left end and the neck's right |
+| 2.1–3.1 | the right strand's tip pulls the whole line out like thread — down, under the jar, across to the divider's foot and up the divider — the jar unravelling from the far end; the liquid drains in the first 0.5s |
+| 3.0–3.8 | at the divider's foot the line splits: the stretch under the jar draws back in, leaving the line on the divider, while a branch grows back up into the stage and redraws the jar |
+| 3.7–4.1 | hand-over: the drawn lines fade out as the real divider and jar fade in; the sidebar loads top to bottom (350ms each, 70ms apart, rising 8px); then the items fall |
+
+- **When:** the full version once per visit; a short version (about 1s: the jar and divider just draw, then hand over) after that and on phones; none for reduced motion, a visit straight to the work (`/#projects`) or a trip back from a case study. `?intro=1` replays the full version; `?slow=4` slows it.
+- **Skip:** a click or any key ends it at once.
+
 ## Zoom into a case study
 
 Clicking a case study — a work-view card, or its row in the sidebar's Works list (from its jar item in jar mode, or its card in work mode) — zooms into it (components/ui/CaseZoom, in the root layout so it lives across the route change):

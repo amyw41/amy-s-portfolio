@@ -1,0 +1,27 @@
+/* The intro's drawing surface (Intro.tsx): the whole window, above the home
+ * page, never in the way of the pointer (a click skips it via a window
+ * listener). */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  width: 100vw;
+  height: 100vh;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* The pen line: black ink, like the jar's. */
+.line {
+  fill: none;
+  stroke: #000;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The liquid inside the jar: a soft wash of the site's blue. */
+.liquid {
+  fill: var(--c-blue);
+  fill-opacity: 0.22;
+  stroke: none;
+}

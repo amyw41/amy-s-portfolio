@@ -109,6 +109,25 @@ export const JAR_LAND_S = 0.36;
 // exit (gone at once — no anticipation, no clink, no items); a jar called
 // back mid-exit rises back into place over JAR_RETURN_S.
 export const JAR_RETURN_S = 0.25;
+// The intro (Home/Intro.tsx, brief Part 4.2), as [start, end] seconds on its
+// own clock: the traced jar line draws (INTRO_DRAW), liquid rises inside it
+// (INTRO_FILL), two strands spill over (INTRO_SPILL), the right strand's tip
+// pulls the whole line out like thread — down, under the jar, up the divider
+// (INTRO_PULL) — then the line splits at the divider's foot and one branch
+// redraws the jar (INTRO_SPLIT), and the drawn lines hand over to the real
+// jar and divider (INTRO_HANDOFF). The sidebar then loads top to bottom,
+// INTRO_SIDEBAR_STAGGER_S apart, rising INTRO_SIDEBAR_RISE_PX.
+// INTRO_SHORT is the whole short version (repeat visits, phones): the jar
+// and divider just draw, then hand over.
+export const INTRO_DRAW: [number, number] = [0, 0.9];
+export const INTRO_FILL: [number, number] = [0.7, 1.6];
+export const INTRO_SPILL: [number, number] = [1.5, 2.1];
+export const INTRO_PULL: [number, number] = [2.1, 3.1];
+export const INTRO_SPLIT: [number, number] = [3.0, 3.8];
+export const INTRO_HANDOFF: [number, number] = [3.7, 4.1];
+export const INTRO_SHORT: { draw: [number, number]; handoff: [number, number] } = { draw: [0, 0.7], handoff: [0.6, 1.0] };
+export const INTRO_SIDEBAR_STAGGER_S = 0.07;
+export const INTRO_SIDEBAR_RISE_PX = 8;
 // Clicking a case study zooms into it (components/ui/CaseZoom, brief Part
 // 3.2): the home page fades and drops out (ZOOM_LEAVE_S, ZOOM_DROP_PX, its
 // parts ZOOM_STAGGER_S apart) while the sidebar narrows to the case study's
