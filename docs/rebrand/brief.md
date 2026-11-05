@@ -155,7 +155,8 @@ This is all one continuous motion. The thumbnail on the home page and on the cas
 - **Back:** clicking the logo returns home. The rail widens back into the sidebar and the home stage fades in. No intro.
 - **Later:** a "view next case study" link at the bottom (Part 7).
 - Existing case-study content (`components/case-studies/*`) moves into this layout. The writing doesn't change, only the frame around it.
-- Housekeeping: `app/projects/[slug]/` is a leftover copy of `app/[slug]/`. Delete it so there's one case-study route.
+- Housekeeping: `app/projects/[slug]/` was a leftover copy of `app/[slug]/` (unreachable: /projects/* redirects to /*). Deleted, so there's one case-study route.
+- Built (step 7a): the frame is `CaseStudyLayout` in `CaseStudyKit.tsx`. It ends in the same thin footer strip as home; the taskbar and big footer stay off case studies. Exact values in the design system.
 
 ---
 

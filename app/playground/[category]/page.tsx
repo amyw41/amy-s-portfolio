@@ -3,7 +3,7 @@ import { ETC_CATEGORIES } from "@/lib/etc";
 import CategoryDetail from "@/components/sections/Playground/CategoryDetail";
 
 // Prerenders one static page per playground category — same
-// generateStaticParams pattern as app/projects/[slug]/page.tsx.
+// generateStaticParams pattern as app/[slug]/page.tsx.
 export function generateStaticParams() {
   return ETC_CATEGORIES.map((category) => ({ category: category.slug }));
 }

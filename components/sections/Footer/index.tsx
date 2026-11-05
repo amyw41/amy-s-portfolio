@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { usePathname } from "next/navigation";
+import { isCaseStudyPath } from "@/lib/projects";
 import Image from "next/image";
 import styles from "./Footer.module.css";
 import FooterItem from "./FooterItem";
@@ -43,7 +44,8 @@ export default function Footer({ flush: flushProp }: FooterProps = {}) {
   // The rebrand v2 home page is one fixed screen with the contact links in
   // its own sidebar — no footer there. Every other route keeps it. After
   // the hooks above so they still run in the same order on every render.
-  if (pathname === "/") return null;
+  // Home and the case studies end in their own thin footer strip instead.
+  if (pathname === "/" || isCaseStudyPath(pathname)) return null;
 
   return (
     <footer className={`${styles.footer} ${flush ? styles.flush : ""}`}>

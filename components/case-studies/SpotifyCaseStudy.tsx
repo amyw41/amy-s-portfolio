@@ -37,7 +37,7 @@ import {
 // jar-portfolio, where this case study was originally written, was
 // "spotify-guessr" — renamed here to match this site's own existing
 // lib/projects.ts slug for the same project, its one canonical id) — see
-// app/projects/[slug]/page.tsx.
+// app/[slug]/page.tsx.
 const HIGHLIGHT = "#EFEDF5";
 
 const SECTION_NAV: SectionNavItem[] = [

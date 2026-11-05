@@ -3,54 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import type { CSSProperties, ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import type { ReactElement, ReactNode } from "react";
+import { Children, cloneElement, isValidElement, useEffect, useState } from "react";
 import { useAutoPlayInView } from "@/lib/useAutoPlayInView";
 import { FADE_IN_TRANSITION } from "@/lib/motion";
-import {
-  buildWobblyPillPath,
-  PILL_STROKE_COLOR,
-  PILL_STROKE_WIDTH,
-  PILL_VIEW_BOX,
-} from "@/lib/wobbly";
-
-// Hand-sketched hover ring for this Back button — the wobbly PILL variant
-// (lib/wobbly.ts's buildWobblyPillPath), not the hero/taskbar's own wide
-// oval: an ellipse stretched over "← Back"'s much shorter, wider box reads
-// as a nearly flat, barely-visible line (see that function's own comment).
-// This route is Tailwind-based (see this file's own top comment), so unlike
-// the other two usages this is revealed via Tailwind's group/group-hover
-// rather than a CSS Module :hover rule, but it's the exact same underlying
-// mechanism. vectorEffect="non-scaling-stroke" keeps the line clearly
-// visible at this button's small font-size, where the oval's own thin
-// stroke would have all but disappeared. Was a bigger 12px expand + full
-// opacity on hover at first (to fix the oval's own near-invisibility) —
-// dialed back per request once the pill shape/thickness alone was already
-// legible: 20px expand gives "BACK" more breathing room inside the ring
-// (its K no longer touches the edge), 0.55 opacity reads as a lighter,
-// less-solid-black line instead.
-function ScribbleOval({ seed, active = false }: { seed: number; active?: boolean }) {
-  const path = useMemo(() => buildWobblyPillPath(seed), [seed]);
-  return (
-    <svg
-      className={`pointer-events-none absolute -left-6 -top-1.5 h-[calc(100%+12px)] w-[calc(100%+48px)] transition-opacity duration-150 ${active ? "opacity-[0.55]" : "opacity-0 group-hover:opacity-[0.55]"
-        }`}
-      viewBox={PILL_VIEW_BOX}
-      fill="none"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-    >
-      <path
-        d={path}
-        stroke={PILL_STROKE_COLOR}
-        strokeWidth={PILL_STROKE_WIDTH}
-        strokeLinecap="round"
-        vectorEffect="non-scaling-stroke"
-      />
-    </svg>
-  );
-}
+import { buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
+import BuzzPath from "@/components/ui/BuzzPath";
+import FooterStrip from "@/components/ui/FooterStrip";
+import layoutStyles from "./CaseStudyLayout.module.css";
 
 // Shared building blocks behind every written case study on the site
 // (SkinSprout, Spotify Guessr, CyberSea) — extracted so the three don't
@@ -63,7 +23,7 @@ function ScribbleOval({ seed, active = false }: { seed: number; active?: boolean
 // Tailwind-based layout/animation work was already built and tuned there,
 // and hand-converting it to this site's own CSS-Modules system would be a
 // high-risk rewrite of animation-heavy, already-correct code for no visual
-// benefit. See app/projects/[slug]/case-study.css for how Tailwind is
+// benefit. See app/[slug]/case-study.css for how Tailwind is
 // scoped to just this route so it can't affect the rest of the site.
 
 // Text system every case study page uses:
@@ -414,110 +374,39 @@ function useActiveSection(ids: string[]) {
   return activeId;
 }
 
-// `className` supplies the flex layout (direction/wrap/gap).
-// font-instrument (serif); the active section (see useActiveSection) gets
-// the site's case-study accent blue.
-const TOC_DELAY = 0;
-
-function TableOfContents({
-  sectionNav,
-  className,
-  style,
-  home = false,
-  extra,
-}: {
-  sectionNav: SectionNavItem[];
-  className: string;
-  style?: CSSProperties;
-  // When true, renders a ← BACK button above the section links — calls
-  // router.back() so the browser restores the user to their exact scroll
-  // position on the previous page rather than jumping to the top.
-  home?: boolean;
-  // Renders between the Back button and the numbered section links — for
-  // a page that wants something else "where the contents normally are"
-  // instead of (or alongside) plain section links, e.g. the Extras page's
-  // category-filter buttons (ExtrasCaseStudy.tsx). Plumbed through from
-  // CaseStudyLayout's own `sidebarExtra` prop below.
-  extra?: ReactNode;
-}) {
+// The rail's numbered contents: one number per section (1, 2, 3…), the
+// one in view (useActiveSection) black, each jumping to its section. Plain
+// hash links would push a history entry per click, so Back would step
+// through them instead of leaving the page: preventDefault + replaceState
+// updates the hash without that.
+function RailContents({ sectionNav }: { sectionNav: SectionNavItem[] }) {
   const activeId = useActiveSection(sectionNav.map((s) => s.id));
-  const router = useRouter();
-
+  if (sectionNav.length === 0) return null;
   return (
-    <motion.nav
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ ...FADE_IN_TRANSITION, delay: TOC_DELAY }}
-      // Size matched exactly to TEXT.content (the case study's own body
-      // copy) per request — was its own close-but-not-quite
-      // clamp(16px,1.5vw,18px).
-      className={`flex text-left font-instrument leading-none text-[clamp(16px,1.45vw,18px)] font-light text-black/60 ${className}`}
-      style={style}
-    >
-      {home && (
-        // leading-none — the sidebar's own pt matches CaseStudyHero's h1 pt
-        // exactly (see CaseStudyLayout), but the h1 is set leading-none
-        // too, so its glyph sits right at the top of its own padding box;
-        // this nav's normal line-height was adding extra space above BACK's
-        // glyph that the h1 doesn't have, making the two look misaligned
-        // even though their boxes start at the same y. leading-none here
-        // closes that gap so both read as starting the same distance down.
-        <button
-          type="button"
-          onClick={() => router.back()}
-          // Was a bare "← Back" text link with a hand-drawn scribble-oval
-          // hover ring (see ScribbleOval above, still used by the section
-          // links below) — briefly tried a solid black circle around the
-          // arrow, dropped per request ("i dont want the black circle
-          // around the arrows"). Back to a plain "←" glyph, no circle, no
-          // scribble ring. Hover still darkens the text toward solid black
-          // (kept from that same pass) instead of the old opacity-fade
-          // scribble-reveal — no more need for `relative`/`group` now that
-          // there's no absolutely-positioned ring riding on top of this
-          // button. self-start still needed: TableOfContents' own flex-col
-          // container defaults to align-items: stretch, which would
-          // otherwise stretch this button to the sidebar's full width.
-          // hover:text-black (was text-black/85) — bumped to solid black
-          // per request ("smaller gray buttons... become black" on hover).
-          className="mb-5 flex w-fit items-center gap-1.5 self-start bg-transparent border-none p-0 cursor-pointer font-instrument leading-none text-[length:var(--fs-small)] font-extralight tracking-[-0.03em] uppercase text-black/40 transition-colors duration-200 ease-out hover:text-black"
-        >
-          <span aria-hidden="true">←</span>
-          Back
-        </button>
-      )}
-      {extra}
-      {sectionNav.map((s, idx) => (
-        <a
-          key={s.id}
-          href={`#${s.id}`}
-          // A plain hash link here pushes a new browser history entry every
-          // time it's clicked, so scrolling through 5-6 sections leaves 5-6
-          // entries behind it — the Back button above (router.back()) was
-          // then just undoing those one at a time instead of actually
-          // leaving the page, so it looked like it randomly landed on
-          // whichever section you'd last clicked instead of returning to
-          // the homepage. preventDefault + replaceState (not pushState)
-          // still updates the URL hash and still scrolls, it just doesn't
-          // add a history entry — so this page is always exactly one entry
-          // deep no matter how much in-page nav happens, and Back always
-          // goes straight to the real previous page at its real scroll
-          // position.
-          onClick={(e) => {
-            e.preventDefault();
-            document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth" });
-            history.replaceState(null, "", `#${s.id}`);
-          }}
-          className={`group relative text-left transition-colors whitespace-nowrap w-fit self-start ${activeId === s.id ? "text-[#2460A4]" : "text-black/60 hover:text-[#2460A4]"
-            }`}
-        >
-          <ScribbleOval seed={idx + 10} active={activeId === s.id} />
-          {s.label}
-        </a>
-      ))}
-    </motion.nav>
+    <nav aria-label="Sections">
+      <ol className={layoutStyles.contents}>
+        {sectionNav.map((s, idx) => (
+          <li key={s.id}>
+            <a
+              href={`#${s.id}`}
+              title={s.label}
+              aria-label={s.label}
+              aria-current={activeId === s.id ? "location" : undefined}
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById(s.id)?.scrollIntoView({ behavior: "smooth" });
+                history.replaceState(null, "", `#${s.id}`);
+              }}
+              className={`${layoutStyles.contentsLink} ${activeId === s.id ? layoutStyles.contentsActive : ""}`}
+            >
+              {idx + 1}.
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
   );
 }
-
 // Every case study's hero box locks to 3/2 to match the homepage's project
 // thumbnail ratio. object-cover (inside CaseStudyImage) crops each source
 // video/image to this shape instead of showing it at its own native proportions.
@@ -543,6 +432,7 @@ export function CaseStudyHero({
   highlightColor,
   meta,
   tldr,
+  layoutPart,
 }: {
   title: string;
   // Overrides the default title size below — for SkinSprout, whose own
@@ -561,36 +451,43 @@ export function CaseStudyHero({
   // for anyone who won't read all the way down through 01–06. Optional so a
   // page can still opt out, though every current case study passes one.
   tldr?: string;
+  /** Set by CaseStudyLayout: "body" renders only the subtitle, meta and
+   * TL;DR — the layout draws the title (top) and the hero media (the
+   * sticky thumbnail) itself. */
+  layoutPart?: "body";
 }) {
+  const body = layoutPart === "body";
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={FADE_IN_TRANSITION}
     >
-      {/* font-light (300), not the old font-normal (400) — matches the
-          homepage's own h1 weight (Hero.module.css's .title), per request
-          that this read the same as "amy wang's jar" on the homepage
-          rather than noticeably bolder. Shared by all 3 case studies (this
-          component, not any one page's own file), so they all match the
-          homepage consistently rather than one getting a special case. */}
-      <h1
-        className={`font-instrument ${titleClassName ?? "text-[clamp(2.75rem,7.5vw,4.5rem)]"} font-light leading-none tracking-[-0.04em] text-black/90`}
-      >
-        {title}
-      </h1>
-      <p className="mt-3 font-body text-[clamp(16px,1.56vw,20px)] font-light text-black/70">{subtitle}</p>
+      {/* Title and hero media: drawn here only when this hero stands on its
+          own; inside CaseStudyLayout the layout draws them (title on top,
+          media as the sticky thumbnail). font-light (300) matches the
+          homepage's own h1 weight. */}
+      {!body && (
+        <h1
+          className={`font-instrument ${titleClassName ?? "text-[clamp(2.75rem,7.5vw,4.5rem)]"} font-light leading-none tracking-[-0.04em] text-black/90`}
+        >
+          {title}
+        </h1>
+      )}
+      <p className={`${body ? "" : "mt-3 "}font-body text-[clamp(16px,1.56vw,20px)] font-light text-black/70`}>{subtitle}</p>
 
-      <div className="mt-8">
-        <CaseStudyImage
-          src={heroSrc}
-          alt={heroAlt}
-          ratio={HERO_RATIO}
-          video={heroVideo}
-          highlightColor={highlightColor}
-          sizes="(min-width: 768px) 946px, 100vw"
-        />
-      </div>
+      {!body && (
+        <div className="mt-8">
+          <CaseStudyImage
+            src={heroSrc}
+            alt={heroAlt}
+            ratio={HERO_RATIO}
+            video={heroVideo}
+            highlightColor={highlightColor}
+            sizes="(min-width: 768px) 946px, 100vw"
+          />
+        </div>
+      )}
 
       <div className="mt-8 grid grid-cols-2 items-start justify-items-center gap-6 rounded-[10px] border border-gray-200 p-6 text-center sm:grid-cols-4">
         {/* Extra bottom padding on every column but the first — added
@@ -630,63 +527,94 @@ export function CaseStudyHero({
   );
 }
 
-// The responsive case study layout — deliberately the simplest version that
-// gets this right, after a few rounds of over-engineering it (absolute
-// positioning + a live clamp()/calc() width formula to dodge overlap, a
-// divider line, custom breakpoints). Plain flexbox: sidebar and content are
-// ordinary siblings inside .pageContainer, which already gives them the
-// same width/centering as the taskbar above and every other section on the
-// site — nothing here needs to compute or guard against overlap, because
-// normal flow siblings simply can't overlap each other. At 1024px (`lg`,
-// matching jar-portfolio's own breakpoint, which this file was ported from)
-// the sidebar hides and the content falls back to an inline top-nav with a
-// Back button instead.
+// The case-study page frame (brief Part 3.3): a thin rail on the left (the
+// "aw" logo back home, then numbered contents), the same hand-drawn divider
+// as the home page, then the content — the title on top, the hero media as
+// a thumbnail that stays put on the left while the sections scroll on the
+// right — and the footer strip at the end. Styles: CaseStudyLayout.module.css.
+//
+// Each case study still renders <CaseStudyHero> first and its sections after
+// it, unchanged: this finds the hero among its children and lays its pieces
+// out (title, thumbnail, then the rest of it at the top of the right column).
+//
+// The divider: home's buzzing line (Home/index.tsx), drawn in a box the
+// laptop layout's height and stretched to the real one.
+const DIVIDER_BOX_W = 12;
+const DIVIDER_BOX_H = 664;
+const DIVIDER_VARIANTS = [0, 1, 2].map((v) =>
+  buildWobblyLinePath(7, [DIVIDER_BOX_W / 2, 0], [DIVIDER_BOX_W / 2, DIVIDER_BOX_H], 1.4, v),
+);
+
+type HeroProps = Parameters<typeof CaseStudyHero>[0];
+
 export function CaseStudyLayout({
   sectionNav,
   sidebarExtra,
   children,
 }: {
   sectionNav: SectionNavItem[];
-  // Rendered in the sidebar between the Back button and the numbered
-  // section links — see TableOfContents' own `extra` prop, which this is
-  // just plumbed through to. Optional: every existing case study omits it
-  // and gets the plain Back-button-then-links sidebar exactly as before.
+  // Shown at the top of the right column (the Extras page's category
+  // filters). Optional.
   sidebarExtra?: ReactNode;
   children: ReactNode;
 }) {
-  return (
-    <div className="tw-scope min-h-screen bg-white">
-      <div className="pageContainer flex w-full gap-10 lg:gap-8">
-        {/* h-fit — sticks to its own content height, not stretched to match
-            <main>'s (flex's default align-items:stretch would otherwise
-            make it tall enough to overlap the footer while sticky).
-            top-0 — this is the actual fix (earlier attempts tried top-14,
-            then a JS-measured CSS var, then a plain top-6; all of them left
-            a permanent gap between the sidebar and the top of the screen
-            once stuck, instead of the sidebar rising to close it). With
-            top-0, the sidebar isn't sticky at all yet while the taskbar
-            (which scrolls away normally, it's not fixed) is still above
-            it — it just scrolls up the page at the same rate as everything
-            else, staying wherever it naturally sits below the taskbar. It
-            only locks in place the instant its own top edge would cross
-            above the very top of the viewport — which is exactly the
-            moment the taskbar has fully scrolled out of view — so it rises
-            to fill the space the taskbar leaves behind, then sits flush
-            against the top for the rest of the page. */}
-        <aside className="sticky top-0 hidden h-fit w-44 shrink-0 pb-24 pt-8 lg:block lg:pt-14">
-          <TableOfContents sectionNav={sectionNav} className="flex-col gap-3.5" home extra={sidebarExtra} />
-        </aside>
+  const all = Children.toArray(children);
+  const heroIndex = all.findIndex((child) => isValidElement(child) && child.type === CaseStudyHero);
+  const hero = heroIndex >= 0 ? (all[heroIndex] as ReactElement<HeroProps>) : null;
+  const rest = all.filter((_, i) => i !== heroIndex);
 
-        {/* Main reading content: shrinks responsively with the container.
-            Below 1024px the sidebar above just hides — no inline top-nav
-            fallback anymore (an earlier version showed a Back button +
-            horizontal section list here); per request, this breakpoint now
-            reads as just the taskbar and then straight into the content,
-            nothing else. */}
-        <main className="min-w-0 flex-1 pb-24 pt-8 lg:pt-14 text-left">
-          {children}
-        </main>
+  return (
+    <div className={`tw-scope ${layoutStyles.frame}`}>
+      <aside className={layoutStyles.rail}>
+        {/* Placeholder until the real logo exists (brief Part 7). */}
+        <Link href="/" className={layoutStyles.logo} aria-label="Amy Wang, home">
+          aw
+        </Link>
+        <RailContents sectionNav={sectionNav} />
+      </aside>
+
+      <div className={layoutStyles.divider} aria-hidden="true">
+        <BuzzPath
+          className={layoutStyles.dividerLine}
+          variants={DIVIDER_VARIANTS}
+          viewBox={`0 0 ${DIVIDER_BOX_W} ${DIVIDER_BOX_H}`}
+          preserveAspectRatio="none"
+          strokeWidth={LINE_STROKE_WIDTH}
+        />
       </div>
+
+      <main className={layoutStyles.content}>
+        {hero && (
+          <motion.h1
+            className={layoutStyles.title}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={FADE_IN_TRANSITION}
+          >
+            {hero.props.title}
+          </motion.h1>
+        )}
+        <div className={layoutStyles.body}>
+          {hero && (
+            <div className={layoutStyles.thumb}>
+              <CaseStudyImage
+                src={hero.props.heroSrc}
+                alt={hero.props.heroAlt}
+                ratio={HERO_RATIO}
+                video={hero.props.heroVideo}
+                highlightColor={hero.props.highlightColor}
+                sizes="(min-width: 768px) 560px, 100vw"
+              />
+            </div>
+          )}
+          <div className={`${layoutStyles.sections} text-left`}>
+            {sidebarExtra}
+            {hero && cloneElement(hero, { layoutPart: "body" })}
+            {rest}
+          </div>
+        </div>
+        <FooterStrip className={layoutStyles.footerPlace} />
+      </main>
     </div>
   );
 }

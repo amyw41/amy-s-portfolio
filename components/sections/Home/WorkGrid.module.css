@@ -23,65 +23,11 @@
   color: #000;
 }
 
-/* The end of the list: a thin black strip, the full width of the stage
- * (it undoes the view's side padding) and flush with its bottom — the
- * credit on the left, the links on the right. */
-.footer {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 16px;
-  height: 38px;
+/* The end of the list: the footer strip (components/ui/FooterStrip), the
+ * full width of the stage (undoing the view's side padding) and flush with
+ * its bottom. */
+.footerPlace {
   margin: 48px calc(var(--stage-pad-x) * -1) 0;
-  padding: 0 var(--stage-pad-x);
-  background: #000;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 300;
-  line-height: 1;
-}
-
-.credit {
-  justify-self: start;
-  white-space: nowrap;
-}
-
-.footerLinks {
-  justify-self: end;
-  white-space: nowrap;
-}
-
-/* The links: white, a faint underline on hover. */
-.footerLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font: inherit;
-  letter-spacing: inherit;
-  color: inherit;
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-underline-offset: 3px;
-}
-
-.footerLink:hover,
-.footerLink:focus-visible {
-  text-decoration-color: rgba(255, 255, 255, 0.7);
-}
-
-.footerLink:focus-visible {
-  outline: 1px solid #fff;
-  outline-offset: 3px;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .footerLink {
-    transition: text-decoration-color 150ms ease;
-  }
 }
 
 /* "equal" layout (WorkGrid.tsx's WORK_LAYOUT): two equal columns, every
@@ -272,20 +218,9 @@
 }
 
 @media (max-width: 767px) {
-  /* The strip stacks: credit, links. */
-  .footer {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    gap: 8px;
-    height: auto;
+  .footerPlace {
     margin-top: 32px;
     margin-inline: -16px;
-    padding: 12px 16px;
-  }
-
-  .credit,
-  .footerLinks {
-    justify-self: center;
   }
 }
 

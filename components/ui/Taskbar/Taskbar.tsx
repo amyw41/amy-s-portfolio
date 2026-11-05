@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
+import { isCaseStudyPath } from "@/lib/projects";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./Taskbar.module.css";
 import { content } from "@/lib/content";
@@ -94,7 +95,8 @@ export default function Taskbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  if (pathname === "/") return null;
+  // Home and the case studies have their own frames (no taskbar).
+  if (pathname === "/" || isCaseStudyPath(pathname)) return null;
 
   const isWorkActive = pathname.startsWith("/projects") || pathname === "/work";
   const isAboutActive = pathname === "/about" || pathname.startsWith("/about/");

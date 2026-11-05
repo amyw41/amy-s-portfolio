@@ -1,0 +1,179 @@
+/* The case-study page frame (CaseStudyKit.tsx's CaseStudyLayout, brief Part
+ * 3.3): a thin rail on the left (logo + numbered contents), the same
+ * hand-drawn divider as home, then the content — title on top, the
+ * thumbnail sticky on the left below it, the sections scrolling on the
+ * right, the footer strip at the end. Full window, like home. Spacing
+ * tokens match home's (Home.module.css .frame): same values at 1536x696. */
+.frame {
+  --frame-gap: clamp(8px, 2.3dvh, 28px);
+  --pad-y: clamp(24px, 6.9dvh, 80px);
+  --stage-pad-x: clamp(21px, 2.734vw, 70px);
+  --rail-width: 64px;
+  display: grid;
+  grid-template-columns: var(--rail-width) 1px minmax(0, 1fr);
+  min-height: 100dvh;
+  background: #fff;
+  font-family: var(--font-geist), system-ui, sans-serif;
+  letter-spacing: -0.6px;
+}
+
+/* ---------- rail ---------- */
+
+.rail {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  padding: var(--pad-y) 0;
+}
+
+/* Placeholder logo until the real one exists (brief Part 7). */
+.logo {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
+  color: #000;
+  text-decoration: none;
+}
+
+.logo:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 4px;
+}
+
+/* Numbered contents: one number per section, the one in view black, the
+ * rest grey; hover darkens. */
+.contents {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.contentsLink {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.45);
+  text-decoration: none;
+}
+
+.contentsLink:hover,
+.contentsLink:focus-visible,
+.contentsActive {
+  color: #000;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .contentsLink {
+    transition: color 150ms ease;
+  }
+}
+
+/* ---------- divider: home's buzzing hand-drawn line, sticky ---------- */
+
+.divider {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  padding: var(--frame-gap) 0;
+}
+
+.dividerLine {
+  display: block;
+  width: 12px;
+  height: 100%;
+  margin-left: -6px;
+  overflow: visible;
+  color: #000;
+}
+
+/* ---------- content ---------- */
+
+.content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: var(--pad-y) var(--stage-pad-x) 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: #000;
+}
+
+/* The thumbnail on the left (sticky), the sections on the right. */
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 42fr) minmax(0, 58fr);
+  align-items: start;
+  gap: 48px;
+  margin-top: 24px;
+}
+
+.thumb {
+  position: sticky;
+  top: var(--pad-y);
+}
+
+/* The case-study kit's own first-section top margin assumes the page's
+ * old single column; here the sections sit beside the thumbnail. */
+.sections {
+  min-width: 0;
+}
+
+.footerPlace {
+  margin: 96px calc(var(--stage-pad-x) * -1) 0;
+}
+
+/* ---------- mobile: a top bar, then everything stacked ---------- */
+
+@media (max-width: 767px) {
+  .frame {
+    display: block;
+  }
+
+  .rail {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    padding: 20px 16px;
+  }
+
+  .contents,
+  .divider {
+    display: none;
+  }
+
+  .content {
+    padding: 8px 16px 0;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    margin-top: 16px;
+  }
+
+  .thumb {
+    position: static;
+  }
+
+  .footerPlace {
+    margin: 64px -16px 0;
+  }
+}

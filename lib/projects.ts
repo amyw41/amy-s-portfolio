@@ -20,7 +20,7 @@ export interface Project {
    * extras) instead of big on the left. Set it on a project's seed below. */
   small: boolean;
   /** Case-study gallery assets — empty until case-study pages exist.
-   * TODO: populate once /projects/[slug] case-study pages are built. */
+   * TODO: populate once the case-study pages (app/[slug]/) are built. */
   gallery: string[];
 }
 
@@ -87,6 +87,13 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     year: 2026,
   },
 ];
+
+/** Whether `pathname` is a case-study page (app/[slug]/): those have their
+ * own frame — a rail and a footer strip — so the site's taskbar and big
+ * footer stay off them. */
+export function isCaseStudyPath(pathname: string): boolean {
+  return PROJECT_SEEDS.some((seed) => pathname === `/${seed.slug}`);
+}
 
 export const PROJECTS: Project[] = PROJECT_SEEDS.map((seed) => ({
   slug: seed.slug,

@@ -117,3 +117,14 @@ Every extra (lib/extras.ts: posters, logos, little sites) lives in its own secti
 ## Sound
 
 One sound: a short glass clink (the first 0.22s of `public/sounds/jar-drop.mp3` from its first sound), decoded once with Web Audio. It plays only when an item hits the jar's glass (floor or wall): each item's first touch as the items fall in (on first load and every return; the recorded fall replays them on the right frames), and up to 3 as the items bounce when the jar is lowered away (within 700ms of the jostle, each item once). Volume follows how hard the hit was (35-100% of 0.8), pitch varies ±8%, and clinks are never closer than 60ms apart. The sound stops the moment the pile settles (the first frame after which nothing moves more than a 1.5px jiggle): contacts from then on, and feather-light touches, are silent, and a clink still ringing fades out in 80ms. Item-on-item contacts, hovering and dragging are silent; so is reduced motion. Browsers allow sound only after a click, tap or key press on the page; until then it's silent.
+
+## Case-study page
+
+The frame around every case study (CaseStudyKit.tsx's `CaseStudyLayout`, styles in `CaseStudyLayout.module.css`), full window like home, Geist with -0.6px tracking (the kit's body/heading classes point at Geist on this route):
+
+- **Rail (left, 64px, sticky):** the placeholder logo "aw" (18px, weight 500, black; back home) `--pad-y` from the top, then 40px below it the numbered contents — one number per section ("1." "2." …, 14px, weight 400), 14px apart: the section in view black, the rest 45% black, black on hover; each jumps to its section (the label is its tooltip).
+- **Divider:** home's buzzing hand-drawn line, sticky, `--frame-gap` from the top and bottom.
+- **Content:** `--pad-y` top, `--stage-pad-x` sides (same tokens as home). Title 32px weight 400 black at the top; 24px below it two columns 48px apart — the hero media as a 3:2 thumbnail on the left (42%), sticky `--pad-y` from the top, and on the right (58%) the subtitle, the meta box, the TL;DR and then every section, scrolling. The writing inside is unchanged.
+- **Footer:** the footer strip, 96px below the last section, the full width of the content area. The site's taskbar and big footer aren't shown on case studies.
+- **Mobile:** a top bar with the logo (no numbers, no divider), then title, thumbnail (not sticky), and the rest stacked; title 28px.
+

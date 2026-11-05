@@ -1,0 +1,66 @@
+/* The thin black footer strip (FooterStrip.tsx): the credit on the left,
+ * the links on the right. Where it sits (and how far it reaches) is up to
+ * the page placing it. */
+.strip {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 16px;
+  height: 38px;
+  padding: 0 var(--strip-pad-x, var(--stage-pad-x, 24px));
+  background: #000;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.credit {
+  justify-self: start;
+  white-space: nowrap;
+}
+
+.links {
+  justify-self: end;
+  white-space: nowrap;
+}
+
+/* The links: white, a faint underline on hover. */
+.link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+}
+
+.link:hover,
+.link:focus-visible {
+  text-decoration-color: rgba(255, 255, 255, 0.7);
+}
+
+.link:focus-visible {
+  outline: 1px solid #fff;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .link {
+    transition: text-decoration-color 150ms ease;
+  }
+}
+
+/* On a phone it stacks, centred: credit, links. */
+@media (max-width: 767px) {
+  .strip {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 8px;
+    height: auto;
+    padding: 12px 16px;
+  }
+
+  .credit,
+  .links {
+    justify-self: center;
+  }
+}

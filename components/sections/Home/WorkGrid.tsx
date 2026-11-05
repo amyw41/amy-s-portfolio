@@ -7,6 +7,7 @@ import { motion, useInView, useReducedMotion, type Variants } from "framer-motio
 import styles from "./WorkGrid.module.css";
 import AutoplayVideo from "@/components/sections/Projects/AutoplayVideo";
 import ScrollHint from "./ScrollHint";
+import FooterStrip from "@/components/ui/FooterStrip";
 import { PROJECTS } from "@/lib/projects";
 import { content } from "@/lib/content";
 import { EXTRAS_PHOTOS } from "@/lib/extras";
@@ -29,9 +30,6 @@ import {
 } from "@/lib/motion";
 
 const copy = content.en.projects;
-const footerCopy = content.en.footer;
-const copyFooterLinksLabel = content.en.sidebar.social.label;
-const FOOTER_LINKS = [footerCopy.links.linkedin, footerCopy.links.email, footerCopy.links.twitter];
 
 // A sidebar-hovered tile's lift (WorkGrid.module.css .lifted) — same timing
 // as the jar item's.
@@ -299,25 +297,8 @@ export default function WorkGrid({
         </div>
       )}
 
-      {/* The end of the list: a thin black footer strip — the credit and
-       * the links. */}
-      <footer className={styles.footer}>
-        <span className={styles.credit}>{footerCopy.credit}</span>
-        <nav className={styles.footerLinks} aria-label={copyFooterLinksLabel}>
-          {FOOTER_LINKS.map((link, i) => (
-            <span key={link.href}>
-              {i > 0 && <span aria-hidden="true"> · </span>}
-              <a
-                className={styles.footerLink}
-                href={link.href}
-                {...(link.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}
-              >
-                {link.label}
-              </a>
-            </span>
-          ))}
-        </nav>
-      </footer>
+      {/* The end of the list: the thin black footer strip. */}
+      <FooterStrip className={styles.footerPlace} />
     </motion.div>
   );
 }

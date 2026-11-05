@@ -7,7 +7,7 @@ import styles from "./PlateCircle.module.css";
  * from Tailwind to a CSS Module, matching this repo's own convention; every
  * other component here — Hero, Projects, Taskbar — is a CSS Module too, and
  * this site's Tailwind dependency is scoped to just the case-study route,
- * see app/projects/[slug]/case-study.css).
+ * see app/[slug]/case-study.css).
  *
  * Rendered both as a link (PlateView's overview grid, wrapped in a Link by
  * index.tsx) and standalone (CategoryDetail.tsx's own cropped hub, where

@@ -44,8 +44,10 @@
  * value in up front.
  */
 @theme inline {
-  --font-body: var(--font-roboto), system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-instrument: var(--font-roboto), system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* The rebrand sets case studies in Geist, like the home page (the
+   * variable comes from app/[slug]/layout.tsx); Roboto as the fallback. */
+  --font-body: var(--font-geist), var(--font-roboto), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-instrument: var(--font-geist), var(--font-roboto), system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 /* ---------- scoped preflight subset ----------

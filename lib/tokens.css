@@ -19,7 +19,7 @@
    * (Was briefly dropped to 820px to match the case-study route's own
    * width — reverted back to the original per a later request; the
    * case-study route keeps its own narrower 820px via its own scoped
-   * override in app/projects/[slug]/case-study.css, independent of this
+   * override in app/[slug]/case-study.css, independent of this
    * sitewide value.) */
   --content-max: 945px;
 
