@@ -245,14 +245,10 @@
   transform: translateY(var(--intro-rise));
 }
 
-/* At the hand-over the real divider swaps in at once (on the same frame the
- * intro's copy of it starts going) and the jar blends in under the intro's
- * fading line; the sidebar loads top to bottom, a beat apart. */
+/* At the hand-over the real divider and jar swap in at once, on the same
+ * frame the intro (drawn exactly over them) goes; the sidebar loads top to
+ * bottom, a beat apart. */
 @media (prefers-reduced-motion: no-preference) {
-  .introReveal [data-intro-jar] {
-    transition: opacity calc(var(--intro-blend-ms) * var(--slow, 1)) linear;
-  }
-
   .introReveal > aside > * {
     transition:
       opacity calc(350ms * var(--slow, 1)) ease,

@@ -24,3 +24,12 @@
   fill: #000;
   stroke: none;
 }
+
+/* The pen that reveals the jar artwork along its strokes (inside a mask:
+ * white shows the drawing). */
+.pen {
+  fill: none;
+  stroke: #fff;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

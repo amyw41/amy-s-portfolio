@@ -109,45 +109,41 @@ export const JAR_LAND_S = 0.36;
 // exit (gone at once — no anticipation, no clink, no items); a jar called
 // back mid-exit rises back into place over JAR_RETURN_S.
 export const JAR_RETURN_S = 0.25;
-// The intro (Home/Intro.tsx, docs/rebrand/intro-brief.md), as [start, end]
-// seconds on its own clock. A blank page until INTRO_DRAW, when a small jar
-// (INTRO_SMALL_SCALE of the real one, centred on screen) pen-draws; black ink
-// fills it in INTRO_FILL_STEPS visible steps (INTRO_FILL), bulges into a dome
-// above the rim (INTRO_DOME) and bubbles over as line-drawn foam, rolling
-// down both sides in INTRO_FOAM_WAVES waves with small bubbles popping
-// (INTRO_FOAM); the foam flattens into the jar's line and the ink drains
-// (INTRO_SETTLE); then the
-// line breaks at the bottom (INTRO_BREAK): the left half is pulled out as
-// thread onto the divider, the right half stretches into the real jar
-// (INTRO_MORPH_STAGGER spreads it along the line). The real jar and divider
-// swap in at INTRO_HANDOFF[0]; the sidebar then loads top to bottom,
-// INTRO_SIDEBAR_STAGGER_S apart, rising INTRO_SIDEBAR_RISE_PX.
-// Ink, dome, foam and bubbles are drawn on the stop-motion clock (INTRO_INK_FPS, a
-// new pose every frame); the line's travel and morph at INTRO_LINE_FPS.
-// INTRO_SHORT is the short version (repeat visits, phones): the small jar
-// draws, then goes straight into the jar and divider.
-export const INTRO_DRAW: [number, number] = [0.3, 0.9];
-export const INTRO_FILL: [number, number] = [0.9, 2.2];
-export const INTRO_FILL_STEPS = 8;
-export const INTRO_DOME: [number, number] = [2.2, 2.5];
-export const INTRO_FOAM: [number, number] = [2.4, 3.0];
+// The intro (Home/Intro.tsx, docs/rebrand/intro-brief.md v2). Everything
+// runs on one stop-motion clock, INTRO_FPS drawings a second, and every line
+// boils (a wobble of about INTRO_BOIL_PX, cycling INTRO_BOIL_DRAWINGS
+// versions a drawing at a time, easing to
+// nothing over the last INTRO_BOIL_OUT_S so the end is exactly the artwork).
+// All line drawing — the small jar, the two rainbow strands, the divider and
+// the real jar — goes at one pen speed, INTRO_PEN_PX_PER_S, so the beats
+// that draw lines last as long as their lines are. In order: a blank page
+// (INTRO_BLANK_S); the small jar (INTRO_SMALL_SCALE of the real one, centred)
+// draws; black ink fills it in INTRO_FILL_STEPS steps over INTRO_FILL_S; the
+// spill (INTRO_SPILL_S): the ink domes over INTRO_DOME_FRAMES drawings, then
+// foam rolls down both sides in INTRO_FOAM_WAVES waves, each creeping to the
+// bottom over INTRO_FOAM_CREEP_S; then two strands leave the foam tops in
+// rainbow arcs, each an INTRO_THREAD_PX length of thread, while the small
+// jar fades out in INTRO_FADE_STEPS steps; the left strand draws the divider
+// and the right one the real jar, stroke by stroke. The sidebar then loads
+// top to bottom, INTRO_SIDEBAR_STAGGER_S apart, rising INTRO_SIDEBAR_RISE_PX.
+// The short version (repeat visits, phones) is just the last beat, the jar's
+// drawing taking INTRO_SHORT_S.
+export const INTRO_FPS = 12;
+export const INTRO_BOIL_PX = 0.8;
+export const INTRO_BOIL_DRAWINGS = 3;
+export const INTRO_BOIL_OUT_S = 0.3;
+export const INTRO_PEN_PX_PER_S = 900;
+export const INTRO_BLANK_S = 0.3;
+export const INTRO_SMALL_SCALE = 1 / 3;
+export const INTRO_FILL_S = 1.8;
+export const INTRO_FILL_STEPS = 9;
+export const INTRO_SPILL_S = 1.6;
+export const INTRO_DOME_FRAMES = 3;
 export const INTRO_FOAM_WAVES = 4;
-export const INTRO_SETTLE: [number, number] = [3.0, 3.4];
-export const INTRO_BREAK: [number, number] = [3.3, 4.2];
-export const INTRO_HANDOFF: [number, number] = [4.2, 4.5];
-export const INTRO_SHORT: { draw: [number, number]; break: [number, number]; handoff: number } = {
-  draw: [0, 0.4],
-  break: [0.4, 0.95],
-  handoff: 0.95,
-};
-// At the swap the divider changes on the same frame (the drawn line is
-// exactly on it); the jar blends over INTRO_JAR_BLEND_S, since its drawing
-// has a few more lines round the rim than the one traced line.
-export const INTRO_JAR_BLEND_S = 0.15;
-export const INTRO_SMALL_SCALE = 0.25;
-export const INTRO_MORPH_STAGGER = 0.3;
-export const INTRO_INK_FPS = 12;
-export const INTRO_LINE_FPS = 60;
+export const INTRO_FOAM_CREEP_S = 0.6;
+export const INTRO_THREAD_PX = 120;
+export const INTRO_FADE_STEPS = 4;
+export const INTRO_SHORT_S = 1.4;
 export const INTRO_SIDEBAR_STAGGER_S = 0.07;
 export const INTRO_SIDEBAR_RISE_PX = 8;
 // Clicking a case study zooms into it (components/ui/CaseZoom, brief Part

@@ -3,33 +3,40 @@
 import { useEffect, useRef } from "react";
 import { flushSync } from "react-dom";
 import styles from "./Intro.module.css";
-import { JAR_OUTLINE, JAR_OUTLINE_BODY_START } from "@/lib/jar-outline";
+import { JAR_OUTLINE, JAR_OUTLINE_BODY_START, JAR_PEN_WIDTH, JAR_STROKES } from "@/lib/jar-outline";
 import { LINE_STROKE_WIDTH } from "@/lib/wobbly";
 import {
-  INTRO_BREAK,
-  INTRO_DOME,
-  INTRO_DRAW,
-  INTRO_FILL,
+  INTRO_BLANK_S,
+  INTRO_BOIL_DRAWINGS,
+  INTRO_BOIL_OUT_S,
+  INTRO_BOIL_PX,
+  INTRO_DOME_FRAMES,
+  INTRO_FADE_STEPS,
+  INTRO_FILL_S,
   INTRO_FILL_STEPS,
-  INTRO_FOAM,
+  INTRO_FOAM_CREEP_S,
   INTRO_FOAM_WAVES,
-  INTRO_HANDOFF,
-  INTRO_INK_FPS,
-  INTRO_JAR_BLEND_S,
-  INTRO_LINE_FPS,
-  INTRO_MORPH_STAGGER,
-  INTRO_SETTLE,
-  INTRO_SHORT,
+  INTRO_FPS,
+  INTRO_PEN_PX_PER_S,
+  INTRO_SHORT_S,
   INTRO_SMALL_SCALE,
+  INTRO_SPILL_S,
+  INTRO_THREAD_PX,
   slowMs,
 } from "@/lib/motion";
 
 type Pt = [number, number];
 
-/** jar.png's proportions (the jar art fills its wrapper's width). */
+/** The jar artwork (the same file the jar on the page shows) and its
+ * proportions (it fills its wrapper's width). */
+const JAR_SRC = "/images/drawings/jar.svg";
 const JAR_ASPECT = 2257 / 1600;
-/** Points along the jar's line once resampled (brief: ~400). */
-const N = 400;
+/** The strands' line: the jar drawing's own ink weight at full size. */
+const THREAD_WIDTH = 1.2;
+/** The jar drawing's ink is about this fraction of its width wide. The small
+ * jar's copy is thickened back up to the full-size weight (scaled down, its
+ * ink would be a faint third of a pixel). */
+const JAR_INK_WIDTH = 0.0031;
 
 // ---------- polyline helpers (all in viewport px) ----------
 
@@ -53,19 +60,12 @@ function pointAt(pts: Pt[], cum: number[], s: number): Pt {
   return [pts[lo][0] + (pts[hi][0] - pts[lo][0]) * f, pts[lo][1] + (pts[hi][1] - pts[lo][1]) * f];
 }
 
-/** n evenly spaced points along a polyline (by arc length). */
-function resample(pts: Pt[], n: number): Pt[] {
-  const cum = lengths(pts);
-  const L = cum[cum.length - 1];
-  return Array.from({ length: n }, (_, i) => pointAt(pts, cum, (L * i) / (n - 1)));
-}
-
 const f1 = (v: number) => v.toFixed(1);
 const polyD = (pts: Pt[]) => (pts.length < 2 ? "" : `M${pts.map((p) => `${f1(p[0])},${f1(p[1])}`).join("L")}`);
 
 /** The stretch of a polyline between arc lengths s0 and s1, as path data. */
 function slice(pts: Pt[], cum: number[], s0: number, s1: number): string {
-  if (s1 - s0 < 0.5) return "";
+  if (s1 - s0 < 0.3) return "";
   const a = pointAt(pts, cum, s0);
   let d = `M${f1(a[0])},${f1(a[1])}`;
   for (let i = 0; i < pts.length; i++) if (cum[i] > s0 && cum[i] < s1) d += `L${f1(pts[i][0])},${f1(pts[i][1])}`;
@@ -100,35 +100,59 @@ function rng(seed: number) {
 }
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
-const progress = (t: number, [a, b]: [number, number]) => clamp01((t - a) / (b - a));
-const easeOut = (t: number) => 1 - (1 - t) ** 3;
-const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
 
-/** One foam bubble: an open arc of a circle, facing away from the jar. */
-type Foam = { x: number; y: number; ax: number; ay: number; r: number; dir: number; sweep: number; wave: number; row: number };
+/** A pen going through a list of strokes in order (lifting between them):
+ * `penD(pen, s)` is everything drawn once it has gone s px. */
+type Pen = { strokes: Pt[][]; cums: number[][]; starts: number[]; total: number; prefix: string[] };
+function makePen(strokes: Pt[][]): Pen {
+  const cums = strokes.map(lengths);
+  const starts: number[] = [];
+  let acc = 0;
+  for (const c of cums) {
+    starts.push(acc);
+    acc += c[c.length - 1];
+  }
+  const prefix = [""];
+  strokes.forEach((s, k) => prefix.push(prefix[k] + polyD(s)));
+  return { strokes, cums, starts, total: acc, prefix };
+}
+function penD(pen: Pen, s: number): string {
+  if (s <= 0) return "";
+  const n = pen.strokes.length;
+  if (s >= pen.total) return pen.prefix[n];
+  let k = 0;
+  while (k < n - 1 && pen.starts[k + 1] <= s) k++;
+  return pen.prefix[k] + slice(pen.strokes[k], pen.cums[k], 0, s - pen.starts[k]);
+}
+
+/** One foam bubble: an open arc, facing away from the jar. */
+type Foam = { x: number; y: number; r: number; dir: number; sweep: number; at: number; s: number; side: number };
 /** One floating bubble: a small circle that drifts up, then pops. */
 type Bubble = { x: number; y: number; r: number; born: number; life: number; phase: number };
-/** Everything the stop-motion layer shows on one frame. */
+/** What the small jar's ink layer shows on one drawing. */
 type InkFrame = { ink: string; dome: string; foam: string; bubbles: string };
 
 /**
- * The intro (docs/rebrand/intro-brief.md), drawn over a blank home page on
- * first load, with lines generated in code from the traced jar
- * (lib/jar-outline.ts):
+ * The intro (docs/rebrand/intro-brief.md, v2), drawn over a blank home page
+ * on first load, all on one stop-motion clock (INTRO_FPS drawings a second)
+ * with every line boiling:
  *
- * full — a small jar draws in the middle of the screen; black ink fills it
- *   one step at a time, domes over the rim and bubbles over as line-drawn
- *   foam with little bubbles popping (all stop motion); the foam flattens
- *   back into the jar's line and the ink drains; then the line breaks at the
- *   bottom — the left half is pulled out like thread onto the sidebar's
- *   divider, the right half stretches into the real jar's outline — and the
- *   real divider and jar swap in on the same frame.
- * short — the small jar draws, then goes straight into the divider and jar.
+ * full — a small copy of the real jar artwork draws on in the middle of the
+ *   screen; black ink fills it in steps, domes over the rim and foams over,
+ *   rolling down both sides in waves, with bubbles popping; two strands of
+ *   thread leave the foam tops in rainbow arcs as the small jar fades; the
+ *   left strand lands at the foot of the sidebar's divider and draws it up,
+ *   the right one lands at the real jar and draws it stroke by stroke. Both
+ *   are drawn from the real artwork (the jar drawing revealed along its own
+ *   strokes, lib/jar-outline.ts; a copy of the divider's own path), so the
+ *   last drawing is the page itself and the swap shows nothing.
+ * short — just the last beat: the divider and the jar draw, fast.
  *
- * Everything is worked out before the first frame; each frame only writes
- * path data to the SVG (no React state). Click or any key skips to the end.
- * `onReveal` fires at the swap (Home shows the real page and lets the items
- * fall); `onDone` right after.
+ * All line drawing goes at one pen speed (INTRO_PEN_PX_PER_S). Everything is
+ * worked out before the first drawing; each one only writes attributes (no
+ * React state). Click or any key skips to the end. `onReveal` fires at the
+ * swap (Home shows the real page and lets the items fall); `onDone` right
+ * after.
  */
 export default function Intro({
   variant,
@@ -140,16 +164,27 @@ export default function Intro({
   onDone: () => void;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const outlineRef = useRef<SVGPathElement>(null);
-  const leftRef = useRef<SVGPathElement>(null);
-  const rightRef = useRef<SVGPathElement>(null);
+  const boilGroupRef = useRef<SVGGElement>(null);
+  const noiseRef = useRef<SVGFETurbulenceElement>(null);
+  const displaceRef = useRef<SVGFEDisplacementMapElement>(null);
+  const smallGroupRef = useRef<SVGGElement>(null);
+  const smallImgRef = useRef<SVGImageElement>(null);
+  const thickenRef = useRef<SVGFEMorphologyElement>(null);
+  const smallMaskRef = useRef<SVGPathElement>(null);
   const inkRef = useRef<SVGPathElement>(null);
   const domeRef = useRef<SVGPathElement>(null);
   const foamRef = useRef<SVGPathElement>(null);
   const bubblesRef = useRef<SVGPathElement>(null);
-  const clipBodyRef = useRef<SVGPathElement>(null);
   const clipRimRef = useRef<SVGPathElement>(null);
+  const clipBodyRef = useRef<SVGPathElement>(null);
   const clipNeckRef = useRef<SVGPathElement>(null);
+  const threadLRef = useRef<SVGPathElement>(null);
+  const threadRRef = useRef<SVGPathElement>(null);
+  const divClipRef = useRef<SVGRectElement>(null);
+  const divSvgRef = useRef<SVGSVGElement>(null);
+  const divPathRef = useRef<SVGPathElement>(null);
+  const realImgRef = useRef<SVGImageElement>(null);
+  const realMaskRef = useRef<SVGPathElement>(null);
   const callbacks = useRef({ onReveal, onDone });
   useEffect(() => {
     callbacks.current = { onReveal, onDone };
@@ -157,430 +192,462 @@ export default function Intro({
 
   useEffect(() => {
     const svg = svgRef.current;
-    const outline = outlineRef.current;
-    const left = leftRef.current;
-    const right = rightRef.current;
+    const boilGroup = boilGroupRef.current;
+    const noise = noiseRef.current;
+    const displace = displaceRef.current;
+    const smallGroup = smallGroupRef.current;
+    const smallImg = smallImgRef.current;
+    const thicken = thickenRef.current;
+    const smallMask = smallMaskRef.current;
     const ink = inkRef.current;
     const dome = domeRef.current;
     const foam = foamRef.current;
     const bubbles = bubblesRef.current;
-    const clipBody = clipBodyRef.current;
     const clipRim = clipRimRef.current;
+    const clipBody = clipBodyRef.current;
     const clipNeck = clipNeckRef.current;
+    const threadL = threadLRef.current;
+    const threadR = threadRRef.current;
+    const divClip = divClipRef.current;
+    const divSvg = divSvgRef.current;
+    const divPath = divPathRef.current;
+    const realImg = realImgRef.current;
+    const realMask = realMaskRef.current;
     const jarEl = document.querySelector("[data-intro-jar]");
-    const dividerPath = document.querySelector<SVGPathElement>("[data-intro-divider] path");
+    const realDivider = document.querySelector<SVGPathElement>("[data-intro-divider] path");
     let finished = false;
-    // The swap: the real page is committed to the DOM (flushSync) in the
-    // same task as the intro starts going, so they change on the same frame:
-    // the real divider appears under its exact copy, and the jar's drawing
-    // blends in as the traced line fades (INTRO_JAR_BLEND_S).
-    let doneTimer = 0;
+    let cancelled = false;
+    let raf = 0;
+    // The swap: the real page is committed to the DOM (flushSync) and the
+    // intro hidden in the same task, so they change on the same frame — and
+    // since the last drawing is the page itself, nothing visibly changes.
     const finish = () => {
       if (finished) return;
       finished = true;
       flushSync(() => callbacks.current.onReveal());
-      if (svg) {
-        svg.style.transition = `opacity ${slowMs(INTRO_JAR_BLEND_S * 1000)}ms linear`;
-        svg.style.opacity = "0";
-      }
-      doneTimer = window.setTimeout(() => callbacks.current.onDone(), slowMs(INTRO_JAR_BLEND_S * 1000));
+      if (svg) svg.style.visibility = "hidden";
+      callbacks.current.onDone();
     };
-    if (!svg || !outline || !left || !right || !ink || !dome || !foam || !bubbles || !clipBody || !clipRim || !clipNeck || !jarEl) {
+    const skip = () => finish();
+    window.addEventListener("pointerdown", skip);
+    window.addEventListener("keydown", skip);
+    const cleanup = () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      window.removeEventListener("pointerdown", skip);
+      window.removeEventListener("keydown", skip);
+    };
+    if (
+      !svg || !boilGroup || !noise || !displace || !smallGroup || !smallImg || !smallMask || !ink || !dome || !foam ||
+      !bubbles || !clipRim || !clipBody || !clipNeck || !threadL || !threadR || !divClip || !divSvg || !divPath ||
+      !realImg || !realMask || !thicken || !jarEl
+    ) {
       finish();
-      return;
+      return cleanup;
     }
 
-    const setupStart = performance.now();
-    // ---- the jar's line, resampled, in fractions of the jar art's box ----
-    const artPts: Pt[] = JAR_OUTLINE.map(([x, y]) => [x * 1600, y * 2257]);
-    const artCum = lengths(artPts);
-    const bodyFrac = artCum[JAR_OUTLINE_BODY_START] / artCum[artCum.length - 1];
-    const frac: Pt[] = resample(artPts, N).map(([x, y]) => [x / 1600, y / 2257]);
-    const bodyStart = Math.round(bodyFrac * (N - 1));
-    // Bounding box (to centre the small jar) and the bottom centre (where the
-    // line breaks): the base point nearest the middle.
-    const xs = frac.map((p) => p[0]);
-    const ys = frac.map((p) => p[1]);
-    const bx = (Math.min(...xs) + Math.max(...xs)) / 2;
-    const by = (Math.min(...ys) + Math.max(...ys)) / 2;
-    const maxY = Math.max(...ys);
-    let split = -1;
-    for (let i = bodyStart; i < N; i++) {
-      if (frac[i][1] < maxY - 0.06) continue;
-      if (split < 0 || Math.abs(frac[i][0] - bx) < Math.abs(frac[split][0] - bx)) split = i;
-    }
-    if (split < 0) split = Math.round((bodyStart + N) / 2);
+    // The artwork has to be loaded before the first drawing.
+    const art = new Image();
+    art.src = JAR_SRC;
+    art
+      .decode()
+      .catch(() => undefined)
+      .then(() => {
+        if (!cancelled && !finished) start();
+      });
 
-    // ---- the real jar (target) and the small one (start), in px ----
-    const J = jarEl.getBoundingClientRect();
-    const w = J.width;
-    const h = w * JAR_ASPECT;
-    const real: Pt[] = frac.map(([x, y]) => [J.left + x * w, J.top + y * h]);
-    const ws = w * INTRO_SMALL_SCALE;
-    const hs = h * INTRO_SMALL_SCALE;
-    const cx = window.innerWidth / 2;
-    const cy = window.innerHeight / 2;
-    const small: Pt[] = frac.map(([x, y]) => [cx + (x - bx) * ws, cy + (y - by) * hs]);
-    const cSmall = lengths(small);
-    const LS = cSmall[N - 1];
+    function start() {
+      if (!svg || !boilGroup || !noise || !displace || !smallGroup || !smallImg || !smallMask || !ink || !dome || !foam) return;
+      if (!bubbles || !clipRim || !clipBody || !clipNeck || !threadL || !threadR || !divClip || !divSvg || !divPath) return;
+      if (!realImg || !realMask || !thicken || !jarEl) return;
+      const setupStart = performance.now();
+      const full = variant === "full";
 
-    // ---- the divider, measured off the real page (bottom to top) ----
-    let divider: Pt[] | null = null;
-    if (dividerPath) {
-      const box = dividerPath.getBoundingClientRect();
-      const ctm = dividerPath.getScreenCTM();
-      if (ctm && box.height > 40) {
-        const L = dividerPath.getTotalLength();
-        const m = 160;
-        divider = Array.from({ length: m }, (_, i) => {
-          const p = dividerPath.getPointAtLength((L * i) / (m - 1));
-          const q = new DOMPoint(p.x, p.y).matrixTransform(ctm);
-          return [q.x, q.y] as Pt;
-        });
-        if (divider[0][1] < divider[m - 1][1]) divider.reverse();
+      // ---- the real jar, and the small one centred on screen ----
+      const J = jarEl.getBoundingClientRect();
+      const w = J.width;
+      const h = w * JAR_ASPECT;
+      const ws = w * INTRO_SMALL_SCALE;
+      const hs = h * INTRO_SMALL_SCALE;
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      const sx = cx - ws / 2;
+      const sy = cy - hs / 2;
+      const toReal = ([x, y]: Pt): Pt => [J.left + x * w, J.top + y * h];
+      const toSmall = ([x, y]: Pt): Pt => [sx + x * ws, sy + y * hs];
+      for (const [img, x, y, iw, ih] of [
+        [realImg, J.left, J.top, w, h],
+        [smallImg, sx, sy, ws, hs],
+      ] as const) {
+        img.setAttribute("href", JAR_SRC);
+        img.setAttribute("x", String(x));
+        img.setAttribute("y", String(y));
+        img.setAttribute("width", String(iw));
+        img.setAttribute("height", String(ih));
       }
-    }
+      const penSmall = makePen(JAR_STROKES.map((s) => s.map((p) => toSmall(p as Pt))));
+      const penReal = makePen(JAR_STROKES.map((s) => s.map((p) => toReal(p as Pt))));
+      smallMask.setAttribute("stroke-width", String(JAR_PEN_WIDTH * ws));
+      thicken.setAttribute("radius", String((JAR_INK_WIDTH * (w - ws)) / 2));
+      realMask.setAttribute("stroke-width", String(JAR_PEN_WIDTH * w));
 
-    // ---- the break ----
-    // Left: the rim and left half, consumed from the far end (the rim's
-    // start) as the tip at the bottom centre is pulled down, left, and up
-    // the divider. The thread stretches from its own length to the
-    // divider's, so it ends exactly on it.
-    let thread: Pt[] = [];
-    let cThread: number[] = [];
-    let LH = 0;
-    let LR = 0;
-    let LD = 0;
-    // Right: the right half, from the neck's end down to the bottom centre,
-    // stretched point for point onto the whole real jar, from the neck's end
-    // round to the rim's start (the free end sweeps up last).
-    let rightFrom: Pt[];
-    if (divider) {
-      const leftHalf = small.slice(0, split + 1);
-      const tip = small[split];
-      const F = divider[0];
-      const reach = Math.max(60, (tip[0] - F[0]) * 0.35);
-      const route = bezier(tip, [tip[0] - reach * 0.4, tip[1] + hs * 0.6], [F[0] + reach, F[1] + 40], F, 60);
-      thread = [...leftHalf, ...route.slice(1), ...divider.slice(1)];
-      cThread = lengths(thread);
-      LH = lengths(leftHalf)[leftHalf.length - 1];
-      LD = lengths(divider)[divider.length - 1];
-      LR = cThread[cThread.length - 1] - LH;
-      rightFrom = resample(small.slice(split).reverse(), N);
-    } else {
-      // No divider on screen (phones): the whole small jar becomes the jar.
-      rightFrom = small.slice().reverse();
-    }
-    const rightTo = real.slice().reverse();
-
-    const drawLeft = (p: number) => {
-      if (!divider) {
-        left.setAttribute("d", "");
-        return;
+      // ---- the divider: a copy of the real one, drawn on from the bottom ----
+      let LD = 0;
+      let D0: Pt | null = null;
+      let divBox: DOMRect | null = null;
+      const realDivSvg = realDivider?.ownerSVGElement;
+      if (realDivider && realDivSvg) {
+        const box = realDivider.getBoundingClientRect();
+        const ctm = realDivider.getScreenCTM();
+        if (ctm && box.height > 40) {
+          const sb = realDivSvg.getBoundingClientRect();
+          divSvg.setAttribute("x", String(sb.left));
+          divSvg.setAttribute("y", String(sb.top));
+          divSvg.setAttribute("width", String(sb.width));
+          divSvg.setAttribute("height", String(sb.height));
+          divSvg.setAttribute("viewBox", realDivSvg.getAttribute("viewBox") ?? "");
+          divSvg.setAttribute("preserveAspectRatio", realDivSvg.getAttribute("preserveAspectRatio") ?? "none");
+          const cs = getComputedStyle(realDivider);
+          divPath.setAttribute("d", realDivider.getAttribute("d") ?? "");
+          divPath.setAttribute("stroke", cs.stroke);
+          divPath.setAttribute("stroke-width", cs.strokeWidth);
+          divPath.setAttribute("stroke-linecap", cs.strokeLinecap);
+          const L = realDivider.getTotalLength();
+          const m = 80;
+          const pts = Array.from({ length: m }, (_, i) => {
+            const p = realDivider.getPointAtLength((L * i) / (m - 1));
+            const q = new DOMPoint(p.x, p.y).matrixTransform(ctm);
+            return [q.x, q.y] as Pt;
+          });
+          LD = lengths(pts)[m - 1];
+          D0 = pts[0][1] > pts[m - 1][1] ? pts[0] : pts[m - 1];
+          divBox = box;
+        }
       }
-      const s1 = LH + p * LR;
-      const s0 = s1 - (LH + (LD - LH) * p);
-      left.setAttribute("d", slice(thread, cThread, s0, s1));
-    };
-    // The right strand reaches the jar in two overlapping moves: it first
-    // travels and stretches onto the real jar's right half (each point
-    // a little after the one before, neck first), then its free end runs on
-    // round the base, up the left wall and round the rim — the line sliding
-    // along the real outline — until every point sits on its own spot.
-    const trackAt = (u: number): Pt => {
-      const i = Math.max(0, Math.min(N - 1, u));
-      const a = Math.floor(i);
-      const b = Math.min(N - 1, a + 1);
-      const f = i - a;
-      return [rightTo[a][0] + (rightTo[b][0] - rightTo[a][0]) * f, rightTo[a][1] + (rightTo[b][1] - rightTo[a][1]) * f];
-    };
-    // Where each point lands on the real jar after the first move.
-    const halfSpan = divider ? N - 1 - split : N - 1;
-    const u0 = rightFrom.map((_, i) => (i / (N - 1)) * halfSpan);
-    const morphPts: Pt[] = rightFrom.map((p) => [p[0], p[1]]);
-    const drawRight = (p: number) => {
-      const slide = easeInOut(progress(p, [0.4, 1]));
-      for (let i = 0; i < N; i++) {
-        const lag = INTRO_MORPH_STAGGER * (i / (N - 1));
-        const m = easeInOut(clamp01((progress(p, [0, 0.6]) - lag) / (1 - lag)));
-        const onTrack = trackAt(u0[i]);
-        const slid = trackAt(u0[i] + (i - u0[i]) * slide);
-        morphPts[i] = [
-          rightFrom[i][0] + (onTrack[0] - rightFrom[i][0]) * m + (slid[0] - onTrack[0]),
-          rightFrom[i][1] + (onTrack[1] - rightFrom[i][1]) * m + (slid[1] - onTrack[1]),
-        ];
-      }
-      right.setAttribute("d", polyD(morphPts));
-    };
+      const drawDivider = (s: number) => {
+        if (!divBox) return;
+        const p = clamp01(s / LD);
+        const top = divBox.top - 3;
+        const span = divBox.height + 6;
+        divClip.setAttribute("x", String(divBox.left - 10));
+        divClip.setAttribute("width", String(divBox.width + 20));
+        divClip.setAttribute("y", String(top + span * (1 - p)));
+        divClip.setAttribute("height", String(span * p));
+      };
 
-    // ---- the ink, dome, foam and bubbles: every stop-motion frame ----
-    const inkFrames = new Map<number, InkFrame>();
-    if (variant === "full") {
-      const rim = small.slice(0, bodyStart + 1);
-      const body = small.slice(bodyStart);
-      clipRim.setAttribute("d", `${polyD(rim)}Z`);
-      clipBody.setAttribute("d", `${polyD(body)}Z`);
+      // ---- the small jar's inside, ink, dome, foam and bubbles ----
+      const O: Pt[] = JAR_OUTLINE.map((p) => toSmall(p as Pt));
+      const bodyStart = JAR_OUTLINE_BODY_START;
+      const rim = O.slice(0, bodyStart + 1);
+      const body = O.slice(bodyStart);
       const rimL = rim.reduce((a, p) => (p[0] < a[0] ? p : a));
       const rimR = rim.reduce((a, p) => (p[0] > a[0] ? p : a));
       const rimTop = Math.min(...rim.map((p) => p[1]));
       const rimMid = (rimL[1] + rimR[1]) / 2;
-      // The neck, between the rim's ends and the walls' tops.
-      clipNeck.setAttribute("d", `${polyD([rimL, rimR, small[N - 1], small[bodyStart]])}Z`);
-      const bottom = Math.max(...small.map((p) => p[1]));
-      const full = rimTop - 1;
-      const x0 = Math.min(...small.map((p) => p[0])) - 4;
-      const x1 = Math.max(...small.map((p) => p[0])) + 4;
-      // The outside of each wall (top to bottom), for the foam to roll down.
-      const leftWall = body.filter((p) => p[0] < cx && p[1] < bottom - hs * 0.06);
-      const rightWall = body.filter((p) => p[0] > cx && p[1] < bottom - hs * 0.06).reverse();
+      const bottom = Math.max(...O.map((p) => p[1]));
       const r0 = Math.max(4, hs * 0.06);
+      const pileTop = rimTop - hs * 0.025 - 2 * r0 * 0.7 - r0 * 0.7;
 
-      // The foam, like soap suds: wide, shallow, open arcs (cloud tops)
-      // piled on the rim, and waves of them down each side, each wave reaching
-      // further down and standing further out, with gaps.
-      const foamList: Foam[] = [];
-      const rand = rng(7);
-      for (let row = 0; row < 3; row++) {
-        const span = (rimR[0] - rimL[0]) * (1.1 - row * 0.3);
-        const n = Math.max(2, Math.round(span / (r0 * 1.5)));
-        for (let i = 0; i < n; i++) {
-          if (rand() < 0.2) continue;
-          const x = cx - span / 2 + (span * (i + 0.5)) / n + (rand() - 0.5) * r0 * 0.6;
-          // Stacked over the dome, each row narrower, like a pile of suds.
-          const y = rimTop - hs * 0.025 - row * r0 * 0.7 - (rand() - 0.3) * r0 * 0.3;
-          foamList.push({
-            x,
-            y,
-            ax: x,
-            ay: rimTop + row * 0.5,
-            r: r0 * (0.8 + rand() * 0.45),
-            dir: -Math.PI / 2,
-            sweep: Math.PI * (0.55 + rand() * 0.3),
-            wave: row,
-            row,
-          });
+      // The clock: lines take as long as they are, at the pen's speed.
+      const speed = full ? INTRO_PEN_PX_PER_S : Math.max(penReal.total, LD) / INTRO_SHORT_S;
+      const tDraw0 = full ? INTRO_BLANK_S : 0;
+      const tFill0 = full ? tDraw0 + penSmall.total / speed : 0;
+      const tSpill0 = tFill0 + (full ? INTRO_FILL_S : 0);
+      const tR0 = tSpill0 + (full ? INTRO_SPILL_S : 0);
+      const fadeS = (INTRO_FADE_STEPS * 2) / INTRO_FPS;
+
+      // The two strands: rainbow halves from the foam tops, up and out, then
+      // down to where each starts drawing.
+      let arcL: Pt[] = [];
+      let arcR: Pt[] = [];
+      if (full) {
+        const startL: Pt = [rimL[0] + (rimR[0] - rimL[0]) * 0.22, pileTop];
+        const startR: Pt = [rimL[0] + (rimR[0] - rimL[0]) * 0.78, pileTop];
+        const apexY = pileTop - Math.max(50, window.innerHeight * 0.14);
+        if (D0) {
+          const dx = startL[0] - D0[0];
+          arcL = bezier(startL, [startL[0] - dx * 0.2, apexY], [D0[0] + dx * 0.2, apexY + 0.15 * (D0[1] - apexY)], D0, 80);
         }
+        // The right one mirrors it, landing where the jar's pen starts (the
+        // bottom of its right wall).
+        const land = penReal.strokes[0][0];
+        const dxR = land[0] - startR[0];
+        arcR = bezier(startR, [startR[0] + dxR * 0.2, apexY], [land[0] - dxR * 0.2, apexY + 0.15 * (land[1] - apexY)], land, 80);
       }
-      for (const [wall, side] of [
-        [leftWall, -1],
-        [rightWall, 1],
-      ] as const) {
-        const path: Pt[] = [side < 0 ? rimL : rimR, ...wall];
-        const cum = lengths(path);
-        const L = cum[cum.length - 1];
-        for (let wave = 0; wave < INTRO_FOAM_WAVES; wave++) {
-          const reach = L * (0.3 + (0.6 * (wave + 1)) / INTRO_FOAM_WAVES);
-          const out = r0 * (0.3 + wave * 0.35);
-          for (let s = rand() * r0; s < reach; s += r0 * (1.3 + rand() * 0.5)) {
-            if (rand() < 0.25) continue;
-            const p = pointAt(path, cum, s);
-            const p2 = pointAt(path, cum, s + 2);
-            // Outward normal of the wall here.
-            const tx = p2[0] - p[0];
-            const ty = p2[1] - p[1];
-            const tl = Math.hypot(tx, ty) || 1;
-            let nx = -ty / tl;
-            let ny = tx / tl;
-            if (nx * side < 0) {
-              nx = -nx;
-              ny = -ny;
-            }
+      const cArcL = lengths(arcL);
+      const cArcR = lengths(arcR);
+      const LaL = arcL.length ? cArcL[cArcL.length - 1] : 0;
+      const LaR = arcR.length ? cArcR[cArcR.length - 1] : 0;
+      const thread = full ? INTRO_THREAD_PX : 0;
+      const tEnd = tR0 + Math.max(LaL + Math.max(LD, thread), LaR + Math.max(penReal.total, thread)) / speed;
+      const thread0 = (arc: Pt[], c: number[], La: number, s: number, el: SVGPathElement) => {
+        el.setAttribute("d", La > 0 ? slice(arc, c, Math.max(0, s - thread), Math.min(s, La)) : "");
+      };
+
+      const inkFrames = new Map<number, InkFrame>();
+      if (full) {
+        clipRim.setAttribute("d", `${polyD(rim)}Z`);
+        clipBody.setAttribute("d", `${polyD(body)}Z`);
+        clipNeck.setAttribute("d", `${polyD([rimL, rimR, O[O.length - 1], O[bodyStart]])}Z`);
+        const x0 = Math.min(...O.map((p) => p[0])) - 4;
+        const x1 = Math.max(...O.map((p) => p[0])) + 4;
+        const fullLevel = rimTop - 1;
+        const foamStart = tSpill0 + INTRO_DOME_FRAMES / INTRO_FPS;
+        const rand = rng(7);
+        const foamList: Foam[] = [];
+        // Suds piled on the rim: wide, shallow, open arcs, rows narrowing.
+        for (let row = 0; row < 3; row++) {
+          const span = (rimR[0] - rimL[0]) * (1.1 - row * 0.3);
+          const n = Math.max(2, Math.round(span / (r0 * 1.5)));
+          for (let i = 0; i < n; i++) {
+            if (rand() < 0.2) continue;
             foamList.push({
-              x: p[0] + nx * out,
-              y: p[1] + ny * out,
-              ax: p[0],
-              ay: p[1],
-              r: r0 * (0.7 + rand() * 0.5),
-              dir: Math.atan2(ny - 1.3, nx),
-              sweep: Math.PI * (0.5 + rand() * 0.35),
-              wave: wave + 1,
-              row: wave,
+              x: cx - span / 2 + (span * (i + 0.5)) / n + (rand() - 0.5) * r0 * 0.6,
+              y: rimTop - hs * 0.025 - row * r0 * 0.7 - (rand() - 0.3) * r0 * 0.3,
+              r: r0 * (0.8 + rand() * 0.45),
+              dir: -Math.PI / 2,
+              sweep: Math.PI * (0.55 + rand() * 0.3),
+              at: foamStart + (row * 2) / INTRO_FPS,
+              s: 0,
+              side: 0,
             });
           }
         }
-      }
-      // Bubbles: born around the top and sides during the foam, each living a
-      // few frames.
-      const bubbleList: Bubble[] = [];
-      const fFoam0 = Math.floor(INTRO_FOAM[0] * INTRO_INK_FPS);
-      const fFoam1 = Math.ceil(INTRO_FOAM[1] * INTRO_INK_FPS);
-      for (let i = 0; i < 9; i++) {
-        const sideX = rand() < 0.5 ? rimL[0] - rand() * ws * 0.35 : rimR[0] + rand() * ws * 0.35;
-        bubbleList.push({
-          x: rand() < 0.3 ? cx + (rand() - 0.5) * ws * 0.6 : sideX,
-          y: rimTop - rand() * hs * 0.15 + rand() * hs * 0.3,
-          r: 1.5 + rand() * 3.5,
-          born: fFoam0 + Math.floor(rand() * (fFoam1 - fFoam0)),
-          life: 3 + Math.floor(rand() * 4),
-          phase: rand() * 6,
-        });
-      }
+        // Waves down each side: each starts at the rim and creeps to the
+        // bottom, standing a little further out than the last.
+        const leftWall = body.filter((p) => p[0] < cx && p[1] < bottom - hs * 0.04);
+        const rightWall = body.filter((p) => p[0] > cx && p[1] < bottom - hs * 0.04).reverse();
+        const wallPaths: { side: number; path: Pt[]; cum: number[] }[] = [
+          { side: -1, path: [rimL, ...leftWall] },
+          { side: 1, path: [rimR, ...rightWall] },
+        ].map((o) => ({ ...o, cum: lengths(o.path) }));
+        const waveGap = (INTRO_SPILL_S - INTRO_DOME_FRAMES / INTRO_FPS - 0.15 - INTRO_FOAM_CREEP_S) / Math.max(1, INTRO_FOAM_WAVES - 1);
+        for (const { side, path, cum } of wallPaths) {
+          const L = cum[cum.length - 1];
+          for (let wave = 0; wave < INTRO_FOAM_WAVES; wave++) {
+            const out = r0 * (0.3 + wave * 0.35);
+            const at = foamStart + 0.15 + wave * waveGap;
+            for (let s = rand() * r0; s < L; s += r0 * (1.3 + rand() * 0.5)) {
+              if (rand() < 0.25) continue;
+              const p = pointAt(path, cum, s);
+              const p2 = pointAt(path, cum, s + 2);
+              const tx = p2[0] - p[0];
+              const ty = p2[1] - p[1];
+              const tl = Math.hypot(tx, ty) || 1;
+              let nx = -ty / tl;
+              let ny = tx / tl;
+              if (nx * side < 0) {
+                nx = -nx;
+                ny = -ny;
+              }
+              foamList.push({
+                x: p[0] + nx * out,
+                y: p[1] + ny * out,
+                r: r0 * (0.7 + rand() * 0.5),
+                dir: Math.atan2(ny - 1.3, nx),
+                sweep: Math.PI * (0.5 + rand() * 0.35),
+                at,
+                s: s / L,
+                side,
+              });
+            }
+          }
+        }
+        const bubbleList: Bubble[] = [];
+        const fB0 = Math.floor(foamStart * INTRO_FPS);
+        const fB1 = Math.ceil((tR0 + 0.2) * INTRO_FPS);
+        for (let i = 0; i < 12; i++) {
+          const sideX = rand() < 0.5 ? rimL[0] - rand() * ws * 0.4 : rimR[0] + rand() * ws * 0.4;
+          bubbleList.push({
+            x: rand() < 0.3 ? cx + (rand() - 0.5) * ws * 0.7 : sideX,
+            y: pileTop + rand() * hs * 0.4,
+            r: 1.5 + rand() * 3.5,
+            born: fB0 + Math.floor(rand() * (fB1 - fB0)),
+            life: 3 + Math.floor(rand() * 4),
+            phase: rand() * 6,
+          });
+        }
 
-      const fStart = Math.floor(INTRO_FILL[0] * INTRO_INK_FPS);
-      const fEnd = Math.ceil(INTRO_SETTLE[1] * INTRO_INK_FPS);
-      const waveTimes = Array.from(
-        { length: INTRO_FOAM_WAVES + 1 },
-        (_, i) => INTRO_FOAM[0] + ((INTRO_FOAM[1] - INTRO_FOAM[0]) * i) / (INTRO_FOAM_WAVES + 1),
-      );
-      for (let f = fStart; f <= fEnd; f++) {
-        const t = f / INTRO_INK_FPS;
-        const r = rng(1000 + f);
-        // The ink level, in steps: up while filling, down while settling.
-        const steps =
-          t < INTRO_SETTLE[0]
-            ? Math.ceil(progress(t, INTRO_FILL) * INTRO_FILL_STEPS)
-            : Math.round((1 - progress(t, INTRO_SETTLE)) * INTRO_FILL_STEPS);
-        let inkD = "";
-        if (steps > 0) {
-          const level = bottom - (steps / INTRO_FILL_STEPS) * (bottom - full);
+        const fFill0 = Math.floor(tFill0 * INTRO_FPS);
+        const fEnd = Math.ceil((tR0 + fadeS) * INTRO_FPS);
+        for (let f = fFill0; f <= fEnd; f++) {
+          const t = f / INTRO_FPS;
+          const r = rng(1000 + f);
+          // The level, a step every 2 drawings; its top sloshes side to side
+          // (a different wave each drawing) and climbs the glass a little.
+          const k = Math.min(INTRO_FILL_STEPS, Math.floor((f - fFill0) / 2) + 1);
+          const level = bottom - (k / INTRO_FILL_STEPS) * (bottom - fullLevel);
+          const slosh = (k % 2 ? 1 : -1) * hs * 0.035 * (1 - (0.5 * k) / INTRO_FILL_STEPS) * (0.7 + r() * 0.6);
           const a1 = r() * 6;
           const a2 = r() * 6;
-          const tilt = (r() - 0.5) * hs * 0.04;
-          const amp = hs * 0.012;
+          const amp = hs * 0.014;
           const pts: Pt[] = [];
           for (let x = x0; x <= x1; x += 3) {
             const u = (x - cx) / (ws / 2);
-            pts.push([x, level + tilt * u + amp * (Math.sin(u * 5 + a1) * 0.6 + Math.sin(u * 11 + a2) * 0.4)]);
+            pts.push([x, level + slosh * u + amp * (Math.sin(u * 4 + a1) * 0.6 + Math.sin(u * 9 + a2) * 0.4) - hs * 0.012 * u ** 6]);
           }
-          inkD = `${polyD(pts)}L${f1(x1)},${f1(bottom + 4)}L${f1(x0)},${f1(bottom + 4)}Z`;
+          const inkD = `${polyD(pts)}L${f1(x1)},${f1(bottom + 4)}L${f1(x0)},${f1(bottom + 4)}Z`;
+          // The dome: up over a few drawings, then wobbling while it spills.
+          let domeD = "";
+          const df = f - Math.floor(tSpill0 * INTRO_FPS);
+          if (df >= 0) {
+            const dh = Math.min(1, (df + 1) / INTRO_DOME_FRAMES) * hs * 0.07 * (1 + (r() - 0.5) * 0.25);
+            const top = rimTop - dh * 1.33;
+            const kk = (rimR[0] - rimL[0]) * 0.08;
+            domeD = `M${f1(rimL[0])},${f1(rimMid)}C${f1(rimL[0] + kk)},${f1(top)} ${f1(rimR[0] - kk)},${f1(top)} ${f1(rimR[0])},${f1(rimMid)}Z`;
+          }
+          let foamD = "";
+          for (const b of foamList) {
+            if (t < b.at) continue;
+            if (b.side !== 0 && b.s > (t - b.at) / INTRO_FOAM_CREEP_S) continue;
+            const rx = b.r * (1 + (r() - 0.5) * 0.16);
+            const ry = rx * 0.72;
+            const sweep = b.sweep * (r() < 0.15 ? 0.65 : 1);
+            const a0 = b.dir - sweep / 2;
+            const aa = b.dir + sweep / 2;
+            const ox = b.x + (r() - 0.5) * 0.8;
+            const oy = b.y + (r() - 0.5) * 0.8;
+            foamD += `M${f1(ox + rx * Math.cos(a0))},${f1(oy + ry * Math.sin(a0))}A${f1(rx)},${f1(ry)} 0 0 1 ${f1(ox + rx * Math.cos(aa))},${f1(oy + ry * Math.sin(aa))}`;
+          }
+          let bubD = "";
+          for (const b of bubbleList) {
+            const age = f - b.born;
+            if (age < 0 || age >= b.life) continue;
+            const x = b.x + Math.sin(b.phase + age * 1.7) * 1.5;
+            const y = b.y - age * hs * 0.03;
+            bubD += `M${f1(x - b.r)},${f1(y)}a${f1(b.r)},${f1(b.r)} 0 1 0 ${f1(2 * b.r)},0a${f1(b.r)},${f1(b.r)} 0 1 0 ${f1(-2 * b.r)},0`;
+          }
+          inkFrames.set(f, { ink: inkD, dome: domeD, foam: foamD, bubbles: bubD });
         }
-        // The dome: bulges up over the rim, wobbling, while the jar is full.
-        let domeD = "";
-        const settle = progress(t, INTRO_SETTLE);
-        const dh = (steps === INTRO_FILL_STEPS ? easeOut(progress(t, INTRO_DOME)) : 0) * hs * 0.07 * (1 + (r() - 0.5) * 0.2);
-        if (dh > 0.5) {
-          const top = rimTop - dh * 1.33;
-          const k = (rimR[0] - rimL[0]) * 0.08;
-          domeD = `M${f1(rimL[0])},${f1(rimMid)}C${f1(rimL[0] + k)},${f1(top)} ${f1(rimR[0] - k)},${f1(top)} ${f1(rimR[0])},${f1(rimMid)}Z`;
-        }
-        // The foam: every bubble of each wave that has arrived, its arc
-        // redrawn a little differently each frame (the boil); while settling,
-        // the rows go flat and sink into the jar's line, outermost first.
-        let foamD = "";
-        for (const b of foamList) {
-          if (t < waveTimes[b.wave]) continue;
-          const flat = clamp01(settle * 1.6 - b.row * 0.15);
-          if (flat >= 1) continue;
-          const rx = b.r * (1 + (r() - 0.5) * 0.16);
-          const ry = rx * 0.72 * (1 - flat);
-          const sweep = b.sweep * (r() < 0.15 ? 0.65 : 1);
-          const a0 = b.dir - sweep / 2;
-          const a1 = b.dir + sweep / 2;
-          // Settling, each arc slides onto the wall it stood off.
-          const ox = b.x + (b.ax - b.x) * flat + (r() - 0.5) * 0.8;
-          const oy = b.y + (b.ay - b.y) * flat + (r() - 0.5) * 0.8;
-          foamD += `M${f1(ox + rx * Math.cos(a0))},${f1(oy + ry * Math.sin(a0))}A${f1(rx)},${f1(Math.max(0.01, ry))} 0 ${sweep > Math.PI ? 1 : 0} 1 ${f1(ox + rx * Math.cos(a1))},${f1(oy + ry * Math.sin(a1))}`;
-        }
-        // Bubbles drift up with a wobble; gone the frame after their last.
-        let bubD = "";
-        for (const b of bubbleList) {
-          const age = f - b.born;
-          if (age < 0 || age >= b.life || t >= INTRO_SETTLE[0] + 0.1) continue;
-          const x = b.x + Math.sin(b.phase + age * 1.7) * 1.5;
-          const y = b.y - age * hs * 0.025;
-          bubD += `M${f1(x - b.r)},${f1(y)}a${f1(b.r)},${f1(b.r)} 0 1 0 ${f1(2 * b.r)},0a${f1(b.r)},${f1(b.r)} 0 1 0 ${f1(-2 * b.r)},0`;
-        }
-        inkFrames.set(f, { ink: inkD, dome: domeD, foam: foamD, bubbles: bubD });
-      }
-    }
-
-    const slow = slowMs(1000) / 1000;
-    const drawWin = variant === "full" ? INTRO_DRAW : INTRO_SHORT.draw;
-    const breakWin = variant === "full" ? INTRO_BREAK : INTRO_SHORT.break;
-    const swapAt = variant === "full" ? INTRO_HANDOFF[0] : INTRO_SHORT.handoff;
-    let shownInk = -1;
-    let raf = 0;
-    const t0 = performance.now();
-
-    // Draws the intro as it is `raw` seconds in; true once it's time to swap.
-    const render = (raw: number) => {
-      const t = Math.floor(raw * INTRO_LINE_FPS) / INTRO_LINE_FPS;
-
-      if (t < breakWin[0]) {
-        outline.setAttribute("d", slice(small, cSmall, 0, easeOut(progress(t, drawWin)) * LS));
       } else {
-        outline.setAttribute("d", "");
-        const p = progress(t, breakWin);
-        drawLeft(easeInOut(p));
-        drawRight(p);
+        smallGroup.style.display = "none";
       }
 
-      if (variant === "full") {
-        const f = Math.floor(raw * INTRO_INK_FPS);
-        if (f !== shownInk) {
-          shownInk = f;
+      // ---- one drawing ----
+      let shownInk = -1;
+      const render = (t: number) => {
+        const f = Math.floor(t * INTRO_FPS + 1e-6);
+        if (full) {
+          smallMask.setAttribute("d", penD(penSmall, (t - tDraw0) * speed));
           const k = inkFrames.get(f);
-          ink.setAttribute("d", k?.ink ?? "");
-          dome.setAttribute("d", k?.dome ?? "");
-          foam.setAttribute("d", k?.foam ?? "");
-          bubbles.setAttribute("d", k?.bubbles ?? "");
+          if (f !== shownInk) {
+            shownInk = f;
+            ink.setAttribute("d", k?.ink ?? "");
+            dome.setAttribute("d", k?.dome ?? "");
+            foam.setAttribute("d", k?.foam ?? "");
+            bubbles.setAttribute("d", k?.bubbles ?? "");
+          }
+          // The small jar fades out in steps while the strands leave.
+          const step = t < tR0 ? 0 : Math.min(INTRO_FADE_STEPS, Math.floor((t - tR0) * INTRO_FPS / 2) + 1);
+          smallGroup.style.opacity = String(1 - step / INTRO_FADE_STEPS);
         }
+        const s = t < tR0 ? -1 : (t - tR0) * speed;
+        thread0(arcL, cArcL, LaL, s, threadL);
+        thread0(arcR, cArcR, LaR, s, threadR);
+        drawDivider(s - LaL);
+        const sj = s - LaR;
+        if (sj >= penReal.total - 0.5) realImg.removeAttribute("mask");
+        else {
+          realImg.setAttribute("mask", "url(#intro-mask-real)");
+          realMask.setAttribute("d", penD(penReal, sj));
+        }
+        // The boil: every line redrawn with a small smooth wobble, cycling
+        // through INTRO_BOIL_DRAWINGS versions a drawing at a time (the
+        // classic hand-drawn boil loop), easing out at the end.
+        const boil = INTRO_BOIL_PX * clamp01((tEnd - t) / INTRO_BOIL_OUT_S);
+        if (boil > 0.01) {
+          noise.setAttribute("seed", String((f % INTRO_BOIL_DRAWINGS) + 1));
+          displace.setAttribute("scale", String(2 * boil));
+          boilGroup.setAttribute("filter", "url(#intro-boil)");
+        } else boilGroup.removeAttribute("filter");
+        return t >= tEnd;
+      };
+
+      if (process.env.NODE_ENV !== "production") {
+        const dev = window as unknown as { __introAt?: (s: number) => void; __introSetupMs?: number; __introEnd?: number };
+        dev.__introSetupMs = performance.now() - setupStart;
+        dev.__introEnd = tEnd;
+        dev.__introAt = (secs: number) => {
+          cancelAnimationFrame(raf);
+          shownInk = -1;
+          render(secs);
+        };
       }
 
-      return t >= swapAt;
-    };
-
-    const frame = (now: number) => {
-      if (finished) return;
-      if (render((now - t0) / 1000 / slow)) {
-        // The last pose is the target itself: check it, then swap.
-        drawLeft(1);
-        drawRight(1);
-        if (process.env.NODE_ENV !== "production") {
-          let off = 0;
-          for (let i = 0; i < N; i++) off = Math.max(off, Math.hypot(morphPts[i][0] - rightTo[i][0], morphPts[i][1] - rightTo[i][1]));
-          if (off > 0.5) console.warn(`intro: the jar line ends ${off.toFixed(2)}px off the real jar`);
-          if (divider) {
-            const end = pointAt(thread, cThread, LH + LR - LD);
-            const top = divider[divider.length - 1];
-            const off2 = Math.hypot(end[0] - divider[0][0], end[1] - divider[0][1]);
-            if (off2 > 0.5) console.warn(`intro: the divider line starts ${off2.toFixed(2)}px off (top ${top[1].toFixed(0)})`);
+      const slow = slowMs(1000) / 1000;
+      const t0 = performance.now();
+      let lastF = -1;
+      const frame = (now: number) => {
+        if (finished || cancelled) return;
+        const f = Math.floor(((now - t0) / 1000 / slow) * INTRO_FPS);
+        if (f !== lastF) {
+          lastF = f;
+          if (render(f / INTRO_FPS)) {
+            finish();
+            return;
           }
         }
-        finish();
-      } else raf = requestAnimationFrame(frame);
-    };
-    raf = requestAnimationFrame(frame);
-    // Dev only: window.__introAt(seconds) freezes the intro on that moment,
-    // for checking its frames one by one; __introSetupMs is how long the
-    // set-up above took.
-    if (process.env.NODE_ENV !== "production") {
-      (window as unknown as { __introSetupMs?: number }).__introSetupMs = performance.now() - setupStart;
-      (window as unknown as { __introAt?: (s: number) => void }).__introAt = (s: number) => {
-        cancelAnimationFrame(raf);
-        shownInk = -1;
-        render(s);
+        raf = requestAnimationFrame(frame);
       };
+      render(0);
+      raf = requestAnimationFrame(frame);
     }
 
-    // Click or any key skips to the end.
-    const skip = () => finish();
-    window.addEventListener("pointerdown", skip);
-    window.addEventListener("keydown", skip);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.clearTimeout(doneTimer);
-      window.removeEventListener("pointerdown", skip);
-      window.removeEventListener("keydown", skip);
-    };
+    return cleanup;
   }, [variant]);
 
   return (
     <svg ref={svgRef} className={styles.intro} aria-hidden="true">
       <defs>
+        <filter id="intro-boil" x="-2%" y="-2%" width="104%" height="104%">
+          <feTurbulence ref={noiseRef} type="fractalNoise" baseFrequency="0.035" numOctaves={1} seed={1} result="noise" />
+          <feDisplacementMap
+            ref={displaceRef}
+            in="SourceGraphic"
+            in2="noise"
+            scale={0}
+            xChannelSelector="R"
+            yChannelSelector="G"
+            colorInterpolationFilters="sRGB"
+          />
+        </filter>
+        <filter id="intro-thicken" x="-5%" y="-5%" width="110%" height="110%">
+          <feMorphology ref={thickenRef} operator="dilate" radius={0} />
+        </filter>
         <clipPath id="intro-jar-inside">
           <path ref={clipRimRef} />
           <path ref={clipBodyRef} />
           <path ref={clipNeckRef} />
         </clipPath>
+        <mask id="intro-mask-small" maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%">
+          <path ref={smallMaskRef} className={styles.pen} />
+        </mask>
+        <mask id="intro-mask-real" maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%">
+          <path ref={realMaskRef} className={styles.pen} />
+        </mask>
+        <clipPath id="intro-divider-clip">
+          <rect ref={divClipRef} width="0" height="0" />
+        </clipPath>
       </defs>
-      <path ref={inkRef} className={styles.ink} clipPath="url(#intro-jar-inside)" />
-      <path ref={domeRef} className={styles.ink} />
-      <path ref={foamRef} className={styles.line} strokeWidth={LINE_STROKE_WIDTH} />
-      <path ref={bubblesRef} className={styles.line} strokeWidth={LINE_STROKE_WIDTH} />
-      <path ref={outlineRef} className={styles.line} strokeWidth={LINE_STROKE_WIDTH} />
-      <path ref={leftRef} className={styles.line} strokeWidth={LINE_STROKE_WIDTH} />
-      <path ref={rightRef} className={styles.line} strokeWidth={LINE_STROKE_WIDTH} />
+      <g ref={boilGroupRef}>
+        <g ref={smallGroupRef}>
+          <g filter="url(#intro-thicken)">
+            <image ref={smallImgRef} mask="url(#intro-mask-small)" preserveAspectRatio="none" />
+          </g>
+          <path ref={inkRef} className={styles.ink} clipPath="url(#intro-jar-inside)" />
+          <path ref={domeRef} className={styles.ink} />
+          <path ref={foamRef} className={styles.line} strokeWidth={LINE_STROKE_WIDTH} />
+          <path ref={bubblesRef} className={styles.line} strokeWidth={LINE_STROKE_WIDTH} />
+        </g>
+        <path ref={threadLRef} className={styles.line} strokeWidth={THREAD_WIDTH} />
+        <path ref={threadRRef} className={styles.line} strokeWidth={THREAD_WIDTH} />
+        <g clipPath="url(#intro-divider-clip)">
+          <svg ref={divSvgRef} overflow="visible">
+            <path ref={divPathRef} fill="none" vectorEffect="non-scaling-stroke" />
+          </svg>
+        </g>
+        <image ref={realImgRef} mask="url(#intro-mask-real)" preserveAspectRatio="none" />
+      </g>
     </svg>
   );
 }

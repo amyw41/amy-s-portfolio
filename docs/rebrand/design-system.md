@@ -120,21 +120,24 @@ One sound: a short glass clink (the first 0.22s of `public/sounds/jar-drop.mp3` 
 
 ## Intro
 
-The home page's opening (Home/Intro.tsx; the brief is `docs/rebrand/intro-brief.md`), drawn over a blank page with lines generated in code from the traced jar (`lib/jar-outline.ts`, made by `scripts/trace-jar-outline.py` from `jar.png`, resampled to 400 points). Lines are the divider's stroke (`LINE_STROKE_WIDTH`, 0.6px), pure black; the ink is solid #000. No colour.
+The home page's opening (Home/Intro.tsx; the brief is `docs/rebrand/intro-brief.md` v2). One stop-motion clock: **12 drawings a second**. Every line **boils**: a smooth turbulence wobble of about 0.8px (`INTRO_BOIL_PX`), cycling 3 versions a drawing at a time like a hand-drawn boil loop, easing to nothing over the last 0.3s so the last drawing is exactly the page. **One pen speed** for every line drawn: 900px/s (`INTRO_PEN_PX_PER_S`), so the line-drawing beats last as long as their lines are. Pure black, no colour.
 
-| Time (s) | What happens | Clock |
-|---|---|---|
-| 0–0.3 | blank white page (no sidebar, divider or items) | — |
-| 0.3–0.9 | a small jar (¼ the real jar's size, centred in the window) pen-draws, ease-out | smooth |
-| 0.9–2.2 | black ink fills it in 8 visible steps (a new layer every other frame); its top is a wobbly line that sloshes a little every frame | 12fps |
-| 2.2–2.5 | the ink domes up over the rim (surface tension) | 12fps |
-| 2.4–3.0 | foam bubbles over, drawn in line like soap suds: wide, shallow, open arcs (cloud tops, about 6% of the jar's height across) pile three rows high over the dome and roll down both sides in 4 waves, each reaching further and standing further out, some arcs broken or missing; small stroked bubbles (3–10px) drift up around the jar, wobbling, and vanish in one frame | 12fps |
-| 3.0–3.4 | the foam flattens back onto the jar's line (outer waves first), the dome goes, the ink drains in steps | 12fps |
-| 3.3–4.2 | the line breaks at the bottom centre. Left: the tip is pulled down, left and up the divider, the rim and left half unspooling behind it like thread, ending exactly on the divider. Right: the right half travels and stretches onto the real jar's right side (neck first), then its free end runs round the base, up the left wall and round the rim until it is the real jar's outline. Ease-in-out, no overshoot | 60fps |
-| 4.2 | swap: the real divider appears on the same frame, under its exact copy; the jar's drawing blends in over 150ms as the traced line fades (the drawing has a few more lines round the rim than one traced line); the sidebar loads top to bottom (350ms each, 70ms apart, rising 8px); the items fall and "scroll down!" draws as usual | — |
+The jar is drawn from the real artwork (`jar.svg`): the drawing is revealed along its own strokes (`JAR_STROKES` in `lib/jar-outline.ts`, its ink walked into 15 strokes by `scripts/trace-jar-outline.py`, with a pen wide enough to cover every ink pixel). The divider is a copy of the real divider path, drawn on from the bottom. At the end both are the real thing, in place, so the swap to the page shows nothing.
 
-- **When:** the full version once per visit; a short version (about 1s: the small jar draws, then goes straight into the divider and jar) after that and on phones (where there's no divider, the whole small jar becomes the jar); none for reduced motion, a visit straight to the work (`/#projects`) or a trip back from a case study. `?intro=1` replays the full version; `?slow=4` slows it.
-- **Skip:** a click or any key ends it at once (the same swap).
+| Beat | What happens |
+|---|---|
+| 0–0.3s | blank white page |
+| small jar (~1.15s) | the jar artwork at ⅓ size, centred, draws on: up the right wall, the rim and lid lines, down the left wall, across the base (its line thickened back to the full-size weight) |
+| fill (1.8s) | black ink fills it in 9 steps, each held 2 drawings; its top is a wavy line sloshing side to side (a new wave every drawing) with a little meniscus at the glass |
+| spill (1.6s) | the ink domes over the rim (3 drawings), then foam bubbles over in line: wide, shallow, open arcs pile three rows on the rim, then roll down both sides in 4 waves, each creeping from the rim to the bottom over 0.6s, a little further out than the last; small bubbles (3–10px) rise, wobble and pop |
+| rainbow (~0.6s) | two strands, 120px of thread each, leave the foam tops and arc up and out like the halves of a rainbow, down to the foot of the divider (left) and the bottom of the jar's right wall (right); the small jar fades out in 4 steps |
+| trace (~3.5s) | the left strand draws the divider bottom to top, the right one draws the real jar stroke by stroke, in the order above, lifting between strokes |
+| swap | nothing visibly changes: the page's divider and jar appear on the same frame the intro goes; the sidebar loads top to bottom (350ms each, 70ms apart, rising 8px); the items fall and "scroll down!" draws |
+
+About 9s at 1536×696; longer on bigger screens, where the jar is bigger.
+
+- **When:** the full version once per visit; after that and on phones a 1.4s short version (just the trace: the divider and the jar draw, fast; phones have no divider); none for reduced motion, a visit straight to the work (`/#projects`) or a trip back from a case study. `?intro=1` replays the full version; `?slow=4` slows it.
+- **Skip:** a click or any key ends it at once.
 
 ## Zoom into a case study
 

@@ -58,3 +58,9 @@ Done when:
 - The trace is the real artwork: a pixel diff of the final frame against the page with no intro shows nothing.
 - All line drawing runs at the same pen speed.
 - design-system.md's Intro section is updated.
+
+## Reference notes
+- **kenjilambert.com** (Amy's reference for the shakiness). There's no code filter on it. The wobble is hand-drawn frame-by-frame animation baked into files: an MP4 loading animation (4.8s, 320×290) and animated WebP drawings (a 72-frame logo at about 30fps; art pieces at about 15fps). Every frame differs from the one before, in a repeating cycle of 3 drawings: the classic boil loop. **Adopted:** the same feel in code. A turbulence displacement filter cycles 3 seeds, one per drawing, on the intro's 12fps clock, at about 0.8px.
+- **anthea_irl on X** (the first reference): the video wouldn't load in the browser I had, so I couldn't watch it.
+- **The jar artwork's SVG** is a single filled shape traced by potrace, not separate strokes. "Drawn on from the artwork's own paths" is done by revealing the artwork along strokes extracted from its ink (lib/jar-outline.ts), so the drawn result is the artwork itself.
+- **Landing point:** the right strand lands at the bottom of the jar's **right** wall, not the left. The left wall's foot sits right under the small jar, so an arc landing there had to cut straight down through it. The pen order is therefore: up the right wall, the rim and lid lines, down the left wall, across the base.
