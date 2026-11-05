@@ -1,3 +1,53 @@
+# Intro brief v4: a rough one-line sketch
+Spirit: a rough, hand-sketched, Heytea-style loading animation. One loose felt-pen line doodling on a white page, not a polished vector animation. Lumpy, uneven, a bit off. When in doubt, rougher.
+
+Fixes, matched to her numbers:
+1. Only ever ONE line until it splits into two strands. No closed circles, and no shapes moving as a block.
+2. The jar is traced by ONE continuous line following its edges, never back-and-forth sketch strokes.
+3. The dot starts at the exact viewport centre.
+4. Shape roughness on everything: uneven radius, lumps, slight overshoots, irregular spacing. This is separate from the boil.
+5. One stroke width for everything (dot, spiral, strands, divider, jar): the divider's on-screen width, with vector-effect non-scaling-stroke.
+6. The first full intro in a session can't be skipped. The repeat short version stays skippable.
+7. The circle becomes a loose, imperfect spiral drawn OUTWARD from the dot. It's drawn on by the pen and never rotates.
+8. All positions are measured live from the viewport and DOM at start. If the window resizes mid-intro, jump to the end state.
+
+The jar: the home jar's outline becomes the one-line jar. It's one continuous rough line tracing the silhouette (from the 047ba4d trace, cleaned into one route).
+- Route: start at the left wall mid-height, go up the left wall, over the shoulder and neck, round the rim (front then back of the opening as one loop), down the right side, across the base, and back up the left to close.
+- Seeded shape roughness of ±1–2px, with a fixed seed so it's the same jar every time. The boil settles to exactly this shape.
+- Same stroke width as the divider.
+- It replaces the multi-stroke outline on the resting page, with no swap and no blend. Document it in the design system.
+
+Sequence (~5.5s at 600px/s):
+1. Dot (0–0.4s): blank page. A small rough dot (an uneven ~4px blob) at the exact viewport centre, boiling.
+2. Spiral (0.4–1.8s): the pen draws a loose, imperfect spiral OUTWARD from the dot, ~2 turns, growing to ~50px across. Each turn is a different lumpy width, the spacing is uneven, and the end overshoots a bit. It's drawn on and never rotates or moves as a solid shape.
+3. Unwind and split (1.8–2.6s): the line's two ends pull away in opposite directions, unwinding the spiral like thread pulled from both ends. The centre end goes left and the outer end goes right. The coils loosen and straighten, so it stays one line pulled into two strands. No extra circles, and nothing pops in.
+4. Left strand to divider (2.6–3.8s): the left end travels down-left on a slightly wobbly path to the bottom of the divider, then runs up it to the top. The tail is used up, so the divider stays.
+5. Right strand to jar (2.6–5.3s): the right end travels to the jar's left wall at mid-height, then traces the whole jar as ONE continuous line along the route. The tail is used up, so the one-line jar stays.
+6. Settle (5.3–5.6s): the boil eases to still. The divider and jar are the page itself. The sidebar fades in top to bottom, the items fall, and "scroll down!" draws.
+
+Style:
+- 12fps on twos.
+- Shape roughness is fixed per shape: low-frequency, ±3–6px on the spiral and strands, ±1–2px on the jar, seeded. The boil is per frame, the 3-drawing cycle at ~0.8px, easing to 0.
+- One stroke width, round caps and joins, black.
+- No straight geometric lines or perfect arcs: even the travel paths curve and wobble a little.
+- One pen speed, INTRO_PEN_PX_PER_S = 600, with soft eases only at the starts and ends of moves.
+
+Rules:
+- First visit: full and unskippable.
+- Repeat visits: the 1.4s short version (the dot pops, two strands run straight to the divider and jar and draw them), skippable by click or key.
+- Phones: the short version, with one strand tracing the jar since there's no divider.
+- No intro with reduced motion or when returning from a case study.
+- ?intro=1 replays the full version, and ?slow=4 slows it.
+
+Done when:
+- One line only, with no explicit circles. The spiral grows outward, imperfect, from the exact centre on every screen size.
+- The jar is drawn by one continuous line, and that line is the jar that stays.
+- Every line is the same width, and it all looks rough and hand-sketched.
+- The first visit can't be skipped.
+- It looks right at 1366×768, 1536×696, 1920×1080 and 2560×1440.
+
+---
+
 # Intro brief v3: one line becomes everything
 Replaces the v2 intro (fill/foam/rainbow), which stays switched off behind its flag. The source is Amy's sketch video.
 
