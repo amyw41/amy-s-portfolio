@@ -120,28 +120,25 @@ One sound: a short glass clink (the first 0.22s of `public/sounds/jar-drop.mp3` 
 
 ## Intro
 
-The home page's opening (Home/Intro.tsx; brief: `docs/rebrand/intro-brief.md` v4): a rough, hand-sketched, HeyTea-style loading doodle. One line becomes everything. `INTRO_STYLE` picks the version: `"line"` (v4, current), `"sketch"` (the divider and the jar artwork drawing on) or `"overflow"` (v2: small jar, ink, foam, rainbow strands).
+The home page's opening (Home/Intro.tsx; brief: `docs/rebrand/intro-brief.md` v5): a rough, hand-sketched, HeyTea-style loading doodle that ends on the original jar drawing. `INTRO_STYLE` picks the version: `"line"` (current), `"sketch"` (the divider and the jar drawing on) or `"overflow"` (v2: small jar, ink, foam, rainbow strands).
 
 - **Clock:** stop motion, 12 drawings a second.
 - **Boil:** every line wobbles about 0.8px, cycling 3 versions, and eases to still over the last 0.3s.
-- **Roughness:** fixed per shape, irregular lumps rather than waves. About ±1.6px on the spiral, ±4px on the strands' paths and up to ±2px on the jar.
-- **Line weight:** one stroke for everything, the divider's (0.6px, never scaled), round caps and joins, black.
-- **Pen speed:** 600px/s, easing in over the first 0.3s of travel.
+- **Roughness:** fixed per shape, irregular lumps. About ±1.6px on the spiral and ±4px on the strands' paths.
+- **Line weight:** the original jar drawing's ink (0.31% of the jar's width, about 1.3px on a laptop) for the dot's line and the strands. The divider keeps its own 0.6px.
+- **Pen speed:** 3000px/s for the strands, the divider and the jar, easing in over 0.15s.
 
-| Time | What happens |
+| Time (1536×696) | What happens |
 |---|---|
-| 0–0.4s | a small uneven dot at the exact centre of the window |
-| 0.4–1.8s | the pen draws a loose spiral outward from the dot: about 2 uneven turns, up to about 50–80px across (3.6% of the window height for its radius, 20–40px), lumpy, the end running on a little. It never rotates |
-| 1.8s → | the line's two ends pull apart. The centre end leads the left strand, the outer end the right one, and each is followed by its half of the spiral like thread. The left strand goes to the divider's foot and runs up the real divider path. The right strand goes to the jar's left wall at mid-height and traces the jar as one continuous line, which stays |
-| end (~6.2s) | the boil stills and the lines are the page. The sidebar loads top to bottom (350ms each, 70ms apart, rising 8px), the items fall and "scroll down!" draws |
+| 0–0.25s | a small uneven dot at the exact centre of the window |
+| 0.25–1.0s | the pen draws a loose, lumpy spiral outward from the dot (about 2 turns; its radius is 3.6% of the window height, 20–40px), the end running on a little. It never rotates |
+| 1.0s → | the line's two ends pull apart into strands, each followed by its half of the spiral like thread. The left one goes to the divider's foot and runs up the real divider path. The right one goes to the jar's left wall at mid-height, and one pen draws the original jar through its own strokes end to end: up the left wall, round the rim and lid lines, down the right wall, along the base and back. The drawing appears exactly where the pen has been |
+| ~2.1s | the boil stills and the lines are the page (the original artwork, unmasked, in the same box). The sidebar loads top to bottom (350ms each, 70ms apart, rising 8px), the items fall and "scroll down!" draws |
 
-- **When:** the full version plays once per visit and can't be skipped. After that, and on phones, there's a 1.4s short version: the dot, then the strands go straight onto the divider and jar. A click or key skips it. Phones have no divider, so a single strand traces the jar. A resize mid-intro jumps to the end. There's no intro with reduced motion, on a visit straight to the work (`/#projects`) or on a trip back from a case study. `?intro=1` replays the full version; `?slow=4` slows it.
-
-## The jar (resting page)
-
-The home jar's outline is the **one-line jar** (`lib/jar-line.ts`): one continuous rough line, the same line the intro traces. It's drawn in the jar's box as an SVG path at the divider's stroke (0.6px, `vector-effect: non-scaling-stroke`). It was traced from `jar.png`'s silhouette (`lib/jar-outline.ts`), and its route runs: from the left wall at mid-height up the wall and neck, round the rim, back down to the neck, across the lid's lower edge, down the right wall, along the base and back up the left wall. It's roughened with a fixed seed, so it's the same jar every time.
-
-The old drawing's inner rim opening and the lid's double edge aren't in it. The physics walls (`jar-shape.ts`) are unchanged, so the items sit inside exactly as before. The old artwork (`jar.svg`) is now only used by the "sketch" and "overflow" intros.
+- **When:** the full version plays once per visit and can't be skipped.
+- **Repeat visits and phones:** a 0.7s version with no dot or strands. The divider draws on top to bottom while the jar draws along its strokes, then the page carries on. A click or key skips it.
+- **Exits:** a resize mid-intro jumps to the end. There's no intro with reduced motion, on a visit straight to the work (`/#projects`) or on a trip back from a case study.
+- **Debug:** `?intro=1` replays the full version, `?intro=2` shows the repeat version, and `?slow=4` slows it.
 
 ## Zoom into a case study
 

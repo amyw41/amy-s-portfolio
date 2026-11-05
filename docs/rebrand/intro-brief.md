@@ -1,3 +1,19 @@
+# Intro brief v5: quick, and it ends on the original jar
+
+Amy's notes on v4:
+1. "this jar isnt the original jar! i want it to look like the original jar".
+2. "its a bit slow.. the shape is good but esp the jar and line sketching parts are way way way too slow, it should be really quick".
+3. "when i reload after the original animation is already done its a really weird animation ... you can just do another animation that would be simpler".
+
+Changes from v4:
+1. **The original jar.** The resting page goes back to the original drawing (jar.svg). The intro's pen draws it through the drawing's own strokes, end to end (lib/jar-line.ts chains the traced strokes from lib/jar-outline.ts). It starts at the left wall at mid-height and always goes on to whichever stroke starts nearest where it is, so moving from one stroke to the next is a hop of a few pixels along ink that's already there. The artwork appears exactly where the pen has been, and at the end it's the artwork itself, unmasked, in the same box as the page's jar. The dot's line and strands take the drawing's own ink weight (about 1.3px). The divider keeps its 0.6px so the page doesn't change.
+2. **Much quicker.** The dot shows for 0.25s, the spiral takes 0.25–1.0s, and the pen moves at 3000px/s for the strands, divider and jar. The whole intro is about 2.1s at 1536×696.
+3. **Simpler repeat version.** Repeat visits and phones get no dot, spiral or strands: the divider draws top to bottom while the jar draws along its strokes, together in 0.7s, with the boil. A click or key skips it. `?intro=2` shows it.
+
+Kept from v4: the dot at the exact window centre, the rough spiral and strands, the 12fps stop motion with boil, the first visit being unskippable, a resize jumping to the end, `?intro=1`, `?slow=4`, and no intro with reduced motion or coming back from a case study.
+
+---
+
 # Intro brief v4: a rough one-line sketch
 Spirit: a rough, hand-sketched, Heytea-style loading animation. One loose felt-pen line doodling on a white page, not a polished vector animation. Lumpy, uneven, a bit off. When in doubt, rougher.
 

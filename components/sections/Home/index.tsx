@@ -158,7 +158,11 @@ export default function Home() {
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const phone = !window.matchMedia("(min-width: 768px)").matches;
       if (reduced || window.location.hash === "#projects") setIntro("none");
-      else setIntro(phone || (seen && !isIntroForced()) ? "short" : "full");
+      else {
+        // ?intro=2 shows the repeat-visit version.
+        const askedShort = new URLSearchParams(window.location.search).get("intro") === "2";
+        setIntro(phone || askedShort || (seen && !isIntroForced()) ? "short" : "full");
+      }
     });
     return () => window.clearTimeout(timer);
   }, [intro]);

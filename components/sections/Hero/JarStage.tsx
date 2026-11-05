@@ -1,8 +1,7 @@
 "use client";
 
 import { memo, useEffect, useRef, type CSSProperties, type MutableRefObject, type RefObject } from "react";
-import { JAR_ART_H, JAR_ART_W, JAR_LINE_D } from "@/lib/jar-line";
-import { LINE_STROKE_WIDTH } from "@/lib/wobbly";
+import Image from "next/image";
 import styles from "./JarStage.module.css";
 import JarItem from "./JarItem";
 import { useJarPhysics } from "./useJarPhysics";
@@ -113,25 +112,21 @@ export default memo(function JarStage({
       className={styles.stage}
       style={LIFT_VARS}
     >
-      {/* The jar: one continuous rough line (lib/jar-line.ts) — the same
-       * line the intro traces, at the divider's stroke weight. */}
-      <svg
-        className={styles.jarImage}
-        viewBox={`0 0 ${JAR_ART_W} ${JAR_ART_H}`}
-        preserveAspectRatio="none"
+      <Image
+        src="/images/drawings/jar.svg"
+        alt=""
         aria-hidden="true"
-        data-jar-line
-      >
-        <path
-          d={JAR_LINE_D}
-          fill="none"
-          stroke="#000"
-          strokeWidth={LINE_STROKE_WIDTH}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          vectorEffect="non-scaling-stroke"
-        />
-      </svg>
+        className={styles.jarImage}
+        draggable={false}
+        width={1600}
+        height={2257}
+        priority
+        // Traced from the original jar.png to SVG (see
+        // public/images/drawings/jar.svg) so this fine hand-drawn linework
+        // renders crisply at any zoom/display size instead of pixelating
+        // like a raster image does once you exceed its native resolution.
+        unoptimized={process.env.NODE_ENV !== "production"}
+      />
 
       {ready && (
         <div className={styles.itemLayer}>

@@ -1,16 +1,16 @@
-import { JAR_OUTLINE, JAR_OUTLINE_BODY_START } from "@/lib/jar-outline";
+import { JAR_STROKES } from "@/lib/jar-outline";
 
 /**
- * The jar as ONE continuous rough line (intro brief v4): the home jar's
- * outline on the resting page, and the line the intro traces — the same
- * points, so the line that draws the jar is the jar that stays.
- *
- * Built from the traced silhouette (lib/jar-outline.ts) as one closed route:
- * from the left wall at mid-height up the left wall and the neck, round the
- * rim (its front edge, then back over the top), across the lid's lower edge,
- * down the right wall, back along the base and up the left wall to where it
- * started. Then roughened by hand-ish wobble (a fixed seed, so it's the same
- * jar every time), about JAR_LINE_ROUGH of the jar's width either side.
+ * The pen's route over the ORIGINAL jar drawing (intro brief v5). The intro
+ * draws the jar with one pen that goes through the drawing's own strokes
+ * (JAR_STROKES: its ink walked into strokes, lib/jar-outline.ts) end to end:
+ * from the left wall at mid-height up the wall, then on to whichever stroke
+ * starts nearest where the pen is — round the rim and lid lines, down the
+ * right wall, along the base — and back up the left wall to where it
+ * started. The strokes touch at their ends, so going from one to the next is
+ * a hop of a few pixels along ink that's already there. The intro reveals
+ * the real artwork (jar.svg) along this route, so when it's done the jar is
+ * the original drawing itself.
  *
  * Points are in the jar art's box: x in 0..JAR_ART_W, y in 0..JAR_ART_H.
  */
@@ -19,11 +19,8 @@ type Pt = [number, number];
 
 export const JAR_ART_W = 1600;
 export const JAR_ART_H = 2257;
-/** How far the line wanders off the traced silhouette, as a fraction of the
- * jar's width (at most about ±2px on a laptop, mostly about 1px). */
-const JAR_LINE_ROUGH = 0.0055;
-/** Where the line starts and ends: this far down the left wall. */
-const JAR_LINE_START_Y = 0.55;
+/** Where the pen starts: this far down the left wall. */
+const JAR_PEN_START_Y = 0.55;
 
 function rng(seed: number) {
   let a = seed >>> 0;
@@ -42,25 +39,11 @@ function lengths(pts: Pt[]): number[] {
   return out;
 }
 
-function resample(pts: Pt[], n: number): Pt[] {
-  const cum = lengths(pts);
-  const L = cum[cum.length - 1];
-  const out: Pt[] = [];
-  let j = 0;
-  for (let k = 0; k < n; k++) {
-    const s = (L * k) / (n - 1);
-    while (j < cum.length - 2 && cum[j + 1] < s) j++;
-    const f = (s - cum[j]) / (cum[j + 1] - cum[j] || 1);
-    out.push([pts[j][0] + (pts[j + 1][0] - pts[j][0]) * f, pts[j][1] + (pts[j + 1][1] - pts[j][1]) * f]);
-  }
-  return out;
-}
-
 /** Wobbles a polyline off true, like a hand: each point pushed along the
  * line's normal by seeded lumps — random heights at irregularly spaced knots
  * (about `wavelength` apart, give or take half), eased between, so no two
- * lumps match. `amp` is the most it strays, in the points' units. Shared with
- * the intro, which roughens its spiral and strands the same way. */
+ * lumps match. `amp` is the most it strays, in the points' units. The intro
+ * roughens its spiral and strands with it. */
 export function roughen(pts: Pt[], amp: number, seed: number, wavelength: number): Pt[] {
   const r = rng(seed);
   const cum = lengths(pts);
@@ -85,42 +68,51 @@ export function roughen(pts: Pt[], amp: number, seed: number, wavelength: number
   });
 }
 
-function build(): Pt[] {
-  const O: Pt[] = JAR_OUTLINE.map(([x, y]) => [x * JAR_ART_W, y * JAR_ART_H]);
-  const n = O.length;
-  const bodyStart = JAR_OUTLINE_BODY_START;
-  // The left wall's point at the starting height.
-  const ty = JAR_LINE_START_Y * JAR_ART_H;
-  let ci = bodyStart;
-  for (let i = bodyStart; i < n; i++) {
-    if (O[i][0] > JAR_ART_W / 2) break;
-    if (Math.abs(O[i][1] - ty) < Math.abs(O[ci][1] - ty)) ci = i;
+function build(): Pt[][] {
+  const strokes: Pt[][] = JAR_STROKES.map((s) => s.map(([x, y]) => [x * JAR_ART_W, y * JAR_ART_H] as Pt));
+  // The start: the left-most ink point at the starting height.
+  const ty = JAR_PEN_START_Y * JAR_ART_H;
+  let cs = 0;
+  let ci = 0;
+  let bestX = Infinity;
+  strokes.forEach((st, k) =>
+    st.forEach((p, i) => {
+      if (Math.abs(p[1] - ty) < 0.04 * JAR_ART_H && p[0] < bestX) {
+        bestX = p[0];
+        cs = k;
+        ci = i;
+      }
+    }),
+  );
+  const host = strokes[cs];
+  // That stroke split in two at the start: the half heading up goes first,
+  // the half heading down is where the pen comes back to at the end.
+  const a = host.slice(0, ci + 1).reverse();
+  const b = host.slice(ci);
+  const up = a[a.length - 1][1] < b[b.length - 1][1] ? a : b;
+  const down = (up === a ? b : a).slice().reverse();
+  const pool = strokes.filter((_, k) => k !== cs);
+  const out: Pt[][] = [up];
+  let end = up[up.length - 1];
+  const d = (p: Pt, q: Pt) => Math.hypot(p[0] - q[0], p[1] - q[1]);
+  while (pool.length) {
+    let bi = 0;
+    let rev = false;
+    let bd = Infinity;
+    pool.forEach((st, i) => {
+      const d0 = d(end, st[0]);
+      const d1 = d(end, st[st.length - 1]);
+      if (d0 < bd) [bd, bi, rev] = [d0, i, false];
+      if (d1 < bd) [bd, bi, rev] = [d1, i, true];
+    });
+    let st = pool.splice(bi, 1)[0];
+    if (rev) st = st.slice().reverse();
+    out.push(st);
+    end = st[st.length - 1];
   }
-  // Up the left wall into the rim loop, round it, ending at the rim's left.
-  const upAndRim = O.slice(0, ci + 1).reverse();
-  // Back down the short stroke to the neck's left, then the lid's lower edge
-  // across to the neck's right, sagging a little like the drawing's.
-  let neck = bodyStart;
-  while (neck < ci && O[neck][1] < O[0][1] + 0.07 * JAR_ART_H) neck++;
-  upAndRim.push(O[neck]);
-  const a = O[neck];
-  const b = O[n - 1];
-  const sag = Math.max(a[1], b[1]) + 0.015 * JAR_ART_H;
-  const lid: Pt[] = [];
-  for (let i = 1; i <= 30; i++) {
-    const t = i / 30;
-    const u = 1 - t;
-    const mid: Pt = [(a[0] + b[0]) / 2, sag];
-    lid.push([u * u * a[0] + 2 * u * t * mid[0] + t * t * b[0], u * u * a[1] + 2 * u * t * mid[1] + t * t * b[1]]);
-  }
-  // Down the right wall, along the base, up the left wall to the start.
-  const downAndBack = O.slice(ci).reverse();
-  const route = resample([...upAndRim, ...lid, ...downAndBack.slice(1)], 700);
-  return roughen(route, JAR_LINE_ROUGH * JAR_ART_W, 11, 0.16 * JAR_ART_W);
+  out.push(down);
+  return out;
 }
 
-/** The one-line jar, in the jar art's box (see above). */
-export const JAR_LINE: Pt[] = build();
-
-/** The one-line jar as SVG path data in the jar art's box. */
-export const JAR_LINE_D = `M${JAR_LINE.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join("L")}`;
+/** The pen's strokes over the original jar, in order (see above). */
+export const JAR_PEN_STROKES: Pt[][] = build();

@@ -128,25 +128,24 @@ export const JAR_RETURN_S = 0.25;
 // top to bottom, INTRO_SIDEBAR_STAGGER_S apart, rising INTRO_SIDEBAR_RISE_PX.
 // The short version (repeat visits, phones) is just the last beat, the jar's
 // drawing taking INTRO_SHORT_S.
-// Which intro plays (intro-brief.md): "line" (v4, current) — a rough dot at
+// Which intro plays (intro-brief.md): "line" (v5, current) — a rough dot at
 // the window's centre draws a loose spiral outward, its two ends pull apart
-// into strands, the left one drawing the divider and the right one tracing
-// the jar as one continuous line (the one-line jar, lib/jar-line.ts, that
-// stays on the page); "sketch" — the divider and the jar artwork drawing on;
-// "overflow" (v2) — the small jar, ink, foam and rainbow strands.
+// into strands, the left one drawing the divider and the right one drawing
+// the original jar with one pen through its own strokes (lib/jar-line.ts);
+// "sketch" — the divider and the jar drawing on; "overflow" (v2) — the
+// small jar, ink, foam and rainbow strands.
 export const INTRO_STYLE = "line" as "line" | "sketch" | "overflow";
-// v4's dot shows until INTRO_SPIRAL[0]; the spiral draws on over INTRO_SPIRAL;
-// then the strands travel at the pen's speed (easing in), each a thread at
-// least INTRO_STRAND_MIN_PX long. The short version shows the dot for
-// INTRO_SHORT_DOT_S, then the strands go straight to the divider and jar.
-export const INTRO_SPIRAL: [number, number] = [0.4, 1.8];
+// v5's dot shows until INTRO_SPIRAL[0]; the spiral draws on over
+// INTRO_SPIRAL; then the strands travel at the pen's speed (easing in over
+// 0.15s), each a thread at least INTRO_STRAND_MIN_PX long. The short version
+// (INTRO_SHORT_S) is just the divider and the jar drawing on together.
+export const INTRO_SPIRAL: [number, number] = [0.25, 1.0];
 export const INTRO_STRAND_MIN_PX = 60;
-export const INTRO_SHORT_DOT_S = 0.15;
 export const INTRO_FPS = 12;
 export const INTRO_BOIL_PX = 0.8;
 export const INTRO_BOIL_DRAWINGS = 3;
 export const INTRO_BOIL_OUT_S = 0.3;
-export const INTRO_PEN_PX_PER_S = 600;
+export const INTRO_PEN_PX_PER_S = 3000;
 export const INTRO_BLANK_S = 0.3;
 export const INTRO_SMALL_SCALE = 1 / 3;
 export const INTRO_FILL_S = 1.8;
@@ -157,7 +156,7 @@ export const INTRO_FOAM_WAVES = 4;
 export const INTRO_FOAM_CREEP_S = 0.6;
 export const INTRO_THREAD_PX = 120;
 export const INTRO_FADE_STEPS = 4;
-export const INTRO_SHORT_S = 1.4;
+export const INTRO_SHORT_S = 0.7;
 export const INTRO_SIDEBAR_STAGGER_S = 0.07;
 export const INTRO_SIDEBAR_RISE_PX = 8;
 // Clicking a case study zooms into it (components/ui/CaseZoom, brief Part
