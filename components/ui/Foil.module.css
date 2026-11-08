@@ -1,0 +1,54 @@
+/* The foil hover (Foil.tsx): a fixed, uneven gradient (raspberry with light
+ * yellow patches) over the host, shown only through a soft half circle under the
+ * mouse (the mask; at rest the circle sits below the host, out of sight).
+ * The gradient doesn't move, only the reveal. On text it's a copy of the text
+ * laid over it with the gradient clipped to the letters, so only the letters
+ * take it on any background. On an icon (an SVG, which can't be clipped that
+ * way) the blend colours just the ink: lighten for black ink on white; the
+ * host is its own isolated white group so the blend only sees the icon. --foil-pos (seeded) shows each a
+ * different patch of the gradient. */
+.hostLight {
+  position: relative;
+  isolation: isolate;
+  background: #fff;
+}
+
+.hostText {
+  position: relative;
+}
+
+.glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 78%, #ffe27a, transparent 40%),
+    radial-gradient(circle at 46% 18%, #fff0b3, transparent 32%),
+    radial-gradient(circle at 74% 70%, #ffe27a, transparent 36%),
+    radial-gradient(circle at 92% 22%, #fff0b3, transparent 28%),
+    linear-gradient(115deg, #d6337f, #e0558f 50%, #d6337f);
+  background-size: 170% 170%, 170% 170%, 170% 170%, 170% 170%, 100% 100%;
+  background-position: var(--foil-pos), var(--foil-pos), var(--foil-pos), var(--foil-pos), 0 0;
+  background-repeat: no-repeat;
+  -webkit-mask-image: radial-gradient(circle 32px at var(--fx0) var(--fy0), #000 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.45) 65%, transparent 100%);
+  mask-image: radial-gradient(circle 32px at var(--fx0) var(--fy0), #000 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.45) 65%, transparent 100%);
+  transition:
+    --fx0 var(--foil-lag) ease-out,
+    --fy0 var(--foil-lag) ease-out;
+}
+
+.onLight {
+  mix-blend-mode: lighten;
+}
+
+/* The text copy: same type as the text under it (inherited), from the same
+ * top-left corner, filled with the gradient. */
+.text {
+  /* An inline host's box is just the font's own height, so a normal line
+   * height puts the copy's letters exactly on the originals. */
+  line-height: normal;
+  color: transparent;
+  white-space: nowrap;
+  -webkit-background-clip: text;
+  background-clip: text;
+}

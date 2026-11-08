@@ -57,6 +57,11 @@ interface JarStageProps {
   skipOffscreenFall?: boolean;
   /** Called once the items exist and have started falling in. */
   onReady?: () => void;
+  /** Passed to useJarPhysics: only decode and precompute, then onWarm. */
+  warmOnly?: boolean;
+  onWarm?: () => void;
+  /** Passed to useJarPhysics: a fixed run of clinks for the fall. */
+  clinkPattern?: readonly { atMs: number; strength: number }[];
 }
 
 // Memoised: whoever holds the jar (Home's JarView) re-renders as it moves
@@ -78,13 +83,16 @@ export default memo(function JarStage({
   onImpactsEnd,
   skipOffscreenFall,
   onReady,
+  warmOnly,
+  onWarm,
+  clinkPattern,
 }: JarStageProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { ready, renderInfo, outlineMasks, registerItemEl, debugWalls, debugPhysicsEnabled, jostle } = useJarPhysics(
     containerRef,
     items,
     textPlatformsRef,
-    { start, outlines, entranceDelayMs, spawnLead, spawnGap, spawnSpeed, onImpact, onImpactsEnd, skipOffscreenFall },
+    { start, outlines, entranceDelayMs, spawnLead, spawnGap, spawnSpeed, onImpact, onImpactsEnd, skipOffscreenFall, warmOnly, onWarm, clinkPattern },
   );
 
   const onReadyRef = useRef(onReady);

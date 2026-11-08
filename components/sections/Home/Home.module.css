@@ -23,18 +23,20 @@
   --stage-pad-x: clamp(21px, 2.734vw, 70px);
   /* Home page tracking for Geist — one place to tune it. */
   --home-tracking: -0.6px;
-  /* The same 373px on every desktop window: just wide enough (plus ~6px of
-   * slack) that the intro's longest line — "user. She adds charm to
-   * intuitive experiences", 311px at 16px — fits between the 28px --pad-x
-   * paddings, so its forced line breaks (Sidebar.tsx) are the only ones.
-   * Bigger screens give all their extra width to the stage; on smaller ones
-   * --pad-x shrinks, so the line still fits. */
-  --sidebar-width: 373px;
+  /* Wide enough that "Amy Wang is a designer who builds as the" fits on
+   * line 1 and "user. She adds charm to intuitive experiences" fits on
+   * line 2, with natural wrapping at 17px. */
+  --sidebar-width: 390px;
   display: grid;
   grid-template-columns: var(--sidebar-width) 1px minmax(0, 1fr);
   width: 100%;
   height: 100dvh;
   overflow: hidden;
+  /* In front of the work view's footer (.homeFooter), which it slides up
+   * off at the end of the work (WorkGrid's onFooterReveal). */
+  position: relative;
+  z-index: 1;
+  background: #fff;
   font-family: var(--font-geist), system-ui, sans-serif;
   letter-spacing: var(--home-tracking);
 }
@@ -45,6 +47,9 @@
  * little either side so its wobble isn't clipped. */
 .divider {
   position: relative;
+  /* Above the work view: its line wobbles a few px out over the stage, and
+   * the work view's white cover (FooterStrip's reveal) mustn't hide it. */
+  z-index: 2;
   margin-block: var(--frame-gap);
 }
 
@@ -105,6 +110,26 @@
 }
 
 /* ---------- mobile: sidebar stacks on top ---------- */
+
+/* The work view's footer on desktop: the whole window wide, under the
+ * sidebar too, fixed to the bottom of the window behind the page. Scrolling
+ * past the end of the work slides the whole page up off it (index.tsx).
+ * Text lined up with the sidebar's. On mobile the work view has its own
+ * (WorkGrid). */
+footer.homeFooter {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  font-family: var(--font-geist), system-ui, sans-serif;
+  --strip-pad-x: clamp(18px, 1.823vw, 28px);
+}
+
+@media (max-width: 767px) {
+  footer.homeFooter {
+    display: none;
+  }
+}
 
 @media (max-width: 767px) {
   /* Sidebar in normal flow on top, then a fixed-height stage — the page
@@ -190,7 +215,7 @@
 .zoomOut > aside > *,
 .zoomCollapsed > aside > *,
 .zoomBack > aside > * {
-  min-width: calc(373px - 2 * var(--pad-x));
+  min-width: calc(390px - 2 * var(--pad-x));
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -230,24 +255,26 @@
   }
 }
 
-/* ---------- the intro (Intro.tsx) ---------- */
+/* ---------- the load-in (Home/index.tsx) ---------- */
 
-/* While the intro draws (and before it's decided whether there is one):
- * the sidebar's parts, the divider and the jar are hidden — the intro's own
- * lines stand in for the divider and the jar. */
-.introHidden > aside > *,
-.introHidden .divider,
-.introHidden [data-intro-jar] {
-  opacity: 0;
-}
-
+/* Until the load-in runs (and before it's decided whether there is one):
+ * the sidebar's parts are hidden a little low, and the divider is clipped
+ * away from the bottom up (negative side insets keep its wobble). */
 .introHidden > aside > * {
+  opacity: 0;
   transform: translateY(var(--intro-rise));
 }
 
-/* At the hand-over the real divider and jar swap in at once, on the same
- * frame the intro (drawn exactly over them) goes; the sidebar loads top to
- * bottom, a beat apart. */
+.introHidden .divider {
+  clip-path: inset(0 -12px 100% -12px);
+}
+
+.introReveal .divider {
+  clip-path: inset(0 -12px 0 -12px);
+}
+
+/* The load-in: the sidebar loads top to bottom, a beat apart, as the
+ * divider draws on downward (and the jar drops in, JarView). */
 @media (prefers-reduced-motion: no-preference) {
   .introReveal > aside > * {
     transition:
@@ -261,5 +288,9 @@
 
   .introReveal > aside > :nth-child(3) {
     transition-delay: calc(var(--intro-stagger-ms) * 2 * var(--slow, 1));
+  }
+
+  .introReveal .divider {
+    transition: clip-path calc(var(--intro-divider-ms) * var(--slow, 1)) cubic-bezier(0.65, 0, 0.35, 1);
   }
 }

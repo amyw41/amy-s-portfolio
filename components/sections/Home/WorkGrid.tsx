@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useRef, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
 import styles from "./WorkGrid.module.css";
 import AutoplayVideo from "@/components/sections/Projects/AutoplayVideo";
 import ScrollHint from "./ScrollHint";
-import FooterStrip from "@/components/ui/FooterStrip";
+import FooterStrip, { footerCover } from "@/components/ui/FooterStrip";
 import { useCaseZoom } from "@/components/ui/CaseZoom";
 import { PROJECTS } from "@/lib/projects";
 import { content } from "@/lib/content";
@@ -55,6 +55,9 @@ interface Tile {
    * portrait posters show whole instead of cropped). null: the standard
    * 3:2 cover. */
   aspect: number | null;
+  /** The cover's background before its media loads: the project's own
+   * light tint. null: the default grey (extras). */
+  tint: string | null;
 }
 
 const projectTile = (p: (typeof PROJECTS)[number]): Tile => ({
@@ -66,6 +69,7 @@ const projectTile = (p: (typeof PROJECTS)[number]): Tile => ({
   // Plays over the cover once the card's on screen (AutoplayVideo).
   video: p.video ?? null,
   aspect: null,
+  tint: p.tint,
 });
 
 // The case studies shown big (left column), in lib/projects.ts's authoring
@@ -88,6 +92,7 @@ const SMALL_TILES: Tile[] = [
     cover: photo.isVideo ? null : photo.src,
     video: photo.isVideo ? photo.src : null,
     aspect: photo.width / photo.height,
+    tint: null,
   })),
 ];
 
@@ -138,10 +143,15 @@ const SWEEP_ORDER = new Map<string, number>(
 export default function WorkGrid({
   focusedId = null,
   onJumpToJar,
+  onFooterReveal,
 }: {
   focusedId?: string | null;
   /** "jump to jar" (bottom of the right column) was clicked. */
   onJumpToJar?: () => void;
+  /** Desktop: how far (px) the view has scrolled past the end of the work,
+   * into the footer's room; Home slides the page up that much to uncover
+   * the footer behind it. 0 when not there (and on leaving). */
+  onFooterReveal?: (px: number) => void;
 }) {
   const reduced = useReducedMotion() ?? false;
   // A case study hovered in the sidebar: its card lifts, the others dim.
@@ -158,6 +168,37 @@ export default function WorkGrid({
   const jumpInView = useInView(jumpRef, { root: viewRef, amount: 0.6 });
 
   const zoom = useCaseZoom();
+
+  // The footer's room at the end (desktop): scrolling into it doesn't move
+  // the cards twice (the view scrolls and the page slides up): the cover is
+  // pushed back down by the same amount, so the work moves up once, with
+  // the page.
+  const coverRef = useRef<HTMLDivElement>(null);
+  const roomRef = useRef<HTMLDivElement>(null);
+  const revealRef = useRef(onFooterReveal);
+  useEffect(() => {
+    revealRef.current = onFooterReveal;
+  });
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    let last = -1;
+    const update = () => {
+      const room = roomRef.current?.offsetHeight ?? 0;
+      const px = room ? Math.max(0, Math.min(room, view.scrollTop - (view.scrollHeight - view.clientHeight - room))) : 0;
+      if (px === last) return;
+      last = px;
+      if (coverRef.current) coverRef.current.style.transform = px ? `translateY(${px}px)` : "";
+      revealRef.current?.(px);
+    };
+    view.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      view.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+      revealRef.current?.(0);
+    };
+  }, []);
 
   const variants = useMemo<{ view: Variants; tile: Variants }>(
     () => ({
@@ -212,7 +253,13 @@ export default function WorkGrid({
           className={`${styles.tile} ${small ? styles.small : ""} ${dimmed ? styles.dimmed : ""} ${lifted ? styles.lifted : ""}`}
           style={LIFT_VARS}
         >
-          <span className={styles.cover} style={tile.aspect ? { aspectRatio: tile.aspect } : undefined}>
+          <span
+            className={styles.cover}
+            style={{
+              ...(tile.aspect ? { aspectRatio: tile.aspect } : null),
+              ...(tile.tint ? { background: tile.tint } : null),
+            }}
+          >
             {tile.cover && tile.video ? (
               <AutoplayVideo src={tile.video} poster={tile.cover} />
             ) : tile.cover ? (
@@ -257,59 +304,66 @@ export default function WorkGrid({
       exit="gone"
       data-scroll-switch-target
     >
-      {/* Drops in from above with a little overshoot, as the jar leaves
-       * (brief Part 2.4: the camera panning down into the jar). */}
-      <motion.h2
-        className={styles.heading}
-        initial={reduced ? { opacity: 0 } : { opacity: 0, y: -HEADING_DROP_PX }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={reduced ? { duration: 0.2 } : slowTransition({ duration: HEADING_DROP_S, ease: EASE_OVERSHOOT })}
-      >
-        {copy.heading}
-      </motion.h2>
+      {/* Everything above the footer, in front of it: scrolling to the end
+       * slides it up off the footer (FooterStrip's reveal). */}
+      <div ref={coverRef} className={footerCover}>
+        {/* Drops in from above with a little overshoot, as the jar leaves
+         * (brief Part 2.4: the camera panning down into the jar). */}
+        <motion.h2
+          className={styles.heading}
+          initial={reduced ? { opacity: 0 } : { opacity: 0, y: -HEADING_DROP_PX }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={reduced ? { duration: 0.2 } : slowTransition({ duration: HEADING_DROP_S, ease: EASE_OVERSHOOT })}
+        >
+          {copy.heading}
+        </motion.h2>
 
-      {WORK_LAYOUT === "equal" ? (
-        // Two equal columns, every case study the same size; "jump to jar"
-        // tucked into the bottom-right corner under them, just above the
-        // footer. It draws on once it scrolls into view.
-        <>
-          <ul className={styles.equalGrid}>{EQUAL_TILES.map((tile) => card(tile, false))}</ul>
-          <div ref={jumpRef} className={styles.jumpCorner}>
-            <ScrollHint
-              shown={jumpInView}
-              onActivate={() => onJumpToJar?.()}
-              label={content.en.sidebar.modes.jumpToJar}
-              ariaLabel={content.en.sidebar.modes.toJarLabel}
-              up
-              className={styles.jumpToJarSmall}
-            />
-          </div>
-        </>
-      ) : (
-        // Two columns: the bigger case studies on the left (2/3), the smaller
-        // ones and the teaser extra(s) small on the right (1/3), each stacked.
-        <div className={styles.columns}>
-          <ul className={styles.bigList}>{BIG_TILES.map((tile) => card(tile, false))}</ul>
-          {/* The rest of the extras are on the Play page. */}
-          <div className={styles.smallColumn}>
-            <ul className={styles.smallList}>{SMALL_TILES.map((tile) => card(tile, true))}</ul>
-            {/* The way back to the jar, in the column's empty space at the
-             * bottom. It draws on once it scrolls into view. */}
-            <div ref={jumpRef} className={styles.jump}>
+        {WORK_LAYOUT === "equal" ? (
+          // Two equal columns, every case study the same size; "jump to jar"
+          // tucked into the bottom-right corner under them, just above the
+          // footer. It draws on once it scrolls into view.
+          <>
+            <ul className={styles.equalGrid}>{EQUAL_TILES.map((tile) => card(tile, false))}</ul>
+            <div ref={jumpRef} className={styles.jumpCorner}>
               <ScrollHint
                 shown={jumpInView}
                 onActivate={() => onJumpToJar?.()}
                 label={content.en.sidebar.modes.jumpToJar}
                 ariaLabel={content.en.sidebar.modes.toJarLabel}
                 up
-                className={styles.jumpToJar}
+                className={styles.jumpToJarSmall}
               />
             </div>
+          </>
+        ) : (
+          // Two columns: the bigger case studies on the left (2/3), the smaller
+          // ones and the teaser extra(s) small on the right (1/3), each stacked.
+          <div className={styles.columns}>
+            <ul className={styles.bigList}>{BIG_TILES.map((tile) => card(tile, false))}</ul>
+            {/* The rest of the extras are on the Play page. */}
+            <div className={styles.smallColumn}>
+              <ul className={styles.smallList}>{SMALL_TILES.map((tile) => card(tile, true))}</ul>
+              {/* The way back to the jar, in the column's empty space at the
+               * bottom. It draws on once it scrolls into view. */}
+              <div ref={jumpRef} className={styles.jump}>
+                <ScrollHint
+                  shown={jumpInView}
+                  onActivate={() => onJumpToJar?.()}
+                  label={content.en.sidebar.modes.jumpToJar}
+                  ariaLabel={content.en.sidebar.modes.toJarLabel}
+                  up
+                  className={styles.jumpToJar}
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* The end of the list: the thin black footer strip. */}
+      {/* The end of the list. Desktop: room to scroll on into, which slides
+       * the whole page up off the footer behind it (Home). Mobile: the
+       * footer itself, revealed from behind the cards. */}
+      <div ref={roomRef} className={styles.footerRoom} aria-hidden="true" />
       <FooterStrip className={styles.footerPlace} />
     </motion.div>
   );

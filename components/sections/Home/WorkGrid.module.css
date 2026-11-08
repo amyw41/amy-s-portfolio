@@ -13,6 +13,9 @@
   /* No bottom padding: the footer strip ends the view, flush with its
    * bottom. */
   padding: var(--pad-y) var(--stage-pad-x) 0;
+  /* How far the footer (and the white cover above it) reach out over the
+   * side padding. */
+  --footer-reach: var(--stage-pad-x);
 }
 
 .heading {
@@ -28,6 +31,25 @@
  * its bottom. */
 .footerPlace {
   margin: 48px calc(var(--stage-pad-x) * -1) 0;
+}
+
+/* Desktop: the footer is Home's, across the whole window; this is the room
+ * to scroll on into at the end (the footer's height), 48px below the cards. */
+.footerRoom {
+  height: 12.5dvh;
+  margin-top: 48px;
+}
+
+@media (min-width: 768px) {
+  footer.footerPlace {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .footerRoom {
+    display: none;
+  }
 }
 
 /* "equal" layout (WorkGrid.tsx's WORK_LAYOUT): two equal columns, every
@@ -227,6 +249,7 @@
 @media (max-width: 767px) {
   .work {
     padding: 24px 16px 0;
+    --footer-reach: 16px;
   }
 
   .heading {

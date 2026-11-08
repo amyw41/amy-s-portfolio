@@ -32,7 +32,7 @@ export const content = {
     sidebar: {
       // The intro is one paragraph: the name, then this sentence.
       name: "Amy Wang",
-      intro: "is a designer who builds as the user. She adds charm to intuitive experiences and loves to overthink interactions!",
+      intro: "is a designer who builds as the user. She adds charm to intuitive experiences and loves to overthink tiny interactions!",
       // Accessible names for the icon-only links row under the intro.
       social: {
         label: "Social links",
@@ -42,7 +42,12 @@ export const content = {
       },
       experience: {
         heading: "Experience",
-        items: ["Design @ Blueprint", "Campus @ Notion", "Management Eng @ Waterloo"],
+        // Each company name links to its site (opens in a new tab).
+        items: [
+          { role: "Design", company: "Blueprint", href: "https://uwblueprint.org" },
+          { role: "Campus", company: "Notion", href: "https://www.notion.com" },
+          { role: "Management Eng", company: "Waterloo", href: "https://uwaterloo.ca/future-students/programs/management-engineering" },
+        ],
       },
       // The menu's three groups, top to bottom: Experience (above), Works
       // (the case studies), then Extra (About Me, Play).

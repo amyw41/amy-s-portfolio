@@ -9,7 +9,7 @@ import { useAutoPlayInView } from "@/lib/useAutoPlayInView";
 import { FADE_IN_TRANSITION } from "@/lib/motion";
 import { buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
 import BuzzPath from "@/components/ui/BuzzPath";
-import FooterStrip from "@/components/ui/FooterStrip";
+import FooterStrip, { footerCover } from "@/components/ui/FooterStrip";
 import { useCaseZoom, ZOOM_TARGET_ATTR } from "@/components/ui/CaseZoom";
 import { usePathname } from "next/navigation";
 import layoutStyles from "./CaseStudyLayout.module.css";
@@ -471,7 +471,7 @@ export function CaseStudyHero({
           homepage's own h1 weight. */}
       {!body && (
         <h1
-          className={`font-instrument ${titleClassName ?? "text-[clamp(2.75rem,7.5vw,4.5rem)]"} font-light leading-none tracking-[-0.04em] text-black/90`}
+          className={`font-instrument ${titleClassName ?? "text-[clamp(2.75rem,7.5vw,4.5rem)]"} font-light leading-none tracking-[-0.6px] text-black/90`}
         >
           {title}
         </h1>
@@ -501,7 +501,7 @@ export function CaseStudyHero({
           <div key={m.label} className={`text-center ${i !== 0 ? "pb-3" : ""}`}>
             {/* Matches TEXT.subheader's own size (clamp(19px,2vw,24px), above) per
                 request — was clamp(15px,1.5vw,19px). */}
-            <p className="font-instrument text-[clamp(19px,2vw,24px)] font-medium tracking-[-0.035em] text-black/80">{m.label}</p>
+            <p className="font-instrument text-[clamp(19px,2vw,24px)] font-medium tracking-[-0.6px] text-black/80">{m.label}</p>
             {m.values.map((v) => (
               <p key={v} className="mt-1 font-body text-[clamp(14px,1.3vw,17px)] font-light text-black/70">
                 {v}
@@ -572,60 +572,71 @@ export function CaseStudyLayout({
 
   return (
     <div className={`tw-scope ${layoutStyles.frame}`}>
-      <aside className={layoutStyles.rail}>
-        {/* Placeholder until the real logo exists (brief Part 7). */}
-        <Link href="/" className={layoutStyles.logo} aria-label="Amy Wang, home" onClick={() => zoom?.goHome()}>
-          aw
-        </Link>
-        <RailContents sectionNav={sectionNav} />
-      </aside>
+      {/* The rail and divider, in their own box the height of the page above
+       * the footer, so they stick only that far (not over the footer). */}
+      <div className={layoutStyles.side}>
+        <aside className={layoutStyles.rail}>
+          {/* Placeholder until the real logo exists (brief Part 7). */}
+          <Link href="/" className={layoutStyles.logo} aria-label="Amy Wang, home" onClick={() => zoom?.goHome()}>
+            aw
+          </Link>
+          <RailContents sectionNav={sectionNav} />
+        </aside>
 
-      <div className={layoutStyles.divider} aria-hidden="true">
-        <BuzzPath
-          className={layoutStyles.dividerLine}
-          variants={DIVIDER_VARIANTS}
-          viewBox={`0 0 ${DIVIDER_BOX_W} ${DIVIDER_BOX_H}`}
-          preserveAspectRatio="none"
-          strokeWidth={LINE_STROKE_WIDTH}
-        />
+        <div className={layoutStyles.divider} aria-hidden="true">
+          <BuzzPath
+            className={layoutStyles.dividerLine}
+            variants={DIVIDER_VARIANTS}
+            viewBox={`0 0 ${DIVIDER_BOX_W} ${DIVIDER_BOX_H}`}
+            preserveAspectRatio="none"
+            strokeWidth={LINE_STROKE_WIDTH}
+          />
+        </div>
       </div>
 
       <main className={layoutStyles.content}>
-        {hero && (
-          <motion.h1
-            className={layoutStyles.title}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={FADE_IN_TRANSITION}
-          >
-            {hero.props.title}
-          </motion.h1>
-        )}
-        <div className={layoutStyles.body}>
+        {/* Everything above the footer, in front of it: scrolling to the end
+         * slides it up off the footer (FooterStrip's reveal). */}
+        <div className={`${footerCover} ${layoutStyles.coverEnd}`}>
           {hero && (
-            <div
-              className={layoutStyles.thumb}
-              {...{ [ZOOM_TARGET_ATTR]: slug }}
-              style={thumbHidden ? { visibility: "hidden" } : undefined}
+            <motion.h1
+              className={layoutStyles.title}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={FADE_IN_TRANSITION}
             >
-              <CaseStudyImage
-                src={hero.props.heroSrc}
-                alt={hero.props.heroAlt}
-                ratio={HERO_RATIO}
-                video={hero.props.heroVideo}
-                highlightColor={hero.props.highlightColor}
-                sizes="(min-width: 768px) 560px, 100vw"
-              />
-            </div>
+              {hero.props.title}
+            </motion.h1>
           )}
-          <div className={`${layoutStyles.sections} text-left`}>
-            {sidebarExtra}
-            {hero && cloneElement(hero, { layoutPart: "body" })}
-            {rest}
+          <div className={layoutStyles.body}>
+            {hero && (
+              <div
+                className={layoutStyles.thumb}
+                {...{ [ZOOM_TARGET_ATTR]: slug }}
+                style={thumbHidden ? { visibility: "hidden" } : undefined}
+              >
+                <CaseStudyImage
+                  src={hero.props.heroSrc}
+                  alt={hero.props.heroAlt}
+                  ratio={HERO_RATIO}
+                  video={hero.props.heroVideo}
+                  highlightColor={hero.props.highlightColor}
+                  sizes="(min-width: 768px) 560px, 100vw"
+                />
+              </div>
+            )}
+            <div className={`${layoutStyles.sections} text-left`}>
+              {sidebarExtra}
+              {hero && cloneElement(hero, { layoutPart: "body" })}
+              {rest}
+            </div>
           </div>
         </div>
-        <FooterStrip className={layoutStyles.footerPlace} />
       </main>
+
+      {/* The whole window wide, under the rail too, revealed from behind the
+       * page as it scrolls up off it. */}
+      <FooterStrip className={layoutStyles.footerPlace} />
     </div>
   );
 }

@@ -153,6 +153,11 @@ export const INTRO_FADE_STEPS = 4;
 export const INTRO_SHORT_S = 0.7;
 export const INTRO_SIDEBAR_STAGGER_S = 0.07;
 export const INTRO_SIDEBAR_RISE_PX = 8;
+// The load-in (Home/index.tsx): the jar drops in and the items fall (the
+// same arrival as coming back from the work: JAR_DROP_IN_S, JAR_LAND_*),
+// while the sidebar loads (INTRO_SIDEBAR_*) and the divider draws on top to
+// bottom over INTRO_DIVIDER_DRAW_S, ease-in-out.
+export const INTRO_DIVIDER_DRAW_S = 0.6;
 // Clicking a case study zooms into it (components/ui/CaseZoom, brief Part
 // 3.2): the home page fades and drops out (ZOOM_LEAVE_S, ZOOM_DROP_PX, its
 // parts ZOOM_STAGGER_S apart) while the sidebar narrows to the case study's
@@ -341,3 +346,27 @@ export function isIntroForced(): boolean {
     return false;
   }
 }
+
+// The sidebar social icons' foil hover (Home/Sidebar.tsx useFoil): a half circle
+// under the mouse reveals a fixed gradient on the icon; it rises in,
+// trails the mouse by this much (ease-out), and sinks out. Reduced motion:
+// instant.
+export const FOIL_REVEAL_LAG_MS = 180;
+// The page load-in's clinks (useJarPhysics's clinkPattern): instead of
+// following the physics (which varies a little, and drops clinks that land
+// in the same frame), a fixed run of clinks starting the moment the first
+// item hits the glass: when (ms after that) and how hard (0-1), the same
+// every time. It runs about as long as the items take to land and settle,
+// getting softer and further apart as they do. The sound stops once the
+// last has rung out (JAR_CLINK_RING_MS).
+export const JAR_LOAD_CLINKS = [
+  { atMs: 0, strength: 0.9 },
+  { atMs: 110, strength: 0.75 },
+  { atMs: 220, strength: 0.85 },
+  { atMs: 340, strength: 0.65 },
+  { atMs: 470, strength: 0.7 },
+  { atMs: 610, strength: 0.55 },
+  { atMs: 760, strength: 0.5 },
+  { atMs: 920, strength: 0.42 },
+] as const;
+export const JAR_CLINK_RING_MS = 220;

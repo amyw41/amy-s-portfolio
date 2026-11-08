@@ -9,21 +9,19 @@ import ScrollCue from "./ScrollCue";
 import { useScrollSwitch } from "./useScrollSwitch";
 import BuzzPath from "@/components/ui/BuzzPath";
 import JarView from "./JarView";
-import Intro from "./Intro";
+import FooterStrip from "@/components/ui/FooterStrip";
 import { createJarSound, type JarSound } from "@/components/sections/Hero/jar-sound";
 import { content } from "@/lib/content";
 import { gaegu, geist } from "@/lib/fonts";
 import { useCaseZoom } from "@/components/ui/CaseZoom";
 import {
-  INTRO_FORCE_KEY,
-  INTRO_SEEN_KEY,
+  INTRO_DIVIDER_DRAW_S,
   INTRO_SIDEBAR_RISE_PX,
   INTRO_SIDEBAR_STAGGER_S,
   ZOOM_DROP_PX,
   ZOOM_LEAVE_S,
   ZOOM_RETURN_S,
   ZOOM_STAGGER_S,
-  isIntroForced,
   slowMs,
 } from "@/lib/motion";
 import { buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
@@ -52,6 +50,7 @@ const ZOOM_VARS = {
   // The intro's hand-over (Home.module.css .introHidden/.introReveal).
   "--intro-stagger-ms": `${INTRO_SIDEBAR_STAGGER_S * 1000}ms`,
   "--intro-rise": `${INTRO_SIDEBAR_RISE_PX}px`,
+  "--intro-divider-ms": `${INTRO_DIVIDER_DRAW_S * 1000}ms`,
 } as CSSProperties;
 
 // Rebrand v2 home page (brief Part 2): one fixed screen — sidebar, divider,
@@ -114,6 +113,14 @@ export default function Home() {
   // The pile has settled: nothing more until the next fall or bounce.
   const handleImpactsEnd = useCallback(() => soundRef.current?.silence(), []);
 
+  // The work view's footer (desktop): scrolling past the end of the work
+  // slides the whole page up by that much, uncovering the footer fixed
+  // behind it across the whole window (WorkGrid reports how far).
+  const handleFooterReveal = useCallback((px: number) => {
+    const frame = frameRef.current;
+    if (frame) frame.style.transform = px > 0 ? `translateY(${-px}px)` : "";
+  }, []);
+
   function changeMode(next: HomeMode) {
     if (next === mode) return;
     setJarEntering(next === "jar");
@@ -136,103 +143,109 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  // The intro (Intro.tsx, brief Part 4.2): the full version once per visit,
-  // a short one after that and on phones, none for reduced motion, a visit
-  // straight to the work (#projects) or a trip back from a case study. The
-  // page starts hidden ("pending") until that's decided — there's no window
-  // to decide it with on the server — and comes in at the intro's hand-over
-  // (introRevealed), staggered top to bottom; the jar items wait for it.
-  const [intro, setIntro] = useState<"pending" | "full" | "short" | "none">(() =>
+  // The load-in, on every visit: the jar drops in from above and the items
+  // fall into it (the same arrival as scrolling back up from the work), while
+  // the sidebar loads top to bottom and the divider draws on downward. None
+  // for reduced motion, a visit straight to the work (#projects) or a trip
+  // back from a case study. The page starts hidden ("pending") until that's
+  // decided (there's no window to decide it with on the server); "play"
+  // paints it hidden once more so the transitions have a start, "reveal"
+  // runs them, and "none" is the page at rest.
+  const [intro, setIntro] = useState<"pending" | "play" | "reveal" | "none">(() =>
     zoom?.returning ? "none" : "pending",
   );
-  const [introRevealed, setIntroRevealed] = useState(false);
   useEffect(() => {
     if (intro !== "pending") return;
+    // setTimeout, not rAF (rAF never fires in a background tab).
     const timer = window.setTimeout(() => {
-      let seen = false;
-      try {
-        seen = sessionStorage.getItem(INTRO_SEEN_KEY) === "1";
-      } catch {
-        // Storage blocked: treat it as a first visit.
-      }
       const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const phone = !window.matchMedia("(min-width: 768px)").matches;
-      if (reduced || window.location.hash === "#projects") setIntro("none");
-      else {
-        // ?intro=2 shows the repeat-visit version.
-        const askedShort = new URLSearchParams(window.location.search).get("intro") === "2";
-        setIntro(phone || askedShort || (seen && !isIntroForced()) ? "short" : "full");
-      }
+      setIntro(reduced || window.location.hash === "#projects" ? "none" : "play");
     });
     return () => window.clearTimeout(timer);
   }, [intro]);
-  const handleIntroDone = useCallback(() => {
-    if (intro === "full") {
-      try {
-        sessionStorage.setItem(INTRO_SEEN_KEY, "1");
-        sessionStorage.removeItem(INTRO_FORCE_KEY);
-      } catch {
-        // Storage blocked: it just plays again next time.
-      }
-    }
-    setIntro("none");
+  // "play" → "reveal" the moment the jar starts to drop (JarView's
+  // onLoadInStart, once it's got the fall ready), so everything comes in
+  // at once. In work mode there's no jar to wait for.
+  const startReveal = useCallback(() => setIntro((i) => (i === "play" ? "reveal" : i)), []);
+  useEffect(() => {
+    if (intro !== "play" || mode === "jar") return;
+    const timer = window.setTimeout(startReveal, 30);
+    return () => window.clearTimeout(timer);
+  }, [intro, mode, startReveal]);
+  useEffect(() => {
+    if (intro !== "reveal") return;
+    // Back to rest once the sidebar and the divider have finished.
+    const sidebarMs = 350 + INTRO_SIDEBAR_STAGGER_S * 1000 * 2;
+    const timer = window.setTimeout(() => setIntro("none"), slowMs(Math.max(sidebarMs, INTRO_DIVIDER_DRAW_S * 1000)) + 50);
+    return () => window.clearTimeout(timer);
   }, [intro]);
-  const introClass = intro === "none" ? "" : introRevealed ? styles.introReveal : styles.introHidden;
+  const introClass = intro === "reveal" ? styles.introReveal : intro === "none" ? "" : styles.introHidden;
+  // The jar only mounts once the load-in is decided, so it can arrive.
+  const jarReady = intro !== "pending";
 
   return (
-    <main
-      ref={frameRef}
-      className={`${geist.variable} ${gaegu.variable} ${styles.frame} ${zoomClass} ${introClass}`}
-      style={ZOOM_VARS}
-    >
-      {/* The case study's logo, appearing in the corner as the sidebar
-       * narrows into its rail (the name retracting into it), and fading as
-       * it widens back. */}
-      <span className={styles.zoomLogo} aria-hidden="true">
-        aw
-      </span>
-      <Sidebar onCaseFocus={setFocusedCase} />
+    <>
+      <main
+        ref={frameRef}
+        className={`${geist.variable} ${gaegu.variable} ${styles.frame} ${zoomClass} ${introClass}`}
+        style={ZOOM_VARS}
+      >
+        {/* The case study's logo, appearing in the corner as the sidebar
+         * narrows into its rail (the name retracting into it), and fading as
+         * it widens back. */}
+        <span className={styles.zoomLogo} aria-hidden="true">
+          aw
+        </span>
+        <Sidebar onCaseFocus={setFocusedCase} />
 
-      {(intro === "full" || intro === "short") && (
-        <Intro variant={intro} onReveal={() => setIntroRevealed(true)} onDone={handleIntroDone} />
-      )}
+        {/* Draws on downward at the load-in (Home.module.css .introReveal). */}
+        <div className={styles.divider} aria-hidden="true" data-intro-divider>
+          <BuzzPath
+            className={styles.dividerLine}
+            variants={DIVIDER_VARIANTS}
+            viewBox={`0 0 ${DIVIDER_BOX_W} ${DIVIDER_BOX_H}`}
+            preserveAspectRatio="none"
+            strokeWidth={LINE_STROKE_WIDTH}
+          />
+        </div>
 
-      {/* data-intro-divider: the intro's line ends exactly on this. */}
-      <div className={styles.divider} aria-hidden="true" data-intro-divider>
-        <BuzzPath
-          className={styles.dividerLine}
-          variants={DIVIDER_VARIANTS}
-          viewBox={`0 0 ${DIVIDER_BOX_W} ${DIVIDER_BOX_H}`}
-          preserveAspectRatio="none"
-          strokeWidth={LINE_STROKE_WIDTH}
-        />
-      </div>
-
-      <section className={styles.stage}>
-        {/* The crayon toggle (ModeToggle.tsx) is kept in the repo but no
-         * longer shown: scrolling switches. On mobile, where it doesn't,
-         * these tap cues do. */}
-        <ScrollCue mode={mode} onActivate={changeMode} />
-        {/* mode="wait": one view at a time — the leaving one finishes its
-         * exit before the next starts (jar → work: the jar drops away, then
-         * "what's inside?" and the grid come in; work → jar: the grid slides
-         * out, then the jar drops in). */}
-        <AnimatePresence mode="wait" initial={false}>
-          {mode === "jar" ? (
-            <JarView
-              key="jar"
-              entering={jarEntering}
-              isolatedId={focusedCase}
-              onImpact={handleImpact}
-              onImpactsEnd={handleImpactsEnd}
-              onHintActivate={() => changeMode("work")}
-              holdItems={intro !== "none" && !introRevealed}
-            />
-          ) : (
-            <WorkGrid key="work" focusedId={focusedCase} onJumpToJar={() => changeMode("jar")} />
-          )}
-        </AnimatePresence>
-      </section>
-    </main>
+        <section className={styles.stage}>
+          {/* The crayon toggle (ModeToggle.tsx) is kept in the repo but no
+           * longer shown: scrolling switches. On mobile, where it doesn't,
+           * these tap cues do. */}
+          <ScrollCue mode={mode} onActivate={changeMode} />
+          {/* mode="wait": one view at a time — the leaving one finishes its
+           * exit before the next starts (jar → work: the jar drops away, then
+           * "what's inside?" and the grid come in; work → jar: the grid slides
+           * out, then the jar drops in). */}
+          <AnimatePresence mode="wait" initial={false}>
+            {mode === "jar" ? (
+              jarReady && (
+                <JarView
+                  key="jar"
+                  // The load-in is the same arrival as coming back from work.
+                  entering={jarEntering || intro === "play"}
+                  loadIn={intro === "play"}
+                  onLoadInStart={startReveal}
+                  isolatedId={focusedCase}
+                  onImpact={handleImpact}
+                  onImpactsEnd={handleImpactsEnd}
+                  onHintActivate={() => changeMode("work")}
+                />
+              )
+            ) : (
+              <WorkGrid
+                key="work"
+                focusedId={focusedCase}
+                onJumpToJar={() => changeMode("jar")}
+                onFooterReveal={handleFooterReveal}
+              />
+            )}
+          </AnimatePresence>
+        </section>
+      </main>
+      {/* Behind the page; only uncovered at the end of the work. */}
+      {mode === "work" && <FooterStrip className={`${geist.variable} ${styles.homeFooter}`} />}
+    </>
   );
 }

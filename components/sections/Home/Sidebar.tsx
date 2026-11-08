@@ -21,6 +21,7 @@ import {
 import { buildWobblyLinePath, buildWobblyPillPath, LINE_STROKE_WIDTH, PILL_VIEW_BOX } from "@/lib/wobbly";
 import BuzzPath from "@/components/ui/BuzzPath";
 import { useCaseZoom } from "@/components/ui/CaseZoom";
+import { FoilGlow, FoilText, foilHostLight, foilHostText, useFoil } from "@/components/ui/Foil";
 
 const copy = content.en.sidebar;
 const links = content.en.footer.links;
@@ -253,13 +254,17 @@ function UpRightArrow() {
 function CaseStudyRow({
   href,
   label,
+  seed,
   onFocusChange,
 }: {
   href: string;
   label: string;
+  seed: number;
   onFocusChange: (active: boolean) => void;
 }) {
   const zoom = useCaseZoom();
+  // The foil hover on the name (components/ui/Foil), as on the icons.
+  const foil = useFoil(seed);
   return (
     <Link
       href={href}
@@ -275,25 +280,70 @@ function CaseStudyRow({
           document.querySelector<HTMLElement>(`[data-work-card="${project.slug}"] [class*="cover"]`);
         if (from && zoom.start({ href, slug: project.slug, from, src: project.cover })) e.preventDefault();
       }}
-      onPointerEnter={() => onFocusChange(true)}
-      onPointerLeave={() => onFocusChange(false)}
+      onPointerEnter={(e) => {
+        onFocusChange(true);
+        foil.handlers.onPointerEnter(e);
+      }}
+      onPointerMove={foil.handlers.onPointerMove}
+      onPointerLeave={(e) => {
+        onFocusChange(false);
+        foil.handlers.onPointerLeave(e);
+      }}
       onFocus={(e) => {
         if (e.currentTarget.matches(":focus-visible")) onFocusChange(true);
       }}
       onBlur={() => onFocusChange(false)}
     >
-      <span className={styles.itemName}>{label}</span>
+      <span className={`${styles.itemName} ${foilHostText}`}>
+        {label}
+        <FoilText foil={foil}>{label}</FoilText>
+      </span>
       <UpRightArrow />
     </Link>
   );
 }
 
+/** A line under Experience: the role, then the company name as a link to
+ * its site (new tab), with the foil hover (components/ui/Foil) on it. */
+function ExperienceRow({ role, company, href, seed }: { role: string; company: string; href: string; seed: number }) {
+  const foil = useFoil(seed);
+  return (
+    <>
+      {role} @{" "}
+      <a
+        className={`${styles.companyLink} ${foilHostText}`}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        {...foil.handlers}
+      >
+        {company}
+        <FoilText foil={foil}>{company}</FoilText>
+      </a>
+    </>
+  );
+}
+
+/** A page under Extra (About Me, Play), with the foil hover on its name
+ * (components/ui/Foil) instead of a grey fade. */
+function ExtraLink({ href, label, seed }: { href: string; label: string; seed: number }) {
+  const foil = useFoil(seed);
+  return (
+    <Link href={href} className={`${styles.itemLink} ${styles.foilLink}`} {...foil.handlers}>
+      <span className={foilHostText}>
+        {label}
+        <FoilText foil={foil}>{label}</FoilText>
+      </span>
+    </Link>
+  );
+}
+
 // Where the intro breaks onto its next line on desktop, so it reads as
-// Amy laid it out: "…builds as the / user. She adds creativity to intuitive
-// experiences / and loves to overthink interactions!" (the sidebar is sized
+// Amy laid it out: "…builds as the user." / "She adds charm to intuitive" /
+// "experiences and loves to overthink interactions!" (the sidebar is sized
 // so the longest line fits). On mobile the breaks are hidden and it wraps
 // naturally. A phrase that's no longer in the copy just gets no break.
-const INTRO_BREAKS_AFTER = ["builds as the", "intuitive experiences"];
+const INTRO_BREAKS_AFTER: string[] = [];
 
 function introLines(text: string): ReactNode[] {
   const parts: ReactNode[] = [];
@@ -311,6 +361,26 @@ function introLines(text: string): ReactNode[] {
   return parts;
 }
 
+/** One icon in the top row, with the foil hover (useFoil). */
+function SocialIcon({ href, label, icon, seed }: { href: string; label: string; icon: ReactNode; seed: number }) {
+  const foil = useFoil(seed);
+  return (
+    <li>
+      <a
+        className={`${styles.socialIcon} ${foilHostLight}`}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={label}
+        {...foil.handlers}
+      >
+        {icon}
+        <FoilGlow foil={foil} />
+      </a>
+    </li>
+  );
+}
+
 // Memoised: Home re-renders on every mode switch, and re-rendering every
 // motion component in here at that moment was a visible hitch. Its only
 // prop is a stable state setter.
@@ -318,18 +388,8 @@ export default memo(function Sidebar({ onCaseFocus }: SidebarProps) {
   return (
     <aside className={styles.sidebar}>
       <ul className={styles.socialRow} aria-label={copy.social.label}>
-        {SOCIAL_LINKS.map((link) => (
-          <li key={link.href}>
-            <a
-              className={styles.socialIcon}
-              href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={link.label}
-            >
-              {link.icon}
-            </a>
-          </li>
+        {SOCIAL_LINKS.map((link, i) => (
+          <SocialIcon key={link.href} {...link} seed={30 + i} />
         ))}
       </ul>
 
@@ -338,7 +398,14 @@ export default memo(function Sidebar({ onCaseFocus }: SidebarProps) {
 
       <nav className={styles.menu} aria-label="Main">
         {/* Experience and Works start open; Extra opens on click. */}
-        <DropdownGroup title={copy.experience.heading} seed={20} items={[...copy.experience.items]} defaultOpen />
+        <DropdownGroup
+          title={copy.experience.heading}
+          seed={20}
+          items={copy.experience.items.map((item, i) => (
+            <ExperienceRow key={item.company} {...item} seed={50 + i} />
+          ))}
+          defaultOpen
+        />
         <DropdownGroup
           title={copy.nav.works}
           seed={21}
@@ -347,6 +414,7 @@ export default memo(function Sidebar({ onCaseFocus }: SidebarProps) {
               key={link.href}
               href={link.href}
               label={link.label}
+              seed={60 + WORK_LINKS.indexOf(link)}
               onFocusChange={(active) => onCaseFocus(active ? link.id : null)}
             />
           ))}
@@ -356,12 +424,8 @@ export default memo(function Sidebar({ onCaseFocus }: SidebarProps) {
           title={copy.nav.extra}
           seed={22}
           items={[
-            <Link key="about" href="/about" className={styles.itemLink}>
-              {copy.nav.about}
-            </Link>,
-            <Link key="play" href="/playground" className={styles.itemLink}>
-              {copy.nav.play}
-            </Link>,
+            <ExtraLink key="about" href="/about" label={copy.nav.about} seed={70} />,
+            <ExtraLink key="play" href="/playground" label={copy.nav.play} seed={71} />,
           ]}
         />
       </nav>

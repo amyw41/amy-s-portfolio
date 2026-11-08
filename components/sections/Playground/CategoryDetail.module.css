@@ -103,7 +103,7 @@
   font-size: var(--fs-small);
   font-weight: 300;
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.6px;
   text-transform: uppercase;
   color: rgba(0, 0, 0, 0.4);
   cursor: pointer;

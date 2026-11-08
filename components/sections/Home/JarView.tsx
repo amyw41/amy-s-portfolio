@@ -13,6 +13,7 @@ import {
   JAR_ANTICIPATE_S,
   JAR_ANTICIPATE_SCALE_Y,
   JAR_DROP_IN_S,
+  JAR_LOAD_CLINKS,
   JAR_DROP_OUT_S,
   JAR_ITEMS_DELAY_MS,
   JAR_JOSTLE_STRENGTH,
@@ -53,6 +54,13 @@ interface JarViewProps {
   onImpactsEnd?: () => void;
   /** Keep the items from falling in yet (the intro is still drawing). */
   holdItems?: boolean;
+  /** The page's load-in (with `entering`): before the jar drops, get the
+   * fall ready out of sight, at rest (decoding the items and working out the
+   * whole fall the first time takes a moment), so the drop, the items and
+   * the landing squash then run in one go with no pause. `onLoadInStart`
+   * fires as the drop begins, so the rest of the page comes in with it. */
+  loadIn?: boolean;
+  onLoadInStart?: () => void;
 }
 
 /** Fully off the stage, above or below: the view is the stage's own height,
@@ -84,13 +92,41 @@ const OFF_STAGE = "110%";
  *
  * Reduced motion: plain fades, items appear already settled.
  */
-export default function JarView({ entering, isolatedId, onSettledChange, onHintActivate, onImpact, onImpactsEnd, holdItems = false }: JarViewProps) {
+export default function JarView({
+  entering,
+  isolatedId,
+  onSettledChange,
+  onHintActivate,
+  onImpact,
+  onImpactsEnd,
+  holdItems = false,
+  loadIn = false,
+  onLoadInStart,
+}: JarViewProps) {
   const reduced = useReducedMotion() ?? false;
   const [scope, animate] = useAnimate<HTMLDivElement>();
   const wrapperRef = useRef<HTMLDivElement>(null);
   const jostleRef = useRef<((strength: number) => void) | null>(null);
   const [isPresent, safeToRemove] = usePresence();
-  const [start, setStart] = useState(!entering);
+  // The load-in warms the physics first (at rest, hidden), so it starts on.
+  const warmFirst = entering && loadIn && !reduced;
+  const [start, setStart] = useState(!entering || warmFirst);
+  const [warming, setWarming] = useState(warmFirst);
+  // The page's load-in plays a fixed run of clinks (JAR_LOAD_CLINKS), the
+  // same every time, lasting until the items have landed; coming back from
+  // the work keeps the usual ones. Fixed at mount (loadIn turns off as the
+  // drop starts).
+  const [clinkPattern] = useState(loadIn ? JAR_LOAD_CLINKS : undefined);
+  // Resolved by JarStage's onWarm (same pattern as itemsReady below).
+  const warmDoneRef = useRef(false);
+  const warmWaitersRef = useRef<(() => void)[]>([]);
+  const warmed = () =>
+    warmDoneRef.current ? Promise.resolve() : new Promise<void>((resolve) => warmWaitersRef.current.push(resolve));
+  const handleWarm = useCallback(() => {
+    warmDoneRef.current = true;
+    warmWaitersRef.current.forEach((resolve) => resolve());
+    warmWaitersRef.current = [];
+  }, []);
 
   // Every animation still running, so any of them can be stopped mid-way.
   const runningRef = useRef<AnimationPlaybackControls[]>([]);
@@ -152,8 +188,18 @@ export default function JarView({ entering, isolatedId, onSettledChange, onHintA
     const seq = sequenceRef.current;
     (async () => {
       if (reduced) {
+        onLoadInStart?.();
         await run(scope.current, { opacity: [0, 1] }, { duration: 0.2 });
       } else {
+        if (warmFirst) {
+          await warmed();
+          if (seq !== sequenceRef.current) return;
+          // Ready: stop the warm-up run and drop the jar in from above.
+          setStart(false);
+          setWarming(false);
+          scope.current.style.visibility = "";
+        }
+        onLoadInStart?.();
         const dropS = slowS(JAR_DROP_IN_S);
         await run(scope.current, { y: [`-${OFF_STAGE}`, "0%"], opacity: [1, 1] }, { duration: dropS, ease: jarEase(EASE_IN, dropS) });
         if (seq !== sequenceRef.current) return;
@@ -245,7 +291,17 @@ export default function JarView({ entering, isolatedId, onSettledChange, onHintA
       className={styles.jarView}
       // Start where the arrival begins, so there's no flash of the jar in
       // place before the first animation frame.
-      style={entering ? (reduced ? { opacity: 0 } : { transform: `translateY(-${OFF_STAGE})` }) : undefined}
+      // The load-in's warm-up measures the jar at rest, so it waits there,
+      // hidden, until the drop.
+      style={
+        entering
+          ? reduced
+            ? { opacity: 0 }
+            : warmFirst
+              ? { visibility: "hidden" }
+              : { transform: `translateY(-${OFF_STAGE})` }
+          : undefined
+      }
     >
       {/* data-intro-jar: where the intro (Intro.tsx) draws its jar. */}
       <div ref={wrapperRef} className={styles.jarWrapper} data-intro-jar>
@@ -265,6 +321,9 @@ export default function JarView({ entering, isolatedId, onSettledChange, onHintA
           entranceDelayMs={JAR_ITEMS_DELAY_MS}
           skipOffscreenFall
           onReady={handleReady}
+          clinkPattern={clinkPattern}
+          warmOnly={warming}
+          onWarm={handleWarm}
           onImpact={onImpact}
           onImpactsEnd={onImpactsEnd}
         />

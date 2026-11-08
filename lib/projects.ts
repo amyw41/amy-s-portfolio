@@ -19,6 +19,10 @@ export interface Project {
   /** Shown small in the home work view's right column (with the teaser
    * extras) instead of big on the left. Set it on a project's seed below. */
   small: boolean;
+  /** A light tint of the project's own colour (its case study's highlight
+   * colour), behind the home card's cover so the card shows it, not grey,
+   * before the image loads. */
+  tint: string;
   /** Case-study gallery assets — empty until case-study pages exist.
    * TODO: populate once the case-study pages (app/[slug]/) are built. */
   gallery: string[];
@@ -42,6 +46,8 @@ interface ProjectSeed {
   /** true: a small card in the home work view's right column, above the
    * teaser extras; otherwise a big one on the left. */
   small?: boolean;
+  /** See Project.tint. */
+  tint: string;
 }
 
 /**
@@ -63,6 +69,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     category: "hackathon",
     hasVideo: true,
     year: 2026,
+    tint: "#e7ecf3", // light blue, CyberSeaCaseStudy's HIGHLIGHT
   },
   {
     // Was "spotify-guessr" — coverPath/videoPath derive their path from
@@ -77,6 +84,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     category: "personal",
     hasVideo: false,
     year: 2026,
+    tint: "#efedf5", // light purple, SpotifyCaseStudy's HIGHLIGHT
   },
   {
     slug: "skinsprout",
@@ -85,6 +93,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     category: "personal",
     hasVideo: true,
     year: 2026,
+    tint: "#faf1f6", // light pink, SkinSproutCaseStudy's HIGHLIGHT
   },
 ];
 
@@ -104,6 +113,7 @@ export const PROJECTS: Project[] = PROJECT_SEEDS.map((seed) => ({
   cover: coverPath(seed.slug),
   video: seed.hasVideo ? videoPath(seed.slug) : undefined,
   small: seed.small ?? false,
+  tint: seed.tint,
   gallery: [], // TODO: case-study gallery assets
 }));
 

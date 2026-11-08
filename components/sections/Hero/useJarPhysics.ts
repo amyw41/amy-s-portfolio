@@ -8,7 +8,7 @@ import { getOutlineMask } from "@/lib/outline";
 import { PLACEMENT_ORDER, LAYER_ORDER, TARGET_X_FRACTION } from "./jar-layout";
 import type { JarItemDef } from "./items.manifest";
 import { JAR_PHYSICS_DELAY_MS } from "./motion-timing";
-import { JAR_BOUNCE_CLINK_WINDOW_MS, JAR_BOUNCE_CLINKS } from "@/lib/motion";
+import { JAR_BOUNCE_CLINK_WINDOW_MS, JAR_BOUNCE_CLINKS, JAR_CLINK_RING_MS } from "@/lib/motion";
 
 const { Engine, Bodies, Body, Composite, Constraint, Events, Sleeping } = Matter;
 
@@ -335,6 +335,21 @@ export interface JarPhysicsOptions {
    * the same fall (and so the same settled pile) as from the default spawn
    * heights, with the items arriving straight away. Default false. */
   skipOffscreenFall?: boolean;
+  /** true: only get ready — decode the items and precompute the fall into
+   * the caches (bboxCache, fallCache) — then stop, without showing anything
+   * or starting the replay, and call onWarm. A later run (start toggled off
+   * and on, warmOnly false) at the same geometry then starts the fall at
+   * once. For a load-in that should do the slow first-time work before the
+   * jar is shown. Default false. */
+  warmOnly?: boolean;
+  /** Called when a warmOnly run has finished. */
+  onWarm?: () => void;
+  /** A fixed run of clinks for the fall instead of the recorded glass
+   * contacts: started the moment the first item visibly hits the glass,
+   * each at its own time (ms after that) and strength, so it sounds the
+   * same every time. onImpactsEnd follows once the last has rung out
+   * (JAR_CLINK_RING_MS). Default: none (the recorded contacts). */
+  clinkPattern?: readonly { atMs: number; strength: number }[];
 }
 
 export function useJarPhysics(
@@ -355,15 +370,20 @@ export function useJarPhysics(
     onImpact,
     onImpactsEnd,
     skipOffscreenFall = false,
+    warmOnly = false,
+    onWarm,
+    clinkPattern,
   }: JarPhysicsOptions = {},
 ) {
   const [ready, setReady] = useState(false);
   // Read from inside setup's closures, which outlive any one render.
   const onImpactRef = useRef(onImpact);
   const onImpactsEndRef = useRef(onImpactsEnd);
+  const onWarmRef = useRef(onWarm);
   useEffect(() => {
     onImpactRef.current = onImpact;
     onImpactsEndRef.current = onImpactsEnd;
+    onWarmRef.current = onWarm;
   });
   // Set by setup once the world exists; a no-op before that (and after
   // cleanup).
@@ -1289,6 +1309,11 @@ export function useJarPhysics(
           `[jar][debug=perf] precompute (${history.length} ticks${cachedFall ? ", cached" : ""}): ${(performance.now() - precomputeStart).toFixed(1)}ms`,
         );
       }
+      // warmOnly: the slow first-time work is done and cached; stop here.
+      if (warmOnly && !instant) {
+        onWarmRef.current?.();
+        return;
+      }
       // Force-mark entered, so anything that never crossed the mouth line
       // during precompute isn't pinned to its lane forever.
       for (const { id } of physicsItems) {
@@ -1551,6 +1576,10 @@ export function useJarPhysics(
       // The next recorded glass contact to play as a clink.
       let nextImpact = 0;
       let settleReported = false;
+      // clinkPattern: started yet, and its timers (cleared on cleanup).
+      let patternStarted = false;
+      const patternTimers: number[] = [];
+      cleanupFns.push(() => patternTimers.forEach((t) => window.clearTimeout(t)));
       let replayAccumulator = 0;
       // The live bodies are at the END of the precomputed fall (precompute
       // ran the real engine to the settled pile), so starting the live loop
@@ -1649,9 +1678,22 @@ export function useJarPhysics(
           }
           // Glass contacts recorded in the fall, on the frame they happened;
           // then, once the pile has settled, the sound stops.
-          while (nextImpact < impacts.length && impacts[nextImpact].tick <= replayIndex) {
-            onImpactRef.current?.(impacts[nextImpact].strength);
-            nextImpact++;
+          if (clinkPattern) {
+            // The fixed run, from the first visible glass contact.
+            if (!patternStarted && nextImpact < impacts.length && impacts[nextImpact].tick <= replayIndex) {
+              patternStarted = true;
+              settleReported = true;
+              for (const { atMs, strength } of clinkPattern) {
+                patternTimers.push(window.setTimeout(() => onImpactRef.current?.(strength), atMs));
+              }
+              const endMs = (clinkPattern[clinkPattern.length - 1]?.atMs ?? 0) + JAR_CLINK_RING_MS;
+              patternTimers.push(window.setTimeout(() => onImpactsEndRef.current?.(), endMs));
+            }
+          } else {
+            while (nextImpact < impacts.length && impacts[nextImpact].tick <= replayIndex) {
+              onImpactRef.current?.(impacts[nextImpact].strength);
+              nextImpact++;
+            }
           }
           if (!settleReported && replayIndex >= settleTick) {
             settleReported = true;

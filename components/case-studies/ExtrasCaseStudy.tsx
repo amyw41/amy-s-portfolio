@@ -95,7 +95,7 @@ export default function ExtrasCaseStudy() {
       }
     >
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={FADE_IN_TRANSITION}>
-        <h1 className="font-instrument text-[clamp(2.75rem,7.5vw,4.5rem)] font-light leading-none tracking-[-0.04em] text-black/90">
+        <h1 className="font-instrument text-[clamp(2.75rem,7.5vw,4.5rem)] font-light leading-none tracking-[-0.6px] text-black/90">
           {copy.title}
         </h1>
         <p className="mt-3 font-body text-[clamp(16px,1.56vw,20px)] font-light text-black/70">{copy.description}</p>

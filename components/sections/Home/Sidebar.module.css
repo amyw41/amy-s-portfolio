@@ -8,7 +8,7 @@
   /* Regular text size for menu headings and items. */
   --fs-body: 14px;
   /* Intro paragraph text size. */
-  --fs-intro: 16px;
+  --fs-intro: 17px;
   /* The two big gaps (icons → intro, intro → menu): 48px @696 tall. */
   --section-gap: clamp(24px, 6.9dvh, 96px);
   /* Between the menu's groups, and above each list item. */
@@ -43,16 +43,6 @@
   width: 24px;
   height: 24px;
   color: #000;
-}
-
-/* Iridescent shimmer: the icon's SVG fill cycles through a pink → magenta →
- * rose arc so it looks like foil catching the light. The filter chain
- * re-renders the black icon in that hue range; the oscillation makes it feel
- * "shiny" rather than just a static colour swap. */
-@media (prefers-reduced-motion: no-preference) {
-  .socialIcon:hover {
-    animation: shimmer-icon 1.8s ease-in-out infinite;
-  }
 }
 
 /* ---------- intro: name + description, one paragraph ---------- */
@@ -108,18 +98,6 @@
   letter-spacing: inherit;
   color: #000;
   text-decoration: none;
-}
-
-/* Gradient shimmer on hover: text shifts from black to a moving pink → rose
- * gradient. background-clip:text needs color:transparent to show through;
- * the animation slides the gradient's position for the "foil" shimmer. */
-.heading:hover {
-  color: transparent;
-  background: linear-gradient(90deg, #ff4d6d, #c44dff, #ff6b9d, #ff4d6d);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  animation: shimmer-text 2s linear infinite;
 }
 
 .chevron {
@@ -178,8 +156,22 @@
 
 /* A Works row's hover is just its arrow turning: the text doesn't grey. */
 .caseLink:hover,
-.caseLink:focus-visible {
+.caseLink:focus-visible,
+.foilLink:hover,
+.foilLink:focus-visible {
   color: inherit;
+}
+
+/* A company name under Experience: a plain black link to the company's
+ * site; its hover is the foil (components/ui/Foil), so no colour change. */
+.companyLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.companyLink:focus-visible {
+  outline: 1px solid #000;
+  outline-offset: 2px;
 }
 
 .itemLink:hover .itemArrow,
@@ -225,6 +217,7 @@
 
 /* Same structure, just in normal flow above the stage (the page scrolls). */
 @media (max-width: 767px) {
+
   /* The intro's line breaks are laid out for the desktop sidebar's width;
    * on a phone it just wraps. */
   .introBreak {

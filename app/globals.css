@@ -35,9 +35,18 @@ body {
 body {
   font-family: var(--font-roboto), system-ui, -apple-system, "Segoe UI", sans-serif;
   font-weight: 300;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.6px;
   color: #000;
   background: #fff;
+}
+
+/* Form controls don't inherit letter-spacing by default; make the -0.6px
+ * tracking reach every button and input too. */
+button,
+input,
+select,
+textarea {
+  letter-spacing: inherit;
 }
 
 img {
@@ -59,6 +68,7 @@ img {
 
 a {
   color: inherit;
+  text-decoration: none;
 }
 
 /* Global visible-focus contract: every interactive element (links, buttons,
@@ -81,6 +91,14 @@ button:focus-visible {
   background: #f9e6e8;
   color: #ae0c24;
 }
+
+/* ---------- foil hover blobs ---------- */
+
+/* The sidebar social icons' foil hover (Home/Sidebar.module.css .foilGlow):
+ * the reveal circle's centre, registered so it can transition (trail the pointer)
+ * instead of jumping. At rest it sits below the text, out of sight. */
+@property --fx0 { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --fy0 { syntax: "<length>"; inherits: false; initial-value: 80px; }
 
 /* ---------- shared shimmer keyframes ---------- */
 

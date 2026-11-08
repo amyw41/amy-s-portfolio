@@ -1,13 +1,21 @@
-/* The thin black footer strip (FooterStrip.tsx): the credit on the left,
- * the links on the right. Where it sits (and how far it reaches) is up to
- * the page placing it. */
+/* The footer (FooterStrip.tsx): a black band an eighth of the window tall,
+ * the credit on the left and the links on the right, along its top. It's revealed as the page
+ * scrolls up off it: it sticks to the bottom of the scrolling area, behind
+ * the page's content (which sits in a white .footerCover above it, z-index
+ * 1), so the content slides up and uncovers it. Where it sits (and how far
+ * it reaches) is up to the page placing it. */
 .strip {
+  position: sticky;
+  bottom: 0;
+  z-index: 0;
   display: grid;
   grid-template-columns: 1fr auto;
-  align-items: center;
+  /* The credit and links sit along the top of the band. */
+  align-items: start;
+  align-content: start;
   gap: 16px;
-  height: 38px;
-  padding: 0 var(--strip-pad-x, var(--stage-pad-x, 24px));
+  height: 12.5dvh;
+  padding: 16px var(--strip-pad-x, var(--stage-pad-x, 24px)) 0;
   background: #000;
   color: #fff;
   font-size: 13px;
@@ -25,28 +33,15 @@
   white-space: nowrap;
 }
 
-/* The links: white, a faint underline on hover. */
+/* The links: white text, no underline. */
 .link {
   color: inherit;
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-underline-offset: 3px;
-}
-
-.link:hover,
-.link:focus-visible {
-  text-decoration-color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
 }
 
 .link:focus-visible {
   outline: 1px solid #fff;
   outline-offset: 3px;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .link {
-    transition: text-decoration-color 150ms ease;
-  }
 }
 
 /* On a phone it stacks, centred: credit, links. */
@@ -56,6 +51,7 @@
     justify-items: center;
     gap: 8px;
     height: auto;
+    min-height: 12.5dvh;
     padding: 12px 16px;
   }
 
@@ -63,4 +59,16 @@
   .links {
     justify-self: center;
   }
+}
+
+/* The page's content above the footer: white and in front of it, reaching
+ * the full width of the footer (out over the side padding the footer
+ * reaches across: --footer-reach, set by the page), so the footer only shows
+ * where the content has scrolled away. Exported as footerCover. */
+.cover {
+  position: relative;
+  z-index: 1;
+  margin-inline: calc(var(--footer-reach, 24px) * -1);
+  padding-inline: var(--footer-reach, 24px);
+  background: #fff;
 }
