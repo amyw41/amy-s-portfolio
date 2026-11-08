@@ -182,7 +182,7 @@ export const JAR_ITEMS_DELAY_MS = 0;
 // in the JAR_BOUNCE_CLINK_WINDOW_MS after. Never closer together than
 // JAR_CLINK_MIN_GAP_MS; each JAR_CLINK_S long.
 export const JAR_BOUNCE_CLINK_WINDOW_MS = 700;
-export const JAR_BOUNCE_CLINKS = 3;
+export const JAR_BOUNCE_CLINKS = 1;
 export const JAR_CLINK_MIN_GAP_MS = 60;
 export const JAR_CLINK_S = 0.22;
 export const HEADING_DROP_PX = 48;
@@ -233,12 +233,13 @@ export const SCROLL_HINT_OUT_S = 0.15;
 export const HOVER_CLOSE_DELAY_MS = 150;
 
 // Sidebar (Home/Sidebar.tsx): the hand-drawn oval pen-draws on around a
-// heading in OVAL_DRAW_S while it's hovered/focused and un-draws on leave; a
+// heading in OVAL_DRAW_S while it's hovered/focused and un-draws on leave at
+// the same pace (ease-in-out, like a pen going round); a
 // dropdown's chevron turns CHEVRON_OPEN_DEG over CHEVRON_TURN_S. Opening a
 // dropdown grows its list over DROPDOWN_OPEN_S while the items fade down
 // into place DROPDOWN_ITEM_STAGGER_S apart; closing runs quicker
 // (DROPDOWN_CLOSE_S) with no stagger.
-export const OVAL_DRAW_S = 0.35;
+export const OVAL_DRAW_S = 0.6;
 export const CHEVRON_TURN_S = 0.2;
 export const CHEVRON_OPEN_DEG = 180;
 // A Works row's ↗ turns ARROW_HOVER_DEG (to point straight right) while the
@@ -352,7 +353,8 @@ export function isIntroForced(): boolean {
 // trails the mouse by this much (ease-out), and sinks out. Reduced motion:
 // instant.
 export const FOIL_REVEAL_LAG_MS = 180;
-// The page load-in's clinks (useJarPhysics's clinkPattern): instead of
+// The items' clinks as they fall in (useJarPhysics's clinkPattern), on the
+// load-in and every return from the work alike: instead of
 // following the physics (which varies a little, and drops clinks that land
 // in the same frame), a fixed run of clinks starting the moment the first
 // item hits the glass: when (ms after that) and how hard (0-1), the same

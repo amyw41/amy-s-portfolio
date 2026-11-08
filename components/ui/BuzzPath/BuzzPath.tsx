@@ -1,7 +1,7 @@
 "use client";
 
-import { useSyncExternalStore, type CSSProperties } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useEffect, useLayoutEffect, useRef, useSyncExternalStore, type CSSProperties } from "react";
+import { animate, useMotionValue, useReducedMotion } from "framer-motion";
 import styles from "./BuzzPath.module.css";
 import { BUZZ_ENABLED, BUZZ_FPS, slowTransition } from "@/lib/motion";
 
@@ -16,7 +16,8 @@ interface BuzzPathProps {
   strokeWidth?: number;
   preserveAspectRatio?: string;
   /** Pen-stroke reveal: omitted, the line is simply there. true/false draws
-   * it on (pathLength 0 → 1) and off again over `drawDuration` seconds. */
+   * it on and off again over `drawDuration` seconds, at the same pace both
+   * ways (ease-in-out, like a pen). */
   drawn?: boolean;
   drawDuration?: number;
 }
@@ -54,6 +55,67 @@ export default function BuzzPath({
   const reveal = drawn !== undefined;
   const isDrawn = drawn ?? true;
 
+  // The reveal: how much of the line is drawn, 0-1. Drawn as a dash the
+  // length of the line ON SCREEN: the stroke is non-scaling, so its dashes
+  // are in screen px, and a stretched viewBox makes that differ from the
+  // path's own length (framer's pathLength assumed they matched, so the
+  // line finished drawing early and was slow to start un-drawing).
+  const progress = useMotionValue(isDrawn ? 1 : 0);
+  const pathRefs = useRef<(SVGPathElement | null)[]>([]);
+  // Layout effect: painted before the first frame, so an undrawn line never
+  // flashes in whole.
+  useLayoutEffect(() => {
+    if (!reveal) return;
+    const paths = pathRefs.current;
+    let lengths: number[] = [];
+    // Screen length of each path: sampled along it through its screen
+    // transform (a non-uniform stretch has no single scale factor).
+    const measure = () => {
+      lengths = paths.map((el) => {
+        const ctm = el?.getScreenCTM();
+        if (!el || !ctm) return 0;
+        const total = el.getTotalLength();
+        let sum = 0;
+        let prev: DOMPoint | null = null;
+        for (let i = 0; i <= 120; i++) {
+          const q = el.getPointAtLength((total * i) / 120);
+          const pt = new DOMPoint(q.x, q.y).matrixTransform(ctm);
+          if (prev) sum += Math.hypot(pt.x - prev.x, pt.y - prev.y);
+          prev = pt;
+        }
+        return sum;
+      });
+    };
+    const paint = (p: number) => {
+      paths.forEach((el, i) => {
+        if (!el) return;
+        const len = lengths[i] ?? 0;
+        el.style.strokeDasharray = `${(p * len).toFixed(2)}px ${(len + 2).toFixed(2)}px`;
+        // Hidden at 0, so a zero-length dash's round cap leaves no dot.
+        el.style.opacity = p > 0.001 ? "1" : "0";
+      });
+    };
+    measure();
+    paint(progress.get());
+    const unsubscribe = progress.on("change", paint);
+    const svg = paths[0]?.ownerSVGElement;
+    const resize = svg ? new ResizeObserver(() => (measure(), paint(progress.get()))) : null;
+    if (svg) resize?.observe(svg);
+    return () => {
+      unsubscribe();
+      resize?.disconnect();
+    };
+  }, [reveal, progress]);
+  useEffect(() => {
+    if (!reveal) return;
+    const controls = animate(
+      progress,
+      isDrawn ? 1 : 0,
+      reduced ? { duration: 0 } : slowTransition({ duration: drawDuration, ease: "easeInOut" as const }),
+    );
+    return () => controls.stop();
+  }, [reveal, isDrawn, reduced, drawDuration, progress]);
+
   return (
     <svg
       className={`${styles.buzz} ${hidden || !BUZZ_ENABLED ? styles.held : ""} ${className ?? ""}`}
@@ -71,24 +133,15 @@ export default function BuzzPath({
           className={styles.frame}
           style={{ "--buzz-frame": (variants.length - i) % variants.length } as CSSProperties}
         >
-          <motion.path
+          <path
+            ref={(el) => {
+              pathRefs.current[i] = el;
+            }}
             d={d}
             stroke="currentColor"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             vectorEffect="non-scaling-stroke"
-            initial={reveal ? false : undefined}
-            // Opacity rides along with the reveal so a zero-length path's
-            // round cap doesn't leave a dot behind.
-            animate={reveal ? { pathLength: isDrawn ? 1 : 0, opacity: isDrawn ? 1 : 0 } : undefined}
-            transition={
-              reduced
-                ? { duration: 0 }
-                : {
-                    pathLength: slowTransition({ duration: drawDuration, ease: "easeOut" as const }),
-                    opacity: slowTransition({ duration: 0.01, delay: isDrawn ? 0 : drawDuration }),
-                  }
-            }
           />
         </g>
       ))}

@@ -112,11 +112,6 @@ export default function JarView({
   const warmFirst = entering && loadIn && !reduced;
   const [start, setStart] = useState(!entering || warmFirst);
   const [warming, setWarming] = useState(warmFirst);
-  // The page's load-in plays a fixed run of clinks (JAR_LOAD_CLINKS), the
-  // same every time, lasting until the items have landed; coming back from
-  // the work keeps the usual ones. Fixed at mount (loadIn turns off as the
-  // drop starts).
-  const [clinkPattern] = useState(loadIn ? JAR_LOAD_CLINKS : undefined);
   // Resolved by JarStage's onWarm (same pattern as itemsReady below).
   const warmDoneRef = useRef(false);
   const warmWaitersRef = useRef<(() => void)[]>([]);
@@ -321,7 +316,9 @@ export default function JarView({
           entranceDelayMs={JAR_ITEMS_DELAY_MS}
           skipOffscreenFall
           onReady={handleReady}
-          clinkPattern={clinkPattern}
+          // The same fixed run of clinks every time the items fall in (the
+          // load-in and every return from the work).
+          clinkPattern={JAR_LOAD_CLINKS}
           warmOnly={warming}
           onWarm={handleWarm}
           onImpact={onImpact}
