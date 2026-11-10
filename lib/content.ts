@@ -106,7 +106,20 @@ export const content = {
         email: { label: "Email", href: "mailto:amy.wang1@uwaterloo.ca" },
         twitter: { label: "X / Twitter", href: "https://twitter.com/apriberri" },
       },
+      heading: "thank you for dropping by !",
       credit: "Designed + built by Amy (2026)",
+      // The new footer (components/ui/FooterStrip): the doodle top right,
+      // and the item carousel in the middle.
+      backToTop: "back to top",
+      backToTopLabel: "Back to the top",
+      carouselLabel: "Things from the jar",
+      carouselPrev: "Previous item",
+      carouselNext: "Next item",
+      // Each carousel item's caption, by its jar id; any not listed shows
+      // its name in lowercase (lib/whatsInsideItems.ts).
+      itemCaptions: {
+        skullpanda: "my rainbow dash skullpanda",
+      } as Record<string, string>,
     },
     // Bio copy for the About page (components/sections/About/Bio.tsx).
     // Split into pieces instead of 4 flat paragraph strings because 2 of

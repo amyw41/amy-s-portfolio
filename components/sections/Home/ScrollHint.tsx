@@ -31,6 +31,15 @@ const HEAD = [
   buildWobblyLinePath(131, [13, 87], [20, 95], 0.15),
   buildWobblyLinePath(132, [20, 95], [27, 88], 0.15),
 ];
+// `short`: the same loop with a much shorter tail after it (the footer's
+// "back to top"), in a box SHORT_VIEW_H tall.
+const SHORT_VIEW_H = 76;
+const SHORT_LOOP: CurveSegment[] = [...LOOP.slice(0, 3), [[26, 62], [24, 66], [22, 69], [21, 72]]];
+const SHORT_ARROW = buildWobblyCurvePath(130, SHORT_LOOP, 0.4);
+const SHORT_HEAD = [
+  buildWobblyLinePath(131, [15, 66], [21, 72], 0.15),
+  buildWobblyLinePath(132, [21, 72], [27, 66], 0.15),
+];
 
 /**
  * A little doodle annotation, in the style of a café's hand-drawn menu
@@ -50,6 +59,7 @@ export default function ScrollHint({
   label = copy.scrollHint,
   ariaLabel = copy.toWorkLabel,
   up = false,
+  short = false,
   className = styles.besideJar,
 }: {
   shown: boolean;
@@ -58,6 +68,8 @@ export default function ScrollHint({
   ariaLabel?: string;
   /** Arrow points up (from under the label) instead of down. */
   up?: boolean;
+  /** A shorter tail after the loop. */
+  short?: boolean;
   /** Where it sits; defaults to beside the jar. */
   className?: string;
 }) {
@@ -86,8 +98,13 @@ export default function ScrollHint({
       >
         {label}
       </motion.span>
-      <svg className={styles.arrow} viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} fill="none" aria-hidden="true">
-        {[ARROW, ...HEAD].map((d, i) => (
+      <svg
+        className={styles.arrow}
+        viewBox={`0 0 ${VIEW_W} ${short ? SHORT_VIEW_H : VIEW_H}`}
+        fill="none"
+        aria-hidden="true"
+      >
+        {(short ? [SHORT_ARROW, ...SHORT_HEAD] : [ARROW, ...HEAD]).map((d, i) => (
           <motion.path
             key={i}
             d={d}

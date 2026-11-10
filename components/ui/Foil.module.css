@@ -1,5 +1,5 @@
 /* The foil hover (Foil.tsx): a fixed, uneven gradient (raspberry with light
- * yellow patches) over the host, shown only through a soft half circle under the
+ * yellow and blue patches) over the host, shown only through a soft half circle under the
  * mouse (the mask; at rest the circle sits below the host, out of sight).
  * The gradient doesn't move, only the reveal. On text it's a copy of the text
  * laid over it with the gradient clipped to the letters, so only the letters
@@ -13,22 +13,23 @@
   background: #fff;
 }
 
+/* inline-block: the host's box is then exactly its own line, whatever
+ * its parent (inline in a sentence, or a flex/block item), so the copy laid
+ * over it with the same line height lands on the letters. */
 .hostText {
   position: relative;
+  display: inline-block;
 }
 
 .glow {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 12% 78%, #ffe27a, transparent 40%),
-    radial-gradient(circle at 46% 18%, #fff0b3, transparent 32%),
-    radial-gradient(circle at 74% 70%, #ffe27a, transparent 36%),
-    radial-gradient(circle at 92% 22%, #fff0b3, transparent 28%),
-    linear-gradient(115deg, #d6337f, #e0558f 50%, #d6337f);
-  background-size: 170% 170%, 170% 170%, 170% 170%, 170% 170%, 100% 100%;
-  background-position: var(--foil-pos), var(--foil-pos), var(--foil-pos), var(--foil-pos), 0 0;
+  /* The cloud (--foil-cloud, app/globals.css), bigger than the word so
+   * each shows only part of it (which part: --foil-pos, seeded). */
+  background: var(--foil-cloud);
+  background-size: 170% 170%;
+  background-position: var(--foil-pos);
   background-repeat: no-repeat;
   -webkit-mask-image: radial-gradient(circle 32px at var(--fx0) var(--fy0), #000 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.45) 65%, transparent 100%);
   mask-image: radial-gradient(circle 32px at var(--fx0) var(--fy0), #000 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.45) 65%, transparent 100%);
@@ -41,12 +42,22 @@
   mix-blend-mode: lighten;
 }
 
+/* The plain text under the gradient copy: faded out under the half circle
+ * by exactly as much as the copy is faded in (the inverse of .glow's mask),
+ * so the two cross-fade and its colour never fringes the gradient letters. */
+.base {
+  -webkit-mask-image: radial-gradient(circle 32px at var(--fx0) var(--fy0), transparent 0%, rgba(0, 0, 0, 0.15) 30%, rgba(0, 0, 0, 0.55) 65%, #000 100%);
+  mask-image: radial-gradient(circle 32px at var(--fx0) var(--fy0), transparent 0%, rgba(0, 0, 0, 0.15) 30%, rgba(0, 0, 0, 0.55) 65%, #000 100%);
+  transition:
+    --fx0 var(--foil-lag) ease-out,
+    --fy0 var(--foil-lag) ease-out;
+}
+
 /* The text copy: same type as the text under it (inherited), from the same
  * top-left corner, filled with the gradient. */
 .text {
-  /* An inline host's box is just the font's own height, so a normal line
-   * height puts the copy's letters exactly on the originals. */
-  line-height: normal;
+  /* Same line height as the text under it (see .hostText). */
+  line-height: inherit;
   color: transparent;
   white-space: nowrap;
   -webkit-background-clip: text;

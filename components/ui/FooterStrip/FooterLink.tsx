@@ -14,7 +14,6 @@ export default function FooterLink({ href, label, seed }: { href: string; label:
       {...(href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})}
       {...foil.handlers}
     >
-      {label}
       <FoilText foil={foil}>{label}</FoilText>
     </a>
   );

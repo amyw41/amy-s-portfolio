@@ -44,9 +44,12 @@ export const PREVIEW_SPRING = { type: "spring", stiffness: 220, damping: 26 } as
 // seconds between items. Run them through slowTransition() where used.
 export const SIDEBAR_STAGGER = 0.07;
 export const GRID_STAGGER = 0.04;
+// Work-mode grid: the cards come in all together, once every cover has
+// loaded, waiting at most this long (ms) for slow ones.
+export const GRID_COVER_WAIT_MS = 800;
 
 // Work-mode grid (Home/WorkGrid.tsx): each tile rises GRID_TILE_RISE_PX and
-// scales up from GRID_TILE_SCALE over GRID_TILE_S, GRID_STAGGER apart.
+// scales up from GRID_TILE_SCALE over GRID_TILE_S, all at once.
 // Leaving work mode, the heading and grid slide up WORK_EXIT_RISE_PX and
 // fade out together over WORK_EXIT_S, then the jar shows. Filtering slides
 // tiles to their new places over GRID_REORDER_S.
@@ -168,6 +171,14 @@ export const ZOOM_LEAVE_S = 0.35;
 export const ZOOM_DROP_PX = 10;
 export const ZOOM_STAGGER_S = 0.03;
 export const ZOOM_GROW_S = 0.6;
+// The zoom v2 (docs/rebrand/zoom-brief.md, components/ui/CaseZoom): on the
+// click the page freezes and a white scrim fades over it (ZOOM_SCRIM_IN_S)
+// as the card grows (ZOOM_GROW_S) toward the case study's thumbnail; it then
+// settles onto the real thumbnail (ZOOM_SETTLE_S) as the scrim fades off
+// the case study (ZOOM_SCRIM_OUT_S).
+export const ZOOM_SCRIM_IN_S = 0.3;
+export const ZOOM_SETTLE_S = 0.25;
+export const ZOOM_SCRIM_OUT_S = 0.3;
 export const ZOOM_RETURN_S = 0.4;
 // The items drop in almost as soon as the jar lands (Home/JarView.tsx starts
 // them the moment it stops moving, then squashes): no wait before the fall
@@ -353,6 +364,18 @@ export function isIntroForced(): boolean {
 // trails the mouse by this much (ease-out), and sinks out. Reduced motion:
 // instant.
 export const FOIL_REVEAL_LAG_MS = 180;
+// The footer's item carousel (components/ui/FooterStrip/FooterCarousel):
+// stepping slides the item out one side and the next in from the other
+// over this (ease-in-out). Reduced motion: instant.
+export const FOOTER_CAROUSEL_SLIDE_S = 0.45;
+// The footer's credit: its gradient follows the mouse across it, catching
+// up over this (ease-out), and eases back on leave. Reduced motion: still.
+export const FOOTER_CREDIT_SHIFT_MS = 500;
+// The home page lifting off the footer (Home/index.tsx): each frame it
+// closes this fraction of the gap to where the wheel has sent it, so a
+// mouse wheel's notches glide and a trackpad's flicks follow straight on;
+// "back to top" eases it back down the same way. Reduced motion: instant.
+export const FOOTER_LIFT_EASE = 0.25;
 // The items' clinks as they fall in (useJarPhysics's clinkPattern), on the
 // load-in and every return from the work alike: instead of
 // following the physics (which varies a little, and drops clinks that land

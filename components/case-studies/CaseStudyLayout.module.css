@@ -12,7 +12,7 @@
   display: grid;
   grid-template-columns: var(--rail-width) 1px minmax(0, 1fr);
   /* The page, then the footer's own height at the end (FooterStrip). */
-  grid-template-rows: auto 12.5dvh;
+  grid-template-rows: auto 50dvh;
   min-height: 100dvh;
   background: #fff;
   font-family: var(--font-geist), system-ui, sans-serif;
@@ -29,6 +29,7 @@
   display: grid;
   grid-template-columns: var(--rail-width) 1px;
   align-items: start;
+  position: relative;
 }
 
 .rail {
@@ -165,8 +166,33 @@
 
 /* The white cover over the footer ends 96px below the last section, level
  * with the rail's bottom, so the footer is uncovered along one edge. */
+/* Torn at the bottom like the content beside it (FooterStrip .cover), the
+ * one tear running on across both. */
+.side::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 16px;
+  z-index: 2;
+  pointer-events: none;
+  background: #000;
+  -webkit-mask:
+    var(--paper-tear) var(--tear-x, 0px) 0 / 1200px 16px repeat-x,
+    /* A solid bottom row, so no sliver of the page shows under the tear. */
+    linear-gradient(#000 0 0) 0 100% / 100% 3px no-repeat;
+  mask:
+    var(--paper-tear) var(--tear-x, 0px) 0 / 1200px 16px repeat-x,
+    /* A solid bottom row, so no sliver of the page shows under the tear. */
+    linear-gradient(#000 0 0) 0 100% / 100% 3px no-repeat;
+}
+
 .coverEnd {
   padding-bottom: 96px;
+  /* Its tear carries straight on from the rail's (.side), which starts the
+   * rail and the divider further left. */
+  --tear-x: calc((var(--rail-width) + 1px) * -1);
 }
 
 /* ---------- mobile: a top bar, then everything stacked ---------- */

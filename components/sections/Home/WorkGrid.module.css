@@ -33,24 +33,18 @@
   margin: 48px calc(var(--stage-pad-x) * -1) 0;
 }
 
-/* Desktop: the footer is Home's, across the whole window; this is the room
- * to scroll on into at the end (the footer's height), 48px below the cards. */
-.footerRoom {
-  height: 12.5dvh;
-  margin-top: 48px;
-}
-
 @media (min-width: 768px) {
   footer.footerPlace {
     display: none;
   }
-}
 
-@media (max-width: 767px) {
-  .footerRoom {
+  /* No tear on the cards' own cover here: on desktop the whole page lifts
+   * and tears instead (Home.module.css .frame[data-lifted]). */
+  div.coverNoTear::after {
     display: none;
   }
 }
+
 
 /* "equal" layout (WorkGrid.tsx's WORK_LAYOUT): two equal columns, every
  * case study the same size, 32px between rows and 24px between columns.
@@ -172,7 +166,7 @@
   display: block;
   aspect-ratio: 3 / 2;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 4px;
   /* A light grey frame (the original case-study cards' own), so a pale
    * thumbnail — or a white frame in a video — doesn't melt into the page. */
   border: 1px solid rgba(0, 0, 0, 0.12);

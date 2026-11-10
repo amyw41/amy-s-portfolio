@@ -20,14 +20,14 @@ const DESKTOP_QUERY = "(min-width: 768px)";
  * `dir` (1 = down, -1 = up) — e.g. the work grid when it overflows and
  * isn't at that edge yet — up to (not including) `root`. */
 function scrollsItself(target: EventTarget | null, root: HTMLElement, dir: 1 | -1): boolean {
-  for (let el = target instanceof Element ? target : null; el && el !== root; el = el.parentElement) {
-    if (!(el instanceof HTMLElement)) continue;
-    const { overflowY } = getComputedStyle(el);
-    if (overflowY !== "auto" && overflowY !== "scroll") continue;
-    if (el.scrollHeight <= el.clientHeight + 1) continue;
-    if (dir === 1 ? el.scrollTop + el.clientHeight < el.scrollHeight - 1 : el.scrollTop > 0) return true;
-  }
-  return false;
+  // The only thing that scrolls inside the home page is the work view
+  // (data-scroll-switch-target): checked directly, not by reading every
+  // ancestor's computed style on every wheel event (that forced a style
+  // recalc per event, mid-animation).
+  const el = target instanceof Element ? target.closest<HTMLElement>("[data-scroll-switch-target]") : null;
+  if (!el || !root.contains(el)) return false;
+  if (el.scrollHeight <= el.clientHeight + 1) return false;
+  return dir === 1 ? el.scrollTop + el.clientHeight < el.scrollHeight - 1 : el.scrollTop > 0;
 }
 
 /**
@@ -65,10 +65,16 @@ export function useScrollSwitch(
   // Read inside the listeners, which are only attached once.
   const modeRef = useRef(mode);
   const onSwitchRef = useRef(onSwitch);
+  // Re-picks the wheel listener's kind (see `listen` below) when the mode
+  // changes from outside a scroll (a click, a key).
+  const syncListenRef = useRef<() => void>(() => {});
   useEffect(() => {
     modeRef.current = mode;
     onSwitchRef.current = onSwitch;
   });
+  useEffect(() => {
+    syncListenRef.current();
+  }, [mode]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -86,6 +92,26 @@ export function useScrollSwitch(
     // Which way the current gesture is going (1 down, -1 up, 0 none yet).
     let gestureDir = 0;
 
+    // The wheel listener can only swallow input (preventDefault) if it's
+    // not passive, but a non-passive one makes the browser wait for the
+    // page's main thread before every scroll step, which is what made
+    // scrolling the work feel sticky. So it only blocks while it might need
+    // to: on the jar (nothing to scroll), during a switch's lock, and for
+    // the rest of a gesture that already switched. Otherwise, scrolling the
+    // work stays on the browser's fast path.
+    let blocking = true;
+    const shouldBlock = () => modeRef.current === "jar" || performance.now() < lockedUntil || spent;
+    const listen = (block: boolean) => {
+      if (block === blocking) return;
+      root.removeEventListener("wheel", onWheel);
+      root.addEventListener("wheel", onWheel, { passive: !block });
+      blocking = block;
+    };
+    const swallow = (e: WheelEvent) => {
+      if (blocking) e.preventDefault();
+    };
+    syncListenRef.current = () => listen(shouldBlock());
+
     /** Switches if `dir` leads anywhere from this mode (down: jar → work;
      * up: work → jar); returns whether it did. */
     const trySwitch = (dir: 1 | -1) => {
@@ -96,8 +122,11 @@ export function useScrollSwitch(
         (w.__scrollSwitches ??= []).push(next);
       }
       onSwitchRef.current(next);
-      lockedUntil = performance.now() + slowMs(MODE_TRANSITION_MS + SCROLL_SWITCH_SETTLE_MS);
+      const lockMs = slowMs(MODE_TRANSITION_MS + SCROLL_SWITCH_SETTLE_MS);
+      lockedUntil = performance.now() + lockMs;
       travel = 0;
+      listen(true);
+      window.setTimeout(() => listen(shouldBlock()), lockMs + 20);
       spent = true;
       return true;
     };
@@ -135,15 +164,18 @@ export function useScrollSwitch(
       // locked, is swallowed: it would otherwise scroll the grid that's
       // only just arriving.
       if (spent || now < lockedUntil) {
-        e.preventDefault();
+        swallow(e);
         return;
       }
+      // A fresh gesture: drop back to the passive listener if nothing needs
+      // swallowing any more.
+      listen(shouldBlock());
       if (scrollsItself(e.target, root, dir)) scrolledInside = true;
       if (scrolledInside) return;
       travel += dy;
       if (Math.abs(travel) >= (back ? SCROLL_BACK_THRESHOLD_PX : SCROLL_SWITCH_THRESHOLD_PX)) {
         trySwitch(dir);
-        e.preventDefault();
+        swallow(e);
       }
     };
 

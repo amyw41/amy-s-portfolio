@@ -1,12 +1,23 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { EASE_IN_OUT, ZOOM_GROW_S, ZOOM_LEAVE_S, slowMs } from "@/lib/motion";
+import {
+  EASE_IN_OUT,
+  ZOOM_GROW_S,
+  ZOOM_SCRIM_IN_S,
+  ZOOM_SCRIM_OUT_S,
+  ZOOM_SETTLE_S,
+  slowMs,
+} from "@/lib/motion";
 
 type Mode = "jar" | "work";
-type Phase = "idle" | "leaving" | "growing";
+/** "growing": the page is frozen under the scrim and the copy is growing
+ * toward the case study's thumbnail; "landing": the copy is on the real
+ * thumbnail and the scrim is fading off the case study. ("leaving" is the
+ * old zoom's home exit, kept only so Home's own check still compiles.) */
+type Phase = "idle" | "leaving" | "growing" | "landing";
 interface Box {
   x: number;
   y: number;
@@ -17,8 +28,6 @@ interface Box {
 }
 
 interface CaseZoomValue {
-  /** "leaving": the home page is fading out; "growing": the case study is
-   * up and the thumbnail is growing into it. */
   phase: Phase;
   /** The case study being zoomed into. */
   slug: string | null;
@@ -26,6 +35,9 @@ interface CaseZoomValue {
    * study at `href`. Returns false when it doesn't apply (phone, reduced
    * motion, already zooming): the caller then just navigates normally. */
   start(opts: { href: string; slug: string; from: HTMLElement; src: string }): boolean;
+  /** The pointer is on a way into a case study: fetch it now so it's ready
+   * by the time the zoom lands. */
+  prefetch(href: string): void;
   /** The case study's logo was clicked: home should come back in the mode
    * it was left in, widening the rail back into the sidebar. */
   goHome(): void;
@@ -48,13 +60,17 @@ export function useCaseZoom(): CaseZoomValue | null {
  * this attribute (its value is the slug). */
 export const ZOOM_TARGET_ATTR = "data-case-thumb";
 
+/** Set on <html> while the zoom runs: globals.css freezes the page under it
+ * (animations held, no pointer). */
+const FREEZE_ATTR = "data-zoom-freeze";
+
 /** The rotation (radians) in a jar item's transform. */
 function rotationOf(el: HTMLElement): number {
   const m = /rotate\(([-\d.e]+)rad\)/.exec(el.style.transform);
   return m ? Number(m[1]) : 0;
 }
 
-/** Waits, a frame at a time and up to `ms`, for the element `find` returns
+/** Waits, polling every ~frame and up to `ms`, for the element `find` returns
  * to be on the page with a size. */
 function waitFor(find: () => HTMLElement | null, ms: number): Promise<HTMLElement | null> {
   const until = performance.now() + ms;
@@ -63,29 +79,82 @@ function waitFor(find: () => HTMLElement | null, ms: number): Promise<HTMLElemen
       const el = find();
       if (el && el.getBoundingClientRect().width > 0) resolve(el);
       else if (performance.now() > until) resolve(null);
-      else requestAnimationFrame(tick);
+      // setTimeout, not rAF: rAF doesn't run in a hidden tab.
+      else window.setTimeout(tick, 16);
     };
     tick();
   });
 }
 
+/** The width of a page scrollbar (the case study scrolls; home doesn't). */
+function scrollbarWidth(): number {
+  const probe = document.createElement("div");
+  probe.style.cssText = "position:absolute;top:-999px;width:100px;height:100px;overflow:scroll";
+  document.body.appendChild(probe);
+  const w = probe.offsetWidth - probe.clientWidth;
+  probe.remove();
+  return w;
+}
+
 /**
- * The zoom into a case study (brief Part 3.2), kept in the root layout so it
- * lives across the route change. On a click: a copy of the clicked
- * thumbnail is laid exactly over it, above everything; the home page plays
- * its exit (reading `phase`) for ZOOM_LEAVE_S; then the route changes
- * underneath (PageTransition skips its fade for this arrival), and once the
- * case study's thumbnail is on the page the copy grows into its exact spot
- * over ZOOM_GROW_S and hands over to it. Phones and reduced motion just
- * navigate.
+ * Where the case study's thumbnail will be, before that page exists, from
+ * the case-study layout's own sizes (CaseStudyLayout.module.css: the 64px
+ * rail and 1px divider, --pad-y, --stage-pad-x, the 32px title, the 24px
+ * gap, the 42/58 columns 48px apart, the 3:2 thumbnail, 4px corners) at this
+ * window size. The grow aims here at once; the landing corrects any
+ * difference.
+ */
+function predictThumb(): Box {
+  const clamp = (lo: number, v: number, hi: number) => Math.min(hi, Math.max(lo, v));
+  const vw = window.innerWidth - scrollbarWidth();
+  const vh = window.innerHeight;
+  const padY = clamp(24, 0.069 * vh, 80);
+  const padX = clamp(21, 0.02734 * window.innerWidth, 70);
+  const left = 64 + 1 + padX;
+  const contentW = vw - 65 - 2 * padX;
+  const w = ((contentW - 48) * 42) / 100;
+  return { x: left, y: padY + 32 * 1.1 + 24, w, h: (w * 2) / 3, rotate: 0, radius: 4 };
+}
+
+/**
+ * The zoom into a case study (docs/rebrand/zoom-brief.md), kept in the root
+ * layout so it lives across the route change. On a click, all at once:
+ * the page freezes (FREEZE_ATTR), a white scrim fades over it
+ * (ZOOM_SCRIM_IN_S), and a copy of the clicked thumbnail grows, physically
+ * bigger, from its spot toward where the case study's thumbnail will be
+ * (predictThumb, ZOOM_GROW_S) while the route changes underneath. Once that
+ * thumbnail is on the page, the copy settles onto its exact rect
+ * (ZOOM_SETTLE_S), the scrim fades off the case study (ZOOM_SCRIM_OUT_S) and
+ * the real thumbnail takes over. Phones and reduced motion just navigate.
  */
 export default function CaseZoomProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("idle");
   const [slug, setSlug] = useState<string | null>(null);
-  const [overlay, setOverlay] = useState<{ src: string; from: Box; to: Box | null } | null>(null);
+  // `to` is where the copy is heading; `settle` marks the short final move
+  // onto the real thumbnail (its own duration).
+  const [overlay, setOverlay] = useState<{ src: string; from: Box; to: Box; settle: boolean } | null>(null);
   const [returning, setReturning] = useState(false);
   const lastModeRef = useRef<Mode>("jar");
+  // Resolves when the grow has arrived (the landing waits for both that and
+  // the case study's thumbnail).
+  const grownRef = useRef<(() => void) | null>(null);
+
+  // The freeze: on while growing, off as it lands (the case study's own
+  // fade-ins can then run).
+  useEffect(() => {
+    const root = document.documentElement;
+    if (phase === "growing") {
+      root.setAttribute(FREEZE_ATTR, "");
+      document.querySelectorAll("video").forEach((v) => v.pause());
+    } else root.removeAttribute(FREEZE_ATTR);
+  }, [phase]);
+
+  const finish = useCallback(() => {
+    setOverlay(null);
+    setPhase("idle");
+    setSlug(null);
+  }, []);
 
   const start = useCallback<CaseZoomValue["start"]>(
     ({ href, slug: target, from, src }) => {
@@ -107,21 +176,23 @@ export default function CaseZoomProvider({ children }: { children: ReactNode }) 
         radius: parseFloat(getComputedStyle(from).borderTopLeftRadius) || 0,
       };
       setSlug(target);
-      setOverlay({ src, from: fromBox, to: null });
-      setPhase("leaving");
-      router.prefetch(href);
+      setOverlay({ src, from: fromBox, to: predictThumb(), settle: false });
+      setPhase("growing");
+      // The page changes underneath straight away.
+      router.push(href);
 
-      window.setTimeout(async () => {
-        setPhase("growing");
-        router.push(href);
+      const grown = new Promise<void>((resolve) => (grownRef.current = resolve));
+      // A backstop in case the grow's end never reports (e.g. a hidden tab
+      // holds animation frames): the page mustn't stay frozen.
+      window.setTimeout(() => grownRef.current?.(), slowMs(ZOOM_GROW_S * 1000) + 150);
+      (async () => {
         const thumb = await waitFor(
           () => document.querySelector<HTMLElement>(`[${ZOOM_TARGET_ATTR}="${target}"]`),
-          slowMs(4000),
+          slowMs(6000),
         );
+        await grown;
         if (!thumb) {
-          setOverlay(null);
-          setPhase("idle");
-          setSlug(null);
+          finish();
           return;
         }
         const t = thumb.getBoundingClientRect();
@@ -129,6 +200,7 @@ export default function CaseZoomProvider({ children }: { children: ReactNode }) 
           (o) =>
             o && {
               ...o,
+              settle: true,
               to: {
                 x: t.left,
                 y: t.top,
@@ -139,10 +211,12 @@ export default function CaseZoomProvider({ children }: { children: ReactNode }) 
               },
             },
         );
-      }, slowMs(ZOOM_LEAVE_S * 1000));
+        setPhase("landing");
+        window.setTimeout(finish, slowMs(Math.max(ZOOM_SETTLE_S, ZOOM_SCRIM_OUT_S) * 1000) + 30);
+      })();
       return true;
     },
-    [phase, router],
+    [phase, router, finish],
   );
 
   const value = useMemo<CaseZoomValue>(
@@ -150,6 +224,7 @@ export default function CaseZoomProvider({ children }: { children: ReactNode }) 
       phase,
       slug,
       start,
+      prefetch: (href) => router.prefetch(href),
       goHome: () => setReturning(true),
       returning,
       doneReturning: () => setReturning(false),
@@ -160,54 +235,83 @@ export default function CaseZoomProvider({ children }: { children: ReactNode }) 
         lastModeRef.current = mode;
       },
     }),
-    [phase, slug, start, returning],
+    [phase, slug, start, returning, router],
   );
 
-  const box = overlay ? (overlay.to ?? overlay.from) : null;
+  const zooming = phase === "growing" || phase === "landing";
+  const box = overlay?.to;
 
   return (
     <CaseZoomContext.Provider value={value}>
       {children}
-      {overlay && box && (
+      {zooming && (
+        // The background fading back: white over the whole page, under the
+        // copy. Fades off the case study as the copy lands.
         <motion.div
           aria-hidden="true"
-          style={{
-            position: "fixed",
-            left: 0,
-            top: 0,
-            zIndex: 1000,
-            overflow: "hidden",
-            pointerEvents: "none",
-            backgroundImage: `url("${overlay.src}")`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-          initial={{
-            x: overlay.from.x,
-            y: overlay.from.y,
-            width: overlay.from.w,
-            height: overlay.from.h,
-            rotate: (overlay.from.rotate * 180) / Math.PI,
-            borderRadius: overlay.from.radius,
-          }}
-          animate={{
-            x: box.x,
-            y: box.y,
-            width: box.w,
-            height: box.h,
-            rotate: (box.rotate * 180) / Math.PI,
-            borderRadius: box.radius,
-          }}
-          transition={{ duration: overlay.to ? slowMs(ZOOM_GROW_S * 1000) / 1000 : 0, ease: EASE_IN_OUT }}
-          onAnimationComplete={() => {
-            if (!overlay.to) return;
-            // Landed: the real thumbnail takes over.
-            setOverlay(null);
-            setPhase("idle");
-            setSlug(null);
+          style={{ position: "fixed", inset: 0, zIndex: 999, background: "#fff", pointerEvents: "none" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: phase === "growing" ? 1 : 0 }}
+          transition={{
+            duration: slowMs((phase === "growing" ? ZOOM_SCRIM_IN_S : ZOOM_SCRIM_OUT_S) * 1000) / 1000,
+            ease: "easeOut",
           }}
         />
       )}
+      {overlay && box && (() => {
+        // The copy is drawn once at its landing size and moved only by
+        // transform (position, uniform scale, rotation), which the GPU does
+        // without redrawing it: animating its width and height redrew the
+        // whole image every frame, on the main thread, while the case study
+        // was rendering. A start of a different shape (a jar item) is
+        // cropped to that shape with clip-path and opens out as it grows.
+        const W = box.w;
+        const H = box.h;
+        const f = overlay.from;
+        const s = Math.max(f.w / W, f.h / H);
+        const ix = Math.max(0, (W - f.w / s) / 2);
+        const iy = Math.max(0, (H - f.h / s) / 2);
+        return (
+          <motion.div
+            aria-hidden="true"
+            style={{
+              position: "fixed",
+              left: 0,
+              top: 0,
+              width: W,
+              height: H,
+              zIndex: 1000,
+              pointerEvents: "none",
+              willChange: "transform",
+              backgroundImage: `url("${overlay.src}")`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+            initial={{
+              x: f.x + f.w / 2 - W / 2,
+              y: f.y + f.h / 2 - H / 2,
+              scale: s,
+              rotate: (f.rotate * 180) / Math.PI,
+              clipPath: `inset(${iy}px ${ix}px round ${f.radius / s}px)`,
+            }}
+            animate={{
+              x: box.x,
+              y: box.y,
+              scale: 1,
+              rotate: (box.rotate * 180) / Math.PI,
+              clipPath: `inset(0px 0px round ${box.radius}px)`,
+            }}
+            transition={
+              overlay.settle
+                ? { duration: slowMs(ZOOM_SETTLE_S * 1000) / 1000, ease: "easeOut" }
+                : { duration: slowMs(ZOOM_GROW_S * 1000) / 1000, ease: EASE_IN_OUT }
+            }
+            onAnimationComplete={() => {
+              if (!overlay.settle) grownRef.current?.();
+            }}
+          />
+        );
+      })()}
     </CaseZoomContext.Provider>
   );
 }

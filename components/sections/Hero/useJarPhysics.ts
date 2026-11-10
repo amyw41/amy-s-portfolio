@@ -1461,6 +1461,15 @@ export function useJarPhysics(
         function rafTick(now: number) {
           accumulator += now - lastTime;
           lastTime = now;
+          // A settled pile (every body asleep) has nothing to step: skip the
+          // engine until something wakes a body (a drag, a jostle, a
+          // collision all do), so an idle jar costs almost nothing per
+          // frame and the page stays free for scrolling and transitions.
+          if (physicsItems.every(({ body }) => body.isSleeping)) {
+            accumulator = 0;
+            rafId = requestAnimationFrame(rafTick);
+            return;
+          }
           accumulator = Math.min(accumulator, STEP_MS * LIVE_MAX_STEPS_PER_FRAME);
           while (accumulator >= STEP_MS) {
             // Snapshot before stepping: this is the endpoint interpolation

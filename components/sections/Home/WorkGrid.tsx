@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
@@ -15,7 +15,7 @@ import { EXTRAS_PHOTOS } from "@/lib/extras";
 import {
   EASE_IN,
   EASE_OUT,
-  GRID_STAGGER,
+  GRID_COVER_WAIT_MS,
   GRID_TILE_RISE_PX,
   GRID_TILE_S,
   GRID_TILE_SCALE,
@@ -112,19 +112,8 @@ const WORK_LAYOUT: "equal" | "split" = "equal";
 /** "equal": every card in one grid, in order. */
 const EQUAL_TILES: Tile[] = [...PROJECTS.map(projectTile), ...SMALL_TILES.filter((t) => t.id.startsWith("extra-"))];
 
-/** Each card's place in the arrival sweep: top to bottom down the stage,
- * left column first on a tie. A small card is about half a big one's
- * height, so small card j sits level with big card j / 2. */
-const SWEEP_ORDER = new Map<string, number>(
-  WORK_LAYOUT === "equal"
-    ? EQUAL_TILES.map((t, i) => [t.id, i] as [string, number])
-    : [
-        ...BIG_TILES.map((t, i) => ({ id: t.id, y: i * 2 })),
-        ...SMALL_TILES.map((t, j) => ({ id: t.id, y: j + 0.5 })),
-      ]
-        .sort((a, b) => a.y - b.y)
-        .map(({ id }, order) => [id, order] as [string, number]),
-);
+/** Every card's cover, so they can all be loaded before the cards come in. */
+const COVERS = EQUAL_TILES.map((t) => t.cover).filter((src): src is string => !!src);
 
 /**
  * Work mode's stage (brief Part 2.4): "what's inside?", then two columns of
@@ -135,23 +124,18 @@ const SWEEP_ORDER = new Map<string, number>(
  * a thin black footer strip has the credit and the links; "jump to jar"
  * sits at the bottom of the right column.
  *
- * Arriving, the cards sweep in one after another, top to bottom
- * (GRID_STAGGER apart, SWEEP_ORDER). Leaving (back to jar), the whole view
+ * Arriving, the cards all come in together, once their covers have loaded
+ * (or after GRID_COVER_WAIT_MS at most), so none pops in on its own. Leaving (back to jar), the whole view
  * slides up and fades out at once — Home/index.tsx waits for that before
  * showing the jar.
  */
 export default function WorkGrid({
   focusedId = null,
   onJumpToJar,
-  onFooterReveal,
 }: {
   focusedId?: string | null;
   /** "jump to jar" (bottom of the right column) was clicked. */
   onJumpToJar?: () => void;
-  /** Desktop: how far (px) the view has scrolled past the end of the work,
-   * into the footer's room; Home slides the page up that much to uncover
-   * the footer behind it. 0 when not there (and on leaving). */
-  onFooterReveal?: (px: number) => void;
 }) {
   const reduced = useReducedMotion() ?? false;
   // A case study hovered in the sidebar: its card lifts, the others dim.
@@ -169,36 +153,31 @@ export default function WorkGrid({
 
   const zoom = useCaseZoom();
 
-  // The footer's room at the end (desktop): scrolling into it doesn't move
-  // the cards twice (the view scrolls and the page slides up): the cover is
-  // pushed back down by the same amount, so the work moves up once, with
-  // the page.
-  const coverRef = useRef<HTMLDivElement>(null);
-  const roomRef = useRef<HTMLDivElement>(null);
-  const revealRef = useRef(onFooterReveal);
+  // The cards wait for every cover to load (up to GRID_COVER_WAIT_MS), then
+  // come in at once.
+  const [coversReady, setCoversReady] = useState(false);
   useEffect(() => {
-    revealRef.current = onFooterReveal;
-  });
-  useEffect(() => {
-    const view = viewRef.current;
-    if (!view) return;
-    let last = -1;
-    const update = () => {
-      const room = roomRef.current?.offsetHeight ?? 0;
-      const px = room ? Math.max(0, Math.min(room, view.scrollTop - (view.scrollHeight - view.clientHeight - room))) : 0;
-      if (px === last) return;
-      last = px;
-      if (coverRef.current) coverRef.current.style.transform = px ? `translateY(${px}px)` : "";
-      revealRef.current?.(px);
+    let done = false;
+    const finish = () => {
+      if (!done) {
+        done = true;
+        setCoversReady(true);
+      }
     };
-    view.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
+    const timer = window.setTimeout(finish, GRID_COVER_WAIT_MS);
+    Promise.all(
+      COVERS.map((src) => {
+        const img = new window.Image();
+        img.src = src;
+        return img.decode().catch(() => undefined);
+      }),
+    ).then(finish);
     return () => {
-      view.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-      revealRef.current?.(0);
+      done = true;
+      window.clearTimeout(timer);
     };
   }, []);
+
 
   const variants = useMemo<{ view: Variants; tile: Variants }>(
     () => ({
@@ -214,13 +193,13 @@ export default function WorkGrid({
       },
       tile: {
         hidden: reduced ? { opacity: 0 } : { opacity: 0, y: GRID_TILE_RISE_PX, scale: GRID_TILE_SCALE },
-        shown: (i: number) => ({
+        shown: () => ({
           opacity: 1,
           y: 0,
           scale: 1,
           transition: reduced
             ? { duration: 0 }
-            : slowTransition({ duration: GRID_TILE_S, delay: i * GRID_STAGGER, ease: EASE_OUT }),
+            : slowTransition({ duration: GRID_TILE_S, ease: EASE_OUT }),
         }),
       },
     }),
@@ -234,14 +213,18 @@ export default function WorkGrid({
       <motion.li
         key={tile.id}
         className={styles.tileItem}
-        custom={SWEEP_ORDER.get(tile.id) ?? 0}
+
         variants={variants.tile}
         initial="hidden"
-        animate="shown"
+        animate={coversReady ? "shown" : "hidden"}
       >
         <Link
           href={tile.href}
           data-work-card={tile.id}
+          // Fetch the case study on hover, so the zoom lands without a wait.
+          onPointerEnter={() => {
+            if (!tile.id.startsWith("extra-")) zoom?.prefetch(tile.href);
+          }}
           // A case study zooms in from its cover (components/ui/CaseZoom);
           // extras (to the Play page) just navigate.
           onClick={(e) => {
@@ -306,7 +289,7 @@ export default function WorkGrid({
     >
       {/* Everything above the footer, in front of it: scrolling to the end
        * slides it up off the footer (FooterStrip's reveal). */}
-      <div ref={coverRef} className={footerCover}>
+      <div className={`${footerCover} ${styles.coverNoTear}`}>
         {/* Drops in from above with a little overshoot, as the jar leaves
          * (brief Part 2.4: the camera panning down into the jar). */}
         <motion.h2
@@ -324,16 +307,6 @@ export default function WorkGrid({
           // footer. It draws on once it scrolls into view.
           <>
             <ul className={styles.equalGrid}>{EQUAL_TILES.map((tile) => card(tile, false))}</ul>
-            <div ref={jumpRef} className={styles.jumpCorner}>
-              <ScrollHint
-                shown={jumpInView}
-                onActivate={() => onJumpToJar?.()}
-                label={content.en.sidebar.modes.jumpToJar}
-                ariaLabel={content.en.sidebar.modes.toJarLabel}
-                up
-                className={styles.jumpToJarSmall}
-              />
-            </div>
           </>
         ) : (
           // Two columns: the bigger case studies on the left (2/3), the smaller
@@ -360,11 +333,10 @@ export default function WorkGrid({
         )}
       </div>
 
-      {/* The end of the list. Desktop: room to scroll on into, which slides
-       * the whole page up off the footer behind it (Home). Mobile: the
-       * footer itself, revealed from behind the cards. */}
-      <div ref={roomRef} className={styles.footerRoom} aria-hidden="true" />
-      <FooterStrip className={styles.footerPlace} />
+      {/* The end of the list. Desktop: the footer is Home's, behind the whole
+       * page, which lifts off it (index.tsx). Mobile: the footer itself,
+       * revealed from behind the cards. */}
+      <FooterStrip className={styles.footerPlace} onBackToTop={() => onJumpToJar?.()} />
     </motion.div>
   );
 }

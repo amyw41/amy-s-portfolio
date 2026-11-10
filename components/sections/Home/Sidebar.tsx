@@ -3,7 +3,7 @@
 import { memo, useId, useMemo, useState, type CSSProperties, type FocusEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
-import { ChevronDown, Mail } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import styles from "./Sidebar.module.css";
 import { content } from "@/lib/content";
 import { PROJECTS } from "@/lib/projects";
@@ -33,22 +33,30 @@ interface SidebarProps {
   onCaseFocus: (id: string | null) => void;
 }
 
-// X and LinkedIn marks — lucide-react no longer ships brand icons, so these
-// two are inline. Both fill with currentColor so the row stays plain black.
+// X, LinkedIn, and Mail marks — drawn flush to their bottom bounding box so
+// all three share an identical bottom baseline. Both fill/stroke with currentColor
+// so the row stays plain black.
 function XIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+    <svg viewBox="1.25 2.25 21.6 19.5" width="16.6" height="15" fill="currentColor" aria-hidden="true">
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
     </svg>
   );
 }
 
-// Drawn edge to edge of its viewBox (the mark has no built-in padding), so
-// it reads as the same size as X and the envelope next to it.
 function LinkedInIcon() {
   return (
-    <svg viewBox="3.5 3.4 16.5 16.2" width="18" height="18" fill="currentColor" aria-hidden="true">
+    <svg viewBox="3.42 3.5 16.08 16.0" width="15.1" height="15" fill="currentColor" aria-hidden="true">
       <path d="M5.34 3.5a1.92 1.92 0 1 1 0 3.84 1.92 1.92 0 0 1 0-3.84zM3.68 8.9h3.32v10.6H3.68zM9.08 8.9h3.18v1.45h.05c.44-.84 1.53-1.73 3.16-1.73 3.38 0 4 2.22 4 5.11v5.77h-3.32v-5.12c0-1.22-.02-2.79-1.7-2.79-1.7 0-1.96 1.33-1.96 2.7v5.21H9.08z" />
+    </svg>
+  );
+}
+
+function MailIcon() {
+  return (
+    <svg viewBox="1.1 3.1 21.8 17.8" width="17.2" height="14" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect width="20" height="16" x="2" y="4" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
     </svg>
   );
 }
@@ -58,7 +66,7 @@ function LinkedInIcon() {
 const SOCIAL_LINKS = [
   { href: links.twitter.href, label: copy.social.twitter, icon: <XIcon /> },
   { href: links.linkedin.href, label: copy.social.linkedin, icon: <LinkedInIcon /> },
-  { href: links.email.href, label: copy.social.email, icon: <Mail size={20} strokeWidth={1.75} aria-hidden="true" /> },
+  { href: links.email.href, label: copy.social.email, icon: <MailIcon /> },
 ];
 
 // Case studies listed under Works — every project in lib/projects.ts, then
@@ -283,6 +291,8 @@ function CaseStudyRow({
       onPointerEnter={(e) => {
         onFocusChange(true);
         foil.handlers.onPointerEnter(e);
+        // Fetch the case study now, so the zoom lands on it without a wait.
+        zoom?.prefetch(href);
       }}
       onPointerMove={foil.handlers.onPointerMove}
       onPointerLeave={(e) => {
@@ -295,7 +305,6 @@ function CaseStudyRow({
       onBlur={() => onFocusChange(false)}
     >
       <span className={`${styles.itemName} ${foilHostText}`}>
-        {label}
         <FoilText foil={foil}>{label}</FoilText>
       </span>
       <UpRightArrow />
@@ -317,7 +326,6 @@ function ExperienceRow({ role, company, href, seed }: { role: string; company: s
         rel="noopener noreferrer"
         {...foil.handlers}
       >
-        {company}
         <FoilText foil={foil}>{company}</FoilText>
       </a>
     </>
@@ -331,7 +339,6 @@ function ExtraLink({ href, label, seed }: { href: string; label: string; seed: n
   return (
     <Link href={href} className={`${styles.itemLink} ${styles.foilLink}`} {...foil.handlers}>
       <span className={foilHostText}>
-        {label}
         <FoilText foil={foil}>{label}</FoilText>
       </span>
     </Link>

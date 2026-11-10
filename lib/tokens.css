@@ -69,12 +69,8 @@
    * the raster itself is cached per-src and doesn't re-read this on its
    * own. */
   --outline-thickness: 4px;
-  /* Shared corner radius for all 3 'box' (project-card) items — previously
-   * computed per-item from each card's own aspect ratio (6% of its own
-   * shorter edge), which drifted between cards whenever their alpha bboxes
-   * didn't share the same aspect ratio. Fixed value instead: all 3 project
-   * items render with an identical radius no matter their own art. */
-  --jar-item-radius: 12px;
+  /* Shared corner radius for project cards. */
+  --jar-item-radius: 4px;
 
   /* Single source of truth for gallery photo captions (Playground's own
    * collage gallery AND the Extras case-study gallery) — both read this
