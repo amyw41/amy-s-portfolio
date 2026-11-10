@@ -98,22 +98,15 @@ function scrollbarWidth(): number {
 
 /**
  * Where the case study's thumbnail will be, before that page exists, from
- * the case-study layout's own sizes (CaseStudyLayout.module.css: the 64px
- * rail and 1px divider, --pad-y, --stage-pad-x, the 32px title, the 24px
- * gap, the 42/58 columns 48px apart, the 3:2 thumbnail, 4px corners) at this
+ * the case-study layout (CaseStudyLayout.module.css: the cover fills the
+ * whole first screen) at this
  * window size. The grow aims here at once; the landing corrects any
  * difference.
  */
 function predictThumb(): Box {
-  const clamp = (lo: number, v: number, hi: number) => Math.min(hi, Math.max(lo, v));
-  const vw = window.innerWidth - scrollbarWidth();
-  const vh = window.innerHeight;
-  const padY = clamp(24, 0.069 * vh, 80);
-  const padX = clamp(21, 0.02734 * window.innerWidth, 70);
-  const left = 64 + 1 + padX;
-  const contentW = vw - 65 - 2 * padX;
-  const w = ((contentW - 48) * 42) / 100;
-  return { x: left, y: padY + 32 * 1.1 + 24, w, h: (w * 2) / 3, rotate: 0, radius: 4 };
+  // The case study's cover fills its whole first screen (the page scrolls,
+  // so less its scrollbar), square cornered.
+  return { x: 0, y: 0, w: window.innerWidth - scrollbarWidth(), h: window.innerHeight, rotate: 0, radius: 0 };
 }
 
 /**

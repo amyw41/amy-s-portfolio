@@ -265,9 +265,9 @@ export default function SpotifyCaseStudy() {
             <div className="space-y-4">
               {INSIGHTS.map((insight, i) => (
                 <div key={insight.title} className="flex gap-4 rounded-[10px] bg-[#f7f7f7] p-6">
-                  <span className="font-body text-lg font-medium text-black">{i + 1}</span>
+                  <span className="font-body text-[14px] font-medium text-black">{i + 1}</span>
                   <div>
-                    <p className="font-body text-[18px] font-light text-black text-left">{insight.title}</p>
+                    <p className="font-body text-[14px] font-light text-black text-left">{insight.title}</p>
                     <p className={`mt-1 ${TEXT.content}`}>{insight.body}</p>
                   </div>
                 </div>

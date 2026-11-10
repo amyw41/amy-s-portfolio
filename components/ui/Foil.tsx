@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { useReducedMotion } from "framer-motion";
 import styles from "./Foil.module.css";
 import { FOIL_REVEAL_LAG_MS } from "@/lib/motion";
@@ -31,29 +31,65 @@ export function useFoil(seed: number) {
       "--foil-pos": `${Math.round(a * 100)}% ${Math.round(b * 100)}%`,
     } as CSSProperties;
   }, [seed, reduced]);
-  const place = (e: PointerEvent<HTMLElement>, risen: boolean) => {
-    const glow = e.currentTarget.querySelector<HTMLElement>("[data-foil]");
-    if (!glow) return;
-    const box = glow.getBoundingClientRect();
-    // In the glow's own CSS px (the box may be scaled, e.g. mid-zoom).
-    const k = glow.offsetWidth ? box.width / glow.offsetWidth : 1;
-    const x = (e.clientX - box.left) / k;
-    const h = glow.offsetHeight;
+  // The gradient layer only exists while it's in use (from the pointer
+  // arriving until it has sunk away after leaving). At rest it isn't on the
+  // page at all: the cloud is many layers of gradient, and having one under
+  // every link meant the whole sidebar was slow to draw, so its load-in (and
+  // everything moving with it, like the jar's bounce) stuttered.
+  const [active, setActive] = useState(false);
+  const host = useRef<HTMLElement | null>(null);
+  const pos = useRef({ x: 0, risen: false });
+  const sinkTimer = useRef(0);
+  const apply = (risen: boolean) => {
+    const el = host.current;
+    if (!el) return;
+    const glow = el.querySelector<HTMLElement>("[data-foil]");
+    const h = glow?.offsetHeight ?? el.offsetHeight;
     // Risen: the centre just under the bottom edge, so a half circle shows.
-    // Sunk: far enough below to be out of sight.
-    // The gradient copy, and (for text) the plain text under it, which
-    // fades out where the copy fades in (FoilText).
-    e.currentTarget.querySelectorAll<HTMLElement>("[data-foil], [data-foil-base]").forEach((el) => {
-      el.style.setProperty("--fx0", `${x.toFixed(1)}px`);
-      el.style.setProperty("--fy0", `${risen ? h + 1 : h + 24}px`);
+    // Sunk: far enough below to be out of sight. The gradient copy, and (for
+    // text) the plain text under it, which fades out where the copy fades in.
+    el.querySelectorAll<HTMLElement>("[data-foil], [data-foil-base]").forEach((n) => {
+      n.style.setProperty("--fx0", `${pos.current.x.toFixed(1)}px`);
+      n.style.setProperty("--fy0", `${risen ? h + 1 : h + 24}px`);
     });
   };
+  const track = (e: PointerEvent<HTMLElement>, risen: boolean) => {
+    host.current = e.currentTarget;
+    const box = e.currentTarget.getBoundingClientRect();
+    // In the host's own CSS px (it may be scaled, e.g. mid-zoom).
+    const k = e.currentTarget.offsetWidth ? box.width / e.currentTarget.offsetWidth : 1;
+    pos.current = { x: (e.clientX - box.left) / k, risen };
+  };
+  // Just mounted: start sunk under the pointer, then rise on the next frame
+  // (so it transitions up rather than appearing).
+  useEffect(() => {
+    if (!active) return;
+    apply(false);
+    const raf = requestAnimationFrame(() => apply(pos.current.risen));
+    return () => cancelAnimationFrame(raf);
+  }, [active]);
+  useEffect(() => () => window.clearTimeout(sinkTimer.current), []);
   return {
     style,
+    active,
     handlers: {
-      onPointerEnter: (e: PointerEvent<HTMLElement>) => place(e, true),
-      onPointerMove: (e: PointerEvent<HTMLElement>) => place(e, true),
-      onPointerLeave: (e: PointerEvent<HTMLElement>) => place(e, false),
+      onPointerEnter: (e: PointerEvent<HTMLElement>) => {
+        track(e, true);
+        window.clearTimeout(sinkTimer.current);
+        if (active) apply(true);
+        else setActive(true);
+      },
+      onPointerMove: (e: PointerEvent<HTMLElement>) => {
+        track(e, true);
+        if (active) apply(true);
+      },
+      onPointerLeave: (e: PointerEvent<HTMLElement>) => {
+        track(e, false);
+        apply(false);
+        // Gone once it has sunk out of sight.
+        window.clearTimeout(sinkTimer.current);
+        sinkTimer.current = window.setTimeout(() => setActive(false), (reduced ? 0 : FOIL_REVEAL_LAG_MS) + 80);
+      },
     },
   };
 }
@@ -61,6 +97,7 @@ export function useFoil(seed: number) {
 /** The gradient layer for an icon: blended so only the icon's black ink on
  * white takes the colour (lighten). Its host needs foilHostLight. */
 export function FoilGlow({ foil }: { foil: ReturnType<typeof useFoil> }) {
+  if (!foil.active) return null;
   return <span className={`${styles.glow} ${styles.onLight}`} data-foil style={foil.style} aria-hidden="true" />;
 }
 
@@ -73,12 +110,16 @@ export function FoilGlow({ foil }: { foil: ReturnType<typeof useFoil> }) {
 export function FoilText({ foil, children }: { foil: ReturnType<typeof useFoil>; children: string }) {
   return (
     <>
-      <span className={styles.base} data-foil-base style={foil.style}>
+      {/* The plain text; masked (to fade under the circle) only while the
+       * foil is in use. */}
+      <span className={foil.active ? styles.base : undefined} data-foil-base style={foil.style}>
         {children}
       </span>
-      <span className={`${styles.glow} ${styles.text}`} data-foil style={foil.style} aria-hidden="true">
-        {children}
-      </span>
+      {foil.active && (
+        <span className={`${styles.glow} ${styles.text}`} data-foil style={foil.style} aria-hidden="true">
+          {children}
+        </span>
+      )}
     </>
   );
 }

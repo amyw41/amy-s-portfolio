@@ -1,1 +1,1 @@
-export { default, footerCover } from "./FooterStrip";
+export { default } from "./FooterStrip";

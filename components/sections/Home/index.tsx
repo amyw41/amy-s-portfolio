@@ -1,21 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type WheelEvent as ReactWheelEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { AnimatePresence } from "framer-motion";
 import styles from "./Home.module.css";
 import Sidebar, { type HomeMode } from "./Sidebar";
-import WorkGrid from "./WorkGrid";
+import WorkGrid, { preloadWorkCovers } from "./WorkGrid";
 import ScrollCue from "./ScrollCue";
 import { useScrollSwitch } from "./useScrollSwitch";
 import BuzzPath from "@/components/ui/BuzzPath";
 import JarView from "./JarView";
-import FooterStrip from "@/components/ui/FooterStrip";
 import { createJarSound, type JarSound } from "@/components/sections/Hero/jar-sound";
 import { content } from "@/lib/content";
 import { gaegu, geist } from "@/lib/fonts";
 import { useCaseZoom } from "@/components/ui/CaseZoom";
 import {
-  FOOTER_LIFT_EASE,
   INTRO_DIVIDER_DRAW_S,
   INTRO_SIDEBAR_RISE_PX,
   INTRO_SIDEBAR_STAGGER_S,
@@ -117,81 +115,7 @@ export default function Home() {
   // The work view's footer (desktop): scrolling past the end of the work
   // slides the whole page up by that much, uncovering the footer fixed
   // behind it across the whole window (WorkGrid reports how far).
-  // The work view's footer (desktop) is fixed behind the whole page. At the
-  // end of the work, scrolling on lifts the whole page (sidebar included)
-  // up off it, as far as the footer is tall; scrolling back up lowers it
-  // before the work scrolls again. The lift follows the wheel (and a
-  // trackpad's momentum) through a short ease each frame
-  // (FOOTER_LIFT_EASE), so a mouse wheel's notches glide. While lifted, the
-  // work view itself is held still (overflow hidden), so only one thing
-  // moves: the page. (Lifting by scrolling the work into extra room and
-  // pushing the cards back down was two movers out of step, a frame apart:
-  // the jitter.)
-  const homeFooterRef = useRef<HTMLElement>(null);
-  // The lift's state and its per-frame ease, made once.
-  const [lifter] = useState(() => {
-    const l = { target: 0, current: 0, raf: 0 };
-    const paint = () => {
-      const frame = frameRef.current;
-      l.current += (l.target - l.current) * FOOTER_LIFT_EASE;
-      if (Math.abs(l.target - l.current) < 0.5) l.current = l.target;
-      if (frame) {
-        frame.style.setProperty("transform", l.current > 0 ? `translateY(${-l.current}px)` : "none");
-        // Its bottom edge tears while it's lifted (Home.module.css).
-        frame.toggleAttribute("data-lifted", l.current > 0);
-        const view = frame.querySelector<HTMLElement>("[data-scroll-switch-target]");
-        if (view) view.style.overflowY = l.target > 0 || l.current > 0 ? "hidden" : "";
-      }
-      l.raf = l.current !== l.target ? requestAnimationFrame(paint) : 0;
-    };
-    return {
-      get target() {
-        return l.target;
-      },
-      set(to: number, max: number) {
-        l.target = Math.max(0, Math.min(max, to));
-        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) l.current = l.target;
-        if (!l.raf) l.raf = requestAnimationFrame(paint);
-      },
-    };
-  });
-  const setLift = useCallback((to: number) => lifter.set(to, homeFooterRef.current?.offsetHeight ?? 0), [lifter]);
-  /** A wheel over the work or the footer (desktop): lifts or lowers the page
-   * when it's at the end of the work; otherwise the work scrolls as usual
-   * (and a wheel over the footer is passed on to it). */
-  const liftWheel = useCallback(
-    (e: WheelEvent | ReactWheelEvent, overFooter: boolean) => {
-      if (!window.matchMedia("(min-width: 768px)").matches) return;
-      const view = frameRef.current?.querySelector<HTMLElement>("[data-scroll-switch-target]");
-      if (!view) return;
-      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? window.innerHeight : 1);
-      const lifted = lifter.target;
-      const atEnd = view.scrollTop + view.clientHeight >= view.scrollHeight - 1;
-      if (lifted > 0 || (dy > 0 && atEnd)) {
-        const left = lifted + dy;
-        setLift(left);
-        // Lowered all the way with some scroll to spare: the work takes it.
-        if (left < 0 && overFooter) view.scrollBy({ top: left });
-      } else if (overFooter) {
-        view.scrollBy({ top: dy, behavior: Math.abs(dy) >= 50 ? "smooth" : "auto" });
-      }
-    },
-    [setLift, lifter],
-  );
-  useEffect(() => {
-    const frame = frameRef.current;
-    if (!frame) return;
-    const onWheel = (e: WheelEvent) => liftWheel(e, false);
-    // Passive: it never needs to stop the scroll (the work is held still by
-    // overflow while lifted), so scrolling stays on the browser's fast path.
-    frame.addEventListener("wheel", onWheel, { passive: true });
-    return () => frame.removeEventListener("wheel", onWheel);
-  }, [liftWheel]);
-  // Leaving the work: back down.
-  useEffect(() => {
-    if (mode !== "work") setLift(0);
-  }, [mode, setLift]);
-  const lowerOffFooter = useCallback(() => setLift(0), [setLift]);
+
 
   function changeMode(next: HomeMode) {
     if (next === mode) return;
@@ -251,84 +175,77 @@ export default function Home() {
     const timer = window.setTimeout(() => setIntro("none"), slowMs(Math.max(sidebarMs, INTRO_DIVIDER_DRAW_S * 1000)) + 50);
     return () => window.clearTimeout(timer);
   }, [intro]);
+  // Once the load-in is over and the page is idle, get the work's covers
+  // ready, so scrolling down shows the cards straight away.
+  useEffect(() => {
+    if (intro !== "none") return;
+    const run = () => void preloadWorkCovers();
+    const idle = typeof window.requestIdleCallback === "function";
+    const id: number = idle ? window.requestIdleCallback(run, { timeout: 2500 }) : window.setTimeout(run, 1200);
+    return () => (idle ? window.cancelIdleCallback(id) : window.clearTimeout(id));
+  }, [intro]);
   const introClass = intro === "reveal" ? styles.introReveal : intro === "none" ? "" : styles.introHidden;
   // The jar only mounts once the load-in is decided, so it can arrive.
   const jarReady = intro !== "pending";
 
   return (
-    <>
-      <main
-        ref={frameRef}
-        className={`${geist.variable} ${gaegu.variable} ${styles.frame} ${zoomClass} ${introClass} ${mode === "work" ? styles.workMode : ""}`}
-        style={ZOOM_VARS}
-      >
-        {/* The case study's logo, appearing in the corner as the sidebar
-         * narrows into its rail (the name retracting into it), and fading as
-         * it widens back. */}
-        <span className={styles.zoomLogo} aria-hidden="true">
-          aw
-        </span>
-        <Sidebar onCaseFocus={setFocusedCase} />
+    <main
+      ref={frameRef}
+      className={`${geist.variable} ${gaegu.variable} ${styles.frame} ${zoomClass} ${introClass}`}
+      style={ZOOM_VARS}
+    >
+      {/* The case study's logo, appearing in the corner as the sidebar
+       * narrows into its rail (the name retracting into it), and fading as
+       * it widens back. */}
+      <span className={styles.zoomLogo} aria-hidden="true">
+        aw
+      </span>
+      <Sidebar onCaseFocus={setFocusedCase} />
 
-        {/* Draws on downward at the load-in (Home.module.css .introReveal). */}
-        <div className={styles.divider} aria-hidden="true" data-intro-divider>
-          <BuzzPath
-            className={styles.dividerLine}
-            variants={DIVIDER_VARIANTS}
-            viewBox={`0 0 ${DIVIDER_BOX_W} ${DIVIDER_BOX_H}`}
-            preserveAspectRatio="none"
-            strokeWidth={LINE_STROKE_WIDTH}
-          />
-        </div>
+      {/* Draws on downward at the load-in (Home.module.css .introReveal). */}
+      <div className={styles.divider} aria-hidden="true" data-intro-divider>
+        <BuzzPath
+          className={styles.dividerLine}
+          variants={DIVIDER_VARIANTS}
+          viewBox={`0 0 ${DIVIDER_BOX_W} ${DIVIDER_BOX_H}`}
+          preserveAspectRatio="none"
+          strokeWidth={LINE_STROKE_WIDTH}
+        />
+      </div>
 
-        <section className={styles.stage}>
-          {/* The crayon toggle (ModeToggle.tsx) is kept in the repo but no
-           * longer shown: scrolling switches. On mobile, where it doesn't,
-           * these tap cues do. */}
-          <ScrollCue mode={mode} onActivate={changeMode} />
-          {/* mode="wait": one view at a time — the leaving one finishes its
-           * exit before the next starts (jar → work: the jar drops away, then
-           * "what's inside?" and the grid come in; work → jar: the grid slides
-           * out, then the jar drops in). */}
-          <AnimatePresence mode="wait" initial={false}>
-            {mode === "jar" ? (
-              jarReady && (
-                <JarView
-                  key="jar"
-                  // The load-in is the same arrival as coming back from work.
-                  entering={jarEntering || intro === "play"}
-                  loadIn={intro === "play"}
-                  onLoadInStart={startReveal}
-                  isolatedId={focusedCase}
-                  onImpact={handleImpact}
-                  onImpactsEnd={handleImpactsEnd}
-                  onHintActivate={() => changeMode("work")}
-                />
-              )
-            ) : (
-              <WorkGrid
-                key="work"
-                focusedId={focusedCase}
-                onJumpToJar={() => changeMode("jar")}
+      <section className={styles.stage}>
+        {/* The crayon toggle (ModeToggle.tsx) is kept in the repo but no
+         * longer shown: scrolling switches. On mobile, where it doesn't,
+         * these tap cues do. */}
+        <ScrollCue mode={mode} onActivate={changeMode} />
+        {/* mode="wait": one view at a time — the leaving one finishes its
+         * exit before the next starts (jar → work: the jar drops away, then
+         * "what's inside?" and the grid come in; work → jar: the grid slides
+         * out, then the jar drops in). */}
+        <AnimatePresence mode="wait" initial={false}>
+          {mode === "jar" ? (
+            jarReady && (
+              <JarView
+                key="jar"
+                // The load-in is the same arrival as coming back from work.
+                entering={jarEntering || intro === "play"}
+                loadIn={intro === "play"}
+                onLoadInStart={startReveal}
+                isolatedId={focusedCase}
+                onImpact={handleImpact}
+                onImpactsEnd={handleImpactsEnd}
+                onHintActivate={() => changeMode("work")}
               />
-            )}
-          </AnimatePresence>
-        </section>
-      </main>
-      {/* Behind the page; only uncovered at the end of the work. Always
-       * there (hidden behind the page in jar mode), so switching to the work
-       * doesn't have to build it. */}
-      <FooterStrip
-        ref={homeFooterRef}
-        className={`${geist.variable} ${styles.homeFooter}`}
-        onBackToTop={() => {
-          lowerOffFooter();
-          changeMode("jar");
-        }}
-        // The footer sits outside the work view's scroll box: a wheel over
-        // it lifts or lowers the page, or scrolls the work (liftWheel).
-        onWheel={(e) => liftWheel(e, true)}
-      />
-    </>
+            )
+          ) : (
+            <WorkGrid
+              key="work"
+              focusedId={focusedCase}
+              onJumpToJar={() => changeMode("jar")}
+            />
+          )}
+        </AnimatePresence>
+      </section>
+    </main>
   );
 }

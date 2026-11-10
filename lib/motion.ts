@@ -45,8 +45,9 @@ export const PREVIEW_SPRING = { type: "spring", stiffness: 220, damping: 26 } as
 export const SIDEBAR_STAGGER = 0.07;
 export const GRID_STAGGER = 0.04;
 // Work-mode grid: the cards come in all together, once every cover has
-// loaded, waiting at most this long (ms) for slow ones.
-export const GRID_COVER_WAIT_MS = 800;
+// loaded (they're usually preloaded while the jar sits idle), waiting at
+// most this long (ms) for slow ones.
+export const GRID_COVER_WAIT_MS = 300;
 
 // Work-mode grid (Home/WorkGrid.tsx): each tile rises GRID_TILE_RISE_PX and
 // scales up from GRID_TILE_SCALE over GRID_TILE_S, all at once.
@@ -371,11 +372,6 @@ export const FOOTER_CAROUSEL_SLIDE_S = 0.45;
 // The footer's credit: its gradient follows the mouse across it, catching
 // up over this (ease-out), and eases back on leave. Reduced motion: still.
 export const FOOTER_CREDIT_SHIFT_MS = 500;
-// The home page lifting off the footer (Home/index.tsx): each frame it
-// closes this fraction of the gap to where the wheel has sent it, so a
-// mouse wheel's notches glide and a trackpad's flicks follow straight on;
-// "back to top" eases it back down the same way. Reduced motion: instant.
-export const FOOTER_LIFT_EASE = 0.25;
 // The items' clinks as they fall in (useJarPhysics's clinkPattern), on the
 // load-in and every return from the work alike: instead of
 // following the physics (which varies a little, and drops clinks that land

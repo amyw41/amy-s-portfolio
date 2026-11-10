@@ -47,7 +47,8 @@ const META = [
 // — a muted plum/mauve in the reference screenshot, not black like the rest
 // of the card text. CHECK: eyeballed from the screenshot, not
 // pixel-sampled — nudge the hex if it's slightly off from the original.
-const PERSONA_ACCENT = "#9c3f72";
+// Now black, like all the case-study text (design-system.md).
+const PERSONA_ACCENT = "#000";
 
 // Persona cards for the Research section — real copy from Amy's reference
 // screenshot (photo + name, an intro bullet list, then Pain Points and
@@ -191,7 +192,7 @@ function RatingLegend() {
       {ratings.map((r) => (
         <div key={r} className="inline-flex items-center gap-[10px]">
           <RatingDot rating={r} size={14} />
-          <span className="font-body text-[14px] font-light text-black/60">{RATING_LABEL[r]}</span>
+          <span className="font-body text-[14px] font-light text-black">{RATING_LABEL[r]}</span>
         </div>
       ))}
     </div>
@@ -253,8 +254,8 @@ const INSIGHTS: { title: string; body: ReactNode }[] = [
 // medium black/80, value: light black/60). Header rule lightened from
 // black/70 to black/30 — less harsh than the original near-solid line.
 function ComparisonTable({ rows }: { rows: typeof COMPARISON_ROWS }) {
-  const headingCell = "py-4 font-body text-[16px] font-medium text-black";
-  const valueCell = "py-5 pr-6 align-top font-body text-[16px] font-light leading-relaxed text-black/60 text-left";
+  const headingCell = "py-4 font-body text-[14px] font-medium text-black";
+  const valueCell = "py-5 pr-6 align-top font-body text-[14px] font-light leading-relaxed text-black text-left";
   return (
     <div className="overflow-x-auto">
       <RatingLegend />
@@ -270,7 +271,7 @@ function ComparisonTable({ rows }: { rows: typeof COMPARISON_ROWS }) {
         <tbody>
           {rows.map((r) => (
             <tr key={r.criteria} className="border-b border-black/10">
-              <td className="w-[180px] py-5 pr-6 align-top font-body text-[16px] font-medium text-black/80">
+              <td className="w-[180px] py-5 pr-6 align-top font-body text-[14px] font-medium text-black">
                 {r.criteria}
               </td>
               <td className={valueCell}>
@@ -310,6 +311,8 @@ export default function SkinSproutCaseStudy() {
     <CaseStudyLayout sectionNav={SECTION_NAV}>
       <CaseStudyHero
         title="SkinSprout"
+        // Its cover is light: dark text over it.
+        heroText="dark"
         // A bit smaller than the shared default clamp() — per request, this
         // page's own title read too large. CyberSea/Spotify are untouched.
         titleClassName="text-[clamp(2.5rem,6.75vw,4rem)]"
@@ -327,7 +330,7 @@ export default function SkinSproutCaseStudy() {
           easy one-line delete in this file once the page is actually done.
           py-8 (was py-[14px]) and the same text treatment as the Problem
           Statement/Navigation problem boxes below (was a one-off
-          text-[16px] font-medium) — per request, so all 3 highlight boxes
+          text-[14px] font-medium) — per request, so all 3 highlight boxes
           on this page read as one consistent component instead of 3
           hand-tuned ones. Spelled out the same way those two do (not
           `${TEXT.frame} text-center`) since TEXT.frame's own text-left
@@ -449,16 +452,16 @@ export default function SkinSproutCaseStudy() {
                     key={f.src}
                     className={
                       isLeftItem
-                        ? // The "left" item: phone flush to the body
-                        // column's LEFT edge (ml-[19rem] = 16rem heading
-                        // col + 3rem gap), text flush to its RIGHT edge —
+                        ? // The "left" item: phone flush to the section's
+                        // LEFT edge (sections are one column now: no
+                        // heading column to clear), text flush to its RIGHT edge —
                         // spanning the box to the body column's own width
                         // (no fixed width here, just the left offset) so
                         // justify-between's gap is scoped to that column,
                         // and the text lands aligned with the phone in
                         // the item directly above it (both flush to the
                         // same right edge).
-                        "flex flex-col items-center gap-8 md:ml-[19rem] md:flex-row md:flex-row-reverse md:justify-between"
+                        "flex flex-col items-center gap-8 md:flex-row md:flex-row-reverse md:justify-between"
                         : // The "right" items: shrink to fit their own
                         // content (phone+text+gap) and hug the body
                         // column's right edge.
@@ -505,9 +508,9 @@ export default function SkinSproutCaseStudy() {
               <div className="space-y-4">
                 {INSIGHTS.map((insight, i) => (
                   <div key={insight.title} className="flex gap-4 rounded-[10px] bg-[#f7f7f7] p-6">
-                    <span className="font-body text-lg font-medium text-black">{i + 1}</span>
+                    <span className="font-body text-[14px] font-medium text-black">{i + 1}</span>
                     <div>
-                      <p className="font-body text-[18px] font-light text-black text-left">{insight.title}</p>
+                      <p className="font-body text-[14px] font-light text-black text-left">{insight.title}</p>
                       <p className={`mt-1 ${TEXT.content}`}>{insight.body}</p>
                     </div>
                   </div>
@@ -540,7 +543,7 @@ export default function SkinSproutCaseStudy() {
                       same idea as PlaceholderBox elsewhere on the page.
                       Swap for a real headshot if/when you have one. */}
                   <div className="h-12 w-12 flex-shrink-0 rounded-full bg-black" aria-hidden="true" />
-                  <p className="font-body text-[28px] font-medium text-black text-left">{p.name}</p>
+                  <p className="font-body text-[14px] font-medium text-black text-left">{p.name}</p>
                 </div>
 
                 <ul className={`mt-4 space-y-1 ${TEXT.content}`}>
@@ -556,7 +559,7 @@ export default function SkinSproutCaseStudy() {
                     aren't plain body copy — 2pt above TEXT.content's 18px
                     (was 16px, smaller than the surrounding body text,
                     which read as inconsistent rather than as a label). */}
-                <p className="mt-4 font-body text-[20px] font-semibold text-left" style={{ color: PERSONA_ACCENT }}>
+                <p className="mt-4 font-body text-[14px] font-semibold text-left" style={{ color: PERSONA_ACCENT }}>
                   Pain Points:
                 </p>
                 <ul className={`mt-1 space-y-1 ${TEXT.content}`}>
@@ -572,7 +575,7 @@ export default function SkinSproutCaseStudy() {
                     aren't plain body copy — 2pt above TEXT.content's 18px
                     (was 16px, smaller than the surrounding body text,
                     which read as inconsistent rather than as a label). */}
-                <p className="mt-4 font-body text-[20px] font-semibold text-left" style={{ color: PERSONA_ACCENT }}>
+                <p className="mt-4 font-body text-[14px] font-semibold text-left" style={{ color: PERSONA_ACCENT }}>
                   Needs:
                 </p>
                 <ul className={`mt-1 space-y-1 ${TEXT.content}`}>
@@ -793,7 +796,7 @@ export default function SkinSproutCaseStudy() {
           <div className="space-y-10">
             {/* Before */}
             <div>
-              <p className="font-body text-[22px] font-medium leading-tight text-black/35 text-left">
+              <p className="font-body text-[14px] font-medium leading-tight text-black text-left">
                 Before
               </p>
               <div className="mt-2.5 grid grid-cols-1 items-start md:grid-cols-[14rem_1fr] lg:grid-cols-[16rem_1fr] md:gap-x-8 lg:gap-x-12">
@@ -806,7 +809,7 @@ export default function SkinSproutCaseStudy() {
                   />
                 </div>
                 <div className="space-y-3.5 mt-8 md:mt-0">
-                  <h3 className="font-body text-[20px] font-normal leading-tight text-black md:text-[22px]">
+                  <h3 className="font-body text-[14px] font-normal leading-tight text-black md:text-[14px]">
                     Pop-up Screen
                   </h3>
                   <ul className="space-y-2.5">
@@ -832,7 +835,7 @@ export default function SkinSproutCaseStudy() {
                             <path d="M2.5 2.5L9.5 9.5M9.5 2.5L2.5 9.5" />
                           </svg>
                         </span>
-                        <span className="font-body text-[16px] font-light leading-snug text-black/80 md:text-[17px]">
+                        <span className="font-body text-[14px] font-light leading-snug text-black md:text-[14px]">
                           {text}
                         </span>
                       </li>
@@ -843,14 +846,14 @@ export default function SkinSproutCaseStudy() {
             </div>
 
             <div className="rounded-[5px] px-5 py-5" style={{ backgroundColor: "#fbeded" }}>
-              <p className="font-body text-[22px] font-light leading-relaxed text-center" style={{ color: "#c0526e" }}>
+              <p className="font-body text-[14px] font-light leading-relaxed text-center text-black">
                 3/5 users flagged this as too unclear
               </p>
             </div>
 
             {/* After */}
             <div>
-              <p className="font-body text-[22px] font-medium leading-tight text-black/35 text-left">
+              <p className="font-body text-[14px] font-medium leading-tight text-black text-left">
                 After
               </p>
               <div className="mt-2.5 grid grid-cols-1 items-start md:grid-cols-[28rem_1fr] lg:grid-cols-[30rem_1fr] md:gap-x-8 lg:gap-x-12">
@@ -875,10 +878,10 @@ export default function SkinSproutCaseStudy() {
                 </div>
 
                 <div className="space-y-3.5 mt-8 md:mt-0">
-                  <h3 className="font-body text-[20px] font-normal leading-tight text-black md:text-[22px]">
+                  <h3 className="font-body text-[14px] font-normal leading-tight text-black md:text-[14px]">
                     Slide-up Tab
                   </h3>
-                  <p className="font-body text-[16px] font-light leading-relaxed text-black/80 md:text-[17px]">
+                  <p className="font-body text-[14px] font-light leading-relaxed text-black md:text-[14px]">
                     Tap/slide up to bring the full tab up.
                   </p>
                   <ul className="space-y-2.5 pt-1">
@@ -904,7 +907,7 @@ export default function SkinSproutCaseStudy() {
                             <path d="M2.5 6.5L5 9L9.5 3" />
                           </svg>
                         </span>
-                        <span className="font-body text-[16px] font-light leading-snug text-black/80 md:text-[17px]">
+                        <span className="font-body text-[14px] font-light leading-snug text-black md:text-[14px]">
                           {text}
                         </span>
                       </li>

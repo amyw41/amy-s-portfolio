@@ -7,7 +7,7 @@ import { motion, useInView, useReducedMotion, type Variants } from "framer-motio
 import styles from "./WorkGrid.module.css";
 import AutoplayVideo from "@/components/sections/Projects/AutoplayVideo";
 import ScrollHint from "./ScrollHint";
-import FooterStrip, { footerCover } from "@/components/ui/FooterStrip";
+import FooterStrip from "@/components/ui/FooterStrip";
 import { useCaseZoom } from "@/components/ui/CaseZoom";
 import { PROJECTS } from "@/lib/projects";
 import { content } from "@/lib/content";
@@ -114,6 +114,20 @@ const EQUAL_TILES: Tile[] = [...PROJECTS.map(projectTile), ...SMALL_TILES.filter
 
 /** Every card's cover, so they can all be loaded before the cards come in. */
 const COVERS = EQUAL_TILES.map((t) => t.cover).filter((src): src is string => !!src);
+let coversLoading: Promise<unknown> | null = null;
+/** Loads and decodes every card's cover (once per visit). Home calls this
+ * while the jar is sitting idle, so by the time you scroll down they're
+ * ready and the cards come in at once. */
+export function preloadWorkCovers(): Promise<unknown> {
+  coversLoading ??= Promise.all(
+    COVERS.map((src) => {
+      const img = new window.Image();
+      img.src = src;
+      return img.decode().catch(() => undefined);
+    }),
+  );
+  return coversLoading;
+}
 
 /**
  * Work mode's stage (brief Part 2.4): "what's inside?", then two columns of
@@ -165,13 +179,7 @@ export default function WorkGrid({
       }
     };
     const timer = window.setTimeout(finish, GRID_COVER_WAIT_MS);
-    Promise.all(
-      COVERS.map((src) => {
-        const img = new window.Image();
-        img.src = src;
-        return img.decode().catch(() => undefined);
-      }),
-    ).then(finish);
+    preloadWorkCovers().then(finish);
     return () => {
       done = true;
       window.clearTimeout(timer);
@@ -287,9 +295,7 @@ export default function WorkGrid({
       exit="gone"
       data-scroll-switch-target
     >
-      {/* Everything above the footer, in front of it: scrolling to the end
-       * slides it up off the footer (FooterStrip's reveal). */}
-      <div className={`${footerCover} ${styles.coverNoTear}`}>
+      <div>
         {/* Drops in from above with a little overshoot, as the jar leaves
          * (brief Part 2.4: the camera panning down into the jar). */}
         <motion.h2
@@ -333,9 +339,8 @@ export default function WorkGrid({
         )}
       </div>
 
-      {/* The end of the list. Desktop: the footer is Home's, behind the whole
-       * page, which lifts off it (index.tsx). Mobile: the footer itself,
-       * revealed from behind the cards. */}
+      {/* The end of the list: the footer, scrolling up into view after the
+       * cards. */}
       <FooterStrip className={styles.footerPlace} onBackToTop={() => onJumpToJar?.()} />
     </motion.div>
   );

@@ -32,10 +32,7 @@
   width: 100%;
   height: 100dvh;
   overflow: hidden;
-  /* In front of the work view's footer (.homeFooter), which it slides up
-   * off at the end of the work (WorkGrid's onFooterReveal). */
   position: relative;
-  z-index: 1;
   background: #fff;
   font-family: var(--font-geist), system-ui, sans-serif;
   letter-spacing: var(--home-tracking);
@@ -111,52 +108,36 @@
 
 /* ---------- mobile: sidebar stacks on top ---------- */
 
-/* Lifted off the footer (index.tsx sets data-lifted while it is): the
- * page's bottom edge torn like paper (--paper-tear, app/globals.css). */
-.frame[data-lifted]::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 16px;
-  z-index: 2;
-  pointer-events: none;
-  background: #000;
-  -webkit-mask:
-    var(--paper-tear) var(--tear-x, 0px) 0 / 1200px 16px repeat-x,
-    /* A solid bottom row, so no sliver of the page shows under the tear. */
-    linear-gradient(#000 0 0) 0 100% / 100% 3px no-repeat;
-  mask:
-    var(--paper-tear) var(--tear-x, 0px) 0 / 1200px 16px repeat-x,
-    /* A solid bottom row, so no sliver of the page shows under the tear. */
-    linear-gradient(#000 0 0) 0 100% / 100% 3px no-repeat;
+/* The footer at the end of the work spans the whole page, under the
+ * sidebar (WorkGrid.module.css). As it scrolls into view, the sidebar and
+ * the divider lift up out of its way exactly as fast as it rises: a
+ * scroll-linked animation tied to the footer's own view timeline
+ * (--home-footer, made visible to them by timeline-scope), which the
+ * browser runs alongside the scroll itself. With no footer (jar mode) the
+ * timeline is inactive and they don't move. Browsers without scroll-driven
+ * animations simply leave the sidebar in place over the footer's left end. */
+@media (min-width: 768px) {
+  .frame {
+    timeline-scope: --home-footer;
+  }
+
+  .frame > aside {
+    position: relative;
+    z-index: 2;
+    background: #fff;
+  }
+
+  .frame > aside,
+  .frame > .divider {
+    animation: liftOffFooter linear both;
+    animation-timeline: --home-footer;
+    animation-range: entry 0% entry 100%;
+  }
 }
 
-/* In work mode the page lifts off the footer as it scrolls (index.tsx): on
- * its own layer then, so that's a cheap move of an already-drawn page, not
- * a repaint of all of it every frame. */
-.frame.workMode {
-  will-change: transform;
-}
-
-/* The work view's footer on desktop: the whole window wide, under the
- * sidebar too, fixed to the bottom of the window behind the page. Scrolling
- * past the end of the work slides the whole page up off it (index.tsx).
- * Text lined up with the sidebar's. On mobile the work view has its own
- * (WorkGrid). */
-footer.homeFooter {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  font-family: var(--font-geist), system-ui, sans-serif;
-  --strip-pad-x: clamp(18px, 1.823vw, 28px);
-}
-
-@media (max-width: 767px) {
-  footer.homeFooter {
-    display: none;
+@keyframes liftOffFooter {
+  to {
+    transform: translateY(-50dvh);
   }
 }
 

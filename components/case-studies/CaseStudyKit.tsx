@@ -7,9 +7,7 @@ import type { ReactElement, ReactNode } from "react";
 import { Children, cloneElement, isValidElement, useEffect, useState } from "react";
 import { useAutoPlayInView } from "@/lib/useAutoPlayInView";
 import { FADE_IN_TRANSITION } from "@/lib/motion";
-import { buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
-import BuzzPath from "@/components/ui/BuzzPath";
-import FooterStrip, { footerCover } from "@/components/ui/FooterStrip";
+import FooterStrip from "@/components/ui/FooterStrip";
 import { useCaseZoom, ZOOM_TARGET_ATTR } from "@/components/ui/CaseZoom";
 import { usePathname } from "next/navigation";
 import layoutStyles from "./CaseStudyLayout.module.css";
@@ -37,13 +35,14 @@ import layoutStyles from "./CaseStudyLayout.module.css";
 //     notch bolder than subheader so it reads as a grouping label, not just
 //     another row in the list
 export const TEXT = {
-  header: "font-body text-[clamp(22px,2.4vw,28px)] font-medium text-black text-left",
-  subheader: "font-body text-[clamp(19px,2vw,24px)] font-normal text-black/60 text-left",
-  // Was black/60 — darkened a notch per request ("make the body text a bit
-  // darker"); still lighter than the black subheader/header above it.
-  content: "font-body text-[clamp(16px,1.45vw,18px)] font-light leading-relaxed text-black/70 text-left",
-  frame: "font-body text-[clamp(18px,1.75vw,22px)] font-light text-black/60 text-left",
-  groupHeader: "font-body text-[clamp(20px,2.1vw,24px)] font-medium text-black/80 text-left",
+  // The case studies' type (docs/rebrand/design-system.md "Case-study type"):
+  // headers 17px (home's intro size), everything else 14px; small headers
+  // italic; all black.
+  header: "font-body text-[17px] font-medium leading-[1.3] text-black text-left",
+  subheader: "font-body text-[14px] font-normal italic leading-[1.45] text-black text-left",
+  content: "font-body text-[14px] font-light leading-[1.45] text-black text-left",
+  frame: "font-body text-[14px] font-light leading-[1.45] text-black text-left",
+  groupHeader: "font-body text-[17px] font-medium leading-[1.3] text-black text-left",
 };
 
 // Fallback tint behind a placeholder/neutral image box when a case study
@@ -167,7 +166,7 @@ export function HighlightBox({
 }) {
   return (
     <div className={`rounded-[5px] px-5 py-5 ${className}`} style={{ backgroundColor: bg }}>
-      <p className="font-body text-[22px] font-light leading-relaxed text-black/60 text-center">{children}</p>
+      <p className="font-body text-[14px] font-light leading-relaxed text-black text-center">{children}</p>
     </div>
   );
 }
@@ -218,11 +217,11 @@ export function StatRow({
     >
       {stats.map((s) => (
         <div key={s.stat}>
-          <p className="font-body text-[32px] font-medium text-black/90">{s.stat}</p>
+          <p className="font-body text-[14px] font-medium text-black">{s.stat}</p>
           {/* Not TEXT.content directly — it bakes in text-left, which as a
               rule on this same element overrides the parent's text-center
               regardless of class order in the string. */}
-          <p className="mt-1 font-body text-[18px] font-light leading-relaxed text-black/60 text-center">
+          <p className="mt-1 font-body text-[14px] font-light leading-relaxed text-black text-center">
             {s.caption}
           </p>
         </div>
@@ -287,25 +286,26 @@ export function Row({
   // `mediaGap`/`tight` — it's real trailing content, not a caption, so
   // squeezing it against `media` the same way would read as cramped rather
   // than related.
-  const childrenGap = tight ? "mt-2 md:mt-0" : "mt-[36px] md:mt-0";
+  // One column on every screen: the heading, then its writing under it.
+  const childrenGap = tight ? "mt-2" : "mt-4";
   const mediaGap = children ? "mt-[36px]" : "mt-2";
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-[17.5rem_1fr] md:gap-x-6">
-        <div className="md:col-start-1">
+      <div className="grid grid-cols-1">
+        <div>
           {eyebrow && <p className={`${TEXT.header} mb-2`}>{eyebrow}</p>}
           <p className={headingClassName ?? TEXT.subheader}>{heading}</p>
         </div>
         {children && (
-          <div className={`min-w-0 md:col-start-2 ${childrenGap} ${TEXT.content}`}>{children}</div>
+          <div className={`min-w-0 ${childrenGap} ${TEXT.content}`}>{children}</div>
         )}
-        {media && <div className={`md:col-span-2 ${mediaGap}`}>{media}</div>}
+        {media && <div className={mediaGap}>{media}</div>}
         {/* Full width (md:col-span-2, matching `media`) — `after` follows a
             full-width image with no heading of its own beside it, so
             confining it to just the narrow content column (like `children`)
             left it looking squeezed relative to the image directly above
             it. */}
-        {after && <div className={`min-w-0 md:col-span-2 mt-[36px] ${TEXT.content}`}>{after}</div>}
+        {after && <div className={`min-w-0 mt-[36px] ${TEXT.content}`}>{after}</div>}
       </div>
     </div>
   );
@@ -329,7 +329,7 @@ export function Section({ id, children }: { id: string; children: ReactNode }) {
 export function BulletList({ title, items }: { title: string; items: string[] }) {
   return (
     <div>
-      <p className="font-body text-[18px] font-light text-black/80 text-left">{title}</p>
+      <p className="font-body text-[14px] font-light text-black text-left">{title}</p>
       <ul className={`mt-2 space-y-1 ${TEXT.content}`}>
         {items.map((item) => (
           <li key={item} className="flex gap-2">
@@ -387,7 +387,7 @@ function RailContents({ sectionNav }: { sectionNav: SectionNavItem[] }) {
   return (
     <nav aria-label="Sections">
       <ol className={layoutStyles.contents}>
-        {sectionNav.map((s, idx) => (
+        {sectionNav.map((s) => (
           <li key={s.id}>
             <a
               href={`#${s.id}`}
@@ -401,7 +401,7 @@ function RailContents({ sectionNav }: { sectionNav: SectionNavItem[] }) {
               }}
               className={`${layoutStyles.contentsLink} ${activeId === s.id ? layoutStyles.contentsActive : ""}`}
             >
-              {idx + 1}.
+              {s.label}
             </a>
           </li>
         ))}
@@ -453,12 +453,17 @@ export function CaseStudyHero({
   // for anyone who won't read all the way down through 01–06. Optional so a
   // page can still opt out, though every current case study passes one.
   tldr?: string;
-  /** Set by CaseStudyLayout: "body" renders only the subtitle, meta and
-   * TL;DR — the layout draws the title (top) and the hero media (the
-   * sticky thumbnail) itself. */
-  layoutPart?: "body";
+  /** Set by CaseStudyLayout, which places the hero's pieces itself (the
+   * title and the media too): "subtitle" (the caption, under the title),
+   * "meta" (the timeline box, in the right column), "body" (the TL;DR, in
+   * the centre column). */
+  layoutPart?: "subtitle" | "meta" | "body";
+  /** The title and caption sit over the full-screen cover: white by
+   * default, "dark" for a light cover. */
+  heroText?: "light" | "dark";
 }) {
-  const body = layoutPart === "body";
+  const body = layoutPart !== undefined;
+  const show = (part: "subtitle" | "meta" | "body") => !layoutPart || layoutPart === part;
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -471,12 +476,14 @@ export function CaseStudyHero({
           homepage's own h1 weight. */}
       {!body && (
         <h1
-          className={`font-instrument ${titleClassName ?? "text-[clamp(2.75rem,7.5vw,4.5rem)]"} font-light leading-none tracking-[-0.6px] text-black/90`}
+          className={`font-instrument ${titleClassName ?? "text-[clamp(2.75rem,7.5vw,4.5rem)]"} font-light leading-none tracking-[-0.6px] text-black`}
         >
           {title}
         </h1>
       )}
-      <p className={`${body ? "" : "mt-3 "}font-body text-[clamp(16px,1.56vw,20px)] font-light text-black/70`}>{subtitle}</p>
+      {show("subtitle") && (
+        <p className={`${body ? "" : "mt-3 "}font-body text-[14px] font-light leading-[1.45] text-black`}>{subtitle}</p>
+      )}
 
       {!body && (
         <div className="mt-8">
@@ -491,25 +498,33 @@ export function CaseStudyHero({
         </div>
       )}
 
-      <div className="mt-8 grid grid-cols-2 items-start justify-items-center gap-6 rounded-[10px] border border-gray-200 p-6 text-center sm:grid-cols-4">
+      {show("meta") && (
+      <div
+        className={
+          layoutPart === "meta"
+            ? "grid grid-cols-2 items-start gap-x-8 gap-y-5 text-left sm:grid-cols-4"
+            : "mt-8 grid grid-cols-2 items-start justify-items-center gap-6 rounded-[10px] border border-gray-200 p-6 text-center sm:grid-cols-4"
+        }
+      >
         {/* Extra bottom padding on every column but the first — added
             per-column instead of bumping the box's own shared p-6, which
             would pad every column (including ones with a single short
             value) and grow the box/border taller than necessary just to
             give the already-tallest columns more breathing room. */}
         {meta.map((m, i) => (
-          <div key={m.label} className={`text-center ${i !== 0 ? "pb-3" : ""}`}>
+          <div key={m.label} className={layoutPart === "meta" ? "" : `text-center ${i !== 0 ? "pb-3" : ""}`}>
             {/* Matches TEXT.subheader's own size (clamp(19px,2vw,24px), above) per
                 request — was clamp(15px,1.5vw,19px). */}
-            <p className="font-instrument text-[clamp(19px,2vw,24px)] font-medium tracking-[-0.6px] text-black/80">{m.label}</p>
+            <p className="font-body text-[14px] font-normal italic leading-[1.45] text-black">{m.label}</p>
             {m.values.map((v) => (
-              <p key={v} className="mt-1 font-body text-[clamp(14px,1.3vw,17px)] font-light text-black/70">
+              <p key={v} className="mt-1 font-body text-[14px] font-light leading-[1.45] text-black">
                 {v}
               </p>
             ))}
           </div>
         ))}
       </div>
+      )}
 
       {/* TL;DR — deliberately its own block below the meta grid, not folded
           into it: meta is scannable facts (timeline, team, role), this is a
@@ -519,8 +534,8 @@ export function CaseStudyHero({
           through the bold "TL;DR" label alone; the summary text itself is
           plain TEXT.content, matching every other paragraph on the page
           rather than its own separate size/color (per request). */}
-      {tldr && (
-        <div className="mt-6 text-left">
+      {tldr && show("body") && (
+        <div className={layoutPart === "body" ? "text-left" : "mt-6 text-left"}>
           <p className={`${TEXT.header} mb-2`}>TL;DR</p>
           <p className={TEXT.content}>{tldr}</p>
         </div>
@@ -529,23 +544,15 @@ export function CaseStudyHero({
   );
 }
 
-// The case-study page frame (brief Part 3.3): a thin rail on the left (the
-// "aw" logo back home, then numbered contents), the same hand-drawn divider
-// as the home page, then the content — the title on top, the hero media as
-// a thumbnail that stays put on the left while the sections scroll on the
-// right — and the footer strip at the end. Styles: CaseStudyLayout.module.css.
+// The case-study page frame (brief Part 3.3): the cover (the hero image
+// filling the first screen, the title and caption over it), then the
+// sidebar (the "aw" logo back home, then the sections by name) and the
+// content (the overview box, the TL;DR, every section), and the footer strip
+// at the end. Styles: CaseStudyLayout.module.css.
 //
 // Each case study still renders <CaseStudyHero> first and its sections after
 // it, unchanged: this finds the hero among its children and lays its pieces
-// out (title, thumbnail, then the rest of it at the top of the right column).
-//
-// The divider: home's buzzing line (Home/index.tsx), drawn in a box the
-// laptop layout's height and stretched to the real one.
-const DIVIDER_BOX_W = 12;
-const DIVIDER_BOX_H = 664;
-const DIVIDER_VARIANTS = [0, 1, 2].map((v) =>
-  buildWobblyLinePath(7, [DIVIDER_BOX_W / 2, 0], [DIVIDER_BOX_W / 2, DIVIDER_BOX_H], 1.4, v),
-);
+// out (the cover, then the overview and TL;DR at the top of the content).
 
 type HeroProps = Parameters<typeof CaseStudyHero>[0];
 
@@ -572,8 +579,40 @@ export function CaseStudyLayout({
 
   return (
     <div className={`tw-scope ${layoutStyles.frame}`}>
-      {/* The rail and divider, in their own box the height of the page above
-       * the footer, so they stick only that far (not over the footer). */}
+      {/* The cover, the whole first screen: the project's image (or video)
+       * filling it edge to edge, its title and caption over the top left.
+       * It's where the zoom from home lands. */}
+      {hero && (
+        <section className={layoutStyles.hero}>
+          <div
+            className={layoutStyles.heroMedia}
+            {...{ [ZOOM_TARGET_ATTR]: slug }}
+            style={thumbHidden ? { visibility: "hidden" } : undefined}
+          >
+            <CaseStudyImage
+              src={hero.props.heroSrc}
+              alt={hero.props.heroAlt}
+              ratio="auto"
+              video={hero.props.heroVideo}
+              highlightColor={hero.props.highlightColor}
+              className={layoutStyles.heroImage}
+              sizes="100vw"
+            />
+          </div>
+          <motion.header
+            className={`${layoutStyles.heroText} ${hero.props.heroText === "dark" ? layoutStyles.heroTextDark : ""}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={FADE_IN_TRANSITION}
+          >
+            <h1 className={layoutStyles.title}>{hero.props.title}</h1>
+            <p className={layoutStyles.caption}>{hero.props.subtitle}</p>
+          </motion.header>
+        </section>
+      )}
+
+      {/* The sidebar, in its own box the height of the content (not the
+       * cover or the footer), so it sticks only that far. */}
       <div className={layoutStyles.side}>
         <aside className={layoutStyles.rail}>
           {/* Placeholder until the real logo exists (brief Part 7). */}
@@ -583,59 +622,23 @@ export function CaseStudyLayout({
           <RailContents sectionNav={sectionNav} />
         </aside>
 
-        <div className={layoutStyles.divider} aria-hidden="true">
-          <BuzzPath
-            className={layoutStyles.dividerLine}
-            variants={DIVIDER_VARIANTS}
-            viewBox={`0 0 ${DIVIDER_BOX_W} ${DIVIDER_BOX_H}`}
-            preserveAspectRatio="none"
-            strokeWidth={LINE_STROKE_WIDTH}
-          />
-        </div>
       </div>
 
       <main className={layoutStyles.content}>
-        {/* Everything above the footer, in front of it: scrolling to the end
-         * slides it up off the footer (FooterStrip's reveal). */}
-        <div className={`${footerCover} ${layoutStyles.coverEnd}`}>
+        <div className={`${layoutStyles.sections} ${layoutStyles.coverEnd} text-left`}>
           {hero && (
-            <motion.h1
-              className={layoutStyles.title}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={FADE_IN_TRANSITION}
-            >
-              {hero.props.title}
-            </motion.h1>
-          )}
-          <div className={layoutStyles.body}>
-            {hero && (
-              <div
-                className={layoutStyles.thumb}
-                {...{ [ZOOM_TARGET_ATTR]: slug }}
-                style={thumbHidden ? { visibility: "hidden" } : undefined}
-              >
-                <CaseStudyImage
-                  src={hero.props.heroSrc}
-                  alt={hero.props.heroAlt}
-                  ratio={HERO_RATIO}
-                  video={hero.props.heroVideo}
-                  highlightColor={hero.props.highlightColor}
-                  sizes="(min-width: 768px) 560px, 100vw"
-                />
-              </div>
-            )}
-            <div className={`${layoutStyles.sections} text-left`}>
-              {sidebarExtra}
-              {hero && cloneElement(hero, { layoutPart: "body" })}
-              {rest}
+            <div className={layoutStyles.overview}>
+              <p className={layoutStyles.overviewLabel}>Overview</p>
+              {cloneElement(hero, { layoutPart: "meta" })}
             </div>
-          </div>
+          )}
+          {sidebarExtra}
+          {hero && cloneElement(hero, { layoutPart: "body" })}
+          {rest}
         </div>
       </main>
 
-      {/* The whole window wide, under the rail too, revealed from behind the
-       * page as it scrolls up off it. */}
+      {/* The last row, the whole window wide (under the sidebar too). */}
       <FooterStrip className={layoutStyles.footerPlace} />
     </div>
   );

@@ -1,14 +1,9 @@
-/* The footer (FooterStrip.tsx): a black panel half the window tall. The
- * links stacked top left, the credit bottom left, "back to top" top right,
- * the item carousel in the middle. It's revealed as the page scrolls up off
- * it: it sticks to the bottom of the scrolling area, behind the page's
- * content (which sits in a white .footerCover above it, z-index 1), so the
- * content slides up and uncovers it. Where it sits (and how far it reaches)
- * is up to the page placing it. */
+/* The footer (FooterStrip.tsx): a black panel half the window tall, the
+ * last section of the page, scrolling up into view like the rest. The links
+ * stacked top left, the credit bottom left, "back to top" top right, the
+ * item carousel in the middle. Where it sits (and how far it reaches) is up
+ * to the page placing it. */
 .strip {
-  position: sticky;
-  bottom: 0;
-  z-index: 0;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   grid-template-rows: auto 1fr auto;
@@ -18,10 +13,6 @@
   /* The foil's colours, lifted for black (app/globals.css): the hovers and
    * the credit inside use --foil-cloud. */
   --foil-cloud: var(--foil-cloud-on-dark);
-  /* A little black above its top edge, hidden behind the page, so a
-   * fraction-of-a-pixel gap between the lifted page and the footer never
-   * shows as a white line. */
-  box-shadow: 0 -3px 0 #000;
   color: #fff;
   font-size: 13px;
   font-weight: 300;
@@ -209,38 +200,4 @@ button.backToTopHint:focus-visible {
     justify-self: center;
     align-items: center;
   }
-}
-
-/* The page's content above the footer: white and in front of it, reaching
- * the full width of the footer (out over the side padding the footer
- * reaches across: --footer-reach, set by the page), so the footer only shows
- * where the content has scrolled away. Exported as footerCover. */
-.cover {
-  position: relative;
-  z-index: 1;
-  margin-inline: calc(var(--footer-reach, 24px) * -1);
-  padding-inline: var(--footer-reach, 24px);
-  background: #fff;
-}
-
-/* The cover's bottom edge torn like paper (--paper-tear, app/globals.css),
- * so the page tears away from the footer as it lifts. */
-.cover::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 16px;
-  z-index: 2;
-  pointer-events: none;
-  background: #000;
-  -webkit-mask:
-    var(--paper-tear) var(--tear-x, 0px) 0 / 1200px 16px repeat-x,
-    /* A solid bottom row, so no sliver of the page shows under the tear. */
-    linear-gradient(#000 0 0) 0 100% / 100% 3px no-repeat;
-  mask:
-    var(--paper-tear) var(--tear-x, 0px) 0 / 1200px 16px repeat-x,
-    /* A solid bottom row, so no sliver of the page shows under the tear. */
-    linear-gradient(#000 0 0) 0 100% / 100% 3px no-repeat;
 }

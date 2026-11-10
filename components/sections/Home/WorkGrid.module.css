@@ -13,9 +13,6 @@
   /* No bottom padding: the footer strip ends the view, flush with its
    * bottom. */
   padding: var(--pad-y) var(--stage-pad-x) 0;
-  /* How far the footer (and the white cover above it) reach out over the
-   * side padding. */
-  --footer-reach: var(--stage-pad-x);
 }
 
 .heading {
@@ -33,15 +30,23 @@
   margin: 48px calc(var(--stage-pad-x) * -1) 0;
 }
 
+/* Desktop: the footer runs the whole width of the page, under the sidebar
+ * too. The work view reaches back under the sidebar (its content still
+ * starts at the stage), so the footer at its end can span everything; as
+ * the footer scrolls in, the sidebar and divider are lifted out of its way
+ * in step (Home.module.css, a scroll-linked animation the browser runs
+ * itself, so it stays as smooth as the scroll). */
 @media (min-width: 768px) {
-  footer.footerPlace {
-    display: none;
+  .work {
+    left: calc((var(--sidebar-width) + 1px) * -1);
+    padding-left: calc(var(--sidebar-width) + 1px + var(--stage-pad-x));
   }
 
-  /* No tear on the cards' own cover here: on desktop the whole page lifts
-   * and tears instead (Home.module.css .frame[data-lifted]). */
-  div.coverNoTear::after {
-    display: none;
+  .footerPlace {
+    margin-left: calc((var(--sidebar-width) + 1px + var(--stage-pad-x)) * -1);
+    /* Text lined up with the sidebar's. */
+    --strip-pad-x: var(--pad-x);
+    view-timeline: --home-footer block;
   }
 }
 
@@ -243,7 +248,6 @@
 @media (max-width: 767px) {
   .work {
     padding: 24px 16px 0;
-    --footer-reach: 16px;
   }
 
   .heading {

@@ -137,14 +137,14 @@ export default function CyberSeaCaseStudy() {
                   keeping its own native height — route2 in particular was
                   much shorter than the other two, so the row looked
                   uneven. */}
-              <p className="text-center font-body text-[24px] font-normal text-black/60">
+              <p className="text-center font-body text-[14px] font-normal text-black">
                 3+ different views are needed to plan ONE route!
               </p>
               <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-3">
                 {ROUTE_VIEWS.map((r) => (
                   <div key={r.src}>
                     <CaseStudyImage src={r.src} alt={r.alt} ratio="512/320" highlightColor={HIGHLIGHT} />
-                    <p className="mt-2 text-center font-body text-sm font-light text-black/50">{r.caption}</p>
+                    <p className="mt-2 text-center font-body text-[14px] font-light text-black">{r.caption}</p>
                   </div>
                 ))}
               </div>
@@ -205,7 +205,7 @@ export default function CyberSeaCaseStudy() {
                   {/* Placeholder for a real persona photo — solid circle,
                       same idea as PlaceholderBox elsewhere on the page. */}
                   <div className="h-12 w-12 flex-shrink-0 rounded-full bg-black" aria-hidden="true" />
-                  <p className="font-body text-[28px] font-medium text-black text-left">{p.name}</p>
+                  <p className="font-body text-[14px] font-medium text-black text-left">{p.name}</p>
                 </div>
                 <p className={`mt-2 ${TEXT.content}`}>{p.role}</p>
 
@@ -214,7 +214,7 @@ export default function CyberSeaCaseStudy() {
                     TEXT.content's 18px (was 16px, actually smaller than
                     the body text around it, which read as inconsistent
                     rather than as a label standing out). */}
-                <p className="mt-4 font-body text-[20px] font-medium text-black/80 text-left">Needs</p>
+                <p className="mt-4 font-body text-[14px] font-medium text-black text-left">Needs</p>
                 <ul className={`mt-1 space-y-1 ${TEXT.content}`}>
                   {p.needs.map((n, i) => (
                     <li key={n} className="flex gap-2">
@@ -224,7 +224,7 @@ export default function CyberSeaCaseStudy() {
                   ))}
                 </ul>
 
-                <p className="mt-4 font-body text-[20px] font-medium text-black/80 text-left">Pain Points</p>
+                <p className="mt-4 font-body text-[14px] font-medium text-black text-left">Pain Points</p>
                 <p className={TEXT.content}>{p.painPoints}</p>
               </div>
             ))}
