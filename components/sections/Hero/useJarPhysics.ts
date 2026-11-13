@@ -266,15 +266,20 @@ const clickMaskCache = new Map<string, { mask: Uint8Array; width: number; height
 function loadBBox(item: JarItemDef): Promise<BBoxPreloadResult> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
-    img.onload = () => {
-      try {
-        resolve({ bbox: computeAlphaBBox(img, item.cropRegion), img });
-      } catch (err) {
-        reject(err instanceof Error ? err : new Error(String(err)));
-      }
-    };
-    img.onerror = () => reject(new Error(`Failed to load ${item.src}`));
     img.src = item.src;
+    // decode() decodes the image off the main thread; drawing a loaded but
+    // undecoded image to the canvas would decode it on the main thread,
+    // inside the scan, which made the scan a long stall.
+    img
+      .decode()
+      .then(() => {
+        try {
+          resolve({ bbox: computeAlphaBBox(img, item.cropRegion), img });
+        } catch (err) {
+          reject(err instanceof Error ? err : new Error(String(err)));
+        }
+      })
+      .catch(() => reject(new Error(`Failed to load ${item.src}`)));
   });
 }
 

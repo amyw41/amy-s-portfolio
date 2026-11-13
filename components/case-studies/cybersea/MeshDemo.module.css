@@ -1,0 +1,218 @@
+/* The CyberSea case study's live 3D demo (MeshDemo.tsx), filling its cover.
+ * The panel copies the CyberSea project's own inspector panel (its
+ * ModelViewer.tsx): dark olive frosted glass, small uppercase labels, blue
+ * for what's on. Values: docs/rebrand/design-system.md "Case-study demo". */
+
+.demo {
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #0a0a0a;
+  letter-spacing: normal;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+.stage:active {
+  cursor: grabbing;
+}
+
+/* The scene loads in like the site's images (components/ui/MediaFade):
+ * from a blur to sharp once the model's in. */
+.stage {
+  opacity: 0;
+  filter: blur(var(--media-fade-blur));
+}
+
+.stageShown {
+  opacity: 1;
+  filter: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .stage {
+    transition:
+      opacity calc(var(--media-fade-ms) * var(--slow, 1)) ease-in-out,
+      filter calc(var(--media-fade-ms) * var(--slow, 1)) ease-in-out;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage {
+    filter: none;
+    transition: opacity calc(var(--media-fade-ms) * var(--slow, 1)) ease-in-out;
+  }
+}
+
+.loading,
+.hint,
+.credit {
+  position: absolute;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: rgb(229 230 218 / 0.6);
+  pointer-events: none;
+}
+
+.loading {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.hint {
+  right: 16px;
+  bottom: 32px;
+}
+
+.credit {
+  right: 16px;
+  bottom: 16px;
+  text-transform: none;
+  pointer-events: auto;
+}
+
+.credit a {
+  color: inherit;
+}
+
+/* The panel: top left, frosted (whatever's behind it blurs). */
+.panel {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 256px;
+  padding: 16px;
+  background: rgb(29 30 21 / 0.9);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
+  color: #fff;
+}
+
+.name {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px 6px;
+  background: rgb(59 130 246 / 0.2);
+  border: 1px solid #3b82f6;
+  color: #3b82f6;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.label,
+.rowLabel,
+.segment,
+.toggle {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.label {
+  margin: 16px 0 6px;
+  padding-top: 12px;
+  border-top: 1px solid rgb(255 255 255 / 0.1);
+  color: rgb(255 255 255 / 0.5);
+  font-weight: 400;
+}
+
+/* Wireframe / Solid. */
+.segmented {
+  display: flex;
+  gap: 6px;
+  height: 32px;
+  padding: 4px;
+  background: #2a2b22;
+  border: 1px solid rgb(255 255 255 / 0.2);
+}
+
+.segment {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: rgb(255 255 255 / 0.7);
+  cursor: pointer;
+}
+
+.segment:hover {
+  background: rgb(255 255 255 / 0.1);
+  color: #fff;
+}
+
+.segment[aria-checked="true"] {
+  background: #3b82f6;
+  color: #fff;
+}
+
+/* Exploded view: On / Off. */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+.rowLabel {
+  margin: 0;
+  color: #fff;
+}
+
+.toggle {
+  min-width: 44px;
+  padding: 4px 8px;
+  border: 1px solid rgb(255 255 255 / 0.3);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+
+.toggle:hover {
+  background: rgb(255 255 255 / 0.1);
+}
+
+.toggle[aria-pressed="true"] {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.note {
+  margin: 6px 0 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.5;
+  color: rgb(255 255 255 / 0.6);
+}
+
+.segment:focus-visible,
+.toggle:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .segment,
+  .toggle {
+    transition: background-color 150ms ease, color 150ms ease;
+  }
+}

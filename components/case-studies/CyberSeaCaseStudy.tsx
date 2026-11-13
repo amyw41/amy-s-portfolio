@@ -13,6 +13,7 @@ import {
   type SectionNavItem,
 } from "@/components/case-studies/CaseStudyKit";
 import TextHighlight from "@/components/case-studies/TextHighlight";
+import MeshDemo from "@/components/case-studies/cybersea/MeshDemo";
 
 // CyberSea case study — same shell/primitives as Spotify Guessr (see
 // CaseStudyKit.tsx), ported from Amy's old Framer portfolio
@@ -115,6 +116,7 @@ export default function CyberSeaCaseStudy() {
         heroSrc="/images/projects/cybersea/cybersea.mp4"
         heroAlt="CyberSea app preview"
         heroVideo
+        heroDemo={<MeshDemo />}
         highlightColor={HIGHLIGHT}
         meta={META}
         tldr="The arctic is pretty hard to navigate, for professionals AND the average person. So we designed an all-in-one information webapp: a map, info dashboard, and a cool 3D mesh feature showcasing ocean assets!"

@@ -171,10 +171,10 @@
   display: block;
   aspect-ratio: 3 / 2;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: 2px;
   /* A light grey frame (the original case-study cards' own), so a pale
    * thumbnail — or a white frame in a video — doesn't melt into the page. */
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   box-sizing: border-box;
   background: #f4f4f4;
 }

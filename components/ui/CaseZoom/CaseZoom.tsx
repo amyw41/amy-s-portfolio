@@ -14,10 +14,9 @@ import {
 
 type Mode = "jar" | "work";
 /** "growing": the page is frozen under the scrim and the copy is growing
- * toward the case study's thumbnail; "landing": the copy is on the real
- * thumbnail and the scrim is fading off the case study. ("leaving" is the
- * old zoom's home exit, kept only so Home's own check still compiles.) */
-type Phase = "idle" | "leaving" | "growing" | "landing";
+ * toward the case study's cover; "landing": the copy is on the real cover
+ * and the scrim is fading off the case study. */
+type Phase = "idle" | "growing" | "landing";
 interface Box {
   x: number;
   y: number;
@@ -64,6 +63,11 @@ export const ZOOM_TARGET_ATTR = "data-case-thumb";
  * (animations held, no pointer). */
 const FREEZE_ATTR = "data-zoom-freeze";
 
+/** Off for now (Amy: opening a case study should just fade into it, like
+ * any page, PageTransition.tsx): start() declines and the click navigates
+ * normally. true brings the zoom back. */
+const ZOOM_ENABLED = false;
+
 /** The rotation (radians) in a jar item's transform. */
 function rotationOf(el: HTMLElement): number {
   const m = /rotate\(([-\d.e]+)rad\)/.exec(el.style.transform);
@@ -98,15 +102,16 @@ function scrollbarWidth(): number {
 
 /**
  * Where the case study's thumbnail will be, before that page exists, from
- * the case-study layout (CaseStudyLayout.module.css: the cover fills the
- * whole first screen) at this
+ * the case-study layout (CaseStudyLayout.module.css: the cover is the top
+ * 5/8 of the screen) at this
  * window size. The grow aims here at once; the landing corrects any
  * difference.
  */
 function predictThumb(): Box {
-  // The case study's cover fills its whole first screen (the page scrolls,
-  // so less its scrollbar), square cornered.
-  return { x: 0, y: 0, w: window.innerWidth - scrollbarWidth(), h: window.innerHeight, rotate: 0, radius: 0 };
+  // The case study's cover: the whole window wide (less the page's
+  // scrollbar), the top 5/8 of it tall (CaseStudyLayout.module.css .hero),
+  // square cornered.
+  return { x: 0, y: 0, w: window.innerWidth - scrollbarWidth(), h: window.innerHeight * 0.625, rotate: 0, radius: 0 };
 }
 
 /**
@@ -151,7 +156,7 @@ export default function CaseZoomProvider({ children }: { children: ReactNode }) 
 
   const start = useCallback<CaseZoomValue["start"]>(
     ({ href, slug: target, from, src }) => {
-      if (phase !== "idle") return false;
+      if (!ZOOM_ENABLED || phase !== "idle") return false;
       if (!window.matchMedia("(min-width: 768px)").matches) return false;
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
 

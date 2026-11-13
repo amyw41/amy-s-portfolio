@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { getSlowFactor, storeIntroParam } from "@/lib/motion";
+import { getSlowFactor } from "@/lib/motion";
 
-// Applies the ?slow / ?intro debug params (see lib/motion.ts) once, on
+// Applies the ?slow debug param (see lib/motion.ts) once, on
 // mount. Rendered from the root layout so the params work on every route,
 // not just home. Renders nothing.
 //
@@ -12,7 +12,6 @@ import { getSlowFactor, storeIntroParam } from "@/lib/motion";
 export default function MotionDebug() {
   useEffect(() => {
     document.documentElement.style.setProperty("--slow", String(getSlowFactor()));
-    storeIntroParam();
   }, []);
 
   return null;

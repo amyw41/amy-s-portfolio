@@ -1,0 +1,349 @@
+/* Spotify Guessr's cover demo (GuessrDemo.tsx), staged like the slide
+ * deck's title slide. Values: docs/rebrand/design-system.md "Spotify Guessr
+ * cover". */
+
+.demo {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  background: #121212;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* The deck's own background image (its grain, and its glows on the right),
+ * cropped to fill. It blooms in once loaded: from dark, a touch bigger and
+ * soft, to itself (GUESSR_BG_BLOOM_MS); reduced motion: a plain fade. */
+.bg {
+  position: absolute;
+  inset: 0;
+  background: url("/demos/spotify/deck-bg.webp") right center / cover no-repeat;
+  opacity: 0;
+  transform: scale(1.12);
+  transform-origin: 85% 30%;
+  filter: blur(24px) saturate(1.4);
+}
+
+/* A magenta glow in the bottom left: a round bloom that runs out into a
+ * long tail along the bottom edge. Blooms in just after the background. */
+.glow {
+  position: absolute;
+  inset: 0;
+  /* The deck's own glow, mirrored to the left and tinted magenta
+   * (deck-glow-magenta.webp), so it has the same grain and softness; masked
+   * to the shape: a round bloom, then a tail along the bottom. */
+  background: url("/demos/spotify/deck-glow-magenta.webp") left center / cover no-repeat;
+  -webkit-mask-image:
+    radial-gradient(48% 80% at 0% 70%, #000 0, rgb(0 0 0 / 0.65) 45%, transparent 100%),
+    radial-gradient(60% 28% at 22% 100%, #000, transparent 75%);
+  mask-image:
+    radial-gradient(48% 80% at 0% 70%, #000 0, rgb(0 0 0 / 0.65) 45%, transparent 100%),
+    radial-gradient(60% 28% at 22% 100%, #000, transparent 75%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: scale(0.85);
+  transform-origin: 0% 75%;
+  pointer-events: none;
+}
+
+.demo[data-in] .glow {
+  opacity: 1;
+  transform: none;
+}
+
+.demo[data-in] .bg {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bg {
+    transition:
+      opacity calc(var(--bloom-ms) * 0.6 * var(--slow, 1)) ease-out,
+      transform calc(var(--bloom-ms) * var(--slow, 1)) cubic-bezier(0.22, 1, 0.36, 1),
+      filter calc(var(--bloom-ms) * var(--slow, 1)) cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg {
+    transform: none;
+    filter: none;
+    transition: opacity calc(var(--bloom-ms) * 0.4 * var(--slow, 1)) ease-out;
+  }
+}
+
+/* ---------- the staggered load-in (data-in on .demo) ----------
+ * The background blooms (above), the magenta glow follows (--glow-delay),
+ * the phone rises in (--phone-delay), then the characters pop in one by
+ * one (--char-delay, --char-stagger apart: the star, the triangle, the
+ * blue one). Reduced motion: everything just fades in together. */
+
+.phone {
+  opacity: 0;
+  transform: translateY(6%);
+}
+
+.demo[data-in] .phone {
+  opacity: 1;
+  transform: none;
+}
+
+.pop {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transform: scale(0.6) translateY(12%);
+}
+
+.demo[data-in] .pop {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .glow {
+    transition:
+      opacity calc(var(--bloom-ms) * 0.7 * var(--slow, 1)) ease-out calc(var(--glow-delay) * var(--slow, 1)),
+      transform calc(var(--bloom-ms) * var(--slow, 1)) cubic-bezier(0.22, 1, 0.36, 1) calc(var(--glow-delay) * var(--slow, 1));
+  }
+
+  .phone {
+    transition:
+      opacity calc(var(--phone-in-ms) * 0.6 * var(--slow, 1)) ease-out calc(var(--phone-delay) * var(--slow, 1)),
+      transform calc(var(--phone-in-ms) * var(--slow, 1)) cubic-bezier(0.22, 1, 0.36, 1) calc(var(--phone-delay) * var(--slow, 1));
+  }
+
+  .pop {
+    transition:
+      opacity calc(var(--char-in-ms) * 0.5 * var(--slow, 1)) ease-out calc((var(--char-delay) + var(--i) * var(--char-stagger)) * var(--slow, 1)),
+      transform calc(var(--char-in-ms) * var(--slow, 1)) cubic-bezier(0.34, 1.56, 0.64, 1) calc((var(--char-delay) + var(--i) * var(--char-stagger)) * var(--slow, 1));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow,
+  .phone,
+  .pop {
+    transform: none;
+    transition: opacity calc(var(--bloom-ms) * 0.4 * var(--slow, 1)) ease-out;
+  }
+}
+
+/* The phone's box, centred and running off the bottom; everything else is
+ * placed against it (in shares of its height, cqh), so the pose holds at any
+ * size. */
+.stage {
+  position: absolute;
+  left: 50%;
+  bottom: -8%;
+  height: 96%;
+  aspect-ratio: 1800 / 3680;
+  transform: translateX(-50%);
+  container-type: size;
+}
+
+.hint {
+  position: absolute;
+  left: var(--pad-x);
+  bottom: 16px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 1.45;
+  color: rgb(255 255 255 / 0.7);
+  pointer-events: none;
+}
+
+/* ---------- the phone ---------- */
+
+.phone {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  filter: drop-shadow(0 30px 40px rgb(0 0 0 / 0.5));
+}
+
+.phone:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 6px;
+  border-radius: 14% / 7%;
+}
+
+/* The screen, inside the mockup's glass (its insets and corners from the
+ * mockup image). */
+.screen {
+  position: absolute;
+  top: 2.3%;
+  bottom: 2.35%;
+  left: 5.1%;
+  right: 5.1%;
+  overflow: hidden;
+  border-radius: 13.6% / 6.3%;
+  background: #0b0b0d;
+}
+
+.screen img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.screenOn {
+  z-index: 1;
+  opacity: 1;
+  transition: opacity calc(var(--screen-fade-ms) * var(--slow, 1)) ease-out;
+}
+
+@starting-style {
+  .screenOn {
+    opacity: 0;
+  }
+}
+
+/* The mockup itself (screen cut out, the island kept), over the screen. */
+.frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+/* ---------- the characters ---------- */
+
+.char {
+  position: absolute;
+  transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
+  pointer-events: none;
+}
+
+/* Cheering off the phone's top right, clear of it (limbs too). */
+.triangle {
+  z-index: 3;
+  left: 172%;
+  top: 14cqh;
+  height: 38cqh;
+  aspect-ratio: 893 / 700;
+  --rot: 6deg;
+}
+
+/* Bouncing off the phone's bottom left, clear of it. */
+.star {
+  z-index: 3;
+  left: -74%;
+  top: 60cqh;
+  height: 42cqh;
+  aspect-ratio: 402 / 347;
+  --rot: -8deg;
+}
+
+/* Off the phone's right side, clear of it. */
+.circle {
+  z-index: 1;
+  left: 166%;
+  top: 60cqh;
+  height: 30cqh;
+  aspect-ratio: 194 / 260;
+  --rot: 14deg;
+}
+
+.bob {
+  width: 100%;
+  height: 100%;
+}
+
+.art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 14px 18px rgb(0 0 0 / 0.4));
+}
+
+@keyframes bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(calc(var(--bob-px) * -1));
+  }
+}
+
+@keyframes hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-14%);
+  }
+  70% {
+    transform: translateY(0) scaleY(0.95);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .bob {
+    animation: bob calc(var(--bob-s) * var(--slow, 1)) ease-in-out infinite;
+  }
+
+  /* Each a little out of step. */
+  .delay1 {
+    animation-delay: -1.1s;
+  }
+
+  .delay2 {
+    animation-delay: -2.2s;
+  }
+
+  .bob.hop {
+    animation: hop calc(var(--hop-ms) * var(--slow, 1)) ease-out 1;
+  }
+}
+
+/* ---------- phones ---------- */
+
+@media (max-width: 767px) {
+  .stage {
+    height: 84%;
+    bottom: -10%;
+  }
+
+  /* Smaller, so they fit beside the narrow phone without touching it. */
+  .triangle {
+    left: 132%;
+    top: 4cqh;
+    height: 22cqh;
+  }
+
+  .star {
+    left: -34%;
+    top: 74cqh;
+    height: 24cqh;
+  }
+
+  .circle {
+    left: 124%;
+    top: 52cqh;
+    height: 18cqh;
+  }
+
+  .hint {
+    top: 16px;
+    bottom: auto;
+    left: 16px;
+    right: 16px;
+  }
+}

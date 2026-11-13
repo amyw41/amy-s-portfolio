@@ -298,7 +298,7 @@ export default function JarView({
           : undefined
       }
     >
-      {/* data-intro-jar: where the intro (Intro.tsx) draws its jar. */}
+      {/* data-intro-jar: marks the jar (handy for tests and debugging). */}
       <div ref={wrapperRef} className={styles.jarWrapper} data-intro-jar>
         {/* Unmounted (not hidden) in work mode: useJarPhysics sizes
          * everything off this box's measured width, and a hidden

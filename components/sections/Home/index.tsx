@@ -18,9 +18,7 @@ import {
   INTRO_SIDEBAR_RISE_PX,
   INTRO_SIDEBAR_STAGGER_S,
   ZOOM_DROP_PX,
-  ZOOM_LEAVE_S,
   ZOOM_RETURN_S,
-  ZOOM_STAGGER_S,
   slowMs,
 } from "@/lib/motion";
 import { buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
@@ -40,11 +38,10 @@ const DIVIDER_VARIANTS = [0, 1, 2].map((v) =>
   buildWobblyLinePath(7, [DIVIDER_BOX_W / 2, 0], [DIVIDER_BOX_W / 2, DIVIDER_BOX_H], DIVIDER_AMPLITUDE, v),
 );
 
-// The zoom's timings, for the CSS (Home.module.css .zoomOut/.zoomBack).
+// The way back from a case study's timings, for the CSS (Home.module.css
+// .zoomCollapsed/.zoomBack).
 const ZOOM_VARS = {
-  "--zoom-leave-ms": `${ZOOM_LEAVE_S * 1000}ms`,
   "--zoom-return-ms": `${ZOOM_RETURN_S * 1000}ms`,
-  "--zoom-stagger-ms": `${ZOOM_STAGGER_S * 1000}ms`,
   "--zoom-drop": `${ZOOM_DROP_PX}px`,
   // The intro's hand-over (Home.module.css .introHidden/.introReveal).
   "--intro-stagger-ms": `${INTRO_SIDEBAR_STAGGER_S * 1000}ms`,
@@ -85,7 +82,7 @@ export default function Home() {
     };
   }, [returnStage, zoom]);
   const zoomClass =
-    zoom?.phase === "leaving" ? styles.zoomOut : returnStage === "collapsed" ? styles.zoomCollapsed : returnStage === "expanding" ? styles.zoomBack : "";
+    returnStage === "collapsed" ? styles.zoomCollapsed : returnStage === "expanding" ? styles.zoomBack : "";
   // The case study hovered/focused in the sidebar's Works list, isolated on
   // the stage: its jar item lifts and the rest dim (or, in work mode, its
   // grid tile).
@@ -214,9 +211,8 @@ export default function Home() {
       </div>
 
       <section className={styles.stage}>
-        {/* The crayon toggle (ModeToggle.tsx) is kept in the repo but no
-         * longer shown: scrolling switches. On mobile, where it doesn't,
-         * these tap cues do. */}
+        {/* Scrolling switches between the jar and the work; on mobile, where
+         * it doesn't, these tap cues do. */}
         <ScrollCue mode={mode} onActivate={changeMode} />
         {/* mode="wait": one view at a time — the leaving one finishes its
          * exit before the next starts (jar → work: the jar drops away, then

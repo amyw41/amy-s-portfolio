@@ -36,14 +36,6 @@ export const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 export const EASE_IN = [0.55, 0, 1, 0.45] as const;
 export const EASE_IN_OUT = [0.65, 0, 0.35, 1] as const;
 
-// Project hover preview slide-up (step 6). A spring has no duration to
-// scale, so ?slow doesn't touch it.
-export const PREVIEW_SPRING = { type: "spring", stiffness: 220, damping: 26 } as const;
-
-// Intro sidebar load-in and the work-mode grid sweep (steps 8 and 4),
-// seconds between items. Run them through slowTransition() where used.
-export const SIDEBAR_STAGGER = 0.07;
-export const GRID_STAGGER = 0.04;
 // Work-mode grid: the cards come in all together, once every cover has
 // loaded (they're usually preloaded while the jar sits idle), waiting at
 // most this long (ms) for slow ones.
@@ -52,14 +44,12 @@ export const GRID_COVER_WAIT_MS = 300;
 // Work-mode grid (Home/WorkGrid.tsx): each tile rises GRID_TILE_RISE_PX and
 // scales up from GRID_TILE_SCALE over GRID_TILE_S, all at once.
 // Leaving work mode, the heading and grid slide up WORK_EXIT_RISE_PX and
-// fade out together over WORK_EXIT_S, then the jar shows. Filtering slides
-// tiles to their new places over GRID_REORDER_S.
+// fade out together over WORK_EXIT_S, then the jar shows.
 export const GRID_TILE_S = 0.3;
 export const GRID_TILE_RISE_PX = 12;
 export const GRID_TILE_SCALE = 0.97;
 export const WORK_EXIT_S = 0.2;
 export const WORK_EXIT_RISE_PX = 12;
-export const GRID_REORDER_S = 0.35;
 
 // Hovering a case study in the sidebar's Works list isolates it: its jar
 // item rises JAR_LIFT_PX and scales to JAR_LIFT_SCALE over JAR_LIFT_IN_MS
@@ -72,19 +62,6 @@ export const JAR_LIFT_SCALE = 1.04;
 export const JAR_LIFT_IN_MS = 400;
 export const JAR_LIFT_OUT_MS = 300;
 export const TILE_LIFT_PX = 6;
-
-// The jar / work toggle (Home/ModeToggle.tsx): the newly picked side is
-// coloured in with crayon, stroke by stroke — each stroke draws on over
-// CRAYON_STROKE_S, CRAYON_STAGGER_S after the last (~400ms in all) — while
-// the old side's shading fades out over CRAYON_ERASE_S. Hovering the
-// unpicked side draws CRAYON_HINT_STROKES faint strokes (CRAYON_HINT_OPACITY)
-// over CRAYON_HINT_S, retracted the same way on leave.
-export const CRAYON_STROKE_S = 0.12;
-export const CRAYON_STAGGER_S = 0.03;
-export const CRAYON_ERASE_S = 0.2;
-export const CRAYON_HINT_S = 0.18;
-export const CRAYON_HINT_STROKES = 2;
-export const CRAYON_HINT_OPACITY = 0.4;
 
 // The jar's cartoon moves (Home/JarView.tsx, brief Part 2.4).
 // jar → work: anticipation — lift JAR_ANTICIPATE_PX and squash to
@@ -113,48 +90,9 @@ export const JAR_LAND_S = 0.36;
 // exit (gone at once — no anticipation, no clink, no items); a jar called
 // back mid-exit rises back into place over JAR_RETURN_S.
 export const JAR_RETURN_S = 0.25;
-// The intro (Home/Intro.tsx, docs/rebrand/intro-brief.md v2). Everything
-// runs on one stop-motion clock, INTRO_FPS drawings a second, and every line
-// boils (a wobble of about INTRO_BOIL_PX, cycling INTRO_BOIL_DRAWINGS
-// versions a drawing at a time, easing to
-// nothing over the last INTRO_BOIL_OUT_S so the end is exactly the artwork).
-// All line drawing — the small jar, the two rainbow strands, the divider and
-// the real jar — goes at one pen speed, INTRO_PEN_PX_PER_S, so the beats
-// that draw lines last as long as their lines are. In order: a blank page
-// (INTRO_BLANK_S); the small jar (INTRO_SMALL_SCALE of the real one, centred)
-// draws; black ink fills it in INTRO_FILL_STEPS steps over INTRO_FILL_S; the
-// spill (INTRO_SPILL_S): the ink domes over INTRO_DOME_FRAMES drawings, then
-// foam rolls down both sides in INTRO_FOAM_WAVES waves, each creeping to the
-// bottom over INTRO_FOAM_CREEP_S; then two strands leave the foam tops in
-// rainbow arcs, each an INTRO_THREAD_PX length of thread, while the small
-// jar fades out in INTRO_FADE_STEPS steps; the left strand draws the divider
-// and the right one the real jar, stroke by stroke. The sidebar then loads
-// top to bottom, INTRO_SIDEBAR_STAGGER_S apart, rising INTRO_SIDEBAR_RISE_PX.
-// The short version (repeat visits, phones) is just the last beat, the jar's
-// drawing taking INTRO_SHORT_S.
-// Which intro plays (intro-brief.md): "line" (current) — the load-in: the
-// divider draws top to bottom while the original jar draws along its own
-// strokes (lib/jar-line.ts), together over INTRO_SHORT_S, on every visit;
-// "sketch" — the divider and the jar drawing on, slower; "overflow" (v2) —
-// the small jar, ink, foam and rainbow strands. (The spiral-and-ribbons
-// intro was removed on 2026-11-05; it's in git history at 5a22690.)
-export const INTRO_STYLE = "line" as "line" | "sketch" | "overflow";
-export const INTRO_FPS = 12;
-export const INTRO_BOIL_PX = 0.8;
-export const INTRO_BOIL_DRAWINGS = 3;
-export const INTRO_BOIL_OUT_S = 0.3;
-export const INTRO_PEN_PX_PER_S = 3000;
-export const INTRO_BLANK_S = 0.3;
-export const INTRO_SMALL_SCALE = 1 / 3;
-export const INTRO_FILL_S = 1.8;
-export const INTRO_FILL_STEPS = 9;
-export const INTRO_SPILL_S = 1.6;
-export const INTRO_DOME_FRAMES = 3;
-export const INTRO_FOAM_WAVES = 4;
-export const INTRO_FOAM_CREEP_S = 0.6;
-export const INTRO_THREAD_PX = 120;
-export const INTRO_FADE_STEPS = 4;
-export const INTRO_SHORT_S = 0.7;
+// The load-in's sidebar (Home/index.tsx, Home.module.css .introReveal):
+// its parts come in top to bottom, INTRO_SIDEBAR_STAGGER_S apart, rising
+// INTRO_SIDEBAR_RISE_PX.
 export const INTRO_SIDEBAR_STAGGER_S = 0.07;
 export const INTRO_SIDEBAR_RISE_PX = 8;
 // The load-in (Home/index.tsx): the jar drops in and the items fall (the
@@ -162,15 +100,10 @@ export const INTRO_SIDEBAR_RISE_PX = 8;
 // while the sidebar loads (INTRO_SIDEBAR_*) and the divider draws on top to
 // bottom over INTRO_DIVIDER_DRAW_S, ease-in-out.
 export const INTRO_DIVIDER_DRAW_S = 0.6;
-// Clicking a case study zooms into it (components/ui/CaseZoom, brief Part
-// 3.2): the home page fades and drops out (ZOOM_LEAVE_S, ZOOM_DROP_PX, its
-// parts ZOOM_STAGGER_S apart) while the sidebar narrows to the case study's
-// rail; then the clicked thumbnail grows into its spot on the case-study
-// page over ZOOM_GROW_S (ease-in-out). The logo back reverses it: the rail
-// widens back into the sidebar as home fades in over ZOOM_RETURN_S.
-export const ZOOM_LEAVE_S = 0.35;
+// The way back from a case study (its logo): home starts at the case
+// study's sidebar width with its parts dropped ZOOM_DROP_PX and faded, and
+// the sidebar widens back as everything fades in over ZOOM_RETURN_S.
 export const ZOOM_DROP_PX = 10;
-export const ZOOM_STAGGER_S = 0.03;
 export const ZOOM_GROW_S = 0.6;
 // The zoom v2 (docs/rebrand/zoom-brief.md, components/ui/CaseZoom): on the
 // click the page freezes and a white scrim fades over it (ZOOM_SCRIM_IN_S)
@@ -240,9 +173,6 @@ export const SCROLL_HINT_DRAW_S = 0.6;
 export const SCROLL_HINT_LABEL_S = 0.3;
 export const SCROLL_HINT_OUT_S = 0.15;
 
-// Hover-intent leave delay for the project hover preview (step 6, brief
-// Part 3.1) — the brief's own name for it.
-export const HOVER_CLOSE_DELAY_MS = 150;
 
 // Sidebar (Home/Sidebar.tsx): the hand-drawn oval pen-draws on around a
 // heading in OVAL_DRAW_S while it's hovered/focused and un-draws on leave at
@@ -335,30 +265,6 @@ export function slowTransition<T extends { duration?: number; delay?: number }>(
   };
 }
 
-/** sessionStorage keys for the intro (step 8). INTRO_SEEN_KEY marks the
- * full intro as already played this visit; INTRO_FORCE_KEY is set by
- * ?intro=1. */
-export const INTRO_SEEN_KEY = "aw:intro-seen";
-export const INTRO_FORCE_KEY = "aw:intro-force";
-
-/** Stores ?intro=1 as INTRO_FORCE_KEY. Called once on mount (MotionDebug). */
-export function storeIntroParam() {
-  if (new URLSearchParams(window.location.search).get("intro") !== "1") return;
-  try {
-    sessionStorage.setItem(INTRO_FORCE_KEY, "1");
-  } catch {
-    // Storage blocked (private mode etc.) — the flag just doesn't stick.
-  }
-}
-
-/** True when ?intro=1 asked for the intro to replay. */
-export function isIntroForced(): boolean {
-  try {
-    return sessionStorage.getItem(INTRO_FORCE_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
 
 // The sidebar social icons' foil hover (Home/Sidebar.tsx useFoil): a half circle
 // under the mouse reveals a fixed gradient on the icon; it rises in,
@@ -391,3 +297,38 @@ export const JAR_LOAD_CLINKS = [
   { atMs: 920, strength: 0.42 },
 ] as const;
 export const JAR_CLINK_RING_MS = 220;
+// The CyberSea case study's 3D demo (case-studies/cybersea/meshScene.ts):
+// Split pulls the pieces apart (and back) over this, ease-in-out. Reduced
+// motion: instant.
+export const MESH_DEMO_SPLIT_MS = 700;
+// Media loading in (components/ui/MediaFade, like rachelchen.tech's): until
+// an image or video has loaded, its box shows a soft grey that pulses
+// (MEDIA_PULSE_S a cycle); once loaded it fades in from MEDIA_FADE_BLUR_PX
+// of blur to sharp over MEDIA_FADE_MS, ease-in-out. Reduced motion: no blur,
+// no pulse, just the fade.
+export const MEDIA_FADE_MS = 500;
+export const MEDIA_FADE_BLUR_PX = 6;
+export const MEDIA_PULSE_S = 2;
+// Spotify Guessr's cover demo (case-studies/spotify/GuessrDemo.tsx): the
+// characters bob GUESSR_BOB_PX up and down, one bob every GUESSR_BOB_S (each
+// a little out of step). The phone's screens cross-fade over
+// GUESSR_SCREEN_FADE_MS (each tap moves on one; nothing plays by itself).
+// The deck background blooms in once loaded over GUESSR_BG_BLOOM_MS. On the
+// podium the characters hop over GUESSR_HOP_MS. Reduced motion: no bobbing
+// or hop; screens swap without the fade.
+export const GUESSR_BOB_PX = 2;
+export const GUESSR_BOB_S = 3.2;
+export const GUESSR_SCREEN_FADE_MS = 220;
+export const GUESSR_BG_BLOOM_MS = 1400;
+// The rest of the cover comes in after the background, staggered: the
+// magenta glow GUESSR_GLOW_DELAY_MS in; the phone GUESSR_PHONE_DELAY_MS in,
+// rising over GUESSR_PHONE_IN_MS; then the characters pop in (with a little
+// overshoot) one by one from GUESSR_CHAR_DELAY_MS, GUESSR_CHAR_STAGGER_MS
+// apart, each over GUESSR_CHAR_IN_MS.
+export const GUESSR_GLOW_DELAY_MS = 300;
+export const GUESSR_PHONE_DELAY_MS = 250;
+export const GUESSR_PHONE_IN_MS = 800;
+export const GUESSR_CHAR_DELAY_MS = 700;
+export const GUESSR_CHAR_STAGGER_MS = 140;
+export const GUESSR_CHAR_IN_MS = 600;
+export const GUESSR_HOP_MS = 600;

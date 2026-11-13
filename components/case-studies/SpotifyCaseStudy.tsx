@@ -1,6 +1,7 @@
 "use client";
 
 import TextHighlight from "@/components/case-studies/TextHighlight";
+import GuessrDemo from "@/components/case-studies/spotify/GuessrDemo";
 import {
   BulletList,
   CaseStudyCta,
@@ -109,6 +110,7 @@ export default function SpotifyCaseStudy() {
         subtitle="Turning a Spotify Blend into a party game"
         heroSrc="/images/projects/spotify/spotify.webp"
         heroAlt="Spotify Guessr app screens"
+        heroDemo={<GuessrDemo />}
         highlightColor={HIGHLIGHT}
         meta={META}
         tldr="Spotify Blends lose their spark over time — shared songs crowd out real taste, and once the social hook fades, so does the reason to open them. Spotify Guessr turns a Blend into a multiplayer guessing game instead, keeping the social payoff front and center."

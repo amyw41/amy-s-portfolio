@@ -6,11 +6,14 @@
   --frame-gap: clamp(8px, 2.3dvh, 28px);
   --pad-y: clamp(24px, 6.9dvh, 80px);
   --stage-pad-x: clamp(21px, 2.734vw, 70px);
-  /* The sidebar: half home's width, home's padding. */
-  --rail-width: 195px;
   --pad-x: clamp(18px, 1.823vw, 28px);
+  /* Under the cover: the writing centred on the page, with an equal margin
+   * either side (240px at 1536 wide); the sidebar sits in the left margin,
+   * flush left at home's padding. */
+  --side: clamp(170px, 15.62vw, 400px);
+  --rail-width: var(--side);
   display: grid;
-  grid-template-columns: var(--rail-width) minmax(0, 1fr);
+  grid-template-columns: var(--side) minmax(0, 1fr) var(--side);
   /* The cover, the page, then the footer (FooterStrip). */
   grid-template-rows: auto auto auto;
   min-height: 100dvh;
@@ -24,7 +27,8 @@
 .hero {
   grid-area: 1 / 1 / 2 / -1;
   position: relative;
-  height: 100dvh;
+  /* 5/8 of the screen. */
+  height: 62.5dvh;
   overflow: hidden;
 }
 
@@ -39,26 +43,8 @@
   border-radius: 0 !important;
 }
 
-/* Title and caption over the cover's top left, lined up with the sidebar's
- * text; white, for the darker covers (heroTextDark for light ones). */
-.heroText {
-  position: absolute;
-  top: var(--pad-y);
-  left: var(--pad-x);
-  right: var(--pad-x);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-width: 560px;
-  color: #fff;
-}
-
-.heroTextDark {
-  color: #000;
-}
-
 .caption {
-  margin: 0;
+  margin: 10px 0 0;
   font-size: 14px;
   font-weight: 300;
   line-height: 1.45;
@@ -86,32 +72,52 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  /* Home's sidebar gap (icons → intro). */
   gap: clamp(24px, 6.9dvh, 96px);
   padding: var(--pad-y) var(--pad-x);
 }
 
-/* Placeholder logo until the real one exists (brief Part 7). */
-.logo {
-  font-size: 18px;
-  font-weight: 500;
-  line-height: 1;
+/* Back home: a hand-drawn ←, in a 24px box like home's social icons. */
+.back {
+  display: flex;
+  align-items: center;
+  width: 24px;
+  height: 24px;
   color: #000;
-  text-decoration: none;
 }
 
-.logo:focus-visible {
-  outline: 2px solid #000;
-  outline-offset: 4px;
+.back:hover {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.back:focus-visible {
+  outline: 1px solid #000;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .back {
+    transition: color calc(150ms * var(--slow, 1)) ease;
+  }
 }
 
 /* The contents: each section by name, like home's menu items (14px,
  * light, black): the one in view medium weight, an underline on hover. */
+/* "Contents", a small header over the list. */
+.contentsLabel {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: #000;
+}
+
 .contents {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
-  margin: 0;
+  margin: 4px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -129,15 +135,15 @@
   font-weight: 500;
 }
 
+/* Hover greys it, like home's menu items. */
 .contentsLink:hover,
 .contentsLink:focus-visible {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  color: rgba(0, 0, 0, 0.55);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .contentsLink {
-    transition: font-weight 150ms ease;
+    transition: font-weight 150ms ease, color calc(150ms * var(--slow, 1)) ease;
   }
 }
 
@@ -148,15 +154,22 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: var(--pad-y) var(--stage-pad-x) 0;
+  padding: var(--pad-y) 0 0;
 }
 
-/* A header: 17px medium, like home's intro (the case studies' type). */
+/* Under the cover: the title, its caption, then the overview box; 40px
+ * before the TL;DR. */
+.intro {
+  margin-bottom: 40px;
+}
+
+/* The title: big (44px at 1536 wide), regular weight. */
 .title {
   margin: 0;
-  font-size: 17px;
-  font-weight: 500;
-  line-height: 1.3;
+  font-size: clamp(30px, 2.865vw, 56px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 /* The writing, left aligned, across the whole of the content area. */
@@ -164,22 +177,13 @@
   min-width: 0;
 }
 
-/* "Overview": a small grey label over the four facts (role, timeline, team,
- * skills) side by side, then 40px before the TL;DR. */
+/* The overview box: the four facts (timeline, team, role, skills) side by
+ * side. */
 .overview {
-  margin-bottom: 40px;
-  padding: 20px 24px;
+  margin-top: 16px;
+  padding: 16px 20px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 10px;
-}
-
-.overviewLabel {
-  margin: 0 0 10px;
-  font-size: 14px;
-  font-style: italic;
-  font-weight: 400;
-  line-height: 1.45;
-  color: #000;
 }
 
 /* The footer: the last row, across every column (under the rail too), its
@@ -215,7 +219,8 @@
     padding: 20px 16px;
   }
 
-  .contents {
+  .contents,
+  .contentsLabel {
     display: none;
   }
 
@@ -224,17 +229,11 @@
   }
 
   .title {
-    font-size: 17px;
+    font-size: 30px;
   }
 
   .hero {
     height: 62svh;
-  }
-
-  .heroText {
-    top: 20px;
-    left: 16px;
-    right: 16px;
   }
 
   .footerPlace {

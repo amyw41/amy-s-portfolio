@@ -67,39 +67,50 @@ export default function BuzzPath({
   useLayoutEffect(() => {
     if (!reveal) return;
     const paths = pathRefs.current;
-    let lengths: number[] = [];
+    // Measured lazily, the first time the line is actually drawn (and again
+    // after a resize): measuring is real work (sampling every path through
+    // its screen transform), and every heading's oval starts undrawn, so
+    // measuring them all at load stalled the page's first moments.
+    let lengths: number[] | null = null;
     // Screen length of each path: sampled along it through its screen
-    // transform (a non-uniform stretch has no single scale factor).
-    const measure = () => {
-      lengths = paths.map((el) => {
+    // transform (a non-uniform stretch has no single scale factor). 32
+    // samples is plenty for these gentle curves.
+    const measure = () =>
+      paths.map((el) => {
         const ctm = el?.getScreenCTM();
         if (!el || !ctm) return 0;
         const total = el.getTotalLength();
         let sum = 0;
         let prev: DOMPoint | null = null;
-        for (let i = 0; i <= 120; i++) {
-          const q = el.getPointAtLength((total * i) / 120);
+        for (let i = 0; i <= 32; i++) {
+          const q = el.getPointAtLength((total * i) / 32);
           const pt = new DOMPoint(q.x, q.y).matrixTransform(ctm);
           if (prev) sum += Math.hypot(pt.x - prev.x, pt.y - prev.y);
           prev = pt;
         }
         return sum;
       });
-    };
     const paint = (p: number) => {
+      if (p > 0.001 && !lengths) lengths = measure();
       paths.forEach((el, i) => {
         if (!el) return;
-        const len = lengths[i] ?? 0;
-        el.style.strokeDasharray = `${(p * len).toFixed(2)}px ${(len + 2).toFixed(2)}px`;
         // Hidden at 0, so a zero-length dash's round cap leaves no dot.
         el.style.opacity = p > 0.001 ? "1" : "0";
+        if (!lengths) return;
+        const len = lengths[i] ?? 0;
+        el.style.strokeDasharray = `${(p * len).toFixed(2)}px ${(len + 2).toFixed(2)}px`;
       });
     };
-    measure();
     paint(progress.get());
     const unsubscribe = progress.on("change", paint);
     const svg = paths[0]?.ownerSVGElement;
-    const resize = svg ? new ResizeObserver(() => (measure(), paint(progress.get()))) : null;
+    // A resize makes the lengths stale: re-measured next time it's drawn.
+    const resize = svg
+      ? new ResizeObserver(() => {
+          lengths = null;
+          paint(progress.get());
+        })
+      : null;
     if (svg) resize?.observe(svg);
     return () => {
       unsubscribe();

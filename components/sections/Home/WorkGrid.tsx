@@ -6,6 +6,7 @@ import Image from "next/image";
 import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
 import styles from "./WorkGrid.module.css";
 import AutoplayVideo from "@/components/sections/Projects/AutoplayVideo";
+import MediaFade from "@/components/ui/MediaFade/MediaFade";
 import ScrollHint from "./ScrollHint";
 import FooterStrip from "@/components/ui/FooterStrip";
 import { useCaseZoom } from "@/components/ui/CaseZoom";
@@ -251,6 +252,8 @@ export default function WorkGrid({
               ...(tile.tint ? { background: tile.tint } : null),
             }}
           >
+            {/* Loads in softly: a pulsing grey, then a blur-to-sharp fade. */}
+            <MediaFade>
             {tile.cover && tile.video ? (
               <AutoplayVideo src={tile.video} poster={tile.cover} />
             ) : tile.cover ? (
@@ -273,6 +276,7 @@ export default function WorkGrid({
                 aria-hidden="true"
               />
             ) : null}
+            </MediaFade>
           </span>
           <span className={styles.caption}>
             <span className={styles.title}>{tile.title}</span>

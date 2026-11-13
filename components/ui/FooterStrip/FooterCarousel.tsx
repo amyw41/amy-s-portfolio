@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import styles from "./FooterStrip.module.css";
 import BuzzPath from "@/components/ui/BuzzPath";
@@ -88,9 +88,12 @@ function loadBBox(src: string): Promise<AlphaBBox> {
   if (!p) {
     p = new Promise<AlphaBBox>((resolve, reject) => {
       const img = new window.Image();
-      img.onload = () => resolve(scanBBox(img));
-      img.onerror = reject;
       img.src = src;
+      // Decoded off the main thread first, so the scan doesn't decode it.
+      img
+        .decode()
+        .then(() => resolve(scanBBox(img)))
+        .catch(reject);
     });
     bboxCache.set(src, p);
   }
@@ -146,16 +149,35 @@ function ItemArt({ id, src, alt }: { id: string; src: string; alt: string }) {
   );
 }
 
-// Load (and trim) the rest of the items once the page is idle, so stepping
-// never waits but opening the page doesn't pay for it.
-function usePreloadItems() {
+// Load (and trim) the items only once the footer is getting close (`near`),
+// then when the page is idle, so stepping never waits. Not at mount: the
+// footer is part of every page, and doing this as a page opened (during the
+// zoom into a case study, or the switch to the work view) was a stall.
+function usePreloadItems(near: boolean) {
   useEffect(() => {
-    const run = () => ITEMS.forEach((item) => loadBBox(item.image).catch(() => undefined));
-    // Safari has no requestIdleCallback: a short delay there instead.
+    if (!near) return;
+    // One item per idle moment, not all ten in one go: each scan is a few
+    // tens of ms, and ten in a row was a stall of its own.
+    let i = 0;
+    let id = 0;
     const idle = typeof window.requestIdleCallback === "function";
-    const id: number = idle ? window.requestIdleCallback(run, { timeout: 3000 }) : (globalThis.setTimeout(run, 1500) as unknown as number);
-    return () => (idle ? window.cancelIdleCallback(id) : globalThis.clearTimeout(id));
-  }, []);
+    const next = () => {
+      const item = ITEMS[i++];
+      if (!item) return;
+      loadBBox(item.image)
+        .catch(() => undefined)
+        .then(() => {
+          // Safari has no requestIdleCallback: a short gap there instead.
+          id = idle ? window.requestIdleCallback(next, { timeout: 2000 }) : (globalThis.setTimeout(next, 120) as unknown as number);
+        });
+    };
+    id = idle ? window.requestIdleCallback(next, { timeout: 2000 }) : (globalThis.setTimeout(next, 300) as unknown as number);
+    return () => {
+      i = ITEMS.length;
+      if (idle) window.cancelIdleCallback(id);
+      else globalThis.clearTimeout(id);
+    };
+  }, [near]);
 }
 
 // The arrow buttons: a hand-drawn circle with a little chevron in it, in a
@@ -196,7 +218,23 @@ function ArrowButton({ dir, seed, label, onClick }: { dir: "prev" | "next"; seed
  */
 export default function FooterCarousel() {
   const reduced = useReducedMotion() ?? false;
-  usePreloadItems();
+  // Whether the footer is within a screen or so of being seen.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || near) return;
+    // Measured against the scroll box it's in (home's work view), or the
+    // window (case studies), so the 800px lead applies either way.
+    const root = el.closest<HTMLElement>("[data-scroll-switch-target]");
+    const io = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && setNear(true), {
+      root,
+      rootMargin: "800px 0px",
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [near]);
+  usePreloadItems(near);
   const [index, setIndex] = useState(() => Math.max(0, ITEMS.findIndex((item) => item.id === "skullpanda")));
   // Which way the last step went: 1 next (slides left), -1 previous.
   const [dir, setDir] = useState(1);
@@ -211,7 +249,7 @@ export default function FooterCarousel() {
 
   if (!item) return null;
   return (
-    <div className={styles.carousel} aria-roledescription="carousel" aria-label={copy.carouselLabel}>
+    <div ref={rootRef} className={styles.carousel} aria-roledescription="carousel" aria-label={copy.carouselLabel}>
       <ArrowButton dir="prev" seed={221} label={copy.carouselPrev} onClick={() => step(-1)} />
       <figure className={styles.slide}>
         <div className={styles.slideImage}>
@@ -232,7 +270,7 @@ export default function FooterCarousel() {
               exit="leave"
               transition={slide}
             >
-              <ItemArt id={item.id} src={item.image} alt={item.name} />
+              {near && <ItemArt id={item.id} src={item.image} alt={item.name} />}
             </motion.div>
           </AnimatePresence>
         </div>

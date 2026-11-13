@@ -1,0 +1,65 @@
+/* An image or video loading in (MediaFade.tsx): a pulsing grey, then the
+ * media fades in from a blur. Timings from lib/motion.ts via the --media-*
+ * custom properties. */
+
+.root {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+/* The placeholder: a soft grey breathing between 30% and 50%. */
+.pulse {
+  position: absolute;
+  inset: 0;
+  background: #e6e6e6;
+  opacity: 0.4;
+}
+
+.media {
+  position: absolute;
+  inset: 0;
+  display: block;
+  opacity: 0;
+  filter: blur(var(--media-fade-blur));
+}
+
+.root[data-shown] .media {
+  opacity: 1;
+  filter: none;
+}
+
+.root[data-shown] .pulse {
+  visibility: hidden;
+  transition: visibility 0s linear calc(var(--media-fade-ms) * var(--slow, 1));
+}
+
+@keyframes mediaPulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pulse {
+    animation: mediaPulse calc(var(--media-pulse-s) * var(--slow, 1)) cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .media {
+    transition:
+      opacity calc(var(--media-fade-ms) * var(--slow, 1)) ease-in-out,
+      filter calc(var(--media-fade-ms) * var(--slow, 1)) ease-in-out;
+  }
+}
+
+/* Reduced motion: no blur, no pulse; a plain fade. */
+@media (prefers-reduced-motion: reduce) {
+  .media {
+    filter: none;
+    transition: opacity calc(var(--media-fade-ms) * var(--slow, 1)) ease-in-out;
+  }
+}

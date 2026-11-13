@@ -193,22 +193,19 @@
   pointer-events: none;
 }
 
-/* Leaving for a case study (.zoomOut, animated), or the first frame back
- * from one (.zoomCollapsed, instant): the sidebar narrowed to the rail's
- * 64px, its contents and the stage faded and dropped out, the logo in. */
-.zoomOut,
+/* The first frame back from a case study (.zoomCollapsed, instant): the
+ * sidebar at the case study's own sidebar width (CaseStudyLayout.module.css
+ * --rail-width), its contents and the stage faded and dropped out, the logo
+ * in; then .zoomBack widens it back as everything fades in. */
 .zoomCollapsed {
-  --sidebar-width: 64px;
+  --sidebar-width: 195px;
 }
 
-.zoomOut .zoomLogo,
 .zoomCollapsed .zoomLogo {
   opacity: 1;
 }
 
-.zoomOut > aside > *,
 .zoomCollapsed > aside > *,
-.zoomOut .stage,
 .zoomCollapsed .stage {
   opacity: 0;
   transform: translateY(var(--zoom-drop));
@@ -216,40 +213,17 @@
 
 /* While narrowing/widening, the sidebar's contents keep their full width
  * (clipped) instead of reflowing as the column changes. */
-.zoomOut > aside,
 .zoomCollapsed > aside,
 .zoomBack > aside {
   overflow: hidden;
 }
 
-.zoomOut > aside > *,
 .zoomCollapsed > aside > *,
 .zoomBack > aside > * {
   min-width: calc(390px - 2 * var(--pad-x));
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .zoomOut {
-    transition: grid-template-columns calc(var(--zoom-leave-ms) * var(--slow, 1)) cubic-bezier(0.65, 0, 0.35, 1);
-  }
-
-  /* Sidebar parts drop out a beat apart, top first; the stage with them. */
-  .zoomOut > aside > *,
-  .zoomOut .stage,
-  .zoomOut .zoomLogo {
-    transition:
-      opacity calc(var(--zoom-leave-ms) * var(--slow, 1)) ease,
-      transform calc(var(--zoom-leave-ms) * var(--slow, 1)) cubic-bezier(0.55, 0, 1, 0.45);
-  }
-
-  .zoomOut > aside > :nth-child(2) {
-    transition-delay: calc(var(--zoom-stagger-ms) * var(--slow, 1));
-  }
-
-  .zoomOut > aside > :nth-child(3) {
-    transition-delay: calc(var(--zoom-stagger-ms) * 2 * var(--slow, 1));
-  }
-
   /* Back from a case study: the rail widens into the sidebar as everything
    * fades back in. */
   .zoomBack {

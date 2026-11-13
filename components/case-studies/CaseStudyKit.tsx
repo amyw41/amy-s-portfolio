@@ -7,6 +7,8 @@ import type { ReactElement, ReactNode } from "react";
 import { Children, cloneElement, isValidElement, useEffect, useState } from "react";
 import { useAutoPlayInView } from "@/lib/useAutoPlayInView";
 import { FADE_IN_TRANSITION } from "@/lib/motion";
+import { buildWobblyLinePath } from "@/lib/wobbly";
+import MediaFade from "@/components/ui/MediaFade/MediaFade";
 import FooterStrip from "@/components/ui/FooterStrip";
 import { useCaseZoom, ZOOM_TARGET_ATTR } from "@/components/ui/CaseZoom";
 import { usePathname } from "next/navigation";
@@ -91,6 +93,8 @@ export function CaseStudyImage({
       // dropping it here removes it everywhere at once.
       className={`relative w-full overflow-hidden rounded-[4px] ${className}`}
     >
+      {/* Loads in softly: a pulsing grey, then a blur-to-sharp fade. */}
+      <MediaFade>
       {video ? (
         // No `autoPlay` — see useAutoPlayInView, starts fresh from the
         // beginning once actually scrolled into view instead of on mount.
@@ -118,6 +122,7 @@ export function CaseStudyImage({
           className="object-cover"
         />
       )}
+      </MediaFade>
     </div>
   );
 }
@@ -376,8 +381,8 @@ function useActiveSection(ids: string[]) {
   return activeId;
 }
 
-// The rail's numbered contents: one number per section (1, 2, 3…), the
-// one in view (useActiveSection) black, each jumping to its section. Plain
+// The sidebar's contents: each section by name, the one in view
+// (useActiveSection) in medium weight, each jumping to its section. Plain
 // hash links would push a history entry per click, so Back would step
 // through them instead of leaving the page: preventDefault + replaceState
 // updates the hash without that.
@@ -385,7 +390,8 @@ function RailContents({ sectionNav }: { sectionNav: SectionNavItem[] }) {
   const activeId = useActiveSection(sectionNav.map((s) => s.id));
   if (sectionNav.length === 0) return null;
   return (
-    <nav aria-label="Sections">
+    <nav aria-label="Contents">
+      <p className={layoutStyles.contentsLabel}>Contents</p>
       <ol className={layoutStyles.contents}>
         {sectionNav.map((s) => (
           <li key={s.id}>
@@ -409,6 +415,26 @@ function RailContents({ sectionNav }: { sectionNav: SectionNavItem[] }) {
     </nav>
   );
 }
+// The back-home arrow at the top of the sidebar: a hand-drawn ← (low
+// wobble, like the ↗s in home's Works list), in a BACK_SIZE box.
+const BACK_SIZE = 18;
+const BACK_PATHS = [
+  buildWobblyLinePath(131, [BACK_SIZE - 1, BACK_SIZE / 2], [1.5, BACK_SIZE / 2], 0.2),
+  buildWobblyLinePath(132, [7, 3.5], [1.5, BACK_SIZE / 2], 0.15) +
+    " " +
+    buildWobblyLinePath(133, [1.5, BACK_SIZE / 2], [7, BACK_SIZE - 3.5], 0.15),
+];
+
+function BackArrow() {
+  return (
+    <svg width={BACK_SIZE} height={BACK_SIZE} viewBox={`0 0 ${BACK_SIZE} ${BACK_SIZE}`} fill="none" aria-hidden="true">
+      {BACK_PATHS.map((d, i) => (
+        <path key={i} d={d} stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" />
+      ))}
+    </svg>
+  );
+}
+
 // Every case study's hero box locks to 3/2 to match the homepage's project
 // thumbnail ratio. object-cover (inside CaseStudyImage) crops each source
 // video/image to this shape instead of showing it at its own native proportions.
@@ -461,6 +487,9 @@ export function CaseStudyHero({
   /** The title and caption sit over the full-screen cover: white by
    * default, "dark" for a light cover. */
   heroText?: "light" | "dark";
+  /** A live demo over the cover (CyberSea's 3D viewer): drawn by
+   * CaseStudyLayout over the cover's media, under the title. */
+  heroDemo?: ReactNode;
 }) {
   const body = layoutPart !== undefined;
   const show = (part: "subtitle" | "meta" | "body") => !layoutPart || layoutPart === part;
@@ -579,8 +608,8 @@ export function CaseStudyLayout({
 
   return (
     <div className={`tw-scope ${layoutStyles.frame}`}>
-      {/* The cover, the whole first screen: the project's image (or video)
-       * filling it edge to edge, its title and caption over the top left.
+      {/* The cover: the top 5/8 of the screen, the whole window wide: the
+       * project's image or video (or a live demo, heroDemo) edge to edge.
        * It's where the zoom from home lands. */}
       {hero && (
         <section className={layoutStyles.hero}>
@@ -599,15 +628,7 @@ export function CaseStudyLayout({
               sizes="100vw"
             />
           </div>
-          <motion.header
-            className={`${layoutStyles.heroText} ${hero.props.heroText === "dark" ? layoutStyles.heroTextDark : ""}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={FADE_IN_TRANSITION}
-          >
-            <h1 className={layoutStyles.title}>{hero.props.title}</h1>
-            <p className={layoutStyles.caption}>{hero.props.subtitle}</p>
-          </motion.header>
+          {hero.props.heroDemo}
         </section>
       )}
 
@@ -615,9 +636,9 @@ export function CaseStudyLayout({
        * cover or the footer), so it sticks only that far. */}
       <div className={layoutStyles.side}>
         <aside className={layoutStyles.rail}>
-          {/* Placeholder until the real logo exists (brief Part 7). */}
-          <Link href="/" className={layoutStyles.logo} aria-label="Amy Wang, home" onClick={() => zoom?.goHome()}>
-            aw
+          {/* Back home: a hand-drawn ←, where home's social icons sit. */}
+          <Link href="/" className={layoutStyles.back} aria-label="Back home">
+            <BackArrow />
           </Link>
           <RailContents sectionNav={sectionNav} />
         </aside>
@@ -626,11 +647,20 @@ export function CaseStudyLayout({
 
       <main className={layoutStyles.content}>
         <div className={`${layoutStyles.sections} ${layoutStyles.coverEnd} text-left`}>
+          {/* Under the cover: the title, its caption, then the facts. */}
           {hero && (
-            <div className={layoutStyles.overview}>
-              <p className={layoutStyles.overviewLabel}>Overview</p>
-              {cloneElement(hero, { layoutPart: "meta" })}
-            </div>
+            <motion.header
+              className={layoutStyles.intro}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={FADE_IN_TRANSITION}
+            >
+              <h1 className={layoutStyles.title}>{hero.props.title}</h1>
+              <p className={layoutStyles.caption}>{hero.props.subtitle}</p>
+              <div className={layoutStyles.overview} aria-label="Overview">
+                {cloneElement(hero, { layoutPart: "meta" })}
+              </div>
+            </motion.header>
           )}
           {sidebarExtra}
           {hero && cloneElement(hero, { layoutPart: "body" })}
