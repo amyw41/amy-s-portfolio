@@ -122,12 +122,12 @@ export default function SpotifyCaseStudy() {
           eyebrow="01 / Initial Planning"
           heading="The Problem"
           media={
-            <div className="space-y-[36px]">
+            <div className="space-y-[var(--space-lg)]">
               <PlaceholderBox
                 label="85% of people use Blend but only 40% return."
                 highlightColor={HIGHLIGHT}
               />
-              <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-[var(--space-md)] sm:grid-cols-2">
                 <CaseStudyImage
                   src="/images/projects/spotify/survey_use.avif"
                   alt="Chart: Do you use Spotify Blend? 85% yes, 15% no"
@@ -149,7 +149,7 @@ export default function SpotifyCaseStudy() {
             our match percentage? What secret song do we share? But curiosity dies
             down. By day 2, the playlist lays in your library, forgotten.
           </p>
-          <p className="mt-[36px]">
+          <p className="mt-[var(--space-lg)]">
             <TextHighlight>
               The problem isn&apos;t Spotify or the Blend itself; it&apos;s creating a
               reason to return.
@@ -210,7 +210,7 @@ export default function SpotifyCaseStudy() {
             I structured this project as a simulated client engagement, where{" "}
             <TextHighlight>my dev was the client and provided me with requirements.</TextHighlight>
           </p>
-          <p className="mt-[36px]">
+          <p className="mt-[var(--space-lg)]">
             I asked him a set of questions to make sure I fully understood the vision,
             then split them into 3 categories. This allowed me to visualize the product
             and begin my research.
@@ -224,7 +224,7 @@ export default function SpotifyCaseStudy() {
           eyebrow="02 / Research"
           heading="Competitive Analysis"
           media={
-            <div className="space-y-[36px]">
+            <div className="space-y-[var(--space-lg)]">
               <CaseStudyImage
                 src="/images/projects/spotify/ca_img.avif"
                 alt="Competitive analysis collage: Kahoot, Codenames, and Jackbox annotated with observations"
@@ -318,7 +318,7 @@ export default function SpotifyCaseStudy() {
               />
             }
           />
-          <div className="mt-[72px]">
+          <div className="mt-[var(--space-2xl)]">
             <Row
               heading="Spotify Wrapped"
               media={
@@ -357,7 +357,7 @@ export default function SpotifyCaseStudy() {
               />
             }
           />
-          <div className="mt-[72px]">
+          <div className="mt-[var(--space-2xl)]">
             <Row
               heading="Color Scheme"
               media={
@@ -393,7 +393,7 @@ export default function SpotifyCaseStudy() {
         <Row
           heading="Navigation Problem"
           media={
-            <div className="space-y-[36px]">
+            <div className="space-y-[var(--space-lg)]">
               <HighlightBox bg="#fbeded">
                 Users needed a way to move between stat cards without breaking the
                 visual rhythm of the layout.
@@ -417,7 +417,7 @@ export default function SpotifyCaseStudy() {
             Despite the vertical arrows having a clear next step, I decided against it
             because it cluttered the screen too much.
           </p>
-          <p className="mt-[36px]">
+          <p className="mt-[var(--space-lg)]">
             <TextHighlight>So we went with the no-arrow option.</TextHighlight> Users can{" "}
             <TextHighlight>swipe or tap</TextHighlight> to move onto the next screen. The layering is intuitive
             enough for the next step to be obvious.
@@ -464,7 +464,7 @@ export default function SpotifyCaseStudy() {
             communicating throughout the process, checking in to make sure everything
             is okay, and consistently asking questions.
           </p>
-          <p className="mt-[36px]">
+          <p className="mt-[var(--space-lg)]">
             Sometimes, the client doesn&apos;t have a tech background and will not
             understand the plausibility of certain features. Other times, they will not
             be able to communicate what they don&apos;t explicitly like about a design.

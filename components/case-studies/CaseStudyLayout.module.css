@@ -7,6 +7,15 @@
   --pad-y: clamp(24px, 6.9dvh, 80px);
   --stage-pad-x: clamp(21px, 2.734vw, 70px);
   --pad-x: clamp(18px, 1.823vw, 28px);
+  /* The case studies' spacing scale (design-system.md "Case-study
+   * spacing"): every vertical gap in the writing is one of these. */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+  --space-2xl: 64px;
+  --space-3xl: 96px;
   /* Under the cover: the writing centred on the page, with an equal margin
    * either side (240px at 1536 wide); the sidebar sits in the left margin,
    * flush left at home's padding. */
@@ -44,7 +53,7 @@
 }
 
 .caption {
-  margin: 10px 0 0;
+  margin: var(--space-sm) 0 0;
   font-size: 14px;
   font-weight: 300;
   line-height: 1.45;
@@ -72,8 +81,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  /* Home's sidebar gap (icons → intro). */
-  gap: clamp(24px, 6.9dvh, 96px);
+  /* The back arrow to the contents: the spacing scale's lg (24px). */
+  gap: var(--space-lg);
   padding: var(--pad-y) var(--pad-x);
 }
 
@@ -116,8 +125,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
-  margin: 4px 0 0;
+  gap: 0;
+  margin: var(--space-xs) 0 0;
   padding: 0;
   list-style: none;
 }
@@ -160,16 +169,16 @@
 /* Under the cover: the title, its caption, then the overview box; 40px
  * before the TL;DR. */
 .intro {
-  margin-bottom: 40px;
+  margin-bottom: var(--space-xl);
 }
 
-/* The title: big (44px at 1536 wide), regular weight. */
+/* The title: the site's big heading (home's "What's inside?": 24px,
+ * regular). */
 .title {
   margin: 0;
-  font-size: clamp(30px, 2.865vw, 56px);
+  font-size: 24px;
   font-weight: 400;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
 /* The writing, left aligned, across the whole of the content area. */
@@ -180,8 +189,8 @@
 /* The overview box: the four facts (timeline, team, role, skills) side by
  * side. */
 .overview {
-  margin-top: 16px;
-  padding: 16px 20px;
+  margin-top: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 10px;
 }
@@ -197,7 +206,7 @@
 
 /* 96px of space between the last section and the footer. */
 .coverEnd {
-  padding-bottom: 96px;
+  padding-bottom: var(--space-3xl);
 }
 
 /* ---------- mobile: a top bar, then everything stacked ---------- */
@@ -229,7 +238,7 @@
   }
 
   .title {
-    font-size: 30px;
+    font-size: 22px;
   }
 
   .hero {
@@ -241,6 +250,6 @@
   }
 
   .coverEnd {
-    padding-bottom: 64px;
+    padding-bottom: var(--space-2xl);
   }
 }

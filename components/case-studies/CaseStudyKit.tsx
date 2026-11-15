@@ -10,6 +10,7 @@ import { FADE_IN_TRANSITION } from "@/lib/motion";
 import { buildWobblyLinePath } from "@/lib/wobbly";
 import MediaFade from "@/components/ui/MediaFade/MediaFade";
 import FooterStrip from "@/components/ui/FooterStrip";
+import BackToTop from "@/components/ui/BackToTop/BackToTop";
 import { useCaseZoom, ZOOM_TARGET_ATTR } from "@/components/ui/CaseZoom";
 import { usePathname } from "next/navigation";
 import layoutStyles from "./CaseStudyLayout.module.css";
@@ -292,13 +293,14 @@ export function Row({
   // squeezing it against `media` the same way would read as cramped rather
   // than related.
   // One column on every screen: the heading, then its writing under it.
-  const childrenGap = tight ? "mt-2" : "mt-4";
-  const mediaGap = children ? "mt-[36px]" : "mt-2";
+  // The spacing scale (CaseStudyLayout.module.css --space-*).
+  const childrenGap = tight ? "mt-[var(--space-sm)]" : "mt-[var(--space-md)]";
+  const mediaGap = children ? "mt-[var(--space-lg)]" : "mt-[var(--space-sm)]";
   return (
     <div>
       <div className="grid grid-cols-1">
         <div>
-          {eyebrow && <p className={`${TEXT.header} mb-2`}>{eyebrow}</p>}
+          {eyebrow && <p className={`${TEXT.header} mb-[var(--space-sm)]`}>{eyebrow}</p>}
           <p className={headingClassName ?? TEXT.subheader}>{heading}</p>
         </div>
         {children && (
@@ -310,22 +312,24 @@ export function Row({
             confining it to just the narrow content column (like `children`)
             left it looking squeezed relative to the image directly above
             it. */}
-        {after && <div className={`min-w-0 mt-[36px] ${TEXT.content}`}>{after}</div>}
+        {after && <div className={`min-w-0 mt-[var(--space-lg)] ${TEXT.content}`}>{after}</div>}
       </div>
     </div>
   );
 }
 
-// One numbered section (01 Initial Planning, 02 Research, ...) — owns the
-// spacing system. Anchored to the page's own 18px body text (TEXT.content):
-// 8x18=144px between sections, 4x18=72px between Rows/subsections (Row's
-// own gap-y-[36px] handles the 2x tier, between text/media within a
-// subsection). One definition here means every case study's section
-// spacing can't quietly drift out of sync the way copy-pasting this
-// className onto each <section> tag by hand eventually did.
+// One numbered section (01 Initial Planning, 02 Research, ...). Its spacing,
+// and Row's, come from the case studies' spacing scale (--space-* in
+// CaseStudyLayout.module.css; design-system.md "Case-study spacing"), so
+// every case study's rhythm stays the same.
 export function Section({ id, children }: { id: string; children: ReactNode }) {
   return (
-    <section id={id} className="first-of-type:mt-[30px] md:first-of-type:mt-[64px] mt-[120px] scroll-mt-24 space-y-[72px]">
+    // The spacing scale (CaseStudyLayout.module.css --space-*): 96px between
+    // sections, 64px between a section's parts and before the first one.
+    <section
+      id={id}
+      className="mt-[var(--space-3xl)] first-of-type:mt-[var(--space-2xl)] scroll-mt-24 space-y-[var(--space-2xl)]"
+    >
       {children}
     </section>
   );
@@ -565,7 +569,7 @@ export function CaseStudyHero({
           rather than its own separate size/color (per request). */}
       {tldr && show("body") && (
         <div className={layoutPart === "body" ? "text-left" : "mt-6 text-left"}>
-          <p className={`${TEXT.header} mb-2`}>TL;DR</p>
+          <p className={`${TEXT.header} mb-[var(--space-sm)]`}>TL;DR</p>
           <p className={TEXT.content}>{tldr}</p>
         </div>
       )}
@@ -669,7 +673,9 @@ export function CaseStudyLayout({
       </main>
 
       {/* The last row, the whole window wide (under the sidebar too). */}
-      <FooterStrip className={layoutStyles.footerPlace} />
+      <FooterStrip className={layoutStyles.footerPlace} showBackToTop={false} />
+      {/* "back to top", floating bottom right once the page has scrolled. */}
+      <BackToTop />
     </div>
   );
 }

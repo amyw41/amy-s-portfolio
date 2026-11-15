@@ -132,7 +132,7 @@ export default function CyberSeaCaseStudy() {
           eyebrow="01 / Initial Planning"
           heading="The Thales Challenge"
           media={
-            <div className="space-y-[36px]">
+            <div className="space-y-[var(--space-lg)]">
               {/* Larger + centered, closer to TEXT.subheader than the
                   usual small caption size, and all 3 images share one
                   ratio (object-cover crops each to fit) instead of each
@@ -142,7 +142,7 @@ export default function CyberSeaCaseStudy() {
               <p className="text-center font-body text-[14px] font-normal text-black">
                 3+ different views are needed to plan ONE route!
               </p>
-              <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-[var(--space-md)] sm:grid-cols-3">
                 {ROUTE_VIEWS.map((r) => (
                   <div key={r.src}>
                     <CaseStudyImage src={r.src} alt={r.alt} ratio="512/320" highlightColor={HIGHLIGHT} />
@@ -158,7 +158,7 @@ export default function CyberSeaCaseStudy() {
             without warning. For maritime operators, this is a problem, and for the
             average person, even beginning to understand the Arctic feels impossible.
           </p>
-          <p className="mt-[36px]">
+          <p className="mt-[var(--space-lg)]">
             This led us to ask:{" "}
             <TextHighlight color={HIGHLIGHT}>
               &ldquo;Why is understanding the Arctic still so complicated that even
@@ -250,7 +250,7 @@ export default function CyberSeaCaseStudy() {
           eyebrow="03 / The Solution"
           heading="3 main features"
           media={
-            <div className="space-y-[56px]">
+            <div className="space-y-[var(--space-xl)]">
               {/* Side by side, not stacked — text (label + caption, on top
                   of each other) on the left, video on the right. Same
                   16rem label-column width as Row's own layout, for visual
@@ -395,7 +395,7 @@ export default function CyberSeaCaseStudy() {
             often found myself in a position where teammates wanted to add a feature or
             element that would just make the interface feel cluttered.
           </p>
-          <p className="mt-[36px]">
+          <p className="mt-[var(--space-lg)]">
             This was my first time having to explain how decisions like
             hierarchy, spacing, and restraint weren&apos;t just visual choices,
             but improvements to the experience. And it taught me that a big part
@@ -412,13 +412,13 @@ export default function CyberSeaCaseStudy() {
             forced us to work efficiently, make quick decisions, and
             continuously re-evaluate our direction.
           </p>
-          <p className="mt-[36px]">
+          <p className="mt-[var(--space-lg)]">
             Through this experience, I learned the importance of iterating
             frequently and refining ideas as development progressed. And to let
             go of my perfectionist mindset. Sometimes, the end result was more
             important than how you got there.
           </p>
-          <p className="mt-[36px]">
+          <p className="mt-[var(--space-lg)]">
             Though if I could go back, I would definitely want to focus more on
             the UX rather than the UI!
           </p>

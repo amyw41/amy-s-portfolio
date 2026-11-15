@@ -24,8 +24,12 @@ const LINKS = [copy.links.linkedin, copy.links.twitter, copy.links.email];
 export default function FooterStrip({
   className = "",
   onBackToTop,
+  showBackToTop = true,
   ref,
 }: {
+  /** Off where the page has its own "back to top" (the case studies' floating
+   * one, components/ui/BackToTop). */
+  showBackToTop?: boolean;
   /** The footer element (home measures it for the lift). */
   ref?: Ref<HTMLElement>;
   className?: string;
@@ -44,6 +48,7 @@ export default function FooterStrip({
           <FooterLink key={link.href} href={link.href} label={link.label} seed={40 + i} />
         ))}
       </nav>
+      {showBackToTop && (
       <div className={styles.backToTop}>
         <ScrollHint
           shown
@@ -55,6 +60,10 @@ export default function FooterStrip({
           className={styles.backToTopHint}
         />
       </div>
+      )}
+      {/* Without its own, the spot where a floating "back to top" docks
+       * (components/ui/BackToTop) as the footer scrolls up to it. */}
+      {!showBackToTop && <div className={`${styles.backToTop} ${styles.dock}`} data-back-to-top-dock />}
       <FooterCarousel />
       <FooterCredit />
     </footer>

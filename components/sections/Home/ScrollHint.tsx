@@ -41,6 +41,26 @@ const SHORT_HEAD = [
   buildWobblyLinePath(132, [21, 72], [27, 66], 0.15),
 ];
 
+// `up` + `short` (the footer's "back to top"): its own drawing, drawn
+// pointing up (not the down arrow flipped, whose head sat off the line's
+// end): from just above the label, up with one loop, to an open head that
+// follows the line's last direction. In a VIEW_W x UP_VIEW_H box.
+const UP_VIEW_H = 76;
+const UP_LOOP: CurveSegment[] = [
+  [[30, 74], [36, 62], [38, 52], [31, 45]],
+  [[31, 45], [23, 38], [13, 44], [17, 51]],
+  [[17, 51], [22, 59], [34, 52], [34, 38]],
+  [[34, 38], [34, 26], [32, 16], [30, 5]],
+];
+const UP_ARROW = buildWobblyCurvePath(140, UP_LOOP, 0.35);
+const UP_HEAD = [
+  buildWobblyLinePath(141, [23.5, 12.5], [30, 5], 0.12),
+  buildWobblyLinePath(142, [30, 5], [36, 12], 0.12),
+];
+/** The footer's arrow is drawn small (90px wide), so its line is heavier
+ * than the jar's ink to read at that size. */
+const UP_STROKE = ARROW_STROKE * 2.2;
+
 /**
  * A little doodle annotation, in the style of a café's hand-drawn menu
  * board: a small lowercase label and a thin curly arrow. Used for:
@@ -74,6 +94,9 @@ export default function ScrollHint({
   className?: string;
 }) {
   const reduced = useReducedMotion() ?? false;
+  const upDrawn = up && short;
+  const viewH = upDrawn ? UP_VIEW_H : short ? SHORT_VIEW_H : VIEW_H;
+  const strokes = upDrawn ? [UP_ARROW, ...UP_HEAD] : short ? [SHORT_ARROW, ...SHORT_HEAD] : [ARROW, ...HEAD];
   const draw = reduced ? { duration: 0 } : slowTransition({ duration: SCROLL_HINT_DRAW_S, ease: EASE_OUT });
   const fadeIn = reduced ? { duration: 0 } : slowTransition({ duration: SCROLL_HINT_LABEL_S, ease: EASE_OUT });
   const fadeOut = reduced ? { duration: 0 } : slowTransition({ duration: SCROLL_HINT_OUT_S, ease: "easeOut" as const });
@@ -81,7 +104,7 @@ export default function ScrollHint({
   return (
     <motion.button
       type="button"
-      className={`${styles.hint} ${up ? styles.up : ""} ${className}`}
+      className={`${styles.hint} ${up ? styles.up : ""} ${upDrawn ? styles.upDrawn : ""} ${className}`}
       aria-label={ariaLabel}
       tabIndex={shown ? 0 : -1}
       initial={false}
@@ -100,17 +123,18 @@ export default function ScrollHint({
       </motion.span>
       <svg
         className={styles.arrow}
-        viewBox={`0 0 ${VIEW_W} ${short ? SHORT_VIEW_H : VIEW_H}`}
+        viewBox={`0 0 ${VIEW_W} ${viewH}`}
         fill="none"
         aria-hidden="true"
       >
-        {(short ? [SHORT_ARROW, ...SHORT_HEAD] : [ARROW, ...HEAD]).map((d, i) => (
+        {strokes.map((d, i) => (
           <motion.path
             key={i}
             d={d}
             stroke="currentColor"
-            strokeWidth={ARROW_STROKE}
+            strokeWidth={upDrawn ? UP_STROKE : ARROW_STROKE}
             strokeLinecap="round"
+            strokeLinejoin="round"
             initial={{ pathLength: 0, opacity: 0 }}
             animate={shown ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }}
             // The head draws once the line reaches it. Each stroke is hidden

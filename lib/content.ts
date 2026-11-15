@@ -42,15 +42,16 @@ export const content = {
       },
       experience: {
         heading: "Experience",
-        // Each company name links to its site (opens in a new tab).
+        // Each company name links to its site (opens in a new tab). The
+        // full list is on the About page.
         items: [
-          { role: "Design", company: "Blueprint", href: "https://uwblueprint.org" },
-          { role: "Campus", company: "Notion", href: "https://www.notion.com" },
+          { role: "Design", company: "Magic Hour AI (YC W24)", href: "https://magichour.ai" },
+          { role: "Design", company: "UW Flow", href: "https://uwflow.com" },
           { role: "Management Eng", company: "Waterloo", href: "https://uwaterloo.ca/future-students/programs/management-engineering" },
         ],
       },
-      // The menu's three groups, top to bottom: Experience (above), Works
-      // (the case studies), then Extra (About Me, Play).
+      // The menu's groups, top to bottom: Experience (above), Works (the
+      // case studies), then Extra (About Me, Play).
       nav: {
         works: "Works",
         extra: "Extra",

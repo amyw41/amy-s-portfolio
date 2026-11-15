@@ -272,8 +272,9 @@ export function slowTransition<T extends { duration?: number; delay?: number }>(
 // instant.
 export const FOIL_REVEAL_LAG_MS = 180;
 // The footer's item carousel (components/ui/FooterStrip/FooterCarousel):
-// stepping slides the item out one side and the next in from the other
-// over this (ease-in-out). Reduced motion: instant.
+// an arrow slides the strip of items along to the next over this (ease-out);
+// clicking again mid-slide carries on from where it is to the new item.
+// Reduced motion: instant.
 export const FOOTER_CAROUSEL_SLIDE_S = 0.45;
 // The footer's credit: its gradient follows the mouse across it, catching
 // up over this (ease-out), and eases back on leave. Reduced motion: still.
@@ -332,3 +333,7 @@ export const GUESSR_CHAR_DELAY_MS = 700;
 export const GUESSR_CHAR_STAGGER_MS = 140;
 export const GUESSR_CHAR_IN_MS = 600;
 export const GUESSR_HOP_MS = 600;
+// The buttons' sound (components/ui/UiSound): never two closer together than
+// UI_SOUND_MIN_GAP_MS (so sweeping the mouse across a row of buttons isn't
+// a buzz).
+export const UI_SOUND_MIN_GAP_MS = 90;

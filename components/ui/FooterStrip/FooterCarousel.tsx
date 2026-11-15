@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { animate, motion, useMotionValue, useMotionValueEvent, useReducedMotion, useTransform } from "framer-motion";
 import styles from "./FooterStrip.module.css";
 import BuzzPath from "@/components/ui/BuzzPath";
 import { WHATS_INSIDE_ITEMS } from "@/lib/whatsInsideItems";
 import { content } from "@/lib/content";
-import { FOOTER_CAROUSEL_SLIDE_S, slowTransition } from "@/lib/motion";
+import { FOOTER_CAROUSEL_SLIDE_S, slowMs } from "@/lib/motion";
 import { buildWobblyLinePath, buildWobblyOvalPath, LINE_STROKE_WIDTH, VIEW_BOX } from "@/lib/wobbly";
 
 const copy = content.en.footer;
@@ -209,12 +209,23 @@ function ArrowButton({ dir, seed, label, onClick }: { dir: "prev" | "next"; seed
   );
 }
 
+/** How far apart the items sit on the strip (px): more than the widest
+ * item (ITEM_MAX_W) plus the window's fade, so a neighbour only shows while
+ * it's sliding through. */
+const SLOT = 380;
+/** Items drawn either side of the one in view (enough for a fast run of
+ * clicks to slide through without gaps). */
+const SPREAD = 2;
+const wrap = (n: number) => ((n % ITEMS.length) + ITEMS.length) % ITEMS.length;
+
 /**
- * The footer's middle: one of the jar's items at a time, its caption under
- * it, and a hand-drawn circle arrow either side to step through them
- * (wrapping round). Stepping slides the strip along like a carousel: the
- * item leaves to one side as the next comes in from the other, over
- * FOOTER_CAROUSEL_SLIDE_S; reduced motion: it just swaps.
+ * The footer's middle: the jar's items on a strip, one in view at a time,
+ * its caption under it, and a hand-drawn circle arrow either side. An arrow
+ * slides the strip along to the next item (wrapping round forever), over
+ * FOOTER_CAROUSEL_SLIDE_S, ease-out. Clicking again mid-slide just extends
+ * it: the strip carries on from where it is to the new item, so clicking
+ * quickly glides through several and always comes to rest centred.
+ * Reduced motion: it jumps straight there.
  */
 export default function FooterCarousel() {
   const reduced = useReducedMotion() ?? false;
@@ -235,17 +246,31 @@ export default function FooterCarousel() {
     return () => io.disconnect();
   }, [near]);
   usePreloadItems(near);
-  const [index, setIndex] = useState(() => Math.max(0, ITEMS.findIndex((item) => item.id === "skullpanda")));
-  // Which way the last step went: 1 next (slides left), -1 previous.
-  const [dir, setDir] = useState(1);
-  const item = ITEMS[index];
-  const step = (by: number) => {
-    setDir(by);
-    setIndex((i) => (i + by + ITEMS.length) % ITEMS.length);
-  };
-  const slide = reduced
-    ? { duration: 0 }
-    : slowTransition({ duration: FOOTER_CAROUSEL_SLIDE_S, ease: [0.65, 0, 0.35, 1] as const });
+
+  // `target`: the strip position (in items, unbounded) it's heading for;
+  // `pos`: where it is now (animated). The item in view is round(pos).
+  const start = Math.max(0, ITEMS.findIndex((item) => item.id === "skullpanda"));
+  const [target, setTarget] = useState(start);
+  const pos = useMotionValue(start);
+  const x = useTransform(pos, (p) => -p * SLOT);
+  const [at, setAt] = useState(start);
+  useMotionValueEvent(pos, "change", (p) => setAt(Math.round(p)));
+  useEffect(() => {
+    if (reduced) {
+      pos.set(target);
+      return;
+    }
+    const controls = animate(pos, target, {
+      duration: slowMs(FOOTER_CAROUSEL_SLIDE_S * 1000) / 1000,
+      ease: [0.22, 1, 0.36, 1],
+    });
+    return () => controls.stop();
+  }, [target, reduced, pos]);
+
+  const step = (by: number) => setTarget((t) => t + by);
+  const item = ITEMS[wrap(target)];
+  const slots = [];
+  for (let k = at - SPREAD; k <= at + SPREAD; k++) slots.push(k);
 
   if (!item) return null;
   return (
@@ -253,26 +278,16 @@ export default function FooterCarousel() {
       <ArrowButton dir="prev" seed={221} label={copy.carouselPrev} onClick={() => step(-1)} />
       <figure className={styles.slide}>
         <div className={styles.slideImage}>
-          <AnimatePresence initial={false} custom={dir}>
-            <motion.div
-              key={item.id}
-              className={styles.slideImageInner}
-              custom={dir}
-              variants={{
-                // Half the window: from just inside one faded edge to the
-                // middle (the window's own fade does most of the fading).
-                enter: (d: number) => ({ x: `${d * 50}%`, opacity: 0 }),
-                center: { x: "0%", opacity: 1 },
-                leave: (d: number) => ({ x: `${d * -50}%`, opacity: 0 }),
-              }}
-              initial="enter"
-              animate="center"
-              exit="leave"
-              transition={slide}
-            >
-              {near && <ItemArt id={item.id} src={item.image} alt={item.name} />}
-            </motion.div>
-          </AnimatePresence>
+          <motion.div className={styles.track} style={{ x }}>
+            {slots.map((k) => {
+              const it = ITEMS[wrap(k)];
+              return (
+                <div key={k} className={styles.slideImageInner} style={{ left: k * SLOT }} aria-hidden={k !== target}>
+                  {near && <ItemArt id={it.id} src={it.image} alt={k === target ? it.name : ""} />}
+                </div>
+              );
+            })}
+          </motion.div>
         </div>
         <figcaption className={styles.caption} aria-live="polite">
           {item.caption}

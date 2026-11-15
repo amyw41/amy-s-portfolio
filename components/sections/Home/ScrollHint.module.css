@@ -40,6 +40,11 @@
   margin: 0 0 6px 4%;
 }
 
+/* The footer's "back to top": its arrow is drawn pointing up, so no flip. */
+.upDrawn .arrow {
+  transform: none;
+}
+
 /* Small lowercase label in the annotation hand (Gaegu Light, lib/fonts.ts),
  * like a menu board's captions. Gaegu runs small, so 19px reads about like
  * the 14-16px body; its own airy spacing, not Geist's tight tracking. */

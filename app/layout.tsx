@@ -5,6 +5,7 @@ import { content } from "@/lib/content";
 import Taskbar from "@/components/ui/Taskbar/Taskbar";
 import PageTransition from "@/components/ui/PageTransition/PageTransition";
 import MotionDebug from "@/components/ui/MotionDebug/MotionDebug";
+import UiSound from "@/components/ui/UiSound/UiSound";
 import Footer from "@/components/sections/Footer";
 import CaseZoomProvider from "@/components/ui/CaseZoom";
 import "./globals.css";
@@ -71,6 +72,7 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         {/* ?slow / ?intro debug params — see lib/motion.ts. */}
         <MotionDebug />
+        <UiSound />
         {/* The zoom from the home page into a case study (and back) lives
          * here so it survives the route change — see CaseZoom.tsx. */}
         <CaseZoomProvider>

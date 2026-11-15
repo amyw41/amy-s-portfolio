@@ -1,0 +1,36 @@
+/* The case studies' floating "back to top" (BackToTop.tsx): the window's
+ * bottom right corner, at the page's padding. */
+.place {
+  position: fixed;
+  right: var(--pad-x, 24px);
+  bottom: 20px;
+  z-index: 50;
+  /* White, inverted against whatever is behind it: black on the white
+   * page, white over the cover and the footer. */
+  mix-blend-mode: difference;
+  pointer-events: none;
+}
+
+button.hint {
+  width: 90px;
+  color: #fff;
+  pointer-events: auto;
+}
+
+button.hint:focus-visible {
+  outline-color: #fff;
+}
+
+@media (max-width: 767px) {
+  .place {
+    right: 16px;
+    bottom: 16px;
+  }
+
+  /* The arrow narrower; the label lined up on the right edge so it stays on
+   * screen. */
+  button.hint {
+    width: 72px;
+    align-items: flex-end;
+  }
+}

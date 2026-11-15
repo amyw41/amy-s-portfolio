@@ -348,7 +348,7 @@ export default function SkinSproutCaseStudy() {
           eyebrow="01 / Initial Planning"
           heading="The Problem"
           media={
-            <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-[var(--space-md)] sm:grid-cols-2">
               <CaseStudyImage
                 src="/images/projects/skinsprout/current1.webp"
                 alt="A skincare recommendations app recommending a product"
@@ -375,7 +375,7 @@ export default function SkinSproutCaseStudy() {
                   Ingredient lists are dense and never optimized for a consumer.
                 </TextHighlight>
               </p>
-              <p className="mt-[36px]">
+              <p className="mt-[var(--space-lg)]">
                 {/* CHECK: same best-effort caveat as above. */}
                 Users are stuck choosing between two bad options:{" "}
                 <TextHighlight color={HIGHLIGHT}>
@@ -383,7 +383,7 @@ export default function SkinSproutCaseStudy() {
                   system that was never built to be understood.
                 </TextHighlight>
               </p>
-              <div className="mt-[36px]">
+              <div className="mt-[var(--space-lg)]">
                 <StatRow
                   bg={HIGHLIGHT}
                   stats={[
@@ -397,12 +397,12 @@ export default function SkinSproutCaseStudy() {
           }
         >
           <p>Finding skincare that actually works for your skin shouldn&apos;t be this difficult.</p>
-          <p className="mt-[36px]">
+          <p className="mt-[var(--space-lg)]">
             But the industry is built to sell, not to inform. Influencers promote
             anything that would give them a brand deal, and marketing is hinged on
             exaggerations.
           </p>
-          <p className="mt-[36px]">
+          <p className="mt-[var(--space-lg)]">
             <TextHighlight color={HIGHLIGHT}>
               The result: Users end up buying based on who has the biggest following, not
               what they actually need.
@@ -413,7 +413,7 @@ export default function SkinSproutCaseStudy() {
         <Row
           heading="The Solution"
           media={
-            <div className="space-y-[56px]">
+            <div className="space-y-[var(--space-xl)]">
               {[
                 {
                   caption: 'A tracking system where you can log your skincare in your "shelf".',
@@ -493,7 +493,7 @@ export default function SkinSproutCaseStudy() {
           eyebrow="02 / Research"
           heading="Affinity Mapping"
           media={
-            <div className="space-y-[36px]">
+            <div className="space-y-[var(--space-lg)]">
               <CaseStudyImage
                 src="/images/projects/skinsprout/am.avif"
                 alt="Affinity map grouping survey responses into 4 key insight clusters"
