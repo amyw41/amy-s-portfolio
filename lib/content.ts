@@ -53,8 +53,8 @@ export const content = {
       // The menu's groups, top to bottom: Experience (above), Works (the
       // case studies), then Extra (About Me, Play).
       nav: {
-        works: "Works",
-        extra: "Extra",
+        works: "Projects",
+        extra: "More",
         about: "About Me",
         play: "Play",
       },

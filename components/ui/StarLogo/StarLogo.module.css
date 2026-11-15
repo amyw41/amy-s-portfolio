@@ -1,0 +1,16 @@
+/* The star logo (StarLogo.tsx). Values: design-system.md "Star logo". */
+.star {
+  display: inline-flex;
+  width: fit-content;
+  line-height: 0;
+}
+
+.star img {
+  display: block;
+}
+
+.star:focus-visible {
+  outline: 1px solid #000;
+  outline-offset: 4px;
+  border-radius: 4px;
+}

@@ -87,9 +87,11 @@ button:focus-visible {
   border-radius: 2px;
 }
 
+/* Selected text: white on a softened raspberry (the brand colour at 70%:
+ * gentler than the full colour, still dark enough for white to read). */
 ::selection {
-  background: #f9e6e8;
-  color: #ae0c24;
+  background: rgb(224 64 138 / 0.7);
+  color: #fff;
 }
 
 /* ---------- the zoom's freeze ---------- */

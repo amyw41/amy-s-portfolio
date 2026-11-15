@@ -22,6 +22,7 @@ import { buildWobblyLinePath, buildWobblyPillPath, LINE_STROKE_WIDTH, PILL_VIEW_
 import BuzzPath from "@/components/ui/BuzzPath";
 import { useCaseZoom } from "@/components/ui/CaseZoom";
 import { FoilGlow, FoilText, foilHostLight, foilHostText, useFoil } from "@/components/ui/Foil";
+import StarLogo from "@/components/ui/StarLogo/StarLogo";
 
 const copy = content.en.sidebar;
 const links = content.en.footer.links;
@@ -394,14 +395,16 @@ function SocialIcon({ href, label, icon, seed }: { href: string; label: string; 
 export default memo(function Sidebar({ onCaseFocus }: SidebarProps) {
   return (
     <aside className={styles.sidebar}>
+      {/* The top: the star logo, the intro (the name and description as one
+          paragraph — no separate title), then the social icons, a group gap
+          apart (Sidebar.module.css). */}
+      <StarLogo size={36} />
+      <h1 className={styles.intro}>{introLines(`${copy.name} ${copy.intro}`)}</h1>
       <ul className={styles.socialRow} aria-label={copy.social.label}>
         {SOCIAL_LINKS.map((link, i) => (
           <SocialIcon key={link.href} {...link} seed={30 + i} />
         ))}
       </ul>
-
-      {/* The name and description as one paragraph — no separate title. */}
-      <h1 className={styles.intro}>{introLines(`${copy.name} ${copy.intro}`)}</h1>
 
       <nav className={styles.menu} aria-label="Main">
         {/* Experience and Works start open; Extra opens on click. */}

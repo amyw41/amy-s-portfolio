@@ -9,11 +9,16 @@
   --fs-body: 14px;
   /* Intro paragraph text size. */
   --fs-intro: 17px;
-  /* The two big gaps (icons → intro, intro → menu): 48px @696 tall. */
-  --section-gap: clamp(24px, 6.9dvh, 96px);
-  /* Between the menu's groups, and above each list item. */
-  --group-gap: 14px;
+  /* The sidebar's two small steps (design-system.md "Sidebar spacing"):
+   * --group-gap between blocks (the star, the intro, the icons; and
+   * Experience, Projects, More), --item-gap between things in a row or list
+   * (icon to icon; item to item). */
+  --group-gap: 16px;
   --item-gap: 4px;
+  /* A group's heading → its first item: a little more than item → item. */
+  --heading-gap: 8px;
+  /* The big gap (the icons → the menu): 48px @696 tall. */
+  --section-gap: clamp(24px, 6.9dvh, 96px);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -21,18 +26,17 @@
   overflow-y: auto;
 }
 
-/* ---------- social icons (very top) ---------- */
+/* ---------- the top: the star logo, the intro, the social icons ---------- */
 
 /* Plain black icons, no border. */
 .socialRow {
   display: flex;
   align-items: flex-end;
-  gap: 4px;
+  gap: var(--item-gap);
   padding: 0;
-  margin: 0;
   /* Pulls the first icon's own box padding back so the X lines up with
    * the text's left edge. */
-  margin-left: -3px;
+  margin: var(--group-gap) 0 0 -3px;
   list-style: none;
 }
 
@@ -58,9 +62,10 @@
 
 /* The sidebar is one stack flowing down from the top, with fixed gaps (not
  * auto margins), so opening a group only ever pushes what's under it down.
- * --section-gap is the two big gaps: icons → intro, intro → menu. */
+ * The star, intro and icons are --group-gap apart (like the menu's groups);
+ * --section-gap is the big gap from the icons to the menu. */
 .intro {
-  margin: var(--section-gap) 0 0;
+  margin: var(--group-gap) 0 0;
   font-size: var(--fs-intro);
   font-weight: 500;
   line-height: 1.45;
@@ -130,6 +135,10 @@
   font-weight: 300;
   line-height: 1.45;
   color: #000;
+}
+
+.item:first-child {
+  padding-top: var(--heading-gap);
 }
 
 /* A case-study row: the name, then its full " - description", wrapping
@@ -213,12 +222,13 @@
 
 /* ---------- very short windows (e.g. 150% browser zoom) ---------- */
 
-/* Below the 696px laptop height the gaps above already shrink with the
+/* Below the 696px laptop height the big gaps already shrink with the
  * window; on a really short one they shrink a little faster still, so
  * everything fits without the sidebar scrolling. */
 @media (min-width: 768px) and (max-height: 660px) {
   .sidebar {
-    --section-gap: 4.5dvh;
+    --section-gap: 3dvh;
+    --group-gap: 10px;
   }
 }
 
@@ -234,8 +244,11 @@
   }
 
   .sidebar {
-    --section-gap: 24px;
     padding: 24px 16px 20px;
     overflow: visible;
+  }
+
+  .sidebar {
+    --section-gap: 24px;
   }
 }
