@@ -47,7 +47,7 @@ export const content = {
         items: [
           { role: "Design", company: "Magic Hour AI (YC W24)", href: "https://magichour.ai" },
           { role: "Design", company: "UW Flow", href: "https://uwflow.com" },
-          { role: "Management Eng", company: "Waterloo", href: "https://uwaterloo.ca/future-students/programs/management-engineering" },
+          { role: "Engineering", company: "Waterloo", href: "https://uwaterloo.ca/future-students/programs/management-engineering" },
         ],
       },
       // The menu's groups, top to bottom: Experience (above), Works (the
