@@ -5,28 +5,23 @@
  * Why it's built like this:
  * - Sounds are decoded with an OfflineAudioContext, which never opens the
  *   audio device, so decoding never stalls the page.
- * - They play through one live AudioContext, from those decoded buffers, so a
- *   sound starts within a few ms of being asked for, even while the page is
- *   busy (a route change, the jar starting up): playback runs on the audio
- *   thread. Plain <audio> elements, used before, could lag a beat behind,
- *   most noticeably on a click that navigates and when home reopens.
- * - That live context is made up front, before any click (like
- *   franceszhao.ca does), and left suspended; the first press resumes it, so
- *   even the very first click and clinks play through it. Making it can
- *   block the page for a moment while the audio device opens, so it waits
- *   until the page has loaded and its load-in has played (OPEN_AFTER_LOAD_MS),
- *   then an idle moment.
- *   If it isn't there yet, sounds fall back to a small pool of preloaded
- *   <audio> elements.
+ * - They play through small pools of <audio> elements, each already loaded
+ *   and warmed up (played once, silently, on the visitor's first click, tap
+ *   or key press), so a sound starts straight away.
+ * - No live AudioContext: creating one opens the audio device, which froze
+ *   the page for 0.4 to 1 second in Chrome on Amy's machine, wherever it was
+ *   put (on load, after load, on the first click), and showed as the site
+ *   feeling slow.
  * - Everything lives at module level, so it's made once per visit and kept
  *   across pages.
  */
 
 const RATE = 44100;
 
-let ctx: AudioContext | null = null;
-let creating = false;
 let unlocked = false;
+/** Every pool, so the first gesture can warm them. */
+const pools: HTMLAudioElement[][] = [];
+let warmed = false;
 
 /** Whether sound is allowed: the visitor has clicked, tapped or pressed a
  * key on the site (the browser remembers that across pages). */
@@ -34,38 +29,27 @@ export function soundAllowed(): boolean {
   return (unlocked ||= typeof navigator !== "undefined" && !!navigator.userActivation?.hasBeenActive);
 }
 
-/** How long after the page loads to make the live context: past the home
- * load-in (the jar dropping and filling), so the moment it takes to open the
- * audio device can't freeze an animation that's playing. */
-const OPEN_AFTER_LOAD_MS = 3500;
-
-/** Opens the live context: `soon` (after a press, when it's needed) on the
- * next idle moment; otherwise once the page has loaded and settled, in a
- * genuinely idle moment. */
-function openContext(soon = false) {
-  if (ctx || typeof window === "undefined") return;
-  const make = () => {
-    if (ctx) return;
-    try {
-      ctx = new AudioContext({ latencyHint: "interactive" });
-      if (unlocked) void ctx.resume();
-    } catch {
-      ctx = null;
-    }
-  };
-  const idle = (timeout?: number) =>
-    typeof window.requestIdleCallback === "function"
-      ? window.requestIdleCallback(make, timeout ? { timeout } : undefined)
-      : window.setTimeout(make, 200);
-  if (soon) {
-    idle(1000);
-    return;
+/** Plays every pooled element once, muted, so each has its data decoded and
+ * its output running before it's first heard. Needs sound to be allowed. */
+function warm(pool: HTMLAudioElement[]) {
+  for (const a of pool) {
+    a.muted = true;
+    a.play()
+      .then(() => {
+        a.pause();
+        a.currentTime = 0;
+        a.muted = false;
+      })
+      .catch(() => {
+        a.muted = false;
+      });
   }
-  if (creating) return;
-  creating = true;
-  const later = () => window.setTimeout(() => idle(), OPEN_AFTER_LOAD_MS);
-  if (document.readyState === "complete") later();
-  else window.addEventListener("load", later, { once: true });
+}
+
+function warmAll() {
+  if (warmed || !soundAllowed()) return;
+  warmed = true;
+  pools.forEach(warm);
 }
 
 if (typeof window !== "undefined") {
@@ -73,12 +57,9 @@ if (typeof window !== "undefined") {
   const unlock = () => {
     unlocked = true;
     events.forEach((e) => window.removeEventListener(e, unlock, true));
-    // Made before the gesture, it starts suspended: the gesture resumes it.
-    void ctx?.resume();
+    warmAll();
   };
   events.forEach((e) => window.addEventListener(e, unlock, true));
-  // Made up front, once the page has loaded and settled, before any click.
-  openContext();
 }
 
 /** Decodes a sound file offline (no audio device). */
@@ -89,7 +70,7 @@ export function decode(url: string): Promise<AudioBuffer | null> {
     .catch(() => null);
 }
 
-/** A buffer as a WAV blob URL, for the <audio> fallback. */
+/** A buffer as a WAV blob URL, for the <audio> elements. */
 function wavUrl(buffer: AudioBuffer): string {
   const count = buffer.length;
   const wav = new DataView(new ArrayBuffer(44 + count * 2));
@@ -117,15 +98,14 @@ function wavUrl(buffer: AudioBuffer): string {
   return URL.createObjectURL(new Blob([wav.buffer], { type: "audio/wav" }));
 }
 
-/** One sound, ready to play: its buffer, and the <audio> fallback pool. */
+/** One sound, ready to play: a pool of preloaded <audio> elements. */
 export interface Sound {
-  buffer: AudioBuffer;
   pool: HTMLAudioElement[];
   next: number;
 }
 
-/** Makes a sound from a decoded buffer (and its fallback pool of `voices`
- * preloaded <audio> elements). */
+/** Makes a sound from a decoded buffer: a pool of `voices` preloaded <audio>
+ * elements (so quick repeats overlap), warmed on the first gesture. */
 export function makeSound(buffer: AudioBuffer, voices = 4): Sound {
   const url = wavUrl(buffer);
   const pool = Array.from({ length: voices }, () => {
@@ -135,7 +115,11 @@ export function makeSound(buffer: AudioBuffer, voices = 4): Sound {
     a.load();
     return a;
   });
-  return { buffer, pool, next: 0 };
+  pools.push(pool);
+  // Already allowed (arrived by a click): warm this one now.
+  if (warmed) warm(pool);
+  else warmAll();
+  return { pool, next: 0 };
 }
 
 /** A playing sound, so it can be faded out early. */
@@ -147,31 +131,14 @@ export interface Voice {
  * nothing until sound is allowed. */
 export function play(sound: Sound, volume: number, rate = 1): Voice | null {
   if (!soundAllowed()) return null;
-  if (!ctx) openContext(true);
-  if (ctx && ctx.state !== "closed") {
-    if (ctx.state === "suspended") void ctx.resume();
-    const src = ctx.createBufferSource();
-    src.buffer = sound.buffer;
-    src.playbackRate.value = rate;
-    const gain = ctx.createGain();
-    gain.gain.value = volume;
-    src.connect(gain).connect(ctx.destination);
-    src.start();
-    const c = ctx;
-    return {
-      fadeOut(seconds) {
-        const now = c.currentTime;
-        gain.gain.cancelScheduledValues(now);
-        gain.gain.setValueAtTime(gain.gain.value, now);
-        gain.gain.linearRampToValueAtTime(0, now + seconds);
-        src.stop(now + seconds + 0.01);
-      },
-    };
-  }
-  // Fallback until the live context exists.
+  warmAll();
   const a = sound.pool[sound.next++ % sound.pool.length];
+  // A fade still running from this element's last use can't touch this one.
+  const use = (uses.get(a) ?? 0) + 1;
+  uses.set(a, use);
   a.pause();
   a.currentTime = 0;
+  a.muted = false;
   a.volume = volume;
   a.playbackRate = rate;
   a.play().catch(() => undefined);
@@ -181,6 +148,7 @@ export function play(sound: Sound, volume: number, rate = 1): Voice | null {
       const steps = 4;
       for (let i = 1; i <= steps; i++) {
         window.setTimeout(() => {
+          if (uses.get(a) !== use) return;
           a.volume = from * (1 - i / steps);
           if (i === steps) a.pause();
         }, (seconds * 1000 * i) / steps);
@@ -188,3 +156,5 @@ export function play(sound: Sound, volume: number, rate = 1): Voice | null {
     },
   };
 }
+
+const uses = new WeakMap<HTMLAudioElement, number>();

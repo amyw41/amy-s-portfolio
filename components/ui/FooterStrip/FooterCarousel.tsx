@@ -6,6 +6,7 @@ import styles from "./FooterStrip.module.css";
 import BuzzPath from "@/components/ui/BuzzPath";
 import { WHATS_INSIDE_ITEMS } from "@/lib/whatsInsideItems";
 import { content } from "@/lib/content";
+import { ITEM_BBOXES } from "@/lib/itemBBoxes";
 import { FOOTER_CAROUSEL_SLIDE_S, slowMs } from "@/lib/motion";
 import { buildWobblyLinePath, buildWobblyOvalPath, LINE_STROKE_WIDTH, VIEW_BOX } from "@/lib/wobbly";
 
@@ -83,8 +84,16 @@ function scanBBox(img: HTMLImageElement): AlphaBBox {
   return { naturalWidth: nw, naturalHeight: nh, bboxX: x0 / k, bboxY: y0 / k, bboxW: (x1 - x0 + 1) / k, bboxH: (y1 - y0 + 1) / k };
 }
 const bboxCache = new Map<string, Promise<AlphaBBox>>();
+/** An item's trim: worked out ahead of time from the files where it can be
+ * (lib/itemBBoxes.ts, scripts/item-bboxes.mjs), so the browser only loads
+ * the image; otherwise scanned here. */
 function loadBBox(src: string): Promise<AlphaBBox> {
   let p = bboxCache.get(src);
+  const known = ITEM_BBOXES[src];
+  if (!p && known) {
+    p = Promise.resolve(known);
+    bboxCache.set(src, p);
+  }
   if (!p) {
     p = new Promise<AlphaBBox>((resolve, reject) => {
       const img = new window.Image();
