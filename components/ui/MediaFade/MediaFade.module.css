@@ -29,9 +29,15 @@
   filter: none;
 }
 
+/* Once the media's in, the pulse is hidden and its animation paused (held
+ * where it is, so nothing jumps under the fade). Hiding alone left it
+ * running forever, so the browser kept redrawing the page every frame for
+ * nothing, and those redraws knocked the home sidebar's lift off the
+ * footer a frame out of step with the scroll (Home.module.css). */
 .root[data-shown] .pulse {
   visibility: hidden;
   transition: visibility 0s linear calc(var(--media-fade-ms) * var(--slow, 1));
+  animation-play-state: paused;
 }
 
 @keyframes mediaPulse {

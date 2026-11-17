@@ -30,23 +30,21 @@
   margin: 48px calc(var(--stage-pad-x) * -1) 0;
 }
 
-/* Desktop: the footer runs the whole width of the page, under the sidebar
- * too. The work view reaches back under the sidebar (its content still
- * starts at the stage), so the footer at its end can span everything; as
- * the footer scrolls in, the sidebar and divider are lifted out of its way
- * in step (Home.module.css, a scroll-linked animation the browser runs
- * itself, so it stays as smooth as the scroll). */
+/* Desktop: the work view doesn't scroll on its own; it's part of the whole
+ * page's scroll (Home.module.css), and the footer at its end reaches back
+ * under the sidebar's column to span the whole window (the sidebar has
+ * been pushed up out of its way by then). */
 @media (min-width: 768px) {
   .work {
-    left: calc((var(--sidebar-width) + 1px) * -1);
-    padding-left: calc(var(--sidebar-width) + 1px + var(--stage-pad-x));
+    position: relative;
+    inset: auto;
+    overflow: visible;
   }
 
   .footerPlace {
     margin-left: calc((var(--sidebar-width) + 1px + var(--stage-pad-x)) * -1);
     /* Text lined up with the sidebar's. */
     --strip-pad-x: var(--pad-x);
-    view-timeline: --home-footer block;
   }
 }
 

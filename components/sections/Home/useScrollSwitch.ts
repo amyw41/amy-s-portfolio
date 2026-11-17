@@ -16,18 +16,16 @@ import {
  * scrolls. Below this the page scrolls normally and the cue is the switch. */
 const DESKTOP_QUERY = "(min-width: 768px)";
 
-/** Whether `target` sits in something that will scroll itself in direction
- * `dir` (1 = down, -1 = up) — e.g. the work grid when it overflows and
- * isn't at that edge yet — up to (not including) `root`. */
+/** Whether input at `target` will scroll the page in direction `dir` (1 =
+ * down, -1 = up) instead of switching: in work mode the whole home frame
+ * (`root`) scrolls (Home.module.css), until it's at that edge. In jar mode
+ * it doesn't overflow, so never. Checked directly, not by reading computed
+ * styles on every wheel event (that forced a style recalc per event,
+ * mid-animation). */
 function scrollsItself(target: EventTarget | null, root: HTMLElement, dir: 1 | -1): boolean {
-  // The only thing that scrolls inside the home page is the work view
-  // (data-scroll-switch-target): checked directly, not by reading every
-  // ancestor's computed style on every wheel event (that forced a style
-  // recalc per event, mid-animation).
-  const el = target instanceof Element ? target.closest<HTMLElement>("[data-scroll-switch-target]") : null;
-  if (!el || !root.contains(el)) return false;
-  if (el.scrollHeight <= el.clientHeight + 1) return false;
-  return dir === 1 ? el.scrollTop + el.clientHeight < el.scrollHeight - 1 : el.scrollTop > 0;
+  if (!(target instanceof Node) || !root.contains(target)) return false;
+  if (root.scrollHeight <= root.clientHeight + 1) return false;
+  return dir === 1 ? root.scrollTop + root.clientHeight < root.scrollHeight - 1 : root.scrollTop > 0;
 }
 
 /**
@@ -207,15 +205,14 @@ export function useScrollSwitch(
       // that control's.
       const t = e.target;
       if (t instanceof HTMLElement && t.closest("input, textarea, select, button, a, [contenteditable]")) return;
-      // Keys aren't aimed anywhere: check the work grid (if it's there) as
-      // if they were aimed at it.
-      const grid = root.querySelector("[data-scroll-switch-target]");
+      // Keys aren't aimed anywhere: treat them as aimed at the page (the
+      // home frame, which scrolls in work mode).
       if (!desktop.matches) return;
-      if (grid && scrollsItself(grid.firstElementChild ?? grid, root, dir)) {
-        // The grid isn't focused, so the key wouldn't scroll it: do it here.
+      if (scrollsItself(root, root, dir)) {
+        // The frame isn't focused, so the key wouldn't scroll it: do it here.
         const page = e.key === "PageDown" || e.key === "PageUp" || e.key === " ";
-        if (e.key === "Home") grid.scrollTo({ top: 0, behavior: "smooth" });
-        else grid.scrollBy({ top: dir * (page ? grid.clientHeight * 0.85 : 60), behavior: "smooth" });
+        if (e.key === "Home") root.scrollTo({ top: 0, behavior: "smooth" });
+        else root.scrollBy({ top: dir * (page ? root.clientHeight * 0.85 : 60), behavior: "smooth" });
         e.preventDefault();
         return;
       }

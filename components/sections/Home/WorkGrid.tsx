@@ -161,10 +161,11 @@ export default function WorkGrid({
     isolating && (tile.id === focusedId || (focusedId === EXTRAS_ID && tile.id.startsWith("extra-")));
 
 
-  // The work view scrolls; "jump to jar" draws on when it's in view there.
+  // "jump to jar" draws on when it's on screen (the page scrolls on
+  // desktop, the work view on a phone; the screen covers both).
   const viewRef = useRef<HTMLDivElement>(null);
   const jumpRef = useRef<HTMLDivElement>(null);
-  const jumpInView = useInView(jumpRef, { root: viewRef, amount: 0.6 });
+  const jumpInView = useInView(jumpRef, { amount: 0.6 });
 
   const zoom = useCaseZoom();
 
@@ -288,8 +289,8 @@ export default function WorkGrid({
   }
 
   return (
-    // data-scroll-switch-target: the box useScrollSwitch checks before a key
-    // press switches back to the jar (only once it's scrolled to the top).
+    // data-work-view: while it's here, the desktop home page scrolls as one
+    // (Home.module.css).
     <motion.div
       ref={viewRef}
       className={styles.work}
@@ -297,7 +298,7 @@ export default function WorkGrid({
       initial="shown"
       animate="shown"
       exit="gone"
-      data-scroll-switch-target
+      data-work-view
     >
       <div>
         {/* Drops in from above with a little overshoot, as the jar leaves

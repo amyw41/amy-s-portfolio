@@ -244,9 +244,14 @@ export default function FooterCarousel() {
   useEffect(() => {
     const el = rootRef.current;
     if (!el || near) return;
-    // Measured against the scroll box it's in (home's work view), or the
-    // window (case studies), so the 800px lead applies either way.
-    const root = el.closest<HTMLElement>("[data-scroll-switch-target]");
+    // Measured against the scroll box it's in (home: the page frame on
+    // desktop, the work view on a phone), or the window (case studies), so
+    // the 800px lead applies either way. Looked up once, on mount.
+    let root: HTMLElement | null = el.parentElement;
+    while (root && root !== document.body && !/(auto|scroll)/.test(getComputedStyle(root).overflowY)) {
+      root = root.parentElement;
+    }
+    if (root === document.body) root = null;
     const io = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && setNear(true), {
       root,
       rootMargin: "800px 0px",

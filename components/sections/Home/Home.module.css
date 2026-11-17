@@ -108,36 +108,46 @@
 
 /* ---------- mobile: sidebar stacks on top ---------- */
 
-/* The footer at the end of the work spans the whole page, under the
- * sidebar (WorkGrid.module.css). As it scrolls into view, the sidebar and
- * the divider lift up out of its way exactly as fast as it rises: a
- * scroll-linked animation tied to the footer's own view timeline
- * (--home-footer, made visible to them by timeline-scope), which the
- * browser runs alongside the scroll itself. With no footer (jar mode) the
- * timeline is inactive and they don't move. Browsers without scroll-driven
- * animations simply leave the sidebar in place over the footer's left end. */
+/* Work mode (desktop): the whole page is one scrolling container, with the
+ * footer (the end of the work view, WorkGrid.module.css) right under it,
+ * the full width of the window. The sidebar and the divider are sticky:
+ * they hold still while the cards scroll, then the footer arriving pushes
+ * them up, as part of the same scroll, so they can never drift out of step
+ * with it. Their bottom margins (the footer's 50dvh, see FooterStrip) are
+ * what make them let go exactly as the footer's top edge reaches them.
+ * (Before 2026-11-17 the work view scrolled on its own and the sidebar was
+ * lifted by a scroll-linked animation, which trailed the scroll by a
+ * frame.) [data-work-view] is the work view, only there once the jar has
+ * left; jar mode stays one fixed screen. */
 @media (min-width: 768px) {
-  .frame {
-    timeline-scope: --home-footer;
+  .frame:has([data-work-view]) {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
   }
 
-  .frame > aside {
-    position: relative;
-    z-index: 2;
-    background: #fff;
+  .frame:has([data-work-view]) > aside {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100dvh;
+    margin-bottom: 50dvh;
   }
 
-  .frame > aside,
-  .frame > .divider {
-    animation: liftOffFooter linear both;
-    animation-timeline: --home-footer;
-    animation-range: entry 0% entry 100%;
+  .frame:has([data-work-view]) > .divider {
+    position: sticky;
+    top: var(--frame-gap);
+    align-self: start;
+    height: calc(100dvh - 2 * var(--frame-gap));
+    margin-bottom: calc(var(--frame-gap) + 50dvh);
   }
-}
 
-@keyframes liftOffFooter {
-  to {
-    transform: translateY(-50dvh);
+  /* Grows with the work instead of being one screen tall (the jar's size
+   * container, above); still a width container for the grid's columns. */
+  .frame:has([data-work-view]) .stage {
+    display: block;
+    container-type: inline-size;
   }
 }
 
