@@ -127,10 +127,12 @@ export interface Voice {
   fadeOut(seconds: number): void;
 }
 
-/** Plays a sound now, at `volume` (0-1) and `rate` (speed and pitch). Does
- * nothing until sound is allowed. */
+/** Plays a sound now, at `volume` (0-1) and `rate` (speed and pitch).
+ * It always tries, even before the visitor has clicked: browsers that allow
+ * sound straight away (some do, e.g. on sites you've visited before) play
+ * it, and the rest quietly refuse. Once one play goes through, sound counts
+ * as allowed for the rest of the visit. */
 export function play(sound: Sound, volume: number, rate = 1): Voice | null {
-  if (!soundAllowed()) return null;
   warmAll();
   const a = sound.pool[sound.next++ % sound.pool.length];
   // A fade still running from this element's last use can't touch this one.
@@ -141,7 +143,15 @@ export function play(sound: Sound, volume: number, rate = 1): Voice | null {
   a.muted = false;
   a.volume = volume;
   a.playbackRate = rate;
-  a.play().catch(() => undefined);
+  a.play()
+    .then(() => {
+      // The browser let it through without a click: treat sound as allowed.
+      if (!unlocked) {
+        unlocked = true;
+        warmAll();
+      }
+    })
+    .catch(() => undefined);
   return {
     fadeOut(seconds) {
       const from = a.volume;

@@ -15,8 +15,9 @@ import { decode, makeSound, play, type Sound, type Voice } from "@/lib/sound";
  * (lib/sound.ts), which starts it within a few ms even while the page is
  * busy, e.g. as home reopens from a case study.
  *
- * Browsers block audio until the visitor has clicked, tapped or pressed a
- * key on the page, so until then clinks are silently skipped.
+ * Clinks always try to play, even on first load. Browsers that allow sound
+ * before a click play them; the rest quietly refuse until the visitor has
+ * clicked, tapped or pressed a key.
  */
 
 const SRC = "/sounds/jar-drop.mp3";
