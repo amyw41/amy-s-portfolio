@@ -39,8 +39,9 @@ function scrollsItself(target: EventTarget | null, root: HTMLElement, dir: 1 | -
  * One gesture, one switch: travel adds up to SCROLL_SWITCH_THRESHOLD_PX,
  * then switching is locked until the transition is done (plus
  * SCROLL_SWITCH_SETTLE_MS). The rest of that gesture — a trackpad's
- * inertial tail — and any wheel input during the lock is swallowed, so it
- * doesn't scroll the grid that's just arriving either. A gesture that scrolled the grid can't also switch:
+ * inertial tail — and any wheel input during the lock can't switch again.
+ * Arriving at the work it scrolls the page, even while the cards are still
+ * coming in; arriving at the jar it's swallowed. A gesture that scrolled the grid can't also switch:
  * reaching its top takes a fresh scroll up to go back to the jar.
  *
  * Going back up is meant to be easy: from the top of the work, a small
@@ -93,12 +94,14 @@ export function useScrollSwitch(
     // The wheel listener can only swallow input (preventDefault) if it's
     // not passive, but a non-passive one makes the browser wait for the
     // page's main thread before every scroll step, which is what made
-    // scrolling the work feel sticky. So it only blocks while it might need
-    // to: on the jar (nothing to scroll), during a switch's lock, and for
-    // the rest of a gesture that already switched. Otherwise, scrolling the
-    // work stays on the browser's fast path.
+    // scrolling the work feel sticky. So it only blocks on the jar (nothing
+    // to scroll there). In the work it never does, not even while the work
+    // is still arriving: scrolling down straight away, or carrying on with
+    // the gesture that opened it, just scrolls the page (Amy wants the
+    // scroll to feel easy while the cards load in), and it stays on the
+    // browser's fast path.
     let blocking = true;
-    const shouldBlock = () => modeRef.current === "jar" || performance.now() < lockedUntil || spent;
+    const shouldBlock = () => modeRef.current === "jar";
     const listen = (block: boolean) => {
       if (block === blocking) return;
       root.removeEventListener("wheel", onWheel);
@@ -123,7 +126,7 @@ export function useScrollSwitch(
       const lockMs = slowMs(MODE_TRANSITION_MS + SCROLL_SWITCH_SETTLE_MS);
       lockedUntil = performance.now() + lockMs;
       travel = 0;
-      listen(true);
+      listen(next === "jar");
       window.setTimeout(() => listen(shouldBlock()), lockMs + 20);
       spent = true;
       return true;
@@ -159,8 +162,9 @@ export function useScrollSwitch(
       lastWheel = e.timeStamp;
       gestureDir = dir;
       // A spent gesture's tail, or anything while the switch is still
-      // locked, is swallowed: it would otherwise scroll the grid that's
-      // only just arriving.
+      // locked, can't switch again. Arriving at the work, it's left to
+      // scroll the page (the listener is passive there, so swallow does
+      // nothing); arriving at the jar, it's swallowed.
       if (spent || now < lockedUntil) {
         swallow(e);
         return;
