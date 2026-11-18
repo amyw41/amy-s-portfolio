@@ -151,6 +151,17 @@ export const SCROLL_GESTURE_GAP_MS = 200;
 // last gesture always counts as new (useScrollSwitch.ts).
 export const SCROLL_BACK_THRESHOLD_PX = 24;
 export const SCROLL_BACK_GAP_MS = 150;
+// A trackpad's inertia keeps sending wheel events long after the fingers
+// lift, so a gesture that scrolled the work up to its top could go on for a
+// second or more and swallow the next swipe up (going back to the jar felt
+// "incredibly difficult", 2026-11-18). So at the top of the work, a new
+// swipe also counts as new when its step jumps to SCROLL_FLICK_RISE times
+// the last one (and at least SCROLL_FLICK_MIN_PX): inertia only ever slows
+// down. And pushing on past the top by SCROLL_BACK_PUSH_PX in the same
+// gesture goes back too.
+export const SCROLL_FLICK_RISE = 1.6;
+export const SCROLL_FLICK_MIN_PX = 8;
+export const SCROLL_BACK_PUSH_PX = 160;
 export const MODE_TRANSITION_MS =
   Math.max(
     JAR_ANTICIPATE_S + JAR_DROP_OUT_S + HEADING_DROP_S,

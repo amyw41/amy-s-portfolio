@@ -5,7 +5,10 @@ import type { HomeMode } from "./Sidebar";
 import {
   MODE_TRANSITION_MS,
   SCROLL_BACK_GAP_MS,
+  SCROLL_BACK_PUSH_PX,
   SCROLL_BACK_THRESHOLD_PX,
+  SCROLL_FLICK_MIN_PX,
+  SCROLL_FLICK_RISE,
   SCROLL_GESTURE_GAP_MS,
   SCROLL_SWITCH_SETTLE_MS,
   SCROLL_SWITCH_THRESHOLD_PX,
@@ -90,6 +93,10 @@ export function useScrollSwitch(
     let scrolledInside = false;
     // Which way the current gesture is going (1 down, -1 up, 0 none yet).
     let gestureDir = 0;
+    // The last wheel step's size, and how far up the current gesture has
+    // pushed on past the top of the work (SCROLL_FLICK_* / SCROLL_BACK_PUSH_PX).
+    let lastStep = 0;
+    let pastTop = 0;
 
     // The wheel listener can only swallow input (preventDefault) if it's
     // not passive, but a non-passive one makes the browser wait for the
@@ -152,10 +159,17 @@ export function useScrollSwitch(
       // early.
       const gap = back ? SCROLL_BACK_GAP_MS : SCROLL_GESTURE_GAP_MS;
       const reversed = gestureDir !== 0 && dir !== gestureDir;
-      if (e.timeStamp - lastWheel > gap || reversed) {
+      const step = Math.abs(dy);
+      const atTop = back && root.scrollTop <= 0;
+      // At the top of the work, a fresh swipe up on top of the last one's
+      // inertia: its step jumps up (inertia only slows).
+      const freshFlick = atTop && step >= SCROLL_FLICK_MIN_PX && step > lastStep * SCROLL_FLICK_RISE;
+      lastStep = step;
+      if (e.timeStamp - lastWheel > gap || reversed || freshFlick) {
         spent = false;
         scrolledInside = false;
         travel = 0;
+        pastTop = 0;
         // A reversal can undo a switch that's still arriving.
         if (reversed) lockedUntil = 0;
       }
@@ -173,6 +187,12 @@ export function useScrollSwitch(
       // swallowing any more.
       listen(shouldBlock());
       if (scrollsItself(e.target, root, dir)) scrolledInside = true;
+      // Still pushing up after the page has reached its top: far enough
+      // counts as meaning it.
+      if (scrolledInside && atTop) {
+        pastTop += step;
+        if (pastTop >= SCROLL_BACK_PUSH_PX) scrolledInside = false;
+      }
       if (scrolledInside) return;
       travel += dy;
       if (Math.abs(travel) >= (back ? SCROLL_BACK_THRESHOLD_PX : SCROLL_SWITCH_THRESHOLD_PX)) {
