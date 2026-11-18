@@ -115,8 +115,15 @@ export function useScrollSwitch(
       root.addEventListener("wheel", onWheel, { passive: !block });
       blocking = block;
     };
+    // Whether the listener handling the event in progress is the blocking
+    // one. Not `blocking` itself: switching back to the jar swaps the
+    // listener mid-event, and calling preventDefault from the passive one
+    // logged an error ("Unable to preventDefault inside passive event
+    // listener") on every switch back, which in dev went through Next's
+    // error overlay right at the switch.
+    let dispatchBlocking = true;
     const swallow = (e: WheelEvent) => {
-      if (blocking) e.preventDefault();
+      if (dispatchBlocking) e.preventDefault();
     };
     syncListenRef.current = () => listen(shouldBlock());
 
@@ -144,6 +151,7 @@ export function useScrollSwitch(
       !desktop.matches || (target instanceof Element && target.closest(sidebarSelector) !== null);
 
     const onWheel = (e: WheelEvent) => {
+      dispatchBlocking = blocking;
       const now = performance.now();
       if (ignored(e.target)) return;
       // Lines/pages → roughly px.
