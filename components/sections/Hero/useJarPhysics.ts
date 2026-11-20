@@ -8,9 +8,9 @@ import { getOutlineMask } from "@/lib/outline";
 import { PLACEMENT_ORDER, LAYER_ORDER, TARGET_X_FRACTION } from "./jar-layout";
 import type { JarItemDef } from "./items.manifest";
 import { JAR_PHYSICS_DELAY_MS } from "./motion-timing";
-import { JAR_BOUNCE_CLINK_WINDOW_MS, JAR_BOUNCE_CLINKS, JAR_CLINK_RING_MS } from "@/lib/motion";
+import { JAR_BOUNCE_CLINK_WINDOW_MS, JAR_BOUNCE_CLINKS, JAR_CLINK_LEAD_MS, JAR_CLINK_RING_MS } from "@/lib/motion";
 
-const { Engine, Bodies, Body, Composite, Constraint, Events, Sleeping } = Matter;
+const { Engine, Bodies, Body, Composite, Constraint, Events, Query, Sleeping } = Matter;
 
 /** Container width the reference viewport assumes. Every px constant below
  * is multiplied by (actual container width / this). Uncapped, so the jar
@@ -652,13 +652,36 @@ export function useJarPhysics(
       // Items dropped out of the jar and respawned above it: the first thing
       // each hits on the way back in (the glass or the pile) clinks, once.
       const respawnClinkIds = new Set<string>();
+      function respawnClink(id: string, body: Matter.Body) {
+        respawnClinkIds.delete(id);
+        const speed = Math.hypot(body.velocity.x, body.velocity.y) / (MAX_BODY_SPEED * scale);
+        onImpactRef.current?.(Math.min(1, Math.max(RESPAWN_CLINK_MIN_STRENGTH, speed)));
+      }
+      // Normally the clink goes off just before the landing
+      // (clinkRespawnsEarly); this is the fallback for a hit that wasn't
+      // seen coming (e.g. a sideways graze).
       function handleRespawnPair(body: Matter.Body, other: Matter.Body) {
         const id = bodyIdToItemId.get(body.id);
         if (!id || !respawnClinkIds.has(id) || recordingTick !== null) return;
         if (!glassIds.has(other.id) && !bodyIdToItemId.has(other.id)) return;
-        respawnClinkIds.delete(id);
-        const speed = Math.hypot(body.velocity.x, body.velocity.y) / (MAX_BODY_SPEED * scale);
-        onImpactRef.current?.(Math.min(1, Math.max(RESPAWN_CLINK_MIN_STRENGTH, speed)));
+        respawnClink(id, body);
+      }
+      // Each step: a respawned item falling towards the glass or the pile
+      // that will reach it within JAR_CLINK_LEAD_MS clinks now, so the sound
+      // arrives with the landing rather than a beat after it.
+      const leadSteps = JAR_CLINK_LEAD_MS / STEP_MS;
+      function clinkRespawnsEarly() {
+        if (respawnClinkIds.size === 0) return;
+        for (const { id, body } of physicsItems) {
+          if (!respawnClinkIds.has(id)) continue;
+          const vy = body.velocity.y;
+          if (vy <= 0) continue;
+          const start = { x: body.position.x, y: body.bounds.max.y };
+          const end = { x: start.x, y: start.y + vy * leadSteps };
+          const others = [...wallBodies, ...physicsItems.filter((pi) => pi.body !== body).map((pi) => pi.body)];
+          const rayWidth = Math.max(1, (body.bounds.max.x - body.bounds.min.x) * 0.6);
+          if (Query.ray(others, start, end, rayWidth).length > 0) respawnClink(id, body);
+        }
       }
       function handleGlassPair(body: Matter.Body, other: Matter.Body) {
         const id = bodyIdToItemId.get(body.id);
@@ -1059,6 +1082,7 @@ export function useJarPhysics(
         }
 
         Engine.update(engine, STEP_MS);
+        clinkRespawnsEarly();
 
         for (const { id, body } of physicsItems) {
           // Column pinning: until an item touches down, hold its x to its

@@ -309,6 +309,12 @@ export const JAR_LOAD_CLINKS = [
   { atMs: 920, strength: 0.42 },
 ] as const;
 export const JAR_CLINK_RING_MS = 220;
+// An item dropped out of the jar falls back in with one clink
+// (useJarPhysics.ts). The browser takes a beat to get a sound out of the
+// speakers, so the clink is started JAR_CLINK_LEAD_MS before the item is
+// due to land (worked out from how fast it's falling), not on the contact
+// itself, which sounded late (2026-11-20).
+export const JAR_CLINK_LEAD_MS = 90;
 // The CyberSea case study's 3D demo (case-studies/cybersea/meshScene.ts):
 // Split pulls the pieces apart (and back) over this, ease-in-out. Reduced
 // motion: instant.
