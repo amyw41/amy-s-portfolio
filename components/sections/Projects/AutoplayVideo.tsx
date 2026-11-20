@@ -8,6 +8,9 @@ import { preloadedVideo } from "./videoPreload";
 interface AutoplayVideoProps {
   src: string;
   poster: string;
+  /** The poster's `sizes` (next/image). Home passes its cards' own, so the
+   * poster is the same file it preloaded. */
+  sizes?: string;
 }
 
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
@@ -30,7 +33,7 @@ const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
  * once when it's playing from memory (the card is still fading in around it
  * then). Reduced motion: the poster only, no video.
  */
-export default function AutoplayVideo({ src, poster }: AutoplayVideoProps) {
+export default function AutoplayVideo({ src, poster, sizes = "(max-width: 900px) 100vw, 624px" }: AutoplayVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -55,7 +58,16 @@ export default function AutoplayVideo({ src, poster }: AutoplayVideoProps) {
     // round to it. A refusal (iOS low-power mode, data saver) leaves the
     // poster showing.
     video.play().catch(() => {});
+    // Paused while its card is completely off screen, so videos nobody can
+    // see aren't decoding while you scroll; resumed as soon as any of it
+    // shows. (Safe now the source is set before this can fire.)
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) video.play().catch(() => {});
+      else video.pause();
+    });
+    observer.observe(video);
     return () => {
+      observer.disconnect();
       video.removeEventListener("playing", onPlaying);
       video.pause();
     };
@@ -67,7 +79,7 @@ export default function AutoplayVideo({ src, poster }: AutoplayVideoProps) {
         src={poster}
         alt=""
         fill
-        sizes="(max-width: 900px) 100vw, 624px"
+        sizes={sizes}
         className={styles.poster}
         draggable={false}
         loading="eager"

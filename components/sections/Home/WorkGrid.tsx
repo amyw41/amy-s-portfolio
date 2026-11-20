@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import Image, { getImageProps } from "next/image";
 import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
 import styles from "./WorkGrid.module.css";
 import AutoplayVideo from "@/components/sections/Projects/AutoplayVideo";
@@ -114,6 +114,12 @@ const WORK_LAYOUT: "equal" | "split" = "equal";
 /** "equal": every card in one grid, in order. */
 const EQUAL_TILES: Tile[] = [...PROJECTS.map(projectTile), ...SMALL_TILES.filter((t) => t.id.startsWith("extra-"))];
 
+/** The cover's `sizes`, big and small cards. Shared by the cards and the
+ * preload below, so the preload fetches the very file the card will ask for
+ * (next/image serves a resized copy per width, not the original). */
+const BIG_SIZES = "(max-width: 767px) 100vw, 680px";
+const SMALL_SIZES = "(max-width: 767px) 50vw, 340px";
+
 /** Every card's cover and video, so they can all be loaded before the
  * cards come in. */
 const COVERS = EQUAL_TILES.map((t) => t.cover).filter((src): src is string => !!src);
@@ -129,8 +135,15 @@ export function preloadWorkCovers(): Promise<unknown> {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   coversLoading ??= Promise.all([
     ...COVERS.map((src) => {
+      // The same srcset/sizes the card's <Image> gets, so the browser picks
+      // (and caches) the same resized copy. Preloading the original file
+      // instead was wasted: the cards then fetched their own copies the
+      // moment they appeared (2026-11-20).
+      const { props } = getImageProps({ src, alt: "", fill: true, sizes: BIG_SIZES });
       const img = new window.Image();
-      img.src = src;
+      if (props.sizes) img.sizes = props.sizes;
+      if (props.srcSet) img.srcset = props.srcSet;
+      img.src = props.src;
       return img.decode().catch(() => undefined);
     }),
     ...(reduced ? [] : VIDEOS.map(preloadVideo)),
@@ -264,13 +277,13 @@ export default function WorkGrid({
             {/* Loads in softly: a pulsing grey, then a blur-to-sharp fade. */}
             <MediaFade>
             {tile.cover && tile.video ? (
-              <AutoplayVideo src={tile.video} poster={tile.cover} />
+              <AutoplayVideo src={tile.video} poster={tile.cover} sizes={small ? SMALL_SIZES : BIG_SIZES} />
             ) : tile.cover ? (
               <Image
                 src={tile.cover}
                 alt=""
                 fill
-                sizes={small ? "(max-width: 767px) 50vw, 340px" : "(max-width: 767px) 100vw, 680px"}
+                sizes={small ? SMALL_SIZES : BIG_SIZES}
                 className={styles.media}
               />
             ) : tile.video ? (

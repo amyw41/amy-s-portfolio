@@ -50,6 +50,9 @@ interface CaseZoomValue {
 }
 
 const CaseZoomContext = createContext<CaseZoomValue | null>(null);
+
+/** Case studies already prefetched this visit (CaseZoom's prefetch). */
+const prefetched = new Set<string>();
 
 export function useCaseZoom(): CaseZoomValue | null {
   return useContext(CaseZoomContext);
@@ -222,7 +225,13 @@ export default function CaseZoomProvider({ children }: { children: ReactNode }) 
       phase,
       slug,
       start,
-      prefetch: (href) => router.prefetch(href),
+      // Once per case study per visit: hovering cards as they scroll under
+      // the pointer kept asking again (2026-11-20).
+      prefetch: (href) => {
+        if (prefetched.has(href)) return;
+        prefetched.add(href);
+        router.prefetch(href);
+      },
       goHome: () => setReturning(true),
       returning,
       doneReturning: () => setReturning(false),
