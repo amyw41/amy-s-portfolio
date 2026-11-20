@@ -256,6 +256,9 @@ const impactCache = new Map<string, GlassImpact[]>();
 const SETTLE_MOVE_PX = 1.5;
 /** Glass contacts gentler than this (0-1) are micro-touches: no clink. */
 const MIN_CLINK_STRENGTH = 0.08;
+/** The clink for an item that was dropped out of the jar and falls back in
+ * (the respawn): never quieter than this (0-1), so it's always heard. */
+const RESPAWN_CLINK_MIN_STRENGTH = 0.35;
 
 /** Dilated click masks (setup's clickMasks), for the rest of the visit,
  * keyed by src + crop + dilation radius. Dilating a full-resolution mask is
@@ -646,6 +649,17 @@ export function useJarPhysics(
       let liveWindowUntil = 0;
       let liveClinksLeft = 0;
       const liveHit = new Set<string>();
+      // Items dropped out of the jar and respawned above it: the first thing
+      // each hits on the way back in (the glass or the pile) clinks, once.
+      const respawnClinkIds = new Set<string>();
+      function handleRespawnPair(body: Matter.Body, other: Matter.Body) {
+        const id = bodyIdToItemId.get(body.id);
+        if (!id || !respawnClinkIds.has(id) || recordingTick !== null) return;
+        if (!glassIds.has(other.id) && !bodyIdToItemId.has(other.id)) return;
+        respawnClinkIds.delete(id);
+        const speed = Math.hypot(body.velocity.x, body.velocity.y) / (MAX_BODY_SPEED * scale);
+        onImpactRef.current?.(Math.min(1, Math.max(RESPAWN_CLINK_MIN_STRENGTH, speed)));
+      }
       function handleGlassPair(body: Matter.Body, other: Matter.Body) {
         const id = bodyIdToItemId.get(body.id);
         if (!id || !glassIds.has(other.id)) return;
@@ -667,6 +681,8 @@ export function useJarPhysics(
           handleLandingPair(pair.bodyB, pair.bodyA);
           handleGlassPair(pair.bodyA, pair.bodyB);
           handleGlassPair(pair.bodyB, pair.bodyA);
+          handleRespawnPair(pair.bodyA, pair.bodyB);
+          handleRespawnPair(pair.bodyB, pair.bodyA);
         }
       };
       Events.on(engine, "collisionStart", handleCollisionStart);
@@ -1137,6 +1153,7 @@ export function useJarPhysics(
               landedIds.delete(id);
               pinVxById.set(id, 0);
               teleportedIds.add(id);
+              respawnClinkIds.add(id);
               continue;
             }
 
