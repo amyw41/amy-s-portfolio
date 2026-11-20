@@ -6,6 +6,7 @@ import Image from "next/image";
 import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
 import styles from "./WorkGrid.module.css";
 import AutoplayVideo from "@/components/sections/Projects/AutoplayVideo";
+import { preloadVideo } from "@/components/sections/Projects/videoPreload";
 import MediaFade from "@/components/ui/MediaFade/MediaFade";
 import ScrollHint from "./ScrollHint";
 import FooterStrip from "@/components/ui/FooterStrip";
@@ -113,20 +114,27 @@ const WORK_LAYOUT: "equal" | "split" = "equal";
 /** "equal": every card in one grid, in order. */
 const EQUAL_TILES: Tile[] = [...PROJECTS.map(projectTile), ...SMALL_TILES.filter((t) => t.id.startsWith("extra-"))];
 
-/** Every card's cover, so they can all be loaded before the cards come in. */
+/** Every card's cover and video, so they can all be loaded before the
+ * cards come in. */
 const COVERS = EQUAL_TILES.map((t) => t.cover).filter((src): src is string => !!src);
+const VIDEOS = EQUAL_TILES.map((t) => t.video).filter((src): src is string => !!src);
 let coversLoading: Promise<unknown> | null = null;
-/** Loads and decodes every card's cover (once per visit). Home calls this
- * while the jar is sitting idle, so by the time you scroll down they're
- * ready and the cards come in at once. */
+/** Loads and decodes every card's cover, and fetches every card's video
+ * into memory (videoPreload.ts), once per visit. Home calls this while the
+ * jar is sitting idle, so by the time you scroll down they're ready and
+ * the cards come in at once, their videos already playing rather than
+ * showing the still cover first. Reduced motion: no videos play, so none
+ * are fetched. */
 export function preloadWorkCovers(): Promise<unknown> {
-  coversLoading ??= Promise.all(
-    COVERS.map((src) => {
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  coversLoading ??= Promise.all([
+    ...COVERS.map((src) => {
       const img = new window.Image();
       img.src = src;
       return img.decode().catch(() => undefined);
     }),
-  );
+    ...(reduced ? [] : VIDEOS.map(preloadVideo)),
+  ]);
   return coversLoading;
 }
 

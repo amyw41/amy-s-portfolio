@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import styles from "./ProjectCard.module.css";
+import { preloadedVideo } from "./videoPreload";
 
 interface AutoplayVideoProps {
   src: string;
@@ -52,6 +53,9 @@ export default function AutoplayVideo({ src, poster }: AutoplayVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [faded, setFaded] = useState(false);
+  // Playing from memory (preloaded, videoPreload.ts): shown at once, no
+  // fade, since the card itself is still fading in around it.
+  const [instant, setInstant] = useState(false);
 
   useEffect(() => {
     // Must happen post-mount (matchMedia needs `window`) — this genuinely
@@ -112,7 +116,11 @@ export default function AutoplayVideo({ src, poster }: AutoplayVideoProps) {
           // browser start buffering during that 200px lead instead of at
           // the moment playback is requested.
           video.preload = "auto";
-          video.src = src;
+          // Already fetched into memory (home preloads its cards' videos
+          // while the jar sits idle, videoPreload.ts): plays at once.
+          const memory = preloadedVideo(src);
+          setInstant(memory !== null);
+          video.src = memory ?? src;
           video.load();
           loadObserver.disconnect();
         }
@@ -166,7 +174,7 @@ export default function AutoplayVideo({ src, poster }: AutoplayVideoProps) {
       {!reducedMotion && (
         <video
           ref={videoRef}
-          className={`${styles.video} ${faded ? styles.videoVisible : ""}`}
+          className={`${styles.video} ${faded ? styles.videoVisible : ""} ${instant ? styles.videoInstant : ""}`}
           muted
           loop
           playsInline

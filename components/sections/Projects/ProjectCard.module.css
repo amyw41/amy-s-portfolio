@@ -82,6 +82,12 @@
   opacity: 1;
 }
 
+/* Already in memory (AutoplayVideo, videoPreload.ts): no fade, it's on as
+ * soon as it plays. */
+.videoInstant {
+  transition: none;
+}
+
 /* ---------- text (right) ---------- */
 
 .text {
