@@ -123,6 +123,11 @@ export default function AutoplayVideo({ src, poster }: AutoplayVideoProps) {
           video.src = memory ?? src;
           video.load();
           loadObserver.disconnect();
+          // The play observer can fire first, while there's no src yet: that
+          // play() fails, and it won't fire again while the card stays in
+          // view, so the video sat frozen on its first frame (2026-11-20).
+          // Try again now that it has a source.
+          syncPlayState();
         }
       },
       { rootMargin: LOAD_ROOT_MARGIN },
@@ -145,12 +150,18 @@ export default function AutoplayVideo({ src, poster }: AutoplayVideoProps) {
     // component's own doc comment for why the fade is one-shot.
     const handlePlaying = () => setFaded(true);
     video.addEventListener("playing", handlePlaying);
+    // And once it can actually play, in case the try above came too early.
+    const handleCanPlay = () => {
+      if (video.paused) syncPlayState();
+    };
+    video.addEventListener("canplay", handleCanPlay);
 
     return () => {
       loadObserver.disconnect();
       playObserver.disconnect();
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       video.removeEventListener("playing", handlePlaying);
+      video.removeEventListener("canplay", handleCanPlay);
       video.pause();
     };
   }, [src, reducedMotion]);
