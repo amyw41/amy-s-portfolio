@@ -49,19 +49,45 @@ export function useFoil(seed: number) {
   const pos = useRef({ x: 0, risen: false });
   const height = useRef(0);
   const sinkTimer = useRef(0);
+  // The circle's x as drawn, gliding after the pointer one frame at a time
+  // (follow, below). It used to be a CSS transition restarted on every
+  // pointer move, which stuttered whenever moves came unevenly
+  // (2026-11-21); this eases the same way every frame whatever the mouse
+  // does.
+  const drawnX = useRef(0);
+  const followRaf = useRef(0);
+  const lastFrame = useRef(0);
+  const layers = () =>
+    host.current ? host.current.querySelectorAll<HTMLElement>("[data-foil], [data-foil-base]") : [];
+  const follow = (now: number) => {
+    const dt = lastFrame.current ? Math.min(64, now - lastFrame.current) : 16;
+    lastFrame.current = now;
+    const target = pos.current.x;
+    // Exponential ease towards the pointer: ~95% of the way there after
+    // FOIL_REVEAL_LAG_MS, the trail the transition used to give.
+    const k = reduced ? 1 : 1 - Math.exp((-3 * dt) / FOIL_REVEAL_LAG_MS);
+    drawnX.current += (target - drawnX.current) * k;
+    if (Math.abs(target - drawnX.current) < 0.1) drawnX.current = target;
+    const x = `${drawnX.current.toFixed(1)}px`;
+    layers().forEach((n) => n.style.setProperty("--fx0", x));
+    if (drawnX.current !== target) followRaf.current = requestAnimationFrame(follow);
+    else followRaf.current = 0;
+  };
+  const glide = () => {
+    if (followRaf.current) return;
+    lastFrame.current = 0;
+    followRaf.current = requestAnimationFrame(follow);
+  };
   const apply = (risen: boolean) => {
-    const el = host.current;
-    if (!el) return;
     // The host's height, measured once on entering (reading it on every
     // move forced a layout per pointer event).
     const h = height.current;
     // Risen: the centre just under the bottom edge, so a half circle shows.
-    // Sunk: far enough below to be out of sight. The gradient copy, and (for
-    // text) the plain text under it, which fades out where the copy fades in.
-    el.querySelectorAll<HTMLElement>("[data-foil], [data-foil-base]").forEach((n) => {
-      n.style.setProperty("--fx0", `${pos.current.x.toFixed(1)}px`);
-      n.style.setProperty("--fy0", `${risen ? h + 1 : h + 24}px`);
-    });
+    // Sunk: far enough below to be out of sight (a CSS transition, see
+    // Foil.module.css). The gradient copy, and (for text) the plain text
+    // under it, which fades out where the copy fades in.
+    layers().forEach((n) => n.style.setProperty("--fy0", `${risen ? h + 1 : h + 24}px`));
+    glide();
   };
   const track = (e: PointerEvent<HTMLElement>, risen: boolean) => {
     host.current = e.currentTarget;
@@ -79,8 +105,16 @@ export function useFoil(seed: number) {
       raf = requestAnimationFrame(() => apply(pos.current.risen));
     });
     return () => cancelAnimationFrame(raf);
+    // Only on mounting the layer; apply reads refs, so it never goes stale.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
-  useEffect(() => () => window.clearTimeout(sinkTimer.current), []);
+  useEffect(
+    () => () => {
+      window.clearTimeout(sinkTimer.current);
+      cancelAnimationFrame(followRaf.current);
+    },
+    [],
+  );
   // The layer's style: the seeded patch and lag, plus, while it's in use,
   // where it starts (sunk under the pointer; later moves are set directly
   // on the element by apply).
@@ -97,7 +131,10 @@ export function useFoil(seed: number) {
         window.clearTimeout(sinkTimer.current);
         height.current = e.currentTarget.offsetHeight;
         if (active) apply(true);
-        else setStart({ x: pos.current.x, h: height.current });
+        else {
+          drawnX.current = pos.current.x;
+          setStart({ x: pos.current.x, h: height.current });
+        }
       },
       onPointerMove: (e: PointerEvent<HTMLElement>) => {
         track(e, true);

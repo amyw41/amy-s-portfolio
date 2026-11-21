@@ -33,9 +33,8 @@
   background-repeat: no-repeat;
   -webkit-mask-image: radial-gradient(circle 32px at var(--fx0) var(--fy0), #000 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.45) 65%, transparent 100%);
   mask-image: radial-gradient(circle 32px at var(--fx0) var(--fy0), #000 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.45) 65%, transparent 100%);
-  transition:
-    --fx0 var(--foil-lag) ease-out,
-    --fy0 var(--foil-lag) ease-out;
+  /* Only the rise and sink; x follows the pointer in Foil.tsx. */
+  transition: --fy0 var(--foil-lag) ease-out;
 }
 
 .onLight {
@@ -48,9 +47,8 @@
 .base {
   -webkit-mask-image: radial-gradient(circle 32px at var(--fx0) var(--fy0), transparent 0%, rgba(0, 0, 0, 0.15) 30%, rgba(0, 0, 0, 0.55) 65%, #000 100%);
   mask-image: radial-gradient(circle 32px at var(--fx0) var(--fy0), transparent 0%, rgba(0, 0, 0, 0.15) 30%, rgba(0, 0, 0, 0.55) 65%, #000 100%);
-  transition:
-    --fx0 var(--foil-lag) ease-out,
-    --fy0 var(--foil-lag) ease-out;
+  /* Only the rise and sink; x follows the pointer in Foil.tsx. */
+  transition: --fy0 var(--foil-lag) ease-out;
 }
 
 /* The text copy: same type as the text under it (inherited), from the same
