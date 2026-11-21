@@ -36,15 +36,25 @@ export function useFoil(seed: number) {
   // page at all: the cloud is many layers of gradient, and having one under
   // every link meant the whole sidebar was slow to draw, so its load-in (and
   // everything moving with it, like the jar's bounce) stuttered.
-  const [active, setActive] = useState(false);
+  // Where the pointer came in (x in the host's px, and the host's height),
+  // while the layer exists; null at rest. The layer is first drawn sunk
+  // right there, so it rises straight up under the pointer. (Before, it was
+  // first drawn at the registered default, x = 0, and the rise could start
+  // with a sweep in from the left, or skip the rise entirely, depending on
+  // when the browser first styled it: the hover felt inconsistent,
+  // 2026-11-21.)
+  const [start, setStart] = useState<{ x: number; h: number } | null>(null);
+  const active = start !== null;
   const host = useRef<HTMLElement | null>(null);
   const pos = useRef({ x: 0, risen: false });
+  const height = useRef(0);
   const sinkTimer = useRef(0);
   const apply = (risen: boolean) => {
     const el = host.current;
     if (!el) return;
-    const glow = el.querySelector<HTMLElement>("[data-foil]");
-    const h = glow?.offsetHeight ?? el.offsetHeight;
+    // The host's height, measured once on entering (reading it on every
+    // move forced a layout per pointer event).
+    const h = height.current;
     // Risen: the centre just under the bottom edge, so a half circle shows.
     // Sunk: far enough below to be out of sight. The gradient copy, and (for
     // text) the plain text under it, which fades out where the copy fades in.
@@ -60,24 +70,34 @@ export function useFoil(seed: number) {
     const k = e.currentTarget.offsetWidth ? box.width / e.currentTarget.offsetWidth : 1;
     pos.current = { x: (e.clientX - box.left) / k, risen };
   };
-  // Just mounted: start sunk under the pointer, then rise on the next frame
-  // (so it transitions up rather than appearing).
+  // Just mounted (drawn sunk under the pointer, see `start`): rise. Two
+  // frames, so the sunk position has been drawn once and the rise is a
+  // transition, not a jump.
   useEffect(() => {
     if (!active) return;
-    apply(false);
-    const raf = requestAnimationFrame(() => apply(pos.current.risen));
+    let raf = requestAnimationFrame(() => {
+      raf = requestAnimationFrame(() => apply(pos.current.risen));
+    });
     return () => cancelAnimationFrame(raf);
   }, [active]);
   useEffect(() => () => window.clearTimeout(sinkTimer.current), []);
+  // The layer's style: the seeded patch and lag, plus, while it's in use,
+  // where it starts (sunk under the pointer; later moves are set directly
+  // on the element by apply).
+  const layerStyle = useMemo(
+    () => (start ? ({ ...style, "--fx0": `${start.x.toFixed(1)}px`, "--fy0": `${start.h + 24}px` } as CSSProperties) : style),
+    [style, start],
+  );
   return {
-    style,
+    style: layerStyle,
     active,
     handlers: {
       onPointerEnter: (e: PointerEvent<HTMLElement>) => {
         track(e, true);
         window.clearTimeout(sinkTimer.current);
+        height.current = e.currentTarget.offsetHeight;
         if (active) apply(true);
-        else setActive(true);
+        else setStart({ x: pos.current.x, h: height.current });
       },
       onPointerMove: (e: PointerEvent<HTMLElement>) => {
         track(e, true);
@@ -88,7 +108,7 @@ export function useFoil(seed: number) {
         apply(false);
         // Gone once it has sunk out of sight.
         window.clearTimeout(sinkTimer.current);
-        sinkTimer.current = window.setTimeout(() => setActive(false), (reduced ? 0 : FOIL_REVEAL_LAG_MS) + 80);
+        sinkTimer.current = window.setTimeout(() => setStart(null), (reduced ? 0 : FOIL_REVEAL_LAG_MS) + 80);
       },
     },
   };
