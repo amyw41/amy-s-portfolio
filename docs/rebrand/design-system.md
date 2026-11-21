@@ -195,7 +195,7 @@ One scale for every vertical gap in a case study's writing (`--space-*` on the c
 - Exploded view pulls each part out from the middle by 35% of the model's size over MESH_DEMO_SPLIT_MS (lib/motion.ts), ease-in-out; reduced motion: instant. The wheel never zooms (the page keeps scrolling).
 
 ## Media loading in (components/ui/MediaFade)
-Every work-grid cover and every case-study image and video loads in the same soft way (like rachelchen.tech): until it has loaded, its box shows a soft grey (#e6e6e6) breathing between 30% and 50% opacity, once every MEDIA_PULSE_S (2s); once loaded, it fades in from MEDIA_FADE_BLUR_PX (6px) of blur to sharp over MEDIA_FADE_MS (500ms), ease-in-out. Already-loaded (cached) media still plays the fade. CyberSea's 3D demo fades in the same way once its model has loaded. Reduced motion: no blur, no pulse, just the fade.
+Every work-grid cover and every case-study image and video loads in the same soft way (like rachelchen.tech): until it has loaded, its box shows a soft grey (#e6e6e6) breathing between 30% and 50% opacity, once every MEDIA_PULSE_S (2s); once loaded, it fades in from MEDIA_FADE_BLUR_PX (6px) of blur to sharp over MEDIA_FADE_MS (500ms), ease-in-out. Already-loaded (cached) media still plays the fade. CyberSea's 3D demo fades in the same way once its model has loaded. Reduced motion: no blur, no pulse, just the fade. Exception: home's work cards fade without the blur (just the fade), because blurring three large covers with videos under them as the cards came in made the load-in stutter (2026-11-21).
 
 ## Spotify Guessr cover (case-studies/spotify/GuessrDemo)
 Staged like the slide deck's title slide, filling the cover, using the deck's own assets (public/demos/spotify):

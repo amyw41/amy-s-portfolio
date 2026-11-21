@@ -274,8 +274,9 @@ export default function WorkGrid({
               ...(tile.tint ? { background: tile.tint } : null),
             }}
           >
-            {/* Loads in softly: a pulsing grey, then a blur-to-sharp fade. */}
-            <MediaFade>
+            {/* Loads in softly: a pulsing grey, then a fade (no blur here,
+             * see MediaFade's `blur`). */}
+            <MediaFade blur={false}>
             {tile.cover && tile.video ? (
               <AutoplayVideo src={tile.video} poster={tile.cover} sizes={small ? SMALL_SIZES : BIG_SIZES} />
             ) : tile.cover ? (

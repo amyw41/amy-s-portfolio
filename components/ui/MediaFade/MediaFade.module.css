@@ -29,6 +29,11 @@
   filter: none;
 }
 
+/* No blur (MediaFade's `blur={false}`): just the fade. */
+.root[data-no-blur] .media {
+  filter: none;
+}
+
 /* Once the media's in, the pulse is hidden and its animation paused (held
  * where it is, so nothing jumps under the fade). Hiding alone left it
  * running forever, so the browser kept redrawing the page every frame for

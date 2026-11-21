@@ -23,7 +23,19 @@ const VARS = {
  * inset 0); the media inside should fill it too. Timings: lib/motion.ts
  * (MEDIA_FADE_*), reduced motion: just the fade.
  */
-export default function MediaFade({ children, className = "" }: { children: ReactNode; className?: string }) {
+export default function MediaFade({
+  children,
+  className = "",
+  blur = true,
+}: {
+  children: ReactNode;
+  className?: string;
+  /** false: a plain fade, no blur. Home's work cards use it: blurring three
+   * large covers (with videos playing under them) as the cards come in was
+   * the heaviest thing on that page and made the load-in stutter
+   * (2026-11-21). */
+  blur?: boolean;
+}) {
   const ref = useRef<HTMLSpanElement>(null);
   const [shown, setShown] = useState(false);
 
@@ -57,7 +69,7 @@ export default function MediaFade({ children, className = "" }: { children: Reac
   }, []);
 
   return (
-    <span ref={ref} className={`${styles.root} ${className}`} style={VARS} data-shown={shown || undefined}>
+    <span ref={ref} className={`${styles.root} ${className}`} style={VARS} data-shown={shown || undefined} data-no-blur={blur ? undefined : true}>
       <span className={styles.pulse} aria-hidden="true" />
       <span className={styles.media}>{children}</span>
     </span>
