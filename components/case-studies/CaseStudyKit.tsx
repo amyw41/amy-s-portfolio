@@ -9,7 +9,8 @@ import { FADE_IN_TRANSITION } from "@/lib/motion";
 import MediaFade from "@/components/ui/MediaFade/MediaFade";
 import FooterStrip from "@/components/ui/FooterStrip";
 import BackToTop from "@/components/ui/BackToTop/BackToTop";
-import StarLogo from "@/components/ui/StarLogo/StarLogo";
+import Link from "next/link";
+import { buildWobblyLinePath } from "@/lib/wobbly";
 import { useCaseZoom, ZOOM_TARGET_ATTR } from "@/components/ui/CaseZoom";
 import { usePathname } from "next/navigation";
 import layoutStyles from "./CaseStudyLayout.module.css";
@@ -418,6 +419,26 @@ function RailContents({ sectionNav }: { sectionNav: SectionNavItem[] }) {
     </nav>
   );
 }
+// The back-home arrow at the top of the sidebar: a hand-drawn ← (low
+// wobble, like the ↗s in home's Works list), in a BACK_SIZE box.
+const BACK_SIZE = 18;
+const BACK_PATHS = [
+  buildWobblyLinePath(131, [BACK_SIZE - 1, BACK_SIZE / 2], [1.5, BACK_SIZE / 2], 0.2),
+  buildWobblyLinePath(132, [7, 3.5], [1.5, BACK_SIZE / 2], 0.15) +
+    " " +
+    buildWobblyLinePath(133, [1.5, BACK_SIZE / 2], [7, BACK_SIZE - 3.5], 0.15),
+];
+
+function BackArrow() {
+  return (
+    <svg width={BACK_SIZE} height={BACK_SIZE} viewBox={`0 0 ${BACK_SIZE} ${BACK_SIZE}`} fill="none" aria-hidden="true">
+      {BACK_PATHS.map((d, i) => (
+        <path key={i} d={d} stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" />
+      ))}
+    </svg>
+  );
+}
+
 // Every case study's hero box locks to 3/2 to match the homepage's project
 // thumbnail ratio. object-cover (inside CaseStudyImage) crops each source
 // video/image to this shape instead of showing it at its own native proportions.
@@ -619,8 +640,10 @@ export function CaseStudyLayout({
        * cover or the footer), so it sticks only that far. */}
       <div className={layoutStyles.side}>
         <aside className={layoutStyles.rail}>
-          {/* Back home: the star logo, as on home's sidebar. */}
-          <StarLogo label="Back home" />
+          {/* Back home: a hand-drawn ←, where home's social icons sit. */}
+          <Link href="/" className={layoutStyles.back} aria-label="Back home">
+            <BackArrow />
+          </Link>
           <RailContents sectionNav={sectionNav} />
         </aside>
 

@@ -86,6 +86,30 @@
   padding: var(--pad-y) var(--pad-x);
 }
 
+/* Back home: a hand-drawn ←, in a 24px box like home's social icons. */
+.back {
+  display: flex;
+  align-items: center;
+  width: 24px;
+  height: 24px;
+  color: #000;
+}
+
+.back:hover {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.back:focus-visible {
+  outline: 1px solid #000;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .back {
+    transition: color calc(150ms * var(--slow, 1)) ease;
+  }
+}
+
 /* The contents: each section by name, like home's menu items (14px,
  * light, black): the one in view medium weight, an underline on hover. */
 /* "Contents", a small header over the list. */
