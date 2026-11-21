@@ -52,8 +52,18 @@
 }
 
 /* The text copy: same type as the text under it (inherited), from the same
- * top-left corner, filled with the gradient. */
+ * top-left corner, filled with the gradient. Its box reaches --foil-bleed past
+ * the text on every side (padded back, so the letters still land on the
+ * ones under them): the gradient is only painted inside the box, and a
+ * glyph's ink can run past its own box (the last letter with the tight
+ * tracking, descenders), so without it the end of a word was cut off
+ * (2026-11-21). The mask is shifted by the same amount. */
 .text {
+  --foil-bleed: 4px;
+  inset: calc(var(--foil-bleed) * -1);
+  padding: var(--foil-bleed);
+  -webkit-mask-image: radial-gradient(circle 32px at calc(var(--fx0) + var(--foil-bleed)) calc(var(--fy0) + var(--foil-bleed)), #000 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.45) 65%, transparent 100%);
+  mask-image: radial-gradient(circle 32px at calc(var(--fx0) + var(--foil-bleed)) calc(var(--fy0) + var(--foil-bleed)), #000 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.45) 65%, transparent 100%);
   /* Same line height as the text under it (see .hostText). */
   line-height: inherit;
   color: transparent;
