@@ -164,20 +164,28 @@ export function createMeshScene(
   let loadToken = 0;
   const loader = new GLTFLoader();
 
+  /** How far the camera sits from the model: further back in a narrow view
+   * (the header's preview), so the whole tank, barrel and all, fits across. */
+  const VIEW_DIR = new THREE.Vector3(0.62, 0.45, 0.62);
+  const distance = () => (current?.size ?? 4) * 1.2 * VIEW_DIR.length() * Math.max(1, 1.3 / camera.aspect);
+
   const resize = () => {
     const w = container.clientWidth || 1;
     const h = container.clientHeight || 1;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    // Keep the way it's turned, just move in or out for the new shape (the
+    // preview growing into the big view and back).
+    const offset = camera.position.clone().sub(controls.target);
+    if (offset.lengthSq() > 1e-6) camera.position.copy(controls.target).add(offset.setLength(distance()));
     dirty = true;
     wake();
   };
 
   const frameCamera = () => {
     const size = current?.size ?? 4;
-    const r = size * 1.2;
-    camera.position.set(r * 0.62, r * 0.45, r * 0.62);
+    camera.position.copy(VIEW_DIR).setLength(distance());
     controls.target.set(0, size * 0.18, 0);
     controls.update();
     dirty = true;

@@ -10,10 +10,12 @@ import MediaFade from "@/components/ui/MediaFade/MediaFade";
 import FooterStrip from "@/components/ui/FooterStrip";
 import BackToTop from "@/components/ui/BackToTop/BackToTop";
 import Link from "next/link";
-import { buildWobblyLinePath } from "@/lib/wobbly";
+import { buildWobblyLinePath, buildWobblyRectPath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
+import BuzzPath from "@/components/ui/BuzzPath";
 import { useCaseZoom, ZOOM_TARGET_ATTR } from "@/components/ui/CaseZoom";
 import { usePathname } from "next/navigation";
 import layoutStyles from "./CaseStudyLayout.module.css";
+import HeroPreview from "./HeroPreview";
 
 // Shared building blocks behind every written case study on the site
 // (SkinSprout, Spotify Guessr, CyberSea) — extracted so the three don't
@@ -439,6 +441,11 @@ function BackArrow() {
   );
 }
 
+// The hand-drawn square round the facts in the preview header: drawn at
+// FACTS_BOX units (about its size at 1536 wide), stretched to the box.
+const FACTS_BOX = 320;
+const FACTS_BORDER_VARIANTS = [0, 1, 2].map((v) => buildWobblyRectPath(151, FACTS_BOX, FACTS_BOX, 10, 0.6, v));
+
 // Every case study's hero box locks to 3/2 to match the homepage's project
 // thumbnail ratio. object-cover (inside CaseStudyImage) crops each source
 // video/image to this shape instead of showing it at its own native proportions.
@@ -494,6 +501,14 @@ export function CaseStudyHero({
   /** A live demo over the cover (CyberSea's 3D viewer): drawn by
    * CaseStudyLayout over the cover's media, under the title. */
   heroDemo?: ReactNode;
+  /** "cover" (the default): the media fills the top of the page. "preview":
+   * no cover; the header has the title, caption and facts on the left and
+   * the media (and demo) in a square on the right that opens into a big
+   * view (HeroPreview.tsx). */
+  heroStyle?: "cover" | "preview";
+  /** With heroStyle "preview": what clicking the square does, for screen
+   * readers ("Open the 3D model"). */
+  previewLabel?: string;
 }) {
   const body = layoutPart !== undefined;
   const show = (part: "subtitle" | "meta" | "body") => !layoutPart || layoutPart === part;
@@ -609,13 +624,14 @@ export function CaseStudyLayout({
   const zoom = useCaseZoom();
   const slug = usePathname().replace(/^\//, "");
   const thumbHidden = !!zoom && zoom.phase !== "idle" && zoom.slug === slug;
+  const preview = hero?.props.heroStyle === "preview";
 
   return (
     <div className={`tw-scope ${layoutStyles.frame}`}>
       {/* The cover: the top 5/8 of the screen, the whole window wide: the
        * project's image or video (or a live demo, heroDemo) edge to edge.
        * It's where the zoom from home lands. */}
-      {hero && (
+      {hero && !preview && (
         <section className={layoutStyles.hero}>
           <div
             className={layoutStyles.heroMedia}
@@ -652,7 +668,7 @@ export function CaseStudyLayout({
       <main className={layoutStyles.content}>
         <div className={`${layoutStyles.sections} ${layoutStyles.coverEnd} text-left`}>
           {/* Under the cover: the title, its caption, then the facts. */}
-          {hero && (
+          {hero && !preview && (
             <motion.header
               className={layoutStyles.intro}
               initial={{ opacity: 0 }}
@@ -664,6 +680,63 @@ export function CaseStudyLayout({
               <div className={layoutStyles.overview} aria-label="Overview">
                 {cloneElement(hero, { layoutPart: "meta" })}
               </div>
+            </motion.header>
+          )}
+          {/* No cover: on the left the facts, in a hand-drawn square; on the
+              right the title and caption (right aligned) over the preview, a
+              wide rounded rectangle. Phones stack it all. */}
+          {hero && preview && (
+            <motion.header
+              className={`${layoutStyles.intro} ${layoutStyles.previewHeader}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={FADE_IN_TRANSITION}
+            >
+              <div className={layoutStyles.previewHead}>
+                <h1 className={`${layoutStyles.title} ${layoutStyles.previewTitle}`}>{hero.props.title}</h1>
+                <p className={layoutStyles.caption}>{hero.props.subtitle}</p>
+              </div>
+              <div className={layoutStyles.previewFacts} aria-label="Overview">
+                <BuzzPath
+                  className={layoutStyles.factsBorder}
+                  variants={FACTS_BORDER_VARIANTS}
+                  viewBox={`0 0 ${FACTS_BOX} ${FACTS_BOX}`}
+                  preserveAspectRatio="none"
+                  strokeWidth={LINE_STROKE_WIDTH}
+                />
+                <div className={layoutStyles.factsGrid}>
+                  {hero.props.meta.map((m) => (
+                    <div key={m.label}>
+                      <p className={layoutStyles.factLabel}>{m.label}</p>
+                      {m.values.map((v) => (
+                        <p key={v} className={layoutStyles.factValue}>
+                          {v}
+                        </p>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <HeroPreview
+                className={layoutStyles.previewSquare}
+                label={hero.props.previewLabel ?? `Open the ${hero.props.title} preview`}
+                squareProps={{
+                  [ZOOM_TARGET_ATTR]: slug,
+                  style: thumbHidden ? { visibility: "hidden" } : undefined,
+                }}
+                media={
+                  <CaseStudyImage
+                    src={hero.props.heroSrc}
+                    alt={hero.props.heroAlt}
+                    ratio="auto"
+                    video={hero.props.heroVideo}
+                    highlightColor={hero.props.highlightColor}
+                    className={layoutStyles.heroImage}
+                    sizes="(min-width: 768px) 760px, 100vw"
+                  />
+                }
+                demo={hero.props.heroDemo}
+              />
             </motion.header>
           )}
           {sidebarExtra}

@@ -4,18 +4,23 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useReducedMotion } from "framer-motion";
 import styles from "./MeshDemo.module.css";
 import type { MeshScene, ViewMode } from "./meshScene";
-import { MEDIA_FADE_BLUR_PX, MEDIA_FADE_MS } from "@/lib/motion";
+import { MEDIA_FADE_BLUR_PX, MEDIA_FADE_MS, PREVIEW_CONTROLS_S } from "@/lib/motion";
+import { usePreviewOpen } from "@/components/case-studies/HeroPreview";
 
-// The scene fades in like the site's images (components/ui/MediaFade).
+// The scene fades in like the site's images (components/ui/MediaFade); the
+// controls fade in once the header's preview is open.
 const FADE_VARS = {
   "--media-fade-ms": `${MEDIA_FADE_MS}ms`,
   "--media-fade-blur": `${MEDIA_FADE_BLUR_PX}px`,
+  "--controls-in": `${PREVIEW_CONTROLS_S * 1000}ms`,
 } as CSSProperties;
 
 const MODEL_URL = "/demos/cybersea/models/t-90.glb";
 
 /**
- * The CyberSea case study's live demo, filling its cover: the 3D mesh viewer
+ * The CyberSea case study's live demo, in the header's preview
+ * (HeroPreview.tsx): small, the tank can be dragged round (and a click
+ * opens the preview), with no panel; open, it's the full viewer: the 3D mesh viewer
  * from the project, cut down to one vehicle (the T-90 tank), drag to turn it
  * (right-drag or two fingers to pan), Wireframe / Solid and Exploded view.
  * It opens straight in as the blue wireframe mesh. The panel is the
@@ -28,10 +33,20 @@ const MODEL_URL = "/demos/cybersea/models/t-90.glb";
  */
 export default function MeshDemo() {
   const reduced = useReducedMotion() ?? false;
+  const { open, settled } = usePreviewOpen();
   const [desktop, setDesktop] = useState(false);
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState<ViewMode>("wireframe");
   const [split, setSplit] = useState(false);
+  // Closing the preview puts the view back as it opened: wireframe, together.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    if (!open) {
+      setMode("wireframe");
+      setSplit(false);
+    }
+  }
   const stageRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<MeshScene | null>(null);
 
@@ -62,8 +77,8 @@ export default function MeshDemo() {
     };
     const idle = typeof window.requestIdleCallback === "function";
     const id = idle ? window.requestIdleCallback(start, { timeout: 600 }) : window.setTimeout(start, 100);
-    // The cover's video is under the demo: it needn't play.
-    const video = stage.closest("section")?.querySelector("video");
+    // The preview's video is under the demo: it needn't play.
+    const video = stage.closest("[data-hero-media]")?.querySelector("video");
     video?.pause();
     return () => {
       cancelled = true;
@@ -78,14 +93,26 @@ export default function MeshDemo() {
 
   useEffect(() => sceneRef.current?.setMode(mode), [mode]);
   useEffect(() => sceneRef.current?.setSplit(split), [split]);
+  // Closing the preview puts the view back to the start.
+  useEffect(() => {
+    if (!open) sceneRef.current?.resetView();
+  }, [open]);
 
   if (!desktop) return null;
 
   return (
-    <div className={styles.demo} style={FADE_VARS}>
-      <div ref={stageRef} className={`${styles.stage} ${loading ? "" : styles.stageShown}`} aria-label="3D model of a T-90 tank: drag to turn it" role="img" />
+    <div className={styles.demo} style={FADE_VARS} data-preview-fill="">
+      <div
+        ref={stageRef}
+        className={`${styles.stage} ${loading ? "" : styles.stageShown}`}
+        aria-label="3D model of a T-90 tank: drag to turn it"
+        role="img"
+      />
       {loading && <p className={styles.loading}>Loading model…</p>}
 
+      {/* Small, just the tank to turn and a hint; open, the full controls. */}
+      {!open && !loading && <p className={styles.hint}>Drag to turn · click to open</p>}
+      <div className={`${styles.controls} ${settled ? styles.controlsShown : ""}`} inert={!settled}>
       <div className={styles.panel}>
         <h2 className={styles.name}>T-90 Main Battle Tank</h2>
         <span className={styles.tag}>Ground vehicle</span>
@@ -132,6 +159,7 @@ export default function MeshDemo() {
         </a>{" "}
         by mamont nikita, CC BY 4.0
       </p>
+      </div>
     </div>
   );
 }

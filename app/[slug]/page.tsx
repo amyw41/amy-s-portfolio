@@ -5,6 +5,8 @@ import SkinSproutCaseStudy from "@/components/case-studies/SkinSproutCaseStudy";
 import CyberSeaCaseStudy from "@/components/case-studies/CyberSeaCaseStudy";
 import SpotifyCaseStudy from "@/components/case-studies/SpotifyCaseStudy";
 import ExtrasCaseStudy from "@/components/case-studies/ExtrasCaseStudy";
+import UnderConstruction from "@/components/ui/UnderConstruction";
+import { UNDER_CONSTRUCTION } from "@/lib/underConstruction";
 
 // Keyed by this site's own project slug (lib/projects.ts) — "spotify", not
 // jar-portfolio's "spotify-guessr", so this map alone is the single source
@@ -44,6 +46,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const CaseStudy = CASE_STUDIES[slug];
   if (!CaseStudy) notFound();
+  // Not finished yet (lib/underConstruction.ts): the barricade instead.
+  if (UNDER_CONSTRUCTION.caseStudies.has(slug)) return <UnderConstruction><CaseStudy /></UnderConstruction>;
 
   return <CaseStudy />;
 }

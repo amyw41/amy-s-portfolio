@@ -1,0 +1,152 @@
+/* The under-construction page (UnderConstruction.tsx). Values:
+ * docs/rebrand/design-system.md "Under construction". */
+
+.page {
+  position: relative;
+  min-height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pad-y) var(--pad-x);
+  background: #fff;
+  color: #000;
+  font-family: var(--font-geist), system-ui, sans-serif;
+  letter-spacing: -0.6px;
+  --pad-y: clamp(24px, 6.9dvh, 80px);
+  --pad-x: clamp(18px, 1.823vw, 28px);
+}
+
+/* The real page behind the sign: its first screen only, blurred 10px. */
+.behind {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  filter: blur(10px);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* A white wash over it (88%): just a shadow of the page shows through. */
+.wash {
+  position: fixed;
+  inset: 0;
+  background: rgb(255 255 255 / 0.88);
+}
+
+/* Back home: the hand-drawn ←, top left, at the sidebar's padding, in a
+ * 24px box; 55% black on hover. */
+.back {
+  position: absolute;
+  z-index: 1;
+  top: var(--pad-y);
+  left: var(--pad-x);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: #000;
+}
+
+.back:hover {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.back:focus-visible {
+  outline: 1px solid #000;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .back {
+    transition: color calc(150ms * var(--slow, 1)) ease;
+  }
+}
+
+/* The sign and its line, centred (a little above the middle). */
+.scene {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  margin-top: -4dvh;
+}
+
+/* The sign: 300px square (its drawing is 260 units), shrinking on narrow or
+ * short windows. */
+.barricade {
+  position: relative;
+  width: min(300px, 72vw, 46dvh);
+  aspect-ratio: 1 / 1;
+}
+
+/* The sign's face: white, so it reads over anything behind (the outer
+ * diamond: a 176/260 square with 16/260 corners, turned 45°). Fades in
+ * with what's on it. */
+.signFill {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(176 / 260 * 100%);
+  height: calc(176 / 260 * 100%);
+  border-radius: calc(16 / 260 * 100%);
+  background: #fff;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  color: #000;
+}
+
+/* What's on the sign, centred in it: the star (14% of the sign tall), then
+ * "under construction". */
+.face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding-top: 2%;
+}
+
+.star {
+  height: 14%;
+  width: auto;
+  user-select: none;
+}
+
+/* "under construction" on the sign: the annotation hand, uppercase like a
+ * road sign's, 19px at full size. */
+.signText {
+  margin: 0;
+  font-family: var(--font-annotation), var(--font-geist), sans-serif;
+  font-size: clamp(15px, 1.24vw, 19px);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+/* "come back soon!" under the sign in the annotation hand (Gaegu Light),
+ * 24px. */
+.label {
+  margin: 0;
+  font-family: var(--font-annotation), var(--font-geist), sans-serif;
+  font-size: 24px;
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  text-align: center;
+  /* A soft white glow, so it reads over whatever's behind. */
+  text-shadow: 0 0 6px #fff, 0 0 12px #fff, 0 0 18px #fff;
+}

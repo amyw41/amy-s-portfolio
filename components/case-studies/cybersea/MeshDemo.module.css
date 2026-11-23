@@ -216,3 +216,21 @@
     transition: background-color 150ms ease, color 150ms ease;
   }
 }
+
+/* The panel, the hint and the credit: shown once the preview has opened,
+ * fading in over --controls-in; hidden at once when it closes. */
+.controls {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.controlsShown {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .controlsShown {
+    transition: opacity calc(var(--controls-in) * var(--slow, 1)) ease-out;
+  }
+}

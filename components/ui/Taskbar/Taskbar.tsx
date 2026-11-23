@@ -1,5 +1,6 @@
 "use client";
 
+import { isUnderConstructionPath } from "@/lib/underConstruction";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -96,7 +97,8 @@ export default function Taskbar() {
   }, []);
 
   // Home and the case studies have their own frames (no taskbar).
-  if (pathname === "/" || isCaseStudyPath(pathname)) return null;
+  // Nor the under-construction barricade (lib/underConstruction.ts).
+  if (pathname === "/" || isCaseStudyPath(pathname) || isUnderConstructionPath(pathname)) return null;
 
   const isWorkActive = pathname.startsWith("/projects") || pathname === "/work";
   const isAboutActive = pathname === "/about" || pathname.startsWith("/about/");

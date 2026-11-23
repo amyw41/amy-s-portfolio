@@ -1,0 +1,88 @@
+/* The case-study header's preview (HeroPreview.tsx). Values:
+ * docs/rebrand/design-system.md "Case-study header". */
+
+/* Holds the preview's place in the header, even while it's out: a wide
+ * rounded rectangle (16:10, 16px corners), no border, no shadow. */
+.square {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  border-radius: 16px;
+  background: #f4f4f4;
+}
+
+/* The preview itself: fills its place. Small, a click opens it. */
+.card {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #f4f4f4;
+  cursor: zoom-in;
+}
+
+.card:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 2px;
+}
+
+/* Out of its place: fixed to the window over the scrim (glide() sets its
+ * box). Above "back to top" (z-index 50). */
+.cardFloating {
+  inset: auto;
+  z-index: 101;
+  cursor: auto;
+}
+
+/* The media fills it, square cornered (the card rounds it). */
+.card video,
+.card img {
+  border-radius: 0;
+}
+
+/* The round badge holding the ×: white, black icon. */
+.badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.92);
+  color: #000;
+}
+
+/* The ×, top right of the open preview. */
+.close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 3;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: #fff;
+}
+
+.close:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .badge {
+    transition: background-color 150ms ease;
+  }
+}
+
+/* The white scrim over the page while the preview is out. */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgb(255 255 255 / 0.9);
+  cursor: zoom-out;
+}

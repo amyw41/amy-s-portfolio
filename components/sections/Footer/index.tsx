@@ -1,5 +1,6 @@
 "use client";
 
+import { isUnderConstructionPath } from "@/lib/underConstruction";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { isCaseStudyPath } from "@/lib/projects";
@@ -45,7 +46,8 @@ export default function Footer({ flush: flushProp }: FooterProps = {}) {
   // its own sidebar — no footer there. Every other route keeps it. After
   // the hooks above so they still run in the same order on every render.
   // Home and the case studies end in their own thin footer strip instead.
-  if (pathname === "/" || isCaseStudyPath(pathname)) return null;
+  // Nor the under-construction barricade (lib/underConstruction.ts).
+  if (pathname === "/" || isCaseStudyPath(pathname) || isUnderConstructionPath(pathname)) return null;
 
   return (
     <footer className={`${styles.footer} ${flush ? styles.flush : ""}`}>
