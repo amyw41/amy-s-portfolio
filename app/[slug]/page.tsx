@@ -47,7 +47,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
   const CaseStudy = CASE_STUDIES[slug];
   if (!CaseStudy) notFound();
   // Not finished yet (lib/underConstruction.ts): the barricade instead.
-  if (UNDER_CONSTRUCTION.caseStudies.has(slug)) return <UnderConstruction><CaseStudy /></UnderConstruction>;
+  if (UNDER_CONSTRUCTION.caseStudies.has(slug)) return <UnderConstruction />;
 
   return <CaseStudy />;
 }
