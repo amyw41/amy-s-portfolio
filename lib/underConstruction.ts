@@ -7,7 +7,9 @@ export const UNDER_CONSTRUCTION = {
   // The Play page and its category pages.
   play: true,
   // Case studies, by slug (app/[slug]/page.tsx).
-  caseStudies: new Set(["cybersea", "spotify", "skinsprout", "extras"]),
+  // Empty on the case-studies branch, so they can be worked on; main keeps
+  // them behind the barricade.
+  caseStudies: new Set<string>([]),
 };
 
 /** Whether this path shows the barricade (so the taskbar and the big footer
