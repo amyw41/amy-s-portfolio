@@ -105,8 +105,8 @@
   color: #000;
 }
 
-/* What's on the sign, centred in it: the star (14% of the sign tall), then
- * "under construction". */
+/* What's on the sign: the star (10% of the sign tall) over "under
+ * construction", the two together centred in the sign. */
 .face {
   position: absolute;
   inset: 0;
@@ -114,12 +114,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding-top: 2%;
+  gap: 6px;
 }
 
 .star {
-  height: 14%;
+  height: 10%;
   width: auto;
   user-select: none;
 }
