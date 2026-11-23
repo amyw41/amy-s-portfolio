@@ -4,7 +4,6 @@
 .page {
   position: relative;
   min-height: 100dvh;
-  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -15,23 +14,6 @@
   letter-spacing: -0.6px;
   --pad-y: clamp(24px, 6.9dvh, 80px);
   --pad-x: clamp(18px, 1.823vw, 28px);
-}
-
-/* The real page behind the sign: its first screen only, blurred 10px. */
-.behind {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  filter: blur(10px);
-  pointer-events: none;
-  user-select: none;
-}
-
-/* A white wash over it (88%): just a shadow of the page shows through. */
-.wash {
-  position: fixed;
-  inset: 0;
-  background: rgb(255 255 255 / 0.88);
 }
 
 /* Back home: the hand-drawn ←, top left, at the sidebar's padding, in a
@@ -64,7 +46,9 @@
   }
 }
 
-/* The sign and its line, centred (a little above the middle). */
+/* The sign and its line in a hand-drawn box (1.2px, 14px corners),
+ * centred (a little above the middle): 40px in at the sides, 32px at the
+ * top and bottom (24px and 24px on phones). */
 .scene {
   position: relative;
   display: flex;
@@ -72,6 +56,23 @@
   align-items: center;
   gap: 24px;
   margin-top: -4dvh;
+  padding: 32px 40px;
+}
+
+.box {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  color: #000;
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .scene {
+    padding: 24px;
+  }
 }
 
 /* The sign: 300px square (its drawing is 260 units), shrinking on narrow or
@@ -82,9 +83,8 @@
   aspect-ratio: 1 / 1;
 }
 
-/* The sign's face: white, so it reads over anything behind (the outer
- * diamond: a 176/260 square with 16/260 corners, turned 45°). Fades in
- * with what's on it. */
+/* The sign's face: white (the outer diamond: a 176/260 square with 16/260
+ * corners, turned 45°). */
 .signFill {
   position: absolute;
   left: 50%;
@@ -146,6 +146,4 @@
   line-height: 1.2;
   letter-spacing: 0.02em;
   text-align: center;
-  /* A soft white glow, so it reads over whatever's behind. */
-  text-shadow: 0 0 6px #fff, 0 0 12px #fff, 0 0 18px #fff;
 }
