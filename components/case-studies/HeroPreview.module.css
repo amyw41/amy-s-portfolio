@@ -2,12 +2,13 @@
  * docs/rebrand/design-system.md "Case-study header". */
 
 /* Holds the preview's place in the header, even while it's out: a wide
- * rounded rectangle (16:10, 16px corners), no border, no shadow. */
+ * rectangle (16:10), 2px corners like the home page's work cards, no
+ * border, no shadow. */
 .square {
   position: relative;
   aspect-ratio: 16 / 10;
   width: 100%;
-  border-radius: 16px;
+  border-radius: 2px;
   background: #f4f4f4;
 }
 
@@ -16,7 +17,7 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  border-radius: 16px;
+  border-radius: 2px;
   background: #f4f4f4;
   cursor: zoom-in;
 }
