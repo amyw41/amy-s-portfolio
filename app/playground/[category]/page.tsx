@@ -15,7 +15,7 @@ export default async function PlaygroundCategoryPage({ params }: { params: Promi
   const category = ETC_CATEGORIES.find((c) => c.slug === slug);
   if (!category) notFound();
   // Not finished yet (lib/underConstruction.ts): the barricade instead.
-  if (UNDER_CONSTRUCTION.play) return <UnderConstruction><CategoryDetail category={category} /></UnderConstruction>;
+  if (UNDER_CONSTRUCTION.play) return <UnderConstruction />;
 
   return <CategoryDetail category={category} />;
 }
