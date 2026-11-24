@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import BuzzPath from "@/components/ui/BuzzPath";
 import { buildWobblyCurvePath, buildWobblyLinePath, buildWobblyRectPath } from "@/lib/wobbly";
 import { gaegu, geist } from "@/lib/fonts";
@@ -10,8 +11,8 @@ import styles from "./UnderConstruction.module.css";
  * Stands in for a page that isn't finished (app/[slug]/page.tsx's
  * lib/underConstruction.ts): a hand-drawn diamond road sign in the middle
  * of the window, Amy's star and "under construction" on it, "come back
- * soon!" under it in the annotation hand, all in a hand-drawn box on plain
- * white, and the hand-drawn ←
+ * soon!" under it in the annotation hand, all in a white hand-drawn box
+ * over the real page (its first screen, blurred and out of reach), and the hand-drawn ←
  * back home in the top left corner. Values: docs/rebrand/design-system.md
  * "Under construction". No animation: it's simply there.
  */
@@ -79,9 +80,19 @@ const BACK_PATHS = [
   buildWobblyLinePath(132, [7, 3.5], [1.5, BACK / 2], 0.15) + " " + buildWobblyLinePath(133, [1.5, BACK / 2], [7, BACK - 3.5], 0.15),
 ];
 
-export default function UnderConstruction() {
+export default function UnderConstruction({ children }: { children?: ReactNode }) {
   return (
     <div className={`${geist.variable} ${gaegu.variable} ${styles.page}`}>
+      {/* The real page, behind: its first screen, blurred, washed over with
+          white, not scrollable and out of reach (no clicks, no focus, hidden
+          from screen readers). */}
+      {children && (
+        <div className={styles.behind} inert aria-hidden="true">
+          {children}
+        </div>
+      )}
+      {children && <div className={styles.wash} aria-hidden="true" />}
+
       <Link href="/" className={styles.back} aria-label="Back home">
         <svg width={BACK} height={BACK} viewBox={`0 0 ${BACK} ${BACK}`} fill="none" aria-hidden="true">
           {BACK_PATHS.map((d, i) => (

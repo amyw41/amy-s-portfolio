@@ -188,9 +188,11 @@ Instead of the cover, a case study can open with a header (`heroStyle="preview"`
 - **Reduced motion:** opening and closing just swap (no grow, no fade).
 
 ## Under construction (components/ui/UnderConstruction)
-An unfinished page shows this instead of its content (`UNDER_CONSTRUCTION` in lib/underConstruction.ts; since 2026-11-23: About, Play and its category pages, and every case study; their real pages stay in the repo). Plain white, the whole window (the real page isn't shown behind it, nor the site's old taskbar and big footer):
+An unfinished page shows this instead of its content (`UNDER_CONSTRUCTION` in lib/underConstruction.ts; since 2026-11-23: About, Play and its category pages, and every case study; their real pages stay in the repo). It covers the whole window over the real page:
 
-- **Box:** the sign and its line sit in a hand-drawn box (lib/wobbly.ts rect, 14px corners, 1.2px black, BuzzPath), 40px in at the sides and 32px at the top and bottom (24px all round on phones), centred a little above the middle (4dvh).
+- **Behind:** the page itself, its first screen only (it doesn't scroll), blurred 10px, under an 88% white wash (just a shadow of it shows), and out of reach (no clicks, no focus, hidden from screen readers). The site's old taskbar and big footer aren't shown.
+
+- **Box:** the sign and its line sit in a white hand-drawn box (lib/wobbly.ts rect, 14px corners, 1.2px black, BuzzPath), 40px in at the sides and 32px at the top and bottom (24px all round on phones), centred a little above the middle (4dvh).
 - **Sign:** a hand-drawn diamond road sign (a rounded square turned 45°: outer edge 176 units across with 16-unit corners, a second line 9 units inside it, a little bolt at the top and bottom corners), 300px square (no wider than 72vw or 46dvh), in the site's pen (lib/wobbly.ts, BuzzPath), black, 1.2px (2× the jar's ink, so it reads at this size), its face white. (2026-11-23: replaced a striped barricade, which read as a Canadian flag, then an A-frame sign.)
 - **On the sign, centred:** Amy's star (black-star.png, 10% of the sign tall), then 6px under it "UNDER / CONSTRUCTION", the two together centred in the sign both ways on two lines in the annotation hand (Gaegu Light, uppercase like a road sign, `clamp(15px, 1.24vw, 19px)`, +0.04em).
 - **Under the sign**, 24px down: "come back soon!" in the annotation hand (Gaegu Light, 24px, +0.02em, centred).
