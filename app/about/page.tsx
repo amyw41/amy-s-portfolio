@@ -4,6 +4,6 @@ import { UNDER_CONSTRUCTION } from "@/lib/underConstruction";
 
 export default function AboutPage() {
   // Not finished yet (lib/underConstruction.ts): the barricade instead.
-  if (UNDER_CONSTRUCTION.about) return <UnderConstruction />;
+  if (UNDER_CONSTRUCTION.about) return <UnderConstruction><About /></UnderConstruction>;
   return <About />;
 }
