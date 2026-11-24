@@ -197,12 +197,13 @@
 
 /* ---------- header with a preview square (heroStyle "preview") ---------- */
 
-/* The preview filling the whole first screen, edge to edge (like the cover,
- * but the full window tall), square cornered. */
+/* The preview filling the first screen, edge to edge, square cornered: the
+ * full window tall less the page's top padding (48px at 696 tall), so a
+ * strip of white shows under it, hinting there's more below. */
 .heroFull {
   grid-area: 1 / 1 / 2 / -1;
   position: relative;
-  height: 100dvh;
+  height: calc(100dvh - var(--pad-y));
 }
 
 .previewFull {
@@ -330,7 +331,7 @@
   /* Phones: the preview the full (small) screen tall, the title 28px, the
    * facts two by two. */
   .heroFull {
-    height: 100svh;
+    height: calc(100svh - 40px);
   }
 
   .previewTitle {
