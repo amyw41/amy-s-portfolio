@@ -197,24 +197,24 @@
 
 /* ---------- header with a preview square (heroStyle "preview") ---------- */
 
-/* On the left the facts, in a hand-drawn square (320px at 1536 wide), its
- * top level with the preview's; on the right, 64px (2xl) away, the title
- * and caption right aligned, then 16px (md) down the preview: a wide
- * rounded rectangle filling the rest of the writing's width. */
+/* On the left the title and caption, left aligned, then 16px (md) down
+ * the preview: a wide rounded rectangle filling the rest of the writing's
+ * width; on the right, 64px (2xl) away, the facts in a hand-drawn square
+ * (320px at 1536 wide), its top level with the preview's. */
 .previewHeader {
   --facts-size: clamp(240px, 20.833vw, 360px);
   display: grid;
-  grid-template-columns: var(--facts-size) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) var(--facts-size);
   grid-template-areas:
-    ". head"
-    "facts preview";
+    "head ."
+    "preview facts";
   column-gap: var(--space-2xl);
 }
 
 .previewHead {
   grid-area: head;
   margin-bottom: var(--space-md);
-  text-align: right;
+  text-align: left;
 }
 
 /* The title a step up from the other pages' (24px): 32px. */
