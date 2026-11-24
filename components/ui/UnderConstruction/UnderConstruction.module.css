@@ -4,6 +4,7 @@
 .page {
   position: relative;
   min-height: 100dvh;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -14,6 +15,23 @@
   letter-spacing: -0.6px;
   --pad-y: clamp(24px, 6.9dvh, 80px);
   --pad-x: clamp(18px, 1.823vw, 28px);
+}
+
+/* The real page behind the box: its first screen only, blurred 10px. */
+.behind {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  filter: blur(10px);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* A white wash over it (88%): just a shadow of the page shows through. */
+.wash {
+  position: fixed;
+  inset: 0;
+  background: rgb(255 255 255 / 0.88);
 }
 
 /* Back home: the hand-drawn ←, top left, at the sidebar's padding, in a
@@ -57,6 +75,9 @@
   gap: 24px;
   margin-top: -4dvh;
   padding: 32px 40px;
+  /* White inside the box, over the blurred page. */
+  background: #fff;
+  border-radius: 14px;
 }
 
 .box {
