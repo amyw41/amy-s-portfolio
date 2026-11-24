@@ -503,8 +503,8 @@ export function CaseStudyHero({
    * CaseStudyLayout over the cover's media, under the title. */
   heroDemo?: ReactNode;
   /** "cover" (the default): the media fills the top of the page. "preview":
-   * no cover; one column: the media (and demo) in a wide box
-   * (HeroPreview.tsx), then the title, caption and facts. */
+   * the media (and demo) fill the whole first screen (HeroPreview.tsx),
+   * then the title, caption and facts. */
   heroStyle?: "cover" | "preview";
 }) {
   const body = layoutPart !== undefined;
@@ -649,6 +649,33 @@ export function CaseStudyLayout({
         </section>
       )}
 
+      {/* No cover but the preview: the live demo (or the media) filling the
+       * whole first screen, edge to edge; the title, caption and facts follow
+       * under it. */}
+      {hero && preview && (
+        <section className={layoutStyles.heroFull}>
+          <HeroPreview
+            className={layoutStyles.previewFull}
+            squareProps={{
+              [ZOOM_TARGET_ATTR]: slug,
+              style: thumbHidden ? { visibility: "hidden" } : undefined,
+            }}
+            media={
+              <CaseStudyImage
+                src={hero.props.heroSrc}
+                alt={hero.props.heroAlt}
+                ratio="auto"
+                video={hero.props.heroVideo}
+                highlightColor={hero.props.highlightColor}
+                className={layoutStyles.heroImage}
+                sizes="100vw"
+              />
+            }
+            demo={hero.props.heroDemo}
+          />
+        </section>
+      )}
+
       {/* The sidebar, in its own box the height of the content (not the
        * cover or the footer), so it sticks only that far. */}
       <div className={layoutStyles.side}>
@@ -679,9 +706,8 @@ export function CaseStudyLayout({
               </div>
             </motion.header>
           )}
-          {/* No cover: one column (like rachelchen.tech): the preview, a
-              wide rectangle; under it the title and caption; then the facts
-              side by side in a hand-drawn box. */}
+          {/* Under the full-screen preview: the title and caption, then the
+              facts side by side in a hand-drawn box. */}
           {hero && preview && (
             <motion.header
               className={`${layoutStyles.intro} ${layoutStyles.previewHeader}`}
@@ -714,25 +740,7 @@ export function CaseStudyLayout({
                   ))}
                 </div>
               </div>
-              <HeroPreview
-                className={layoutStyles.previewSquare}
-                squareProps={{
-                  [ZOOM_TARGET_ATTR]: slug,
-                  style: thumbHidden ? { visibility: "hidden" } : undefined,
-                }}
-                media={
-                  <CaseStudyImage
-                    src={hero.props.heroSrc}
-                    alt={hero.props.heroAlt}
-                    ratio="auto"
-                    video={hero.props.heroVideo}
-                    highlightColor={hero.props.highlightColor}
-                    className={layoutStyles.heroImage}
-                    sizes="(min-width: 768px) 1100px, 100vw"
-                  />
-                }
-                demo={hero.props.heroDemo}
-              />
+
             </motion.header>
           )}
           {sidebarExtra}

@@ -197,22 +197,32 @@
 
 /* ---------- header with a preview square (heroStyle "preview") ---------- */
 
-/* One column, like rachelchen.tech's case studies: the preview first, a
- * wide rectangle across the whole writing width; 40px (xl) under it the
- * title and caption, left aligned; then 24px (lg) down the facts, side by
- * side in a hand-drawn box across the same width. */
+/* The preview filling the whole first screen, edge to edge (like the cover,
+ * but the full window tall), square cornered. */
+.heroFull {
+  grid-area: 1 / 1 / 2 / -1;
+  position: relative;
+  height: 100dvh;
+}
+
+.previewFull {
+  height: 100%;
+  aspect-ratio: auto !important;
+  border-radius: 0 !important;
+}
+
+/* Under it: the title and caption, left aligned; then 24px (lg) down the
+ * facts, side by side in a hand-drawn box across the writing width. */
 .previewHeader {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
-    "preview"
     "head"
     "facts";
 }
 
 .previewHead {
   grid-area: head;
-  margin-top: var(--space-xl);
   text-align: left;
 }
 
@@ -220,10 +230,6 @@
 .previewTitle {
   font-size: 32px;
   line-height: 1.1;
-}
-
-.previewSquare {
-  grid-area: preview;
 }
 
 /* The facts' box: a hand-drawn rounded outline (the site's pen line,
@@ -319,7 +325,12 @@
     height: 62svh;
   }
 
-  /* Phones: the same column, the title 28px, the facts two by two. */
+  /* Phones: the preview the full (small) screen tall, the title 28px, the
+   * facts two by two. */
+  .heroFull {
+    height: 100svh;
+  }
+
   .previewTitle {
     font-size: 28px;
   }
