@@ -354,13 +354,3 @@ export const GUESSR_HOP_MS = 600;
 // UI_SOUND_MIN_GAP_MS (so sweeping the mouse across a row of buttons isn't
 // a buzz).
 export const UI_SOUND_MIN_GAP_MS = 90;
-// The case-study header's preview (case-studies/HeroPreview.tsx): clicking
-// it grows it from its spot to fill the window over PREVIEW_GROW_S
-// (ease-in-out, like the zoom into a case study) as a white scrim fades in
-// over PREVIEW_SCRIM_S; closing shrinks it back over PREVIEW_SHRINK_S. Once
-// it's open, the demo's own controls fade in over PREVIEW_CONTROLS_S.
-// Reduced motion: no grow (it just appears).
-export const PREVIEW_GROW_S = 0.6;
-export const PREVIEW_SHRINK_S = 0.45;
-export const PREVIEW_SCRIM_S = 0.3;
-export const PREVIEW_CONTROLS_S = 0.2;

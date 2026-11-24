@@ -118,7 +118,6 @@ export default function CyberSeaCaseStudy() {
         heroVideo
         heroDemo={<MeshDemo />}
         heroStyle="preview"
-        previewLabel="Open the 3D model"
         highlightColor={HIGHLIGHT}
         meta={META}
         tldr="The arctic is pretty hard to navigate, for professionals AND the average person. So we designed an all-in-one information webapp: a map, info dashboard, and a cool 3D mesh feature showcasing ocean assets!"

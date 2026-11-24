@@ -503,13 +503,9 @@ export function CaseStudyHero({
    * CaseStudyLayout over the cover's media, under the title. */
   heroDemo?: ReactNode;
   /** "cover" (the default): the media fills the top of the page. "preview":
-   * no cover; the header has the title, caption and facts on the left and
-   * the media (and demo) in a square on the right that opens into a big
-   * view (HeroPreview.tsx). */
+   * no cover; one column: the media (and demo) in a wide box
+   * (HeroPreview.tsx), then the title, caption and facts. */
   heroStyle?: "cover" | "preview";
-  /** With heroStyle "preview": what clicking the square does, for screen
-   * readers ("Open the 3D model"). */
-  previewLabel?: string;
 }) {
   const body = layoutPart !== undefined;
   const show = (part: "subtitle" | "meta" | "body") => !layoutPart || layoutPart === part;
@@ -720,7 +716,6 @@ export function CaseStudyLayout({
               </div>
               <HeroPreview
                 className={layoutStyles.previewSquare}
-                label={hero.props.previewLabel ?? `Open the ${hero.props.title} preview`}
                 squareProps={{
                   [ZOOM_TARGET_ATTR]: slug,
                   style: thumbHidden ? { visibility: "hidden" } : undefined,
