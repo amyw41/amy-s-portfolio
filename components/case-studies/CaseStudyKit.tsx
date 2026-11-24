@@ -441,10 +441,11 @@ function BackArrow() {
   );
 }
 
-// The hand-drawn square round the facts in the preview header: drawn at
-// FACTS_BOX units (about its size at 1536 wide), stretched to the box.
-const FACTS_BOX = 320;
-const FACTS_BORDER_VARIANTS = [0, 1, 2].map((v) => buildWobblyRectPath(151, FACTS_BOX, FACTS_BOX, 10, 0.6, v));
+// The hand-drawn box round the facts in the preview header: drawn at about
+// its size at 1536 wide (FACTS_W × FACTS_H), stretched to the box.
+const FACTS_W = 1056;
+const FACTS_H = 110;
+const FACTS_BORDER_VARIANTS = [0, 1, 2].map((v) => buildWobblyRectPath(151, FACTS_W, FACTS_H, 10, 0.6, v));
 
 // Every case study's hero box locks to 3/2 to match the homepage's project
 // thumbnail ratio. object-cover (inside CaseStudyImage) crops each source
@@ -682,9 +683,9 @@ export function CaseStudyLayout({
               </div>
             </motion.header>
           )}
-          {/* No cover: on the left the facts, in a hand-drawn square; on the
-              right the title and caption (right aligned) over the preview, a
-              wide rounded rectangle. Phones stack it all. */}
+          {/* No cover: one column (like rachelchen.tech): the preview, a
+              wide rectangle; under it the title and caption; then the facts
+              side by side in a hand-drawn box. */}
           {hero && preview && (
             <motion.header
               className={`${layoutStyles.intro} ${layoutStyles.previewHeader}`}
@@ -700,7 +701,7 @@ export function CaseStudyLayout({
                 <BuzzPath
                   className={layoutStyles.factsBorder}
                   variants={FACTS_BORDER_VARIANTS}
-                  viewBox={`0 0 ${FACTS_BOX} ${FACTS_BOX}`}
+                  viewBox={`0 0 ${FACTS_W} ${FACTS_H}`}
                   preserveAspectRatio="none"
                   strokeWidth={LINE_STROKE_WIDTH}
                 />
@@ -732,7 +733,7 @@ export function CaseStudyLayout({
                     video={hero.props.heroVideo}
                     highlightColor={hero.props.highlightColor}
                     className={layoutStyles.heroImage}
-                    sizes="(min-width: 768px) 760px, 100vw"
+                    sizes="(min-width: 768px) 1100px, 100vw"
                   />
                 }
                 demo={hero.props.heroDemo}

@@ -197,23 +197,22 @@
 
 /* ---------- header with a preview square (heroStyle "preview") ---------- */
 
-/* On the left the title and caption, left aligned, then 16px (md) down
- * the preview: a wide rounded rectangle filling the rest of the writing's
- * width; on the right, 64px (2xl) away, the facts in a hand-drawn square
- * (320px at 1536 wide), its top level with the preview's. */
+/* One column, like rachelchen.tech's case studies: the preview first, a
+ * wide rectangle across the whole writing width; 40px (xl) under it the
+ * title and caption, left aligned; then 24px (lg) down the facts, side by
+ * side in a hand-drawn box across the same width. */
 .previewHeader {
-  --facts-size: clamp(240px, 20.833vw, 360px);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--facts-size);
+  grid-template-columns: minmax(0, 1fr);
   grid-template-areas:
-    "head ."
-    "preview facts";
-  column-gap: var(--space-2xl);
+    "preview"
+    "head"
+    "facts";
 }
 
 .previewHead {
   grid-area: head;
-  margin-bottom: var(--space-md);
+  margin-top: var(--space-xl);
   text-align: left;
 }
 
@@ -227,15 +226,12 @@
   grid-area: preview;
 }
 
-/* The facts' square: a hand-drawn rounded outline (0.6px, the site's pen
- * line), the facts two by two in the middle of it. */
+/* The facts' box: a hand-drawn rounded outline (the site's pen line,
+ * stretched to the box), the four facts side by side inside it. */
 .previewFacts {
   grid-area: facts;
-  align-self: start;
   position: relative;
-  aspect-ratio: 1 / 1;
-  display: flex;
-  align-items: center;
+  margin-top: var(--space-lg);
   padding: var(--space-lg);
 }
 
@@ -249,11 +245,11 @@
   pointer-events: none;
 }
 
-/* Timeline, Team / Role, Skills: 16px between rows, 24px between columns. */
+/* Timeline, Team, Role, Skills in four equal columns, 24px apart (two by
+ * two on phones, 16px between rows). */
 .factsGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, max-content));
-  justify-content: center;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-md) var(--space-lg);
   width: 100%;
 }
@@ -323,28 +319,13 @@
     height: 62svh;
   }
 
-  /* No cover on phones either: the top bar, then the title and caption,
-   * the preview the full width under them, then the facts' box (as tall as
-   * the facts). */
-  .previewHeader {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "head"
-      "preview"
-      "facts";
-  }
-
-  .previewHead {
-    text-align: left;
-  }
-
+  /* Phones: the same column, the title 28px, the facts two by two. */
   .previewTitle {
     font-size: 28px;
   }
 
-  .previewFacts {
-    aspect-ratio: auto;
-    margin-top: var(--space-lg);
+  .factsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .footerPlace {
