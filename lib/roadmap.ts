@@ -26,12 +26,6 @@ export type RoadmapStop = {
   panel: { paragraphs: string[]; photos: RoadmapPhoto[] };
 };
 
-/** How the page is drawn. "plain" (2026-11-25, to match the home page):
- * Geist type, just the coastline, route and pins straight on the page, the
- * star top left as the way home. "illustrated": the torn paper, handwritten
- * labels, coloured landmark doodles and islets, the star on the map. */
-export const ROADMAP_STYLE: "plain" | "illustrated" = "plain";
-
 /** Amy's own drawing goes here (a path under /public), drawn into the
  * map's box (MAP_ASPECT wide to 1 tall). null draws the placeholder map. */
 export const ROADMAP_MAP: { src: string; alt: string } | null = null;
@@ -43,8 +37,8 @@ export const ROADMAP_STOPS: RoadmapStop[] = [
     id: "calgary",
     place: "Calgary, AB",
     when: "where I grew up",
-    x: 24,
-    y: 52.6,
+    x: 13,
+    y: 23.4,
     marker: {
       photo: { src: "/images/etc/dance1.webp", alt: "Amy dancing" },
       caption: "grew up dancing, drawing and debating",
@@ -65,8 +59,8 @@ export const ROADMAP_STOPS: RoadmapStop[] = [
     id: "waterloo",
     place: "Waterloo, ON",
     when: "now",
-    x: 70,
-    y: 68.6,
+    x: 60,
+    y: 65.6,
     marker: {
       photo: { src: "/images/etc/drawing2.webp", alt: "A drawing" },
       caption: "studying management engineering",
@@ -86,8 +80,8 @@ export const ROADMAP_STOPS: RoadmapStop[] = [
     id: "next",
     place: "Next stop?",
     when: "to be continued",
-    x: 88,
-    y: 35.6,
+    x: 84,
+    y: 15.6,
     label: "left",
     marker: { caption: "placeholder: somewhere new" },
     panel: {

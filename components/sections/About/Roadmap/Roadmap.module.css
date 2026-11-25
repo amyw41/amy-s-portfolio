@@ -29,7 +29,8 @@
   justify-content: center;
 }
 
-/* The stamp sits over the paper's left edge, a little above centre. */
+/* The photo overlaps the paper's left edge, a little above centre, with
+ * "★ home" just above it. */
 .stampSpot {
   position: relative;
   z-index: 3;
@@ -39,7 +40,37 @@
   transform: translateY(-6%);
 }
 
-/* ---------- the stamp ---------- */
+/* "★ home": the star and the word in the annotation hand (like the
+ * title), above the photo's top left. */
+.home {
+  position: absolute;
+  bottom: calc(100% + 16px);
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #000;
+  font-family: var(--font-annotation), cursive;
+  font-weight: 300;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.home img {
+  display: block;
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.home:hover img,
+.home:focus-visible img {
+  transform: scale(1.2) rotate(18deg);
+}
+
+/* ---------- the photo ---------- */
 
 /* The tape is the pivot: it stays stuck to the page and the stamp swings
  * from it. The shadow is on the wrapper, so it follows the stamp's
@@ -66,39 +97,24 @@
   outline-offset: 4px;
 }
 
-/* The stamp: its perforated paper (an svg, Postcard.tsx), the thin frame
- * line inside it and the photo inside that, placed in % of the stamp. */
+/* The print: a thin white border round the photo, softly rounded. The
+ * photo sits inside it in % of the print. */
 .stampFace {
   position: relative;
   display: block;
   aspect-ratio: 260 / 330;
-}
-
-.stampSvg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-
-.stampPaper {
-  fill: #fbfaf7;
-}
-
-.stampFrame {
-  fill: none;
-  stroke: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  background: #fff;
 }
 
 /* The photo, cropped out of its hand-drawn frame in me-framed.webp (the
  * photo is 852 × 1140 of the 1368 × 1600 image, from 258, 230). */
 .postcardPhoto {
   position: absolute;
-  left: 8.46%;
-  right: 8.46%;
-  top: 6.67%;
-  bottom: 6.67%;
+  left: 4%;
+  right: 4%;
+  top: 3.2%;
+  bottom: 3.2%;
   border-radius: 6px;
   overflow: hidden;
   background: #f4f4f4;
@@ -148,7 +164,6 @@
   height: 100%;
   overflow: visible;
   pointer-events: none;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.04));
 }
 
 .paperFill {
@@ -181,12 +196,6 @@
 }
 
 /* The route: a dashed pen line. */
-.mapText {
-  font-family: var(--font-annotation), cursive;
-  font-weight: 300;
-  letter-spacing: 0.02em;
-}
-
 .route {
   fill: none;
   stroke: #000;
@@ -209,56 +218,6 @@
   letter-spacing: 0.02em;
   text-align: center;
   text-transform: lowercase;
-}
-
-/* ---------- the way home: Amy's star ---------- */
-
-/* Out in the sea at the bottom left of the map (in % of the map's box). */
-.homeSpot {
-  position: absolute;
-  left: 6%;
-  top: 90%;
-  z-index: 2;
-  width: 0;
-  height: 0;
-}
-
-.homeStar {
-  position: absolute;
-  left: -14px;
-  top: -14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #000;
-}
-
-.homeStar img {
-  display: block;
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.homeStar:hover img,
-.homeStar:focus-visible img {
-  transform: scale(1.25) rotate(18deg);
-}
-
-.homeLabel {
-  font-family: var(--font-annotation), cursive;
-  font-weight: 300;
-  font-size: 19px;
-  line-height: 1;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.homeStar:hover .homeLabel,
-.homeStar:focus-visible .homeLabel {
-  transform: translateX(3px);
 }
 
 /* ---------- pins ---------- */
@@ -386,11 +345,11 @@
 
 .pinLabel {
   display: block;
-  font-family: var(--font-annotation), cursive;
+  font-family: var(--font-geist), system-ui, sans-serif;
   font-weight: 300;
-  font-size: 19px;
-  line-height: 1;
-  letter-spacing: 0.02em;
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: -0.6px;
   text-transform: lowercase;
   white-space: nowrap;
   text-shadow: 0 0 4px #fff, 0 0 8px #fff;
@@ -515,32 +474,6 @@
   background: #f4f4f4;
 }
 
-/* ---------- plain style (ROADMAP_STYLE): like the home page ---------- */
-
-/* The star, top left where it sits on home's sidebar. */
-.cornerStar {
-  position: absolute;
-  top: var(--pad-y);
-  left: var(--pad-x);
-  z-index: 6;
-}
-
-/* The same squiggly paper (Amy likes its edges), but no shadow, like home.
- * The stamp overlaps its left edge. */
-.page[data-style="plain"] .paperSvg {
-  filter: none;
-}
-
-/* Labels in Geist, like home: 14px light, like the sidebar's items. The
- * title stays in the annotation hand (Amy likes it handwritten). */
-.page[data-style="plain"] .pinLabel {
-  font-family: var(--font-geist), system-ui, sans-serif;
-  font-size: 14px;
-  font-weight: 300;
-  letter-spacing: -0.6px;
-  line-height: 1.45;
-}
-
 /* ---------- phones ---------- */
 
 @media (max-width: 767px) {
@@ -569,29 +502,15 @@
     left: 40%;
   }
 
-  .pinLabel,
-  .homeLabel {
-    font-size: 14px;
+  /* At the bottom of the map: the photo overlaps the paper's top. */
+  .title {
+    top: auto;
+    bottom: 0;
+    left: 0;
   }
 
-  /* Clear of the stamp's corner, which overlaps the frame's top left. */
-  .page[data-style="plain"] .title {
-    top: 5%;
-  }
-
-  .page[data-style="plain"] .frame {
+  .frame {
     padding-top: 96px;
-  }
-
-  .homeStar {
-    left: -10px;
-    top: -10px;
-    gap: 6px;
-  }
-
-  .homeStar img {
-    width: 20px;
-    height: 20px;
   }
 
   .pinCaption {
@@ -621,8 +540,7 @@
   .pinDot,
   .pinPhoto,
   .pinCaption,
-  .homeStar img,
-  .homeLabel,
+  .home img,
   .popupClose {
     transition: none !important;
   }

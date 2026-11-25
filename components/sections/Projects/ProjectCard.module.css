@@ -70,6 +70,12 @@
 
 .video {
   opacity: 0;
+  /* 1px larger on every side (the card clips it), so when the browser hands
+   * the video to the graphics card to draw, its rounded-off edge can't leave
+   * a dark hairline down the card's side. */
+  inset: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
 }
 
 @media (prefers-reduced-motion: no-preference) {

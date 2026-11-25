@@ -1,11 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { geist } from "@/lib/fonts";
-import { ROADMAP_MAP, ROADMAP_STOPS, ROADMAP_STYLE, type RoadmapStop } from "@/lib/roadmap";
+import { ROADMAP_MAP, ROADMAP_STOPS, type RoadmapStop } from "@/lib/roadmap";
 import { buildWobblyCurvePath, buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
 import {
   cubicBezier,
@@ -28,7 +27,7 @@ import {
   ROADMAP_SCRIM_S,
   slowTransition,
 } from "@/lib/motion";
-import { MAP_H, MAP_SHAPES, MAP_SHAPES_PLAIN, MAP_TEXT, MAP_W, PAPER_H, PAPER_PATH, PAPER_W, ROUTE_PATH, STOP_ROUTE_T } from "./mapDrawing";
+import { MAP_H, MAP_SHAPES, MAP_W, PAPER_CURL, PAPER_H, PAPER_PATH, PAPER_W, ROUTE_PATH, STOP_ROUTE_T } from "./mapDrawing";
 import styles from "./Roadmap.module.css";
 
 // The route is drawn at an even pen pace eased in and out (EASE_IN_OUT), so
@@ -219,8 +218,6 @@ function Popup({ stop, reduced, onClose }: { stop: RoadmapStop; reduced: boolean
 
 // ---------- the map ----------
 
-const illustrated = ROADMAP_STYLE === "illustrated";
-
 /**
  * The map on its torn paper (the placeholder drawing, or Amy's own once
  * ROADMAP_MAP is set), the dashed route drawing itself in from stop to
@@ -288,9 +285,11 @@ export default function MapStage() {
   return (
     <div className={styles.paper} style={PIN_VARS} onClick={() => setTouchShown(null)}>
       {/* The paper the map is drawn on: its squiggly, softly torn edge
-       * and rounded corners give it personality. */}
+       * and rounded corners give it personality, and its bottom right
+       * corner curls up. */}
       <svg className={styles.paperSvg} viewBox={`0 0 ${PAPER_W} ${PAPER_H}`} preserveAspectRatio="none" aria-hidden="true">
         <path className={styles.paperFill} d={PAPER_PATH} strokeWidth={LINE_STROKE_WIDTH} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        <path d={PAPER_CURL} fill="none" stroke="currentColor" strokeWidth={LINE_STROKE_WIDTH} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
       </svg>
       <div className={styles.mapBox}>
         {/* The map drawing: Amy's own image, or the placeholder. */}
@@ -299,7 +298,7 @@ export default function MapStage() {
           <img className={styles.mapImage} src={ROADMAP_MAP.src} alt={ROADMAP_MAP.alt} draggable={false} />
         ) : (
           <svg className={styles.mapSvg} viewBox={`0 0 ${MAP_W} ${MAP_H}`} aria-hidden="true">
-            {(illustrated ? MAP_SHAPES : MAP_SHAPES_PLAIN).map((p, i) => (
+            {MAP_SHAPES.map((p, i) => (
               <path
                 key={i}
                 d={p.d}
@@ -311,11 +310,6 @@ export default function MapStage() {
                 strokeLinejoin="round"
                 vectorEffect="non-scaling-stroke"
               />
-            ))}
-            {illustrated && MAP_TEXT.map((t) => (
-              <text key={t.text} className={styles.mapText} x={t.x} y={t.y} fontSize={t.size} textAnchor="middle">
-                {t.text}
-              </text>
             ))}
           </svg>
         )}
@@ -341,24 +335,6 @@ export default function MapStage() {
         </svg>
 
         <h1 className={styles.title}>{"Amy's life map"}</h1>
-
-        {/* The way home (illustrated only; plain has it top left, like
-         * home): Amy's star, a landmark out in the sea at the bottom left,
-         * off the route. It's there first, before the route. */}
-        {illustrated && (
-        <motion.div
-          className={styles.homeSpot}
-          initial={reduced ? false : { opacity: 0, scale: ROADMAP_PIN_FROM_SCALE }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={slowTransition({ duration: ROADMAP_PIN_POP_S, ease: EASE_OVERSHOOT, delay: ROADMAP_ROUTE_DELAY_S * 0.2 })}
-        >
-          <Link href="/" className={styles.homeStar} aria-label="Back to the home page">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/logos/black-star.png" alt="" draggable={false} />
-            <span className={styles.homeLabel}>back home</span>
-          </Link>
-        </motion.div>
-        )}
 
         {ROADMAP_STOPS.map((stop, i) => (
           <Pin
