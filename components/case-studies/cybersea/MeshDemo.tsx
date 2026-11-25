@@ -96,8 +96,7 @@ export default function MeshDemo() {
       {/* The controls (Amy's sketch, in the CyberSea project's own style):
           a small dark panel top right with two switches. */}
       <div className={styles.panel}>
-        <p className={styles.label}>Exploded</p>
-        <ModelSwitch label="Exploded view" on={split} onChange={setSplit} />
+        <p className={styles.panelTitle}>Settings</p>
         <p className={styles.label}>Mode</p>
         <ModelSwitch
           label="Solid view"
@@ -106,6 +105,8 @@ export default function MeshDemo() {
           offText="Wire"
           onChange={(solid) => setMode(solid ? "solid" : "wireframe")}
         />
+        <p className={styles.label}>Exploded</p>
+        <ModelSwitch label="Exploded view" on={split} onChange={setSplit} />
       </div>
 
     </div>

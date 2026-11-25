@@ -676,7 +676,7 @@ export default function SkinSproutCaseStudy() {
             the old -mt-0.5 (a line-height-overlap hack) — same real gap
             Row's own eyebrow now uses, so this reads identically to it and
             to CyberSea's "06 / Learnings" restructure. */}
-        <p className={`${TEXT.header} mb-2`}>03 / Design Process</p>
+        <p className={`${TEXT.subheader} mb-2`}>03 / Design Process</p>
         <Row
           heading="Moodboard"
           media={
@@ -957,7 +957,7 @@ export default function SkinSproutCaseStudy() {
 
       {/* 05 / Learnings */}
       <Section id="learnings">
-        <p className={`${TEXT.header} mb-2`}>05 / Learnings</p>
+        <p className={`${TEXT.subheader} mb-2`}>05 / Learnings</p>
         <Row heading="Research first">
           <p>
             This was my first complete solo project. As silly as it sounds, I

@@ -386,7 +386,7 @@ export default function CyberSeaCaseStudy() {
             own eyebrow now uses, so this reads identically to it and to
             SpotifyCaseStudy.tsx's own standalone group headers (see
             "Spotify's Design System"). */}
-        <p className={`${TEXT.header} mb-2`}>06 / Learnings</p>
+        <p className={`${TEXT.subheader} mb-2`}>06 / Learnings</p>
         <Row heading="Working on a team of non-designers">
           <p>
             Design is often reduced to just &ldquo;making things look aesthetic,&rdquo;

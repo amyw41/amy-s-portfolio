@@ -94,6 +94,20 @@
 
 /* "Exploded", "Mode": mono 14px (-0.6px) uppercase, white/50%; 6px over their switch,
  * 12px between the two. */
+/* "Settings" on top: mono 14px (-0.6px) uppercase, white, with a hairline
+ * under it, 12px above the first switch's label. */
+.panelTitle {
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  align-self: stretch;
+  border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: -0.6px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
 .label {
   margin: 0 0 6px;
   font-family: var(--mono);
@@ -107,13 +121,13 @@
   margin-top: 12px;
 }
 
-/* The switch: a 32 × 16 track (white/30% outline, square), a 10px white knob
- * that slides across; on, the track fills blue. The state beside it, 10px
- * bold uppercase. */
+/* The switch (1.2× the first size, 2026-11-25): a 38 × 19 track (white/30%
+ * outline, square), a 12px white knob that slides across; on, the track
+ * fills blue. The state beside it, 12px bold uppercase. */
 .switch {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -124,18 +138,18 @@
 .switchTrack {
   position: relative;
   display: block;
-  width: 32px;
-  height: 16px;
+  width: 38px;
+  height: 19px;
   border: 1px solid rgb(255 255 255 / 0.3);
   background: #2a2b22;
 }
 
 .switchKnob {
   position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 10px;
-  height: 10px;
+  top: 2.5px;
+  left: 2.5px;
+  width: 12px;
+  height: 12px;
   background: #fff;
 }
 
@@ -145,13 +159,13 @@
 }
 
 .switch[aria-checked="true"] .switchKnob {
-  transform: translateX(16px);
+  transform: translateX(19px);
 }
 
 .switchText {
-  min-width: 34px;
+  min-width: 41px;
   font-family: inherit;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;

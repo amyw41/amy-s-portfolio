@@ -43,8 +43,10 @@ export const TEXT = {
   // headers 17px (home's intro size), everything else 14px; small headers
   // italic; all black.
   header: "font-body text-[17px] font-medium leading-[1.3] text-black text-left",
-  // Small headers in mono caps (2026-11-25, matching the facts' labels over
-  // the cover: Consolas on Windows, the system mono elsewhere).
+  // Small labels in mono caps (2026-11-25, matching the facts' labels over
+  // the cover: Consolas on Windows, the system mono elsewhere). Since
+  // 2026-11-25 this is the small label *above* a title (a section's
+  // "01 / Initial Planning"), with the title under it in `header`.
   subheader: "font-mono text-[14px] font-normal uppercase tracking-[-0.6px] leading-[1.45] text-black/60 text-left",
   content: "font-body text-[14px] font-light leading-[1.45] text-black text-left",
   frame: "font-body text-[14px] font-light leading-[1.45] text-black text-left",
@@ -303,8 +305,11 @@ export function Row({
     <div>
       <div className="grid grid-cols-1">
         <div>
-          {eyebrow && <p className={`${TEXT.header} mb-[var(--space-sm)]`}>{eyebrow}</p>}
-          <p className={headingClassName ?? TEXT.subheader}>{heading}</p>
+          {/* The section's number and name small on top (mono caps), the
+              part's own title big under it (like rachelchen.tech /
+              franceszhao.ca). */}
+          {eyebrow && <p className={`${TEXT.subheader} mb-[var(--space-xs)]`}>{eyebrow}</p>}
+          <p className={headingClassName ?? TEXT.header}>{heading}</p>
         </div>
         {children && (
           <div className={`min-w-0 ${childrenGap} ${TEXT.content}`}>{children}</div>
@@ -398,7 +403,6 @@ function RailContents({ sectionNav }: { sectionNav: SectionNavItem[] }) {
   if (sectionNav.length === 0) return null;
   return (
     <nav aria-label="Contents">
-      <p className={layoutStyles.contentsLabel}>Contents</p>
       <ol className={layoutStyles.contents}>
         {sectionNav.map((s) => (
           <li key={s.id}>
