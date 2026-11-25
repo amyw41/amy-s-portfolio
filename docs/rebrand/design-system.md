@@ -197,6 +197,9 @@ An unfinished page shows this instead of its content (`UNDER_CONSTRUCTION` in li
 - **Back home:** the hand-drawn ← (18px in a 24px box, 1.2px stroke), top left at the sidebar's padding, where the case studies' sits (`--pad-y` down, `--pad-x` in); 55% black on hover (150ms).
 - **No animation:** it's all simply there when the page opens (no draw-on or fades, removed 2026-11-23).
 
+## Case-study measure
+The writing sits in a narrow column, 680px at most, centred in the content area (`MEASURE` in CaseStudyKit.tsx; 2026-11-25: comfortable 60 to 75 character lines, and an editorial page instead of one wide block like franceszhao.ca). That covers every part's label, title, writing and trailing writing, the TL;DR, and lone section labels. Images, videos, stat boxes and other media stay the full content width (1056px at 1536 wide), so they break out wider than the text. On phones it's simply the full width.
+
 ## Case-study spacing
 One scale for every vertical gap in a case study's writing (`--space-*` on the case-study frame, CaseStudyLayout.module.css; Section and Row in CaseStudyKit.tsx use them, and so do the case studies' own blocks). Fixed px, the same on every screen size. Nothing between steps (no 10, 30, 36, 56, 72 or 120px).
 

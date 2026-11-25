@@ -53,6 +53,12 @@ export const TEXT = {
   groupHeader: "font-body text-[17px] font-medium leading-[1.3] text-black text-left",
 };
 
+// The writing's measure (2026-11-25): text sits in a narrow column, 680px
+// at most, centred in the content area (comfortable line lengths, and an
+// editorial page rather than one wide block); images and videos stay the
+// full content width, so they break out wider than the text.
+export const MEASURE = "mx-auto w-full max-w-[680px]";
+
 // Fallback tint behind a placeholder/neutral image box when a case study
 // doesn't pass its own — each case study's actual highlight color (Spotify's
 // lavender EFEDF5, CyberSea's pale blue e5eef7, SkinSprout's pink faf1f6)
@@ -304,7 +310,7 @@ export function Row({
   return (
     <div>
       <div className="grid grid-cols-1">
-        <div>
+        <div className={MEASURE}>
           {/* The section's number and name small on top (mono caps), the
               part's own title big under it (like rachelchen.tech /
               franceszhao.ca). */}
@@ -312,7 +318,7 @@ export function Row({
           <p className={headingClassName ?? TEXT.header}>{heading}</p>
         </div>
         {children && (
-          <div className={`min-w-0 ${childrenGap} ${TEXT.content}`}>{children}</div>
+          <div className={`min-w-0 ${MEASURE} ${childrenGap} ${TEXT.content}`}>{children}</div>
         )}
         {media && <div className={mediaGap}>{media}</div>}
         {/* Full width (md:col-span-2, matching `media`) — `after` follows a
@@ -320,7 +326,7 @@ export function Row({
             confining it to just the narrow content column (like `children`)
             left it looking squeezed relative to the image directly above
             it. */}
-        {after && <div className={`min-w-0 mt-[var(--space-lg)] ${TEXT.content}`}>{after}</div>}
+        {after && <div className={`min-w-0 ${MEASURE} mt-[var(--space-lg)] ${TEXT.content}`}>{after}</div>}
       </div>
     </div>
   );
@@ -580,7 +586,7 @@ export function CaseStudyHero({
           plain TEXT.content, matching every other paragraph on the page
           rather than its own separate size/color (per request). */}
       {tldr && show("body") && (
-        <div className={layoutPart === "body" ? "text-left" : "mt-6 text-left"}>
+        <div className={`${MEASURE} ${layoutPart === "body" ? "text-left" : "mt-6 text-left"}`}>
           <p className={`${TEXT.header} mb-[var(--space-sm)]`}>TL;DR</p>
           <p className={TEXT.content}>{tldr}</p>
         </div>
