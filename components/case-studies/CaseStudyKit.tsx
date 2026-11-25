@@ -43,7 +43,9 @@ export const TEXT = {
   // headers 17px (home's intro size), everything else 14px; small headers
   // italic; all black.
   header: "font-body text-[17px] font-medium leading-[1.3] text-black text-left",
-  subheader: "font-body text-[14px] font-normal italic leading-[1.45] text-black text-left",
+  // Small headers in mono caps (2026-11-25, matching the facts' labels over
+  // the cover: Consolas on Windows, the system mono elsewhere).
+  subheader: "font-mono text-[12px] font-normal uppercase tracking-[0.06em] leading-[1.45] text-black/60 text-left",
   content: "font-body text-[14px] font-light leading-[1.45] text-black text-left",
   frame: "font-body text-[14px] font-light leading-[1.45] text-black text-left",
   groupHeader: "font-body text-[17px] font-medium leading-[1.3] text-black text-left",
