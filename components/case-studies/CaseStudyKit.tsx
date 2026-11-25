@@ -692,6 +692,11 @@ export function CaseStudyLayout({
             }
             demo={hero.props.heroDemo}
           />
+          {/* Trying the title over the preview, top left (Amy's sketch,
+              2026-11-25); the real h1 is still under it. */}
+          <p className={layoutStyles.heroOverlayTitle} aria-hidden="true">
+            {hero.props.title}
+          </p>
         </section>
       )}
 

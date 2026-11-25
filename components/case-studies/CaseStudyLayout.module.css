@@ -206,6 +206,22 @@
   height: calc(100dvh - var(--pad-y));
 }
 
+/* The title over the preview, top left (a try-out): white, the case
+ * study's title size, at the page's padding. Clicks go through to the
+ * demo. */
+.heroOverlayTitle {
+  position: absolute;
+  top: var(--pad-y);
+  left: var(--pad-x);
+  z-index: 2;
+  margin: 0;
+  color: #fff;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.1;
+  pointer-events: none;
+}
+
 .previewFull {
   height: 100%;
   aspect-ratio: auto !important;

@@ -5,6 +5,10 @@ import { useReducedMotion } from "framer-motion";
 import styles from "./MeshDemo.module.css";
 import type { MeshScene, ViewMode } from "./meshScene";
 import { MEDIA_FADE_BLUR_PX, MEDIA_FADE_MS } from "@/lib/motion";
+import BuzzPath from "@/components/ui/BuzzPath";
+import { buildWobblyRectPath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
+import HandToggle from "./HandToggle";
+import { gaegu } from "@/lib/fonts";
 
 // The scene fades in like the site's images (components/ui/MediaFade).
 const FADE_VARS = {
@@ -14,13 +18,24 @@ const FADE_VARS = {
 
 const MODEL_URL = "/demos/cybersea/models/t-90.glb";
 
+// The hand-drawn box round the controls (about its size, stretched to fit;
+// 4 units of room all round for the wobble).
+const PANEL_W = 128;
+const PANEL_H = 150;
+const PANEL_VARIANTS = [0, 1, 2].map((v) =>
+  buildWobblyRectPath(251, PANEL_W, PANEL_H, 12, 0.5, v).replace(
+    /(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g,
+    (_, x, y) => `${(+x + 4).toFixed(2)},${(+y + 4).toFixed(2)}`,
+  ),
+);
+
 /**
  * The CyberSea case study's live demo, filling the header's preview
  * (HeroPreview.tsx), right there on the page: the 3D mesh viewer
  * from the project, cut down to one vehicle (the T-90 tank), drag to turn it
- * (right-drag or two fingers to pan), Wireframe / Solid and Exploded view.
- * It opens straight in as the blue wireframe mesh. The panel is the
- * project's own inspector panel, trimmed.
+ * (right-drag or two fingers to pan), and two hand-drawn switches top right
+ * (Amy's sketch): exploded on / off, mode wire / solid. It opens straight
+ * in as the blue wireframe mesh.
  *
  * Desktop only: phones keep the cover's video (a 3D view that takes drags
  * would trap the page's scroll on a touch screen, and it's heavy there).
@@ -83,7 +98,7 @@ export default function MeshDemo() {
   if (!desktop) return null;
 
   return (
-    <div className={styles.demo} style={FADE_VARS}>
+    <div className={`${gaegu.variable} ${styles.demo}`} style={FADE_VARS}>
       <div
         ref={stageRef}
         className={`${styles.stage} ${loading ? "" : styles.stageShown}`}
@@ -92,39 +107,26 @@ export default function MeshDemo() {
       />
       {loading && <p className={styles.loading}>Loading model…</p>}
 
-      <div className={styles.panel}>
-        <h2 className={styles.name}>T-90 Main Battle Tank</h2>
-        <span className={styles.tag}>Ground vehicle</span>
-
-        <p className={styles.label}>View mode</p>
-        <div className={styles.segmented} role="radiogroup" aria-label="View mode">
-          {(["wireframe", "solid"] as const).map((v) => (
-            <button
-              key={v}
-              type="button"
-              role="radio"
-              aria-checked={mode === v}
-              className={styles.segment}
-              onClick={() => setMode(v)}
-            >
-              {v === "wireframe" ? "Wireframe" : "Solid"}
-            </button>
-          ))}
-        </div>
-
-        <div className={styles.row}>
-          <p className={styles.rowLabel}>Exploded view</p>
-          <button
-            type="button"
-            aria-pressed={split}
-            aria-label="Exploded view"
-            className={styles.toggle}
-            onClick={() => setSplit((s) => !s)}
-          >
-            {split ? "On" : "Off"}
-          </button>
-        </div>
-        <p className={styles.note}>Separates disconnected geometry into distinct parts.</p>
+      {/* The controls, as Amy sketched them: a small hand-drawn box top
+          right with two switches, "exploded" and "mode". */}
+      <div className={styles.handPanel}>
+        <BuzzPath
+          className={styles.handPanelBox}
+          variants={PANEL_VARIANTS}
+          viewBox={`0 0 ${PANEL_W + 8} ${PANEL_H + 8}`}
+          preserveAspectRatio="none"
+          strokeWidth={LINE_STROKE_WIDTH}
+        />
+        <p className={styles.handLabel}>exploded</p>
+        <HandToggle label="Exploded view" on={split} onChange={setSplit} />
+        <p className={styles.handLabel}>mode</p>
+        <HandToggle
+          label="Solid view"
+          on={mode === "solid"}
+          onText="solid"
+          offText="wire"
+          onChange={(solid) => setMode(solid ? "solid" : "wireframe")}
+        />
       </div>
 
       <p className={styles.hint}>Drag to rotate · right-drag to pan</p>

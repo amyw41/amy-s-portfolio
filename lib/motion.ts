@@ -389,3 +389,7 @@ export const ROADMAP_POPUP_OUT_S = 0.15;
 export const ROADMAP_SWING_KICK = 140;
 export const ROADMAP_SWING_STIFFNESS = 90;
 export const ROADMAP_SWING_DAMPING = 4;
+// CyberSea's hand-drawn toggles (case-studies/cybersea/HandToggle.tsx): the
+// knob slides across over MESH_TOGGLE_MS, strong ease-out. Reduced motion:
+// it jumps.
+export const MESH_TOGGLE_MS = 200;
