@@ -3,7 +3,7 @@
 // content, which stays in the repo untouched. Take a page out of here once
 // it's done. (2026-11-23: About, Play and every case study.)
 export const UNDER_CONSTRUCTION = {
-  about: true,
+  about: false,
   // The Play page and its category pages.
   play: true,
   // Case studies, by slug (app/[slug]/page.tsx).

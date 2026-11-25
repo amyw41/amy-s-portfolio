@@ -98,7 +98,8 @@ export default function Taskbar() {
 
   // Home and the case studies have their own frames (no taskbar).
   // Nor the under-construction barricade (lib/underConstruction.ts).
-  if (pathname === "/" || isCaseStudyPath(pathname) || isUnderConstructionPath(pathname)) return null;
+  // About is full window with its own footer strip, like home.
+  if (pathname === "/" || pathname === "/about" || isCaseStudyPath(pathname) || isUnderConstructionPath(pathname)) return null;
 
   const isWorkActive = pathname.startsWith("/projects") || pathname === "/work";
   const isAboutActive = pathname === "/about" || pathname.startsWith("/about/");

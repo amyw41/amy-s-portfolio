@@ -242,7 +242,7 @@ export function stopMotion(ease: readonly [number, number, number, number], dura
 }
 
 /** CSS-style cubic-bezier(x1, y1, x2, y2) as a function of progress. */
-function cubicBezier([x1, y1, x2, y2]: readonly [number, number, number, number]): (t: number) => number {
+export function cubicBezier([x1, y1, x2, y2]: readonly [number, number, number, number]): (t: number) => number {
   const sample = (a: number, b: number, t: number) => 3 * a * t * (1 - t) ** 2 + 3 * b * t ** 2 * (1 - t) + t ** 3;
   return (x) => {
     if (x <= 0 || x >= 1) return x <= 0 ? 0 : 1;
@@ -354,3 +354,38 @@ export const GUESSR_HOP_MS = 600;
 // UI_SOUND_MIN_GAP_MS (so sweeping the mouse across a row of buttons isn't
 // a buzz).
 export const UI_SOUND_MIN_GAP_MS = 90;
+
+// ---------- About page: "Amy's roadmap" (components/sections/About/Roadmap) ----------
+// The dotted route draws itself in along the map on load: it starts
+// ROADMAP_ROUTE_DELAY_S in and takes ROADMAP_ROUTE_DRAW_S (ease-in-out, like a
+// pen). Each pin pops in (ROADMAP_PIN_POP_S, a little overshoot, from
+// ROADMAP_PIN_FROM_SCALE) the moment the route reaches it; the first is there
+// before the route sets off. Its label fades in ROADMAP_LABEL_LAG_S after.
+export const ROADMAP_ROUTE_DELAY_S = 0.35;
+export const ROADMAP_ROUTE_DRAW_S = 1.8;
+export const ROADMAP_PIN_POP_S = 0.36;
+export const ROADMAP_PIN_FROM_SCALE = 0.4;
+export const ROADMAP_LABEL_LAG_S = 0.08;
+// Hovering (or focusing, or on touch tapping) a pin grows it from its tip
+// to ROADMAP_PIN_GROW× its size over ROADMAP_PIN_GROW_S (ease-out), its
+// round head opening to show the stop's photo, and the caption fades in
+// under its label; it shrinks back over ROADMAP_PIN_SHRINK_S (ease-in-out).
+export const ROADMAP_PIN_GROW = 3;
+export const ROADMAP_PIN_GROW_S = 0.24;
+export const ROADMAP_PIN_SHRINK_S = 0.2;
+// Clicking a pin opens its popup in the middle of the window: the page
+// behind darkens (to ROADMAP_SCRIM_OPACITY black) over ROADMAP_SCRIM_S, and
+// the popup comes in from ROADMAP_POPUP_FROM_SCALE over ROADMAP_POPUP_IN_S
+// (ease-out); closing, it goes over ROADMAP_POPUP_OUT_S (ease-in).
+export const ROADMAP_SCRIM_OPACITY = 0.5;
+export const ROADMAP_SCRIM_S = 0.2;
+export const ROADMAP_POPUP_FROM_SCALE = 0.96;
+export const ROADMAP_POPUP_IN_S = 0.22;
+export const ROADMAP_POPUP_OUT_S = 0.15;
+// The taped photo swings from its tape when clicked: a push of
+// ROADMAP_SWING_KICK (deg/s) on a loose spring (ROADMAP_SWING_STIFFNESS,
+// ROADMAP_SWING_DAMPING), so it rocks a few times and settles back at its
+// own tilt. Clicking again mid-swing pushes it again from where it is.
+export const ROADMAP_SWING_KICK = 140;
+export const ROADMAP_SWING_STIFFNESS = 90;
+export const ROADMAP_SWING_DAMPING = 4;

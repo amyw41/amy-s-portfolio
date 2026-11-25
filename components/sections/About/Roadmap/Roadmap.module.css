@@ -1,0 +1,629 @@
+/* The About page, "Amy's roadmap". Values: docs/rebrand/design-system.md
+ * "About page". One scene in the middle of the window: the stamp photo
+ * beside the map on torn paper, just overlapping. Sizes scale with the
+ * window (min of vw and dvh), landing on the design values at 1536×696. */
+
+.page {
+  --pad-x: clamp(18px, 1.823vw, 28px);
+  --pad-y: clamp(24px, 6.9dvh, 80px);
+  /* 250px and 766px @1536×696. */
+  --stamp-w: min(16.3vw, 36dvh);
+  --paper-w: min(50vw, 110dvh);
+  font-family: var(--font-geist), system-ui, sans-serif;
+  letter-spacing: -0.6px;
+  color: #000;
+  background: #fff;
+}
+
+.frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: var(--pad-y) var(--pad-x);
+}
+
+.scene {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The stamp sits over the paper's left edge, a little above centre. */
+.stampSpot {
+  position: relative;
+  z-index: 3;
+  flex: none;
+  width: var(--stamp-w);
+  margin-right: calc(var(--stamp-w) * -0.16);
+  transform: translateY(-6%);
+}
+
+/* ---------- the stamp ---------- */
+
+/* The tape is the pivot: it stays stuck to the page and the stamp swings
+ * from it. The shadow is on the wrapper, so it follows the stamp's
+ * perforated shape. */
+.postcardWrap {
+  position: relative;
+  width: 100%;
+  padding-top: 12px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.07));
+}
+
+.postcard {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transform-origin: 50% 0;
+}
+
+.postcard:focus-visible {
+  outline: 2px solid #000;
+  outline-offset: 4px;
+}
+
+/* The stamp: its perforated paper (an svg, Postcard.tsx), the thin frame
+ * line inside it and the photo inside that, placed in % of the stamp. */
+.stampFace {
+  position: relative;
+  display: block;
+  aspect-ratio: 260 / 330;
+}
+
+.stampSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.stampPaper {
+  fill: #fbfaf7;
+}
+
+.stampFrame {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.2);
+}
+
+/* The photo, cropped out of its hand-drawn frame in me-framed.webp (the
+ * photo is 852 × 1140 of the 1368 × 1600 image, from 258, 230). */
+.postcardPhoto {
+  position: absolute;
+  left: 8.46%;
+  right: 8.46%;
+  top: 6.67%;
+  bottom: 6.67%;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f4f4f4;
+}
+
+.postcardPhoto img {
+  position: absolute;
+  left: -30.3%;
+  top: -20.2%;
+  width: 160.6%;
+  height: 140.4%;
+  max-width: none;
+}
+
+/* Masking tape: a translucent strip with torn (zigzag) ends. */
+.tape {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 1;
+  width: 30%;
+  height: 24px;
+  transform: translateX(-50%) rotate(-5deg);
+  background: rgba(236, 228, 208, 0.82);
+  pointer-events: none;
+  clip-path: polygon(
+    0% 0%, 3% 18%, 0% 36%, 3% 54%, 0% 72%, 3% 90%, 0% 100%,
+    100% 100%, 97% 82%, 100% 64%, 97% 46%, 100% 28%, 97% 10%, 100% 0%
+  );
+}
+
+/* ---------- the map, on torn paper ---------- */
+
+/* Turned a little against the stamp's tilt. */
+.paper {
+  position: relative;
+  flex: none;
+  width: var(--paper-w);
+  aspect-ratio: 1128 / 768;
+  transform: rotate(1.5deg);
+}
+
+.paperSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.04));
+}
+
+.paperFill {
+  fill: #fff;
+  stroke: #000;
+}
+
+/* The map's own box, PAPER_MARGIN (64 of 1128 × 768) in from the edges. */
+.mapBox {
+  position: absolute;
+  left: 5.674%;
+  right: 5.674%;
+  top: 8.333%;
+  bottom: 8.333%;
+}
+
+.mapSvg,
+.mapImage,
+.routeSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.mapImage {
+  object-fit: contain;
+}
+
+/* The route: a dashed pen line. */
+.mapText {
+  font-family: var(--font-annotation), cursive;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+}
+
+.route {
+  fill: none;
+  stroke: #000;
+  stroke-width: 0.6px;
+  stroke-linecap: round;
+  stroke-dasharray: 7 6;
+}
+
+/* The map's title, hand-lettered, centred along its top. */
+.title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: 0;
+  font-family: var(--font-annotation), cursive;
+  font-weight: 300;
+  font-size: 28px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-transform: lowercase;
+}
+
+/* ---------- the way home: Amy's star ---------- */
+
+/* Out in the sea at the bottom left of the map (in % of the map's box). */
+.homeSpot {
+  position: absolute;
+  left: 6%;
+  top: 90%;
+  z-index: 2;
+  width: 0;
+  height: 0;
+}
+
+.homeStar {
+  position: absolute;
+  left: -14px;
+  top: -14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #000;
+}
+
+.homeStar img {
+  display: block;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.homeStar:hover img,
+.homeStar:focus-visible img {
+  transform: scale(1.25) rotate(18deg);
+}
+
+.homeLabel {
+  font-family: var(--font-annotation), cursive;
+  font-weight: 300;
+  font-size: 19px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.homeStar:hover .homeLabel,
+.homeStar:focus-visible .homeLabel {
+  transform: translateX(3px);
+}
+
+/* ---------- pins ---------- */
+
+/* Each pin sits on its spot (a 0 × 0 box there, so it pops in from the
+ * spot itself). Hovered (data-grown) it grows from its tip, its head
+ * opening onto the stop's photo, and the caption shows under the label. */
+.pinSpot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  --pw: var(--pin-w);
+  --ph: var(--pin-h);
+  --ease: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur: var(--shrink-ms);
+}
+
+.pinSpot[data-grown] {
+  --pw: calc(var(--pin-w) * var(--pin-grow));
+  --ph: calc(var(--pin-h) * var(--pin-grow));
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur: var(--grow-ms);
+}
+
+.pin {
+  position: absolute;
+  left: calc(var(--pw) / -2);
+  top: calc(var(--ph) * -0.963);
+  width: var(--pw);
+  height: var(--ph);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #000;
+  cursor: pointer;
+  transition-property: width, height, left, top;
+  transition-duration: var(--dur);
+  transition-timing-function: var(--ease);
+}
+
+/* A bigger hit area than the drawing. */
+.pin::before {
+  content: "";
+  position: absolute;
+  inset: -10px -12px -6px;
+}
+
+.pinIcon {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.pinBody {
+  fill: #fff;
+  stroke: currentColor;
+  transition: fill 150ms ease-out;
+}
+
+.pinDot {
+  fill: currentColor;
+  transition: opacity 120ms ease-out, fill 150ms ease-out;
+}
+
+.pinSpot[data-grown] .pinDot {
+  opacity: 0;
+}
+
+.pin[data-open] .pinBody {
+  fill: #000;
+}
+
+.pin[data-open] .pinDot {
+  fill: #fff;
+}
+
+/* The photo in the head: a circle just inside the line. */
+.pinPhoto {
+  position: absolute;
+  left: var(--head-x);
+  top: var(--head-y);
+  width: var(--head-d);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+  pointer-events: none;
+}
+
+.pinPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pinSpot[data-grown] .pinPhoto {
+  opacity: 1;
+  transition-delay: 60ms;
+}
+
+/* The label, beside the pin's head (moving out with it as it grows), and
+ * the caption under it. */
+.pinText {
+  position: absolute;
+  left: calc(var(--pw) / 2 + 6px);
+  top: calc(var(--ph) * -0.63);
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition-property: left, right, top;
+  transition-duration: var(--dur);
+  transition-timing-function: var(--ease);
+}
+
+.pinSpot[data-side="left"] .pinText {
+  left: auto;
+  right: calc(var(--pw) / 2 + 6px);
+  text-align: right;
+}
+
+.pinLabel {
+  display: block;
+  font-family: var(--font-annotation), cursive;
+  font-weight: 300;
+  font-size: 19px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  white-space: nowrap;
+  text-shadow: 0 0 4px #fff, 0 0 8px #fff;
+}
+
+.pinCaption {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: max-content;
+  max-width: 170px;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 1.35;
+  opacity: 0;
+  transition: opacity 120ms ease-in;
+  text-shadow: 0 0 4px #fff, 0 0 8px #fff;
+}
+
+.pinSpot[data-side="left"] .pinCaption {
+  left: auto;
+  right: 0;
+}
+
+.pinSpot[data-grown] .pinCaption {
+  opacity: 1;
+  transition: opacity 180ms ease-out 80ms;
+}
+
+/* ---------- the popup ---------- */
+
+.popupLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  font-family: var(--font-geist), system-ui, sans-serif;
+  letter-spacing: -0.6px;
+  color: #000;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: #000;
+}
+
+.popup {
+  position: relative;
+  width: min(680px, 100%);
+  max-height: calc(100dvh - 32px);
+  padding: 32px;
+  overflow-y: auto;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  scrollbar-width: thin;
+}
+
+.popupClose {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #000;
+  cursor: pointer;
+  transition: color 150ms ease-out;
+}
+
+.popupClose:hover {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.popupTitle {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.15;
+  outline: none;
+}
+
+.popupWhen {
+  margin: 8px 0 16px;
+  font-size: 14px;
+  font-weight: 300;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.popupParagraph {
+  margin: 0 0 16px;
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.45;
+}
+
+.popupPhotos {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.popupPhotos img {
+  display: block;
+  height: 200px;
+  width: auto;
+  max-width: 300px;
+  flex: none;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #f4f4f4;
+}
+
+/* ---------- plain style (ROADMAP_STYLE): like the home page ---------- */
+
+/* The star, top left where it sits on home's sidebar. */
+.cornerStar {
+  position: absolute;
+  top: var(--pad-y);
+  left: var(--pad-x);
+  z-index: 6;
+}
+
+/* The same squiggly paper (Amy likes its edges), but no shadow, like home.
+ * The stamp overlaps its left edge. */
+.page[data-style="plain"] .paperSvg {
+  filter: none;
+}
+
+/* Labels in Geist, like home: 14px light, like the sidebar's items. The
+ * title stays in the annotation hand (Amy likes it handwritten). */
+.page[data-style="plain"] .pinLabel {
+  font-family: var(--font-geist), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: -0.6px;
+  line-height: 1.45;
+}
+
+/* ---------- phones ---------- */
+
+@media (max-width: 767px) {
+  .page {
+    --stamp-w: 168px;
+    --paper-w: calc(100vw - 40px);
+  }
+
+  .frame {
+    place-items: start center;
+    padding: 48px 16px;
+  }
+
+  .scene {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .stampSpot {
+    margin: 0 0 -28px 8px;
+    transform: none;
+  }
+
+  .title {
+    font-size: 18px;
+    left: 40%;
+  }
+
+  .pinLabel,
+  .homeLabel {
+    font-size: 14px;
+  }
+
+  /* Clear of the stamp's corner, which overlaps the frame's top left. */
+  .page[data-style="plain"] .title {
+    top: 5%;
+  }
+
+  .page[data-style="plain"] .frame {
+    padding-top: 96px;
+  }
+
+  .homeStar {
+    left: -10px;
+    top: -10px;
+    gap: 6px;
+  }
+
+  .homeStar img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .pinCaption {
+    max-width: 120px;
+    font-size: 12px;
+  }
+
+  .popup {
+    padding: 24px 16px;
+  }
+
+  .popupClose {
+    top: 16px;
+    right: 12px;
+  }
+
+  .popupPhotos img {
+    height: 150px;
+    max-width: 220px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pin,
+  .pinText,
+  .pinBody,
+  .pinDot,
+  .pinPhoto,
+  .pinCaption,
+  .homeStar img,
+  .homeLabel,
+  .popupClose {
+    transition: none !important;
+  }
+}

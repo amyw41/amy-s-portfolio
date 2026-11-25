@@ -47,7 +47,8 @@ export default function Footer({ flush: flushProp }: FooterProps = {}) {
   // the hooks above so they still run in the same order on every render.
   // Home and the case studies end in their own thin footer strip instead.
   // Nor the under-construction barricade (lib/underConstruction.ts).
-  if (pathname === "/" || isCaseStudyPath(pathname) || isUnderConstructionPath(pathname)) return null;
+  // About is full window with its own footer strip, like home.
+  if (pathname === "/" || pathname === "/about" || isCaseStudyPath(pathname) || isUnderConstructionPath(pathname)) return null;
 
   return (
     <footer className={`${styles.footer} ${flush ? styles.flush : ""}`}>
