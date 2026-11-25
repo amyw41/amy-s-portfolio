@@ -37,16 +37,12 @@ const SECTION_NAV: SectionNavItem[] = [
   { id: "learnings", label: "06 Learnings" },
 ];
 
-// CHECK: TEAM/ROLE/SKILLS values are a best-effort read of a very small
-// meta box in the source screenshot — worth a second look to confirm.
-// TIMELINE is the most confident one since it matches the "1st Overall
-// @uOttahacks" project blurb already used on the homepage
-// (lib/projects.ts), and was a single line in the source, not two.
+// The facts over the tank screen. TEAM and ROLE are Amy's own wording
+// (2026-11-25); SKILLS was dropped as too generic to tell anyone much.
 const META = [
   { label: "TIMELINE", values: ["January 2026 · 36 hrs"] },
-  { label: "TEAM", values: ["4 members"] },
-  { label: "ROLE", values: ["Product Designer", "Visual Designer"] },
-  { label: "SKILLS", values: ["Product Design", "Product Strategy", "Prototyping"] },
+  { label: "TEAM", values: ["1 designer (me!)", "3 devs"] },
+  { label: "ROLE", values: ["Designer"] },
 ];
 
 // Persona cards for the Research section — same "one card per person" idea
