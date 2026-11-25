@@ -212,8 +212,8 @@
   border-radius: 0 !important;
 }
 
-/* Over the preview (Amy's sketch): the title and caption centred at the
- * top, the facts along the bottom left; all white, at the page's padding,
+/* Over the preview (Amy's sketch): the title and caption in the top left
+ * corner, the facts along the bottom left; all white, at the page's padding,
  * clicks going through to the demo (its controls sit top right, its hint
  * and credit bottom right). */
 .heroOverlay {
@@ -227,11 +227,9 @@
 .heroOverlayHead {
   position: absolute;
   top: var(--pad-y);
-  left: 50%;
-  transform: translateX(-50%);
-  width: max-content;
+  left: var(--pad-x);
   max-width: calc(100% - 2 * var(--pad-x));
-  text-align: center;
+  text-align: left;
 }
 
 /* The title: 44px, weight 400, line-height 1.05; the caption 8px under it,
@@ -251,19 +249,20 @@
   color: rgb(255 255 255 / 0.8);
 }
 
-/* Timeline, Team, Role, Skills side by side along the bottom left, 40px
- * apart: the labels small headers (white/60%), the values 14px weight 300. */
+/* Timeline, Team, Role, Skills side by side along the bottom left, small:
+ * 24px apart, the labels 12px italic (white/60%), the values 12px weight
+ * 300. */
 .heroOverlayFacts {
   position: absolute;
   left: var(--pad-x);
   bottom: var(--pad-x);
   display: flex;
-  gap: var(--space-xl);
+  gap: var(--space-lg);
 }
 
 .heroFactLabel {
   margin: 0;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 400;
   font-style: italic;
   line-height: 1.45;
@@ -271,8 +270,8 @@
 }
 
 .heroFactValue {
-  margin: var(--space-xs) 0 0;
-  font-size: 14px;
+  margin: 2px 0 0;
+  font-size: 12px;
   font-weight: 300;
   line-height: 1.45;
 }

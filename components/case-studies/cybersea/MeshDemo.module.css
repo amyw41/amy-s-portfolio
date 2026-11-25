@@ -85,13 +85,14 @@
 
 /* ---------- the controls (Amy's sketch, 2026-11-25) ---------- */
 
-/* Top right, 16px in: the CyberSea project's own panel look (dark olive
+/* On the right, centred top to bottom, 40px in: the CyberSea project's own panel look (dark olive
  * frosted glass, a 1px white/20% border, square corners), small: two
  * labelled switches. */
 .panel {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 50%;
+  right: 40px;
+  transform: translateY(-50%);
   padding: 12px 14px 14px;
   display: flex;
   flex-direction: column;
