@@ -240,8 +240,8 @@
   line-height: 1.1;
 }
 
-/* The facts side by side along the bottom left, in even columns (each at
- * least 160px, 40px apart), like an app's spec sheet: the labels upright
+/* The facts side by side along the bottom left, each as wide as its
+ * longest line, 40px apart, like an app's spec sheet: the labels upright
  * mono uppercase (11px, +0.06em, white/55%), 6px over the values (13px
  * weight 300, white). */
 .heroOverlayFacts {
@@ -250,7 +250,7 @@
   bottom: var(--pad-x);
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(160px, max-content);
+  grid-auto-columns: max-content;
   gap: var(--space-xl);
 }
 
