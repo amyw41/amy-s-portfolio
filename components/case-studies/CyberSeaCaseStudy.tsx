@@ -37,13 +37,14 @@ const SECTION_NAV: SectionNavItem[] = [
   { id: "learnings", label: "06 Learnings" },
 ];
 
-// The facts over the tank screen (Amy, 2026-11-25): Team, Timeline,
-// Results. ROLE went (Team already says "1 designer (me!)") and so did
-// SKILLS (too generic); RESULTS repeats 05 / Final Project's wins.
+// The facts over the tank screen, in Amy's order and words (2026-11-25):
+// Role, Timeline, Results, Team. SKILLS was dropped as too generic;
+// RESULTS repeats 05 / Final Project's wins.
 const META = [
-  { label: "TEAM", values: ["1 designer (me!)", "3 devs"] },
-  { label: "TIMELINE", values: ["January 2026 · 36 hrs"] },
+  { label: "ROLE", values: ["Design Engineer"] },
+  { label: "TIMELINE", values: ["Jan 2026 (36h)"] },
   { label: "RESULTS", values: ["1st overall", "2nd for the Thales Challenge"] },
+  { label: "TEAM", values: ["1 designer, 2 devs"] },
 ];
 
 // Persona cards for the Research section — same "one card per person" idea
