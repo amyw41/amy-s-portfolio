@@ -10,8 +10,7 @@ import MediaFade from "@/components/ui/MediaFade/MediaFade";
 import FooterStrip from "@/components/ui/FooterStrip";
 import BackToTop from "@/components/ui/BackToTop/BackToTop";
 import Link from "next/link";
-import { buildWobblyLinePath, buildWobblyRectPath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
-import BuzzPath from "@/components/ui/BuzzPath";
+import { buildWobblyLinePath } from "@/lib/wobbly";
 import { useCaseZoom, ZOOM_TARGET_ATTR } from "@/components/ui/CaseZoom";
 import { usePathname } from "next/navigation";
 import layoutStyles from "./CaseStudyLayout.module.css";
@@ -441,30 +440,6 @@ function BackArrow() {
   );
 }
 
-// The hand-drawn box round the facts in the preview header: one loose pen
-// loop with soft, round corners (lib/wobbly.ts's rect: 22-unit corners, a
-// gentle wobble, carrying on a little past where it started). Drawn at
-// about its size at 1536 wide (FACTS_W × FACTS_H), stretched to the box.
-const FACTS_W = 1056;
-const FACTS_H = 176;
-// The drawing has FACTS_PAD of room all round (the svg sits that far
-// outside the box), so the wobble isn't cut off.
-const FACTS_PAD = 10;
-// Phones get their own drawing at their own shape (about 358 × 260), so the
-// corners stay round instead of squashed by the stretch.
-const FACTS_PHONE_W = 358;
-const FACTS_PHONE_H = 260;
-function factsBorderPath(variant: number, w = FACTS_W, h = FACTS_H): string {
-  const p = FACTS_PAD;
-  // Drawn from 0,0, then moved to its place (2 units in on the left, where
-  // the sidebar's white edge is right there).
-  return buildWobblyRectPath(151, w - 2, h, 22, 1.2, variant).replace(
-    /(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g,
-    (_, x, y) => `${(+x + p + 2).toFixed(2)},${(+y + p).toFixed(2)}`,
-  );
-}
-const FACTS_BORDER_VARIANTS = [0, 1, 2].map((v) => factsBorderPath(v));
-const FACTS_BORDER_PHONE_VARIANTS = [0, 1, 2].map((v) => factsBorderPath(v, FACTS_PHONE_W, FACTS_PHONE_H));
 
 // Every case study's hero box locks to 3/2 to match the homepage's project
 // thumbnail ratio. object-cover (inside CaseStudyImage) crops each source
@@ -522,8 +497,8 @@ export function CaseStudyHero({
    * CaseStudyLayout over the cover's media, under the title. */
   heroDemo?: ReactNode;
   /** "cover" (the default): the media fills the top of the page. "preview":
-   * the media (and demo) fill the whole first screen (HeroPreview.tsx),
-   * then the title, caption and facts. */
+   * the media (and demo) fill the whole first screen (HeroPreview.tsx), with
+   * the title, caption and facts over it. */
   heroStyle?: "cover" | "preview";
 }) {
   const body = layoutPart !== undefined;
@@ -669,8 +644,8 @@ export function CaseStudyLayout({
       )}
 
       {/* No cover but the preview: the live demo (or the media) filling the
-       * whole first screen, edge to edge; the title, caption and facts follow
-       * under it. */}
+       * whole first screen, edge to edge, with the title, caption and facts
+       * over it. */}
       {hero && preview && (
         <section className={layoutStyles.heroFull}>
           <HeroPreview
@@ -692,11 +667,27 @@ export function CaseStudyLayout({
             }
             demo={hero.props.heroDemo}
           />
-          {/* Trying the title over the preview, top left (Amy's sketch,
-              2026-11-25); the real h1 is still under it. */}
-          <p className={layoutStyles.heroOverlayTitle} aria-hidden="true">
-            {hero.props.title}
-          </p>
+          {/* Over the preview (Amy's sketch, 2026-11-25): the title and its
+              caption centred at the top, the facts along the bottom left.
+              Clicks go through to the demo. */}
+          <header className={layoutStyles.heroOverlay}>
+            <div className={layoutStyles.heroOverlayHead}>
+              <h1 className={layoutStyles.heroOverlayTitle}>{hero.props.title}</h1>
+              <p className={layoutStyles.heroOverlayCaption}>{hero.props.subtitle}</p>
+            </div>
+            <div className={layoutStyles.heroOverlayFacts} aria-label="Overview">
+              {hero.props.meta.map((m) => (
+                <div key={m.label}>
+                  <p className={layoutStyles.heroFactLabel}>{m.label}</p>
+                  {m.values.map((v) => (
+                    <p key={v} className={layoutStyles.heroFactValue}>
+                      {v}
+                    </p>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </header>
         </section>
       )}
 
@@ -728,50 +719,6 @@ export function CaseStudyLayout({
               <div className={layoutStyles.overview} aria-label="Overview">
                 {cloneElement(hero, { layoutPart: "meta" })}
               </div>
-            </motion.header>
-          )}
-          {/* Under the full-screen preview: the title and caption, then the
-              facts side by side in a hand-drawn box. */}
-          {hero && preview && (
-            <motion.header
-              className={`${layoutStyles.intro} ${layoutStyles.previewHeader}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={FADE_IN_TRANSITION}
-            >
-              <div className={layoutStyles.previewHead}>
-                <h1 className={`${layoutStyles.title} ${layoutStyles.previewTitle}`}>{hero.props.title}</h1>
-                <p className={layoutStyles.caption}>{hero.props.subtitle}</p>
-              </div>
-              <div className={layoutStyles.previewFacts} aria-label="Overview">
-                <BuzzPath
-                  className={`${layoutStyles.factsBorder} ${layoutStyles.factsBorderWide}`}
-                  variants={FACTS_BORDER_VARIANTS}
-                  viewBox={`0 0 ${FACTS_W + FACTS_PAD * 2} ${FACTS_H + FACTS_PAD * 2}`}
-                  preserveAspectRatio="none"
-                  strokeWidth={LINE_STROKE_WIDTH}
-                />
-                <BuzzPath
-                  className={`${layoutStyles.factsBorder} ${layoutStyles.factsBorderPhone}`}
-                  variants={FACTS_BORDER_PHONE_VARIANTS}
-                  viewBox={`0 0 ${FACTS_PHONE_W + FACTS_PAD * 2} ${FACTS_PHONE_H + FACTS_PAD * 2}`}
-                  preserveAspectRatio="none"
-                  strokeWidth={LINE_STROKE_WIDTH}
-                />
-                <div className={layoutStyles.factsGrid}>
-                  {hero.props.meta.map((m) => (
-                    <div key={m.label}>
-                      <p className={layoutStyles.factLabel}>{m.label}</p>
-                      {m.values.map((v) => (
-                        <p key={v} className={layoutStyles.factValue}>
-                          {v}
-                        </p>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
             </motion.header>
           )}
           {sidebarExtra}

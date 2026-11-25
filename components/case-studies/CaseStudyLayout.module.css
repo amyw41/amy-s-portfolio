@@ -206,103 +206,71 @@
   height: calc(100dvh - var(--pad-y));
 }
 
-/* The title over the preview, top left (a try-out): white, the case
- * study's title size, at the page's padding. Clicks go through to the
- * demo. */
-.heroOverlayTitle {
-  position: absolute;
-  top: var(--pad-y);
-  left: var(--pad-x);
-  z-index: 2;
-  margin: 0;
-  color: #fff;
-  font-size: 32px;
-  font-weight: 400;
-  line-height: 1.1;
-  pointer-events: none;
-}
-
 .previewFull {
   height: 100%;
   aspect-ratio: auto !important;
   border-radius: 0 !important;
 }
 
-/* Under it: the title and caption, left aligned; then 24px (lg) down the
- * facts, side by side in a hand-drawn box across the writing width. */
-.previewHeader {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-areas:
-    "head"
-    "facts";
-}
-
-.previewHead {
-  grid-area: head;
-  text-align: left;
-}
-
-/* The title a step up from the other pages' (24px): 32px. */
-.previewTitle {
-  font-size: 32px;
-  line-height: 1.1;
-}
-
-/* The facts' box: a hand-drawn rounded outline (the site's pen line,
- * stretched to the box), the four facts side by side inside it. */
-.previewFacts {
-  grid-area: facts;
-  position: relative;
-  margin-top: var(--space-lg);
-  padding: var(--space-lg);
-}
-
-.factsBorder {
-  /* 10px of room all round for the strokes running past the corners
-   * (FACTS_PAD in CaseStudyKit.tsx). */
+/* Over the preview (Amy's sketch): the title and caption centred at the
+ * top, the facts along the bottom left; all white, at the page's padding,
+ * clicks going through to the demo (its controls sit top right, its hint
+ * and credit bottom right). */
+.heroOverlay {
   position: absolute;
-  inset: -10px;
-  width: calc(100% + 20px);
-  height: calc(100% + 20px);
-  overflow: visible;
-  color: #000;
+  inset: 0;
+  z-index: 2;
   pointer-events: none;
+  color: #fff;
 }
 
-/* The wide drawing on desktop, the phone one on phones. */
-.factsBorderPhone {
-  display: none;
+.heroOverlayHead {
+  position: absolute;
+  top: var(--pad-y);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 2 * var(--pad-x));
+  text-align: center;
 }
 
-@media (max-width: 767px) {
-  .factsBorderWide {
-    display: none;
-  }
-
-  .factsBorderPhone {
-    display: block;
-  }
+/* The title: 44px, weight 400, line-height 1.05; the caption 8px under it,
+ * 14px weight 300, white/80%. */
+.heroOverlayTitle {
+  margin: 0;
+  font-size: 44px;
+  font-weight: 400;
+  line-height: 1.05;
 }
 
-/* Timeline, Team, Role, Skills in four equal columns, 24px apart (two by
- * two on phones, 16px between rows). */
-.factsGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-md) var(--space-lg);
-  width: 100%;
+.heroOverlayCaption {
+  margin: var(--space-sm) 0 0;
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.45;
+  color: rgb(255 255 255 / 0.8);
 }
 
-.factLabel {
+/* Timeline, Team, Role, Skills side by side along the bottom left, 40px
+ * apart: the labels small headers (white/60%), the values 14px weight 300. */
+.heroOverlayFacts {
+  position: absolute;
+  left: var(--pad-x);
+  bottom: var(--pad-x);
+  display: flex;
+  gap: var(--space-xl);
+}
+
+.heroFactLabel {
   margin: 0;
   font-size: 14px;
   font-weight: 400;
   font-style: italic;
   line-height: 1.45;
+  color: rgb(255 255 255 / 0.6);
 }
 
-.factValue {
+.heroFactValue {
   margin: var(--space-xs) 0 0;
   font-size: 14px;
   font-weight: 300;
@@ -359,18 +327,21 @@
     height: 62svh;
   }
 
-  /* Phones: the preview the full (small) screen tall, the title 28px, the
+  /* Phones: the preview the full (small) screen tall, the title 32px, the
    * facts two by two. */
   .heroFull {
     height: calc(100svh - 40px);
   }
 
-  .previewTitle {
-    font-size: 28px;
+  .heroOverlayTitle {
+    font-size: 32px;
   }
 
-  .factsGrid {
+  .heroOverlayFacts {
+    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-md) var(--space-lg);
+    right: var(--pad-x);
   }
 
   .footerPlace {
