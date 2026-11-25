@@ -45,7 +45,7 @@ export const TEXT = {
   header: "font-body text-[17px] font-medium leading-[1.3] text-black text-left",
   // Small headers in mono caps (2026-11-25, matching the facts' labels over
   // the cover: Consolas on Windows, the system mono elsewhere).
-  subheader: "font-mono text-[12px] font-normal uppercase tracking-[0.06em] leading-[1.45] text-black/60 text-left",
+  subheader: "font-mono text-[14px] font-normal uppercase tracking-[-0.6px] leading-[1.45] text-black/60 text-left",
   content: "font-body text-[14px] font-light leading-[1.45] text-black text-left",
   frame: "font-body text-[14px] font-light leading-[1.45] text-black text-left",
   groupHeader: "font-body text-[17px] font-medium leading-[1.3] text-black text-left",
