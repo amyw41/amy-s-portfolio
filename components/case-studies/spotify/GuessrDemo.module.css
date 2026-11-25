@@ -145,17 +145,6 @@
   container-type: size;
 }
 
-.hint {
-  position: absolute;
-  left: var(--pad-x);
-  bottom: 16px;
-  margin: 0;
-  font-size: 12px;
-  font-weight: 300;
-  line-height: 1.45;
-  color: rgb(255 255 255 / 0.7);
-  pointer-events: none;
-}
 
 /* ---------- the phone ---------- */
 
@@ -340,10 +329,4 @@
     height: 18cqh;
   }
 
-  .hint {
-    top: 16px;
-    bottom: auto;
-    left: 16px;
-    right: 16px;
-  }
 }

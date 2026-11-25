@@ -171,7 +171,6 @@ export default function GuessrDemo() {
         </div>
       </div>
 
-      <p className={styles.hint}>Tap the phone to play a round</p>
     </div>
   );
 }

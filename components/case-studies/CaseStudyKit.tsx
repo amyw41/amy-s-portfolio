@@ -683,7 +683,9 @@ export function CaseStudyLayout({
           {/* Over the preview (Amy's sketch, 2026-11-25): the title in the
               top left corner (no caption), the facts along the bottom left.
               Clicks go through to the demo. */}
-          <header className={layoutStyles.heroOverlay}>
+          <header
+            className={`${layoutStyles.heroOverlay} ${hero.props.heroText === "dark" ? layoutStyles.heroOverlayDark : ""}`}
+          >
             <div className={layoutStyles.heroOverlayHead}>
               <h1 className={layoutStyles.heroOverlayTitle}>{hero.props.title}</h1>
             </div>

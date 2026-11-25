@@ -3,6 +3,7 @@
 import TextHighlight from "@/components/case-studies/TextHighlight";
 import GuessrDemo from "@/components/case-studies/spotify/GuessrDemo";
 import {
+  MEASURE,
   BulletList,
   CaseStudyCta,
   CaseStudyHero,
@@ -51,11 +52,12 @@ const SECTION_NAV: SectionNavItem[] = [
 
 // `values` is an array, not a comma-joined string — each entry renders on
 // its own line instead of being run together after a comma.
+// The facts over the cover, in CyberSea's order and style (2026-11-25):
+// Role, Timeline, Team (no Results: no award to show).
 const META = [
+  { label: "ROLE", values: ["Product Designer"] },
   { label: "TIMELINE", values: ["June 2026"] },
-  { label: "TEAM", values: ["1 designer (me!)", "1 dev"] },
-  { label: "ROLE", values: ["Product design", "Visual design"] },
-  { label: "SKILLS", values: ["Product design", "Branding"] },
+  { label: "TEAM", values: ["1 designer, 1 dev"] },
 ];
 
 // `body` is JSX, not a plain string — each one wraps the specific phrase
@@ -111,6 +113,7 @@ export default function SpotifyCaseStudy() {
         heroSrc="/images/projects/spotify/spotify.webp"
         heroAlt="Spotify Guessr app screens"
         heroDemo={<GuessrDemo />}
+        heroStyle="preview"
         highlightColor={HIGHLIGHT}
         meta={META}
         tldr="Spotify Blends lose their spark over time — shared songs crowd out real taste, and once the social hook fades, so does the reason to open them. Spotify Guessr turns a Blend into a multiplayer guessing game instead, keeping the social payoff front and center."
@@ -306,7 +309,7 @@ export default function SpotifyCaseStudy() {
           {/* mb-2, not the old -mt-0.5 (a line-height-overlap hack) — same
               real gap Row's own eyebrow now uses, so this standalone
               group-header idiom reads identically to it. */}
-          <p className={`${TEXT.header} mb-2`}>Spotify&apos;s Design System</p>
+          <p className={`${TEXT.subheader} ${MEASURE} mb-2`}>Spotify&apos;s Design System</p>
           <Row
             heading="Spotify's Main App"
             media={
@@ -345,7 +348,7 @@ export default function SpotifyCaseStudy() {
           {/* mb-2, not the old -mt-0.5 (a line-height-overlap hack) — same
               real gap Row's own eyebrow now uses, so this standalone
               group-header idiom reads identically to it. */}
-          <p className={`${TEXT.header} mb-2`}>Branding</p>
+          <p className={`${TEXT.subheader} ${MEASURE} mb-2`}>Branding</p>
           <Row
             heading="Mascots"
             media={

@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import {
+  MEASURE,
   CaseStudyCta,
   CaseStudyHero,
   CaseStudyImage,
@@ -36,11 +37,12 @@ const SECTION_NAV: SectionNavItem[] = [
   { id: "learnings", label: "05 Learnings" },
 ];
 
+// The facts over the cover, in CyberSea's order and style (2026-11-25):
+// Role, Timeline, Team (no Results: no award to show).
 const META = [
+  { label: "ROLE", values: ["Product Designer"] },
   { label: "TIMELINE", values: ["May 2026"] },
-  { label: "TEAM", values: ["1 designer (me!)"] },
-  { label: "ROLE", values: ["Product design", "Visual design"] },
-  { label: "SKILLS", values: ["Product design", "Branding"] },
+  { label: "TEAM", values: ["1 designer (solo)"] },
 ];
 
 // Accent color for the "Pain Points:"/"Needs:" labels on each persona card
@@ -311,7 +313,8 @@ export default function SkinSproutCaseStudy() {
     <CaseStudyLayout sectionNav={SECTION_NAV}>
       <CaseStudyHero
         title="SkinSprout"
-        // Its cover is light: dark text over it.
+        // Its cover flips between white and pink frames: black text reads
+        // on both, white doesn't.
         heroText="dark"
         // A bit smaller than the shared default clamp() — per request, this
         // page's own title read too large. CyberSea/Spotify are untouched.
@@ -320,6 +323,7 @@ export default function SkinSproutCaseStudy() {
         heroSrc="/images/projects/skinsprout/skinsprout.mp4"
         heroAlt="SkinSprout app preview"
         heroVideo
+        heroStyle="preview"
         highlightColor={HIGHLIGHT}
         meta={META}
         tldr="SkinSprout helps people track their skincare history and get product recommendations that actually fit their skin — built for everyone from beginners overwhelmed by choice to routine-trackers who forget what they've already tried."
@@ -338,7 +342,7 @@ export default function SkinSproutCaseStudy() {
           competing for the same property — safer to just match their
           exact className than rely on Tailwind's generated stylesheet
           order to pick the right one. */}
-      <HighlightBox bg={HIGHLIGHT} className="mt-8">
+      <HighlightBox bg={HIGHLIGHT} className={`${MEASURE} mt-8`}>
         THIS PAGE IS CURRENTLY A WIP!
       </HighlightBox>
 
@@ -676,7 +680,7 @@ export default function SkinSproutCaseStudy() {
             the old -mt-0.5 (a line-height-overlap hack) — same real gap
             Row's own eyebrow now uses, so this reads identically to it and
             to CyberSea's "06 / Learnings" restructure. */}
-        <p className={`${TEXT.subheader} mb-2`}>03 / Design Process</p>
+        <p className={`${TEXT.subheader} ${MEASURE} mb-2`}>03 / Design Process</p>
         <Row
           heading="Moodboard"
           media={
@@ -957,7 +961,7 @@ export default function SkinSproutCaseStudy() {
 
       {/* 05 / Learnings */}
       <Section id="learnings">
-        <p className={`${TEXT.subheader} mb-2`}>05 / Learnings</p>
+        <p className={`${TEXT.subheader} ${MEASURE} mb-2`}>05 / Learnings</p>
         <Row heading="Research first">
           <p>
             This was my first complete solo project. As silly as it sounds, I

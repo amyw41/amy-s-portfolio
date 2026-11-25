@@ -216,6 +216,16 @@
   color: #fff;
 }
 
+/* Over a light cover (heroText "dark", SkinSprout): the same in black,
+ * the labels 55% black. */
+.heroOverlayDark {
+  color: #000;
+}
+
+.heroOverlayDark .heroFactLabel {
+  color: rgb(0 0 0 / 0.55);
+}
+
 .heroOverlayHead {
   position: absolute;
   top: var(--pad-y);
@@ -312,6 +322,17 @@
 
   .hero {
     height: 62svh;
+  }
+
+  /* Phones: the facts can land on the cover's busiest part (Spotify's
+   * phone), so a soft dark fade rises behind them (white text only). */
+  .heroOverlay:not(.heroOverlayDark)::before {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 45%;
+    background: linear-gradient(to top, rgb(0 0 0 / 0.65), transparent);
+    pointer-events: none;
   }
 
   /* Phones: the preview the full (small) screen tall, the title 28px, the
