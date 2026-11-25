@@ -55,9 +55,12 @@ export const TEXT = {
 
 // The writing's measure (2026-11-25): text sits in a narrow column, 680px
 // at most, centred in the content area (comfortable line lengths, and an
-// editorial page rather than one wide block); images and videos stay the
-// full content width, so they break out wider than the text.
+// editorial page rather than one wide block). Images and videos sit in a
+// wider centred column, MEDIA_MEASURE: 920px at most, so on any window
+// they break out the same 120px past the text on each side (consistent
+// margins), instead of filling a content area that grows with the window.
 export const MEASURE = "mx-auto w-full max-w-[680px]";
+export const MEDIA_MEASURE = "mx-auto w-full max-w-[920px]";
 
 // Fallback tint behind a placeholder/neutral image box when a case study
 // doesn't pass its own — each case study's actual highlight color (Spotify's
@@ -320,7 +323,7 @@ export function Row({
         {children && (
           <div className={`min-w-0 ${MEASURE} ${childrenGap} ${TEXT.content}`}>{children}</div>
         )}
-        {media && <div className={mediaGap}>{media}</div>}
+        {media && <div className={`${MEDIA_MEASURE} ${mediaGap}`}>{media}</div>}
         {/* Full width (md:col-span-2, matching `media`) — `after` follows a
             full-width image with no heading of its own beside it, so
             confining it to just the narrow content column (like `children`)
