@@ -45,12 +45,14 @@ const SHORT_HEAD = [
 // pointing up (not the down arrow flipped, whose head sat off the line's
 // end): from just above the label, up with one loop, to an open head that
 // follows the line's last direction. In a VIEW_W x UP_VIEW_H box.
-const UP_VIEW_H = 76;
+// Shortened 2026-11-25 (it read a little long): the same loop, with less
+// tail under it and less shaft above it.
+const UP_VIEW_H = 54;
 const UP_LOOP: CurveSegment[] = [
-  [[30, 74], [36, 62], [38, 52], [31, 45]],
-  [[31, 45], [23, 38], [13, 44], [17, 51]],
-  [[17, 51], [22, 59], [34, 52], [34, 38]],
-  [[34, 38], [34, 26], [32, 16], [30, 5]],
+  [[30, 52], [35, 45], [37, 38], [31, 33]],
+  [[31, 33], [23, 27], [13, 32], [17, 38]],
+  [[17, 38], [22, 45], [34, 40], [34, 28]],
+  [[34, 28], [34, 20], [32, 12], [30, 5]],
 ];
 const UP_ARROW = buildWobblyCurvePath(140, UP_LOOP, 0.35);
 const UP_HEAD = [
