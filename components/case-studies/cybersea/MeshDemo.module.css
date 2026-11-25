@@ -52,7 +52,9 @@
   position: absolute;
   margin: 0;
   font-family: var(--mono);
-  font-size: 10px;
+  /* The mono rule: always 14px, -0.6px. */
+  font-size: 14px;
+  letter-spacing: -0.6px;
   line-height: 1.5;
   text-transform: uppercase;
   color: rgb(229 230 218 / 0.6);
@@ -90,14 +92,14 @@
   color: #fff;
 }
 
-/* "Exploded", "Mode": 10px uppercase, white/50%; 6px over their switch,
+/* "Exploded", "Mode": mono 14px (-0.6px) uppercase, white/50%; 6px over their switch,
  * 12px between the two. */
 .label {
   margin: 0 0 6px;
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 14px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: -0.6px;
   color: rgb(255 255 255 / 0.5);
 }
 
