@@ -108,17 +108,6 @@ export default function MeshDemo() {
         />
       </div>
 
-      <p className={styles.hint}>Drag to rotate · right-drag to pan</p>
-      <p className={styles.credit}>
-        <a
-          href="https://sketchfab.com/3d-models/t-90-f21acfb4ef1b4e74b91c2348cbf6e2e2"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          &ldquo;T-90&rdquo;
-        </a>{" "}
-        by mamont nikita, CC BY 4.0
-      </p>
     </div>
   );
 }

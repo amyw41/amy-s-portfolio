@@ -424,6 +424,22 @@ export default function CyberSeaCaseStudy() {
             the UX rather than the UI!
           </p>
         </Row>
+
+        {/* The 3D tank at the top of the page is someone else's model (CC
+            BY 4.0 needs this credit somewhere on the page): kept quiet, at
+            the very end, instead of over the demo. */}
+        <p className="font-body text-[12px] font-light leading-[1.45] text-black/55">
+          3D model:{" "}
+          <a
+            href="https://sketchfab.com/3d-models/t-90-f21acfb4ef1b4e74b91c2348cbf6e2e2"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            &ldquo;T-90&rdquo;
+          </a>{" "}
+          by mamont nikita, CC BY 4.0
+        </p>
       </Section>
     </CaseStudyLayout>
   );
