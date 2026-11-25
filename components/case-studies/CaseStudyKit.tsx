@@ -10,7 +10,7 @@ import MediaFade from "@/components/ui/MediaFade/MediaFade";
 import FooterStrip from "@/components/ui/FooterStrip";
 import BackToTop from "@/components/ui/BackToTop/BackToTop";
 import Link from "next/link";
-import { buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
+import { buildWobblyLinePath, buildWobblyRectPath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
 import BuzzPath from "@/components/ui/BuzzPath";
 import { useCaseZoom, ZOOM_TARGET_ATTR } from "@/components/ui/CaseZoom";
 import { usePathname } from "next/navigation";
@@ -441,33 +441,30 @@ function BackArrow() {
   );
 }
 
-// The hand-drawn box round the facts in the preview header, sketched like a
-// quick pen box: four separate strokes, each a touch off level, running a
-// little past the corners where they meet (no rounded corners). Drawn at
+// The hand-drawn box round the facts in the preview header: one loose pen
+// loop with soft, round corners (lib/wobbly.ts's rect: 22-unit corners, a
+// gentle wobble, carrying on a little past where it started). Drawn at
 // about its size at 1536 wide (FACTS_W × FACTS_H), stretched to the box.
 const FACTS_W = 1056;
 const FACTS_H = 176;
 // The drawing has FACTS_PAD of room all round (the svg sits that far
-// outside the box), so the strokes running past the corners aren't cut off.
+// outside the box), so the wobble isn't cut off.
 const FACTS_PAD = 10;
-function factsBorderPath(variant: number): string {
-  const W = FACTS_W;
-  const H = FACTS_H;
+// Phones get their own drawing at their own shape (about 358 × 260), so the
+// corners stay round instead of squashed by the stretch.
+const FACTS_PHONE_W = 358;
+const FACTS_PHONE_H = 260;
+function factsBorderPath(variant: number, w = FACTS_W, h = FACTS_H): string {
   const p = FACTS_PAD;
-  return [
-    // top: left to right, rising a little, past the right corner (on the
-    // left the sidebar's white edge is right there, so nothing pokes out
-    // that side)
-    buildWobblyLinePath(151, [p + 2, p + 3], [p + W + 4, p - 1], 1.4, variant),
-    // right: top to bottom, leaning in a little
-    buildWobblyLinePath(152, [p + W - 1, p - 7], [p + W + 2, p + H + 5], 1.1, variant),
-    // bottom: right to left, dipping a little
-    buildWobblyLinePath(153, [p + W + 7, p + H - 2], [p + 1, p + H + 2], 1.4, variant),
-    // left: bottom to top, past both ends
-    buildWobblyLinePath(154, [p + 5, p + H + 7], [p + 3, p - 5], 1.1, variant),
-  ].join(" ");
+  // Drawn from 0,0, then moved to its place (2 units in on the left, where
+  // the sidebar's white edge is right there).
+  return buildWobblyRectPath(151, w - 2, h, 22, 1.2, variant).replace(
+    /(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g,
+    (_, x, y) => `${(+x + p + 2).toFixed(2)},${(+y + p).toFixed(2)}`,
+  );
 }
-const FACTS_BORDER_VARIANTS = [0, 1, 2].map(factsBorderPath);
+const FACTS_BORDER_VARIANTS = [0, 1, 2].map((v) => factsBorderPath(v));
+const FACTS_BORDER_PHONE_VARIANTS = [0, 1, 2].map((v) => factsBorderPath(v, FACTS_PHONE_W, FACTS_PHONE_H));
 
 // Every case study's hero box locks to 3/2 to match the homepage's project
 // thumbnail ratio. object-cover (inside CaseStudyImage) crops each source
@@ -743,9 +740,16 @@ export function CaseStudyLayout({
               </div>
               <div className={layoutStyles.previewFacts} aria-label="Overview">
                 <BuzzPath
-                  className={layoutStyles.factsBorder}
+                  className={`${layoutStyles.factsBorder} ${layoutStyles.factsBorderWide}`}
                   variants={FACTS_BORDER_VARIANTS}
                   viewBox={`0 0 ${FACTS_W + FACTS_PAD * 2} ${FACTS_H + FACTS_PAD * 2}`}
+                  preserveAspectRatio="none"
+                  strokeWidth={LINE_STROKE_WIDTH}
+                />
+                <BuzzPath
+                  className={`${layoutStyles.factsBorder} ${layoutStyles.factsBorderPhone}`}
+                  variants={FACTS_BORDER_PHONE_VARIANTS}
+                  viewBox={`0 0 ${FACTS_PHONE_W + FACTS_PAD * 2} ${FACTS_PHONE_H + FACTS_PAD * 2}`}
                   preserveAspectRatio="none"
                   strokeWidth={LINE_STROKE_WIDTH}
                 />

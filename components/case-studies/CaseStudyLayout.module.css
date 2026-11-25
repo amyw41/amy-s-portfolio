@@ -254,6 +254,21 @@
   pointer-events: none;
 }
 
+/* The wide drawing on desktop, the phone one on phones. */
+.factsBorderPhone {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .factsBorderWide {
+    display: none;
+  }
+
+  .factsBorderPhone {
+    display: block;
+  }
+}
+
 /* Timeline, Team, Role, Skills in four equal columns, 24px apart (two by
  * two on phones, 16px between rows). */
 .factsGrid {
