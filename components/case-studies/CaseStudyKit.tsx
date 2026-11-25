@@ -667,13 +667,12 @@ export function CaseStudyLayout({
             }
             demo={hero.props.heroDemo}
           />
-          {/* Over the preview (Amy's sketch, 2026-11-25): the title and its
-              caption centred at the top, the facts along the bottom left.
+          {/* Over the preview (Amy's sketch, 2026-11-25): the title in the
+              top left corner (no caption), the facts along the bottom left.
               Clicks go through to the demo. */}
           <header className={layoutStyles.heroOverlay}>
             <div className={layoutStyles.heroOverlayHead}>
               <h1 className={layoutStyles.heroOverlayTitle}>{hero.props.title}</h1>
-              <p className={layoutStyles.heroOverlayCaption}>{hero.props.subtitle}</p>
             </div>
             <div className={layoutStyles.heroOverlayFacts} aria-label="Overview">
               {hero.props.meta.map((m) => (

@@ -212,8 +212,8 @@
   border-radius: 0 !important;
 }
 
-/* Over the preview (Amy's sketch): the title and caption in the top left
- * corner, the facts along the bottom left; all white, at the page's padding,
+/* Over the preview (Amy's sketch): the title in the top left corner (no
+ * caption), the facts along the bottom left; all white, at the page's padding,
  * clicks going through to the demo (its controls sit top right, its hint
  * and credit bottom right). */
 .heroOverlay {
@@ -232,21 +232,12 @@
   text-align: left;
 }
 
-/* The title: 44px, weight 400, line-height 1.05; the caption 8px under it,
- * 14px weight 300, white/80%. */
+/* The title: 32px, weight 400, line-height 1.1. */
 .heroOverlayTitle {
   margin: 0;
-  font-size: 44px;
+  font-size: 32px;
   font-weight: 400;
-  line-height: 1.05;
-}
-
-.heroOverlayCaption {
-  margin: var(--space-sm) 0 0;
-  font-size: 14px;
-  font-weight: 300;
-  line-height: 1.45;
-  color: rgb(255 255 255 / 0.8);
+  line-height: 1.1;
 }
 
 /* Timeline, Team, Role, Skills side by side along the bottom left, small:
@@ -326,14 +317,14 @@
     height: 62svh;
   }
 
-  /* Phones: the preview the full (small) screen tall, the title 32px, the
+  /* Phones: the preview the full (small) screen tall, the title 28px, the
    * facts two by two. */
   .heroFull {
     height: calc(100svh - 40px);
   }
 
   .heroOverlayTitle {
-    font-size: 32px;
+    font-size: 28px;
   }
 
   .heroOverlayFacts {
