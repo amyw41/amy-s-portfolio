@@ -142,7 +142,7 @@ export default function CyberSeaCaseStudy() {
               <p className="text-center font-body text-[14px] font-normal text-black">
                 3+ different views are needed to plan ONE route!
               </p>
-              <div className="grid grid-cols-1 gap-[var(--space-md)] sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-[var(--space-sm)] sm:grid-cols-3">
                 {ROUTE_VIEWS.map((r) => (
                   <div key={r.src}>
                     <CaseStudyImage src={r.src} alt={r.alt} ratio="512/320" highlightColor={HIGHLIGHT} />
