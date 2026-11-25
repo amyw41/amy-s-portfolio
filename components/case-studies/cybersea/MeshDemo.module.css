@@ -83,52 +83,49 @@
   color: inherit;
 }
 
-/* ---------- the hand-drawn controls (Amy's sketch, 2026-11-25) ---------- */
+/* ---------- the controls (Amy's sketch, 2026-11-25) ---------- */
 
-/* Top right, 24px in: a small hand-drawn box (0.6px white pen) holding two
+/* Top right, 16px in: the CyberSea project's own panel look (dark olive
+ * frosted glass, a 1px white/20% border, square corners), small: two
  * labelled switches. */
-.handPanel {
+.panel {
   position: absolute;
-  top: 24px;
-  right: 24px;
-  width: 128px;
-  padding: 14px 16px 16px;
+  top: 16px;
+  right: 16px;
+  padding: 12px 14px 14px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  background: rgb(29 30 21 / 0.9);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.35);
   color: #fff;
 }
 
-.handPanelBox {
-  position: absolute;
-  inset: -4px;
-  width: calc(100% + 8px);
-  height: calc(100% + 8px);
-  overflow: visible;
-  color: rgb(255 255 255 / 0.85);
-  pointer-events: none;
+/* "Exploded", "Mode": 10px uppercase, white/50%; 6px over their switch,
+ * 12px between the two. */
+.label {
+  margin: 0 0 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgb(255 255 255 / 0.5);
 }
 
-/* "exploded", "mode": the annotation hand (Gaegu Light), 19px, white. */
-.handLabel {
-  margin: 0 0 4px;
-  font-family: var(--font-annotation), var(--font-geist), sans-serif;
-  font-size: 19px;
-  font-weight: 300;
-  line-height: 1.1;
-  letter-spacing: 0.02em;
-}
-
-.handLabel + .handToggle + .handLabel,
-.handToggle + .handLabel {
+.switch + .label {
   margin-top: 12px;
 }
 
-/* The switch: a hand-drawn pill, its knob sliding end to end, the state
- * written at the free end. */
-.handToggle {
-  position: relative;
-  display: block;
+/* The switch: a 32 × 16 track (white/30% outline, square), a 10px white knob
+ * that slides across; on, the track fills blue. The state beside it, 10px
+ * bold uppercase. */
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -136,30 +133,62 @@
   cursor: pointer;
 }
 
-.handToggle:focus-visible {
-  outline: 1px solid #fff;
-  outline-offset: 3px;
-  border-radius: 14px;
+.switchTrack {
+  position: relative;
+  display: block;
+  width: 32px;
+  height: 16px;
+  border: 1px solid rgb(255 255 255 / 0.3);
+  background: #2a2b22;
 }
 
-.handKnob {
-  transform-box: view-box;
+.switchKnob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  background: #fff;
+}
+
+.switch[aria-checked="true"] .switchTrack {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.switch[aria-checked="true"] .switchKnob {
+  transform: translateX(16px);
+}
+
+.switchText {
+  min-width: 34px;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: left;
+}
+
+.switch:hover .switchTrack {
+  border-color: rgb(255 255 255 / 0.6);
+}
+
+.switch[aria-checked="true"]:hover .switchTrack {
+  border-color: #3b82f6;
+}
+
+.switch:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .handKnob {
+  .switchKnob {
     transition: transform calc(var(--toggle-ms) * var(--slow, 1)) cubic-bezier(0.23, 1, 0.32, 1);
   }
-}
 
-.handToggleText {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  font-family: var(--font-annotation), var(--font-geist), sans-serif;
-  font-size: 16px;
-  font-weight: 300;
-  line-height: 1;
-  letter-spacing: 0.02em;
-  pointer-events: none;
+  .switchTrack {
+    transition: background-color 150ms ease, border-color 150ms ease;
+  }
 }

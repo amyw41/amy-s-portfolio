@@ -5,10 +5,7 @@ import { useReducedMotion } from "framer-motion";
 import styles from "./MeshDemo.module.css";
 import type { MeshScene, ViewMode } from "./meshScene";
 import { MEDIA_FADE_BLUR_PX, MEDIA_FADE_MS } from "@/lib/motion";
-import BuzzPath from "@/components/ui/BuzzPath";
-import { buildWobblyRectPath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
-import HandToggle from "./HandToggle";
-import { gaegu } from "@/lib/fonts";
+import ModelSwitch from "./ModelSwitch";
 
 // The scene fades in like the site's images (components/ui/MediaFade).
 const FADE_VARS = {
@@ -18,23 +15,12 @@ const FADE_VARS = {
 
 const MODEL_URL = "/demos/cybersea/models/t-90.glb";
 
-// The hand-drawn box round the controls (about its size, stretched to fit;
-// 4 units of room all round for the wobble).
-const PANEL_W = 128;
-const PANEL_H = 150;
-const PANEL_VARIANTS = [0, 1, 2].map((v) =>
-  buildWobblyRectPath(251, PANEL_W, PANEL_H, 12, 0.5, v).replace(
-    /(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g,
-    (_, x, y) => `${(+x + 4).toFixed(2)},${(+y + 4).toFixed(2)}`,
-  ),
-);
-
 /**
  * The CyberSea case study's live demo, filling the header's preview
  * (HeroPreview.tsx), right there on the page: the 3D mesh viewer
  * from the project, cut down to one vehicle (the T-90 tank), drag to turn it
- * (right-drag or two fingers to pan), and two hand-drawn switches top right
- * (Amy's sketch): exploded on / off, mode wire / solid. It opens straight
+ * (right-drag or two fingers to pan), and two switches top right (Amy's
+ * sketch, in the project's own style): exploded on / off, mode wire / solid. It opens straight
  * in as the blue wireframe mesh.
  *
  * Desktop only: phones keep the cover's video (a 3D view that takes drags
@@ -98,7 +84,7 @@ export default function MeshDemo() {
   if (!desktop) return null;
 
   return (
-    <div className={`${gaegu.variable} ${styles.demo}`} style={FADE_VARS}>
+    <div className={styles.demo} style={FADE_VARS}>
       <div
         ref={stageRef}
         className={`${styles.stage} ${loading ? "" : styles.stageShown}`}
@@ -107,24 +93,17 @@ export default function MeshDemo() {
       />
       {loading && <p className={styles.loading}>Loading model…</p>}
 
-      {/* The controls, as Amy sketched them: a small hand-drawn box top
-          right with two switches, "exploded" and "mode". */}
-      <div className={styles.handPanel}>
-        <BuzzPath
-          className={styles.handPanelBox}
-          variants={PANEL_VARIANTS}
-          viewBox={`0 0 ${PANEL_W + 8} ${PANEL_H + 8}`}
-          preserveAspectRatio="none"
-          strokeWidth={LINE_STROKE_WIDTH}
-        />
-        <p className={styles.handLabel}>exploded</p>
-        <HandToggle label="Exploded view" on={split} onChange={setSplit} />
-        <p className={styles.handLabel}>mode</p>
-        <HandToggle
+      {/* The controls (Amy's sketch, in the CyberSea project's own style):
+          a small dark panel top right with two switches. */}
+      <div className={styles.panel}>
+        <p className={styles.label}>Exploded</p>
+        <ModelSwitch label="Exploded view" on={split} onChange={setSplit} />
+        <p className={styles.label}>Mode</p>
+        <ModelSwitch
           label="Solid view"
           on={mode === "solid"}
-          onText="solid"
-          offText="wire"
+          onText="Solid"
+          offText="Wire"
           onChange={(solid) => setMode(solid ? "solid" : "wireframe")}
         />
       </div>

@@ -358,11 +358,11 @@ export const UI_SOUND_MIN_GAP_MS = 90;
 // ---------- About page: "Amy's roadmap" (components/sections/About/Roadmap) ----------
 // The dotted route draws itself in along the map on load: it starts
 // ROADMAP_ROUTE_DELAY_S in and takes ROADMAP_ROUTE_DRAW_S (ease-in-out, like a
-// pen). Each pin pops in (ROADMAP_PIN_POP_S, a little overshoot, from
+// pen, 2026-11-25: linear, one steady pace; was ease-in-out). Each pin pops in (ROADMAP_PIN_POP_S, a little overshoot, from
 // ROADMAP_PIN_FROM_SCALE) the moment the route reaches it; the first is there
 // before the route sets off. Its label fades in ROADMAP_LABEL_LAG_S after.
 export const ROADMAP_ROUTE_DELAY_S = 0.35;
-export const ROADMAP_ROUTE_DRAW_S = 1.8;
+export const ROADMAP_ROUTE_DRAW_S = 2.6;
 export const ROADMAP_PIN_POP_S = 0.36;
 export const ROADMAP_PIN_FROM_SCALE = 0.4;
 export const ROADMAP_LABEL_LAG_S = 0.08;
@@ -389,7 +389,7 @@ export const ROADMAP_POPUP_OUT_S = 0.15;
 export const ROADMAP_SWING_KICK = 140;
 export const ROADMAP_SWING_STIFFNESS = 90;
 export const ROADMAP_SWING_DAMPING = 4;
-// CyberSea's hand-drawn toggles (case-studies/cybersea/HandToggle.tsx): the
+// CyberSea's demo switches (case-studies/cybersea/ModelSwitch.tsx): the
 // knob slides across over MESH_TOGGLE_MS, strong ease-out. Reduced motion:
 // it jumps.
 export const MESH_TOGGLE_MS = 200;
