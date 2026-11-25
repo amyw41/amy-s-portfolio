@@ -251,13 +251,11 @@ export default function CyberSeaCaseStudy() {
           heading="3 main features"
           media={
             <div className="space-y-[var(--space-xl)]">
-              {/* Side by side, not stacked — text (label + caption, on top
-                  of each other) on the left, video on the right. Same
-                  16rem label-column width as Row's own layout, for visual
-                  consistency with the rest of the page. items-end (not
-                  items-center) bottom-aligns the text against the video. */}
+              {/* Stacked: the label and caption, then the video under them,
+                  the column's full width (2026-11-25, so every image lines
+                  up with the words). */}
               {FEATURES.map((f) => (
-                <div key={f.label} className="grid grid-cols-1 gap-6 sm:grid-cols-[16rem_1fr] sm:items-end">
+                <div key={f.label} className="grid grid-cols-1 gap-[var(--space-md)]">
                   <div>
                     <p className={TEXT.groupHeader}>{f.label}</p>
                     <p className={`mt-1 ${TEXT.content}`}>{f.caption}</p>

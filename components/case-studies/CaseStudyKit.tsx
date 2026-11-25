@@ -53,14 +53,12 @@ export const TEXT = {
   groupHeader: "font-body text-[17px] font-medium leading-[1.3] text-black text-left",
 };
 
-// The writing's measure (2026-11-25): text sits in a narrow column, 680px
-// at most, centred in the content area (comfortable line lengths, and an
-// editorial page rather than one wide block). Images and videos sit in a
-// wider centred column, MEDIA_MEASURE: 920px at most, so on any window
-// they break out the same 120px past the text on each side (consistent
-// margins), instead of filling a content area that grows with the window.
+// The measure (2026-11-25): everything, writing and images alike, sits in
+// one narrow column, 680px at most, centred in the content area, so the
+// images' edges line up exactly with the words' (comfortable line lengths,
+// and an editorial page rather than one wide block). Images shrink to fit.
 export const MEASURE = "mx-auto w-full max-w-[680px]";
-export const MEDIA_MEASURE = "mx-auto w-full max-w-[920px]";
+export const MEDIA_MEASURE = MEASURE;
 
 // Fallback tint behind a placeholder/neutral image box when a case study
 // doesn't pass its own — each case study's actual highlight color (Spotify's
