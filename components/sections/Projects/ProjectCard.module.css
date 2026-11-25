@@ -88,6 +88,14 @@
   transition: none;
 }
 
+/* Once the video is showing, the still cover under it is hidden (after the
+ * video's fade), so its first frame can't peek out as a thin line along a
+ * card edge that lands between pixels. */
+.mediaInner:has(.videoVisible) .poster {
+  visibility: hidden;
+  transition: visibility 0s linear 200ms;
+}
+
 /* ---------- text (right) ---------- */
 
 .text {
