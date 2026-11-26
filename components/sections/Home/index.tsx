@@ -17,6 +17,7 @@ import {
   INTRO_DIVIDER_DRAW_S,
   INTRO_SIDEBAR_RISE_PX,
   INTRO_SIDEBAR_STAGGER_S,
+  WORK_ENTER_DELAY_S,
   ZOOM_DROP_PX,
   ZOOM_RETURN_S,
   slowMs,
@@ -95,6 +96,18 @@ export default function Home() {
   // Whether the jar view is arriving from work mode (drops in) rather than
   // just being there on first load. Read by JarView once, when it mounts.
   const [jarEntering, setJarEntering] = useState(false);
+  // jar → work: the work view mounts WORK_ENTER_DELAY_S after the switch,
+  // while the jar is still dropping away (it passes behind the grid). Not
+  // at once: mounting the grid is real work, and doing it the moment the
+  // jar starts to leave held the jar's first move back. On first load, or
+  // back from a case study, it's there straight away.
+  const [workMounted, setWorkMounted] = useState(true);
+  useEffect(() => {
+    if (workMounted) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const timer = window.setTimeout(() => setWorkMounted(true), reduced ? 0 : slowMs(WORK_ENTER_DELAY_S * 1000));
+    return () => window.clearTimeout(timer);
+  }, [workMounted]);
 
   // The glass clink, created up front so its audio is decoded before the
   // first item lands. It only ever plays when an item hits the jar's glass
@@ -122,6 +135,7 @@ export default function Home() {
   function changeMode(next: HomeMode) {
     if (next === mode) return;
     setJarEntering(next === "jar");
+    if (next === "work") setWorkMounted(false);
     setMode(next);
   }
 
@@ -222,12 +236,16 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, [intro]);
   // Once the load-in is over and the page is idle, get the work's covers
-  // ready, so scrolling down shows the cards straight away.
+  // ready, so scrolling down shows the cards straight away. The jar's
+  // replay keeps the page busy, so an idle moment rarely comes: the short
+  // timeout starts them within a fraction of a second either way (it used
+  // to be 2.5s, so the videos only started ~5s after load and anyone who
+  // scrolled sooner downloaded them during the switch, 2026-11-26).
   useEffect(() => {
     if (intro !== "none") return;
     const run = () => void preloadWorkCovers();
     const idle = typeof window.requestIdleCallback === "function";
-    const id: number = idle ? window.requestIdleCallback(run, { timeout: 2500 }) : window.setTimeout(run, 1200);
+    const id: number = idle ? window.requestIdleCallback(run, { timeout: 300 }) : window.setTimeout(run, 300);
     return () => (idle ? window.cancelIdleCallback(id) : window.clearTimeout(id));
   }, [intro]);
   const introClass = intro === "reveal" ? styles.introReveal : intro === "none" ? "" : styles.introHidden;
@@ -263,11 +281,14 @@ export default function Home() {
         {/* Scrolling switches between the jar and the work; on mobile, where
          * it doesn't, these tap cues do. */}
         <ScrollCue mode={mode} onActivate={changeMode} />
-        {/* mode="wait": one view at a time — the leaving one finishes its
-         * exit before the next starts (jar → work: the jar drops away, then
-         * "what's inside?" and the grid come in; work → jar: the grid slides
-         * out, then the jar drops in). */}
-        <AnimatePresence mode="wait" initial={false}>
+        {/* jar → work ("sync"): the work comes in while the jar is still
+         * dropping away, WORK_ENTER_DELAY_S after the switch (the jar holds
+         * its size and passes behind the grid; JarView's exit). work → jar
+         * ("wait"): the grid slides out first, then the jar drops in — the
+         * jar measures itself as it arrives, so it can't share the stage
+         * with the grid. Switching the mode doesn't remount anything (only
+         * "popLayout" wraps the children). */}
+        <AnimatePresence mode={mode === "work" ? "sync" : "wait"} initial={false}>
           {mode === "jar" ? (
             jarReady && (
               <JarView
@@ -283,11 +304,9 @@ export default function Home() {
               />
             )
           ) : (
-            <WorkGrid
-              key="work"
-              focusedId={focusedCase}
-              onJumpToJar={() => changeMode("jar")}
-            />
+            workMounted && (
+              <WorkGrid key="work" focusedId={focusedCase} onJumpToJar={() => changeMode("jar")} />
+            )
           )}
         </AnimatePresence>
       </section>
