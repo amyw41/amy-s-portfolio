@@ -17,7 +17,6 @@ import {
   INTRO_DIVIDER_DRAW_S,
   INTRO_SIDEBAR_RISE_PX,
   INTRO_SIDEBAR_STAGGER_S,
-  WORK_ENTER_DELAY_S,
   ZOOM_DROP_PX,
   ZOOM_RETURN_S,
   slowMs,
@@ -96,18 +95,6 @@ export default function Home() {
   // Whether the jar view is arriving from work mode (drops in) rather than
   // just being there on first load. Read by JarView once, when it mounts.
   const [jarEntering, setJarEntering] = useState(false);
-  // jar → work: the work view mounts WORK_ENTER_DELAY_S after the switch,
-  // while the jar is still dropping away (it passes behind the grid). Not
-  // at once: mounting the grid is real work, and doing it the moment the
-  // jar starts to leave held the jar's first move back. On first load, or
-  // back from a case study, it's there straight away.
-  const [workMounted, setWorkMounted] = useState(true);
-  useEffect(() => {
-    if (workMounted) return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const timer = window.setTimeout(() => setWorkMounted(true), reduced ? 0 : slowMs(WORK_ENTER_DELAY_S * 1000));
-    return () => window.clearTimeout(timer);
-  }, [workMounted]);
 
   // The glass clink, created up front so its audio is decoded before the
   // first item lands. It only ever plays when an item hits the jar's glass
@@ -135,7 +122,6 @@ export default function Home() {
   function changeMode(next: HomeMode) {
     if (next === mode) return;
     setJarEntering(next === "jar");
-    if (next === "work") setWorkMounted(false);
     setMode(next);
   }
 
@@ -281,14 +267,13 @@ export default function Home() {
         {/* Scrolling switches between the jar and the work; on mobile, where
          * it doesn't, these tap cues do. */}
         <ScrollCue mode={mode} onActivate={changeMode} />
-        {/* jar → work ("sync"): the work comes in while the jar is still
-         * dropping away, WORK_ENTER_DELAY_S after the switch (the jar holds
-         * its size and passes behind the grid; JarView's exit). work → jar
-         * ("wait"): the grid slides out first, then the jar drops in — the
-         * jar measures itself as it arrives, so it can't share the stage
-         * with the grid. Switching the mode doesn't remount anything (only
-         * "popLayout" wraps the children). */}
-        <AnimatePresence mode={mode === "work" ? "sync" : "wait"} initial={false}>
+        {/* mode="wait": one view at a time — the leaving one finishes its
+         * exit before the next starts (jar → work: the jar drops all the way
+         * out of view, then "what's inside?" and the grid come in; work →
+         * jar: the grid slides out, then the jar drops in). An overlap was
+         * tried on 2026-11-26 and taken back the same day (Amy: the work
+         * should only arrive once the jar is completely gone). */}
+        <AnimatePresence mode="wait" initial={false}>
           {mode === "jar" ? (
             jarReady && (
               <JarView
@@ -304,9 +289,7 @@ export default function Home() {
               />
             )
           ) : (
-            workMounted && (
-              <WorkGrid key="work" focusedId={focusedCase} onJumpToJar={() => changeMode("jar")} />
-            )
+            <WorkGrid key="work" focusedId={focusedCase} onJumpToJar={() => changeMode("jar")} />
           )}
         </AnimatePresence>
       </section>

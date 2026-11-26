@@ -49,13 +49,6 @@ export const GRID_TILE_S = 0.3;
 export const GRID_TILE_RISE_PX = 12;
 export const GRID_TILE_SCALE = 0.97;
 export const WORK_EXIT_S = 0.2;
-// jar → work: the work doesn't wait for the jar to be gone. The jar's exit
-// (anticipation + drop-out, 0.5s) and the work's arrival overlap: the
-// heading and cards start WORK_ENTER_DELAY_S after the switch, while the
-// jar is still falling (it passes behind them). Was a full wait until the
-// jar had gone (cards in at ~0.95s); now ~0.55s (2026-11-26, to make the
-// switch feel quicker). work → jar still waits for the grid to go first.
-export const WORK_ENTER_DELAY_S = 0.25;
 export const WORK_EXIT_RISE_PX = 12;
 
 // Hovering a case study in the sidebar's Works list isolates it: its jar
@@ -178,8 +171,7 @@ export const SCROLL_FLICK_MIN_PX = 8;
 export const SCROLL_BACK_PUSH_PX = 160;
 export const MODE_TRANSITION_MS =
   Math.max(
-    JAR_ANTICIPATE_S + JAR_DROP_OUT_S,
-    WORK_ENTER_DELAY_S + HEADING_DROP_S,
+    JAR_ANTICIPATE_S + JAR_DROP_OUT_S + HEADING_DROP_S,
     WORK_EXIT_S + JAR_DROP_IN_S + JAR_LAND_S,
   ) * 1000;
 // Mobile's tap cues (Home/ScrollCue.tsx; desktop has none): each bobs

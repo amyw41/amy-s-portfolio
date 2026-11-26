@@ -220,6 +220,20 @@ export default function WorkGrid({
     };
   }, []);
 
+  // The footer is far below the cards, so it's built just after they've
+  // come in, at the next quiet moment, not as the work view mounts: building
+  // it then (its carousel holds every jar item) was a big share of the
+  // stutter as the work arrived (2026-11-26). A placeholder holds its place
+  // until then.
+  const [footerReady, setFooterReady] = useState(false);
+  useEffect(() => {
+    if (!coversReady) return;
+    const run = () => setFooterReady(true);
+    const idle = typeof window.requestIdleCallback === "function";
+    const id: number = idle ? window.requestIdleCallback(run, { timeout: 400 }) : window.setTimeout(run, 200);
+    return () => (idle ? window.cancelIdleCallback(id) : window.clearTimeout(id));
+  }, [coversReady]);
+
 
   const variants = useMemo<{ view: Variants; tile: Variants }>(
     () => ({
@@ -385,7 +399,11 @@ export default function WorkGrid({
 
       {/* The end of the list: the footer, scrolling up into view after the
        * cards. */}
-      <FooterStrip className={styles.footerPlace} onBackToTop={() => onJumpToJar?.()} />
+      {footerReady ? (
+        <FooterStrip className={styles.footerPlace} onBackToTop={() => onJumpToJar?.()} />
+      ) : (
+        <div className={styles.footerPlace} style={{ height: "50dvh", background: "#000" }} aria-hidden="true" />
+      )}
     </motion.div>
   );
 }

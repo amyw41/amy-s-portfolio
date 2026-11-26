@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAnimate, usePresence, useReducedMotion, type AnimationPlaybackControls } from "framer-motion";
 import styles from "./Home.module.css";
 import JarStage from "@/components/sections/Hero/JarStage";
@@ -108,7 +108,6 @@ export default function JarView({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const jostleRef = useRef<((strength: number) => void) | null>(null);
   const [isPresent, safeToRemove] = usePresence();
-
   // The load-in warms the physics first (at rest, hidden), so it starts on.
   const warmFirst = entering && loadIn && !reduced;
   const [start, setStart] = useState(!entering || warmFirst);
@@ -137,44 +136,6 @@ export default function JarView({
   const itemsReady = () =>
     itemsReadyRef.current ? Promise.resolve() : new Promise<void>((resolve) => readyWaitersRef.current.push(resolve));
   const leavingRef = useRef(false);
-
-  // Leaving for the work, the grid comes in while the jar is still dropping
-  // away (Home's AnimatePresence "sync", WORK_ENTER_DELAY_S), and with it
-  // the stage changes layout (Home.module.css, :has([data-work-view])) —
-  // which would resize the jar mid-fall (it's sized off the stage). So its
-  // last size at rest is kept as it changes, and pinned in pixels the moment
-  // it starts to leave, before that layout is ever painted; let go again if
-  // it's called back.
-  const restSizeRef = useRef<{ w: number; h: number; jarW: number } | null>(null);
-  useEffect(() => {
-    const view = scope.current;
-    const jar = wrapperRef.current;
-    if (!view || !jar) return;
-    const record = () => {
-      if (leavingRef.current) return;
-      restSizeRef.current = { w: view.offsetWidth, h: view.offsetHeight, jarW: jar.offsetWidth };
-    };
-    record();
-    const observer = new ResizeObserver(record);
-    observer.observe(view);
-    observer.observe(jar);
-    return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  useLayoutEffect(() => {
-    const view = scope.current;
-    const jar = wrapperRef.current;
-    const size = restSizeRef.current;
-    if (!view || !jar) return;
-    if (!isPresent && size) {
-      Object.assign(view.style, { right: "auto", bottom: "auto", width: `${size.w}px`, height: `${size.h}px` });
-      jar.style.width = `${size.jarW}px`;
-    } else if (isPresent) {
-      Object.assign(view.style, { right: "", bottom: "", width: "", height: "" });
-      jar.style.width = "";
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPresent]);
 
   const run = (...args: Parameters<typeof animate>) => {
     const controls = (animate as (...a: Parameters<typeof animate>) => AnimationPlaybackControls)(...args);
