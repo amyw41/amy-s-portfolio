@@ -1,7 +1,6 @@
-// The placeholder map for "Amy's life map", after Amy's sketch
-// (2026-11-25): an island of a few lobes round a central bay, the left lobe
-// cut by an inlet and a hook at the top right, a route winding across it, on
-// a scrap of paper with a curled corner. All from lib/wobbly.ts, so it's in
+// The placeholder map for "Amy's life map", traced from Amy's sketch
+// (2026-11-25): the island and the route winding across it, on a scrap of
+// paper. All from lib/wobbly.ts, so it's in
 // the site's own pen, at the jar's 0.6px. Drawn in a MAP_W × MAP_H box
 // (lib/roadmap.ts MAP_ASPECT). Amy will swap it for her own drawing
 // (ROADMAP_MAP in lib/roadmap.ts); the route and the pins sit on top in % of
@@ -57,39 +56,62 @@ function through(pts: Pt[]): CurveSegment[] {
 
 // ---------- the island ----------
 
-// Clockwise from the west: the left lobe (Calgary) with an inlet down its
-// east side, the inner shore of the central bay (open to the north, where
-// the title sits), the right arm rising to a blob at the top right with a
-// hooked notch on its east side, then the wiggly south coast back west.
+// Traced from Amy's sketch (2026-11-25), point for point (her Procreate
+// sketch's paper mapped onto this box): a main island with a left lobe
+// (Calgary) and an inlet down its east side, the bay's shore running east
+// and rising to the north-east, a south-east lobe, and a wiggly south coast;
+// plus a separate hooked island at the top right.
 const COAST: Pt[] = [
-  [56, 168], [96, 96], [168, 62], [222, 86], [212, 148], [236, 206],
-  [300, 232], [372, 222], [436, 196], [490, 190], [522, 218], [534, 258],
-  [588, 262], [656, 226], [716, 180], [748, 140], [728, 100], [722, 60],
-  [780, 28], [846, 36], [896, 72], [904, 128], [862, 134], [846, 152],
-  [852, 182], [890, 194], [906, 240], [892, 320], [924, 396], [902, 468],
-  [858, 498], [806, 474], [764, 438], [722, 472], [682, 522], [604, 540],
-  [524, 508], [458, 538], [380, 520], [300, 546], [220, 520], [152, 500],
-  [102, 450], [82, 382], [104, 322], [72, 262], [84, 210],
+  [66, 130], [91, 88], [128, 63], [184, 47], [236, 42], [259, 59], [242, 93],
+  [211, 139], [203, 198], [215, 248], [257, 282], [329, 296], [406, 282],
+  [468, 255], [522, 260], [547, 292], [559, 323], [600, 316], [671, 274],
+  [743, 231], [820, 201], [828, 248], [820, 316], [840, 400], [847, 468],
+  [820, 527], [754, 544], [687, 522], [633, 501], [580, 498], [526, 476],
+  [480, 493], [427, 535], [360, 569], [273, 572], [186, 559], [120, 535],
+  [100, 485], [116, 425], [91, 375], [66, 316], [58, 248], [71, 189],
 ];
-
-const COAST_PATH = buildWobblyCurvePath(501, blob(COAST, 0.9), 1);
+const ISLE: Pt[] = [
+  [687, 117], [696, 71], [737, 42], [805, 32], [874, 49], [919, 83], [936, 120],
+  [909, 130], [867, 110], [816, 105], [774, 122], [758, 164], [745, 206],
+  [712, 218], [683, 194], [675, 155],
+];
 
 /** One piece of the drawing: an outline (`ink`, its line weight in px). */
 export type MapShape = { d: string; ink?: number; fill?: string; dash?: string };
 
-export const MAP_SHAPES: MapShape[] = [{ d: COAST_PATH, ink: LINE_STROKE_WIDTH }];
+/** A small hand-drawn circle round (x, y): the sketch's little stops along
+ * the route. */
+function ring(seed: number, x: number, y: number, r: number): string {
+  const k = r * 0.55;
+  return buildWobblyCurvePath(seed, [
+    [[x, y - r], [x + k, y - r], [x + r, y - k], [x + r, y]],
+    [[x + r, y], [x + r, y + k], [x + k, y + r], [x, y + r]],
+    [[x, y + r], [x - k, y + r], [x - r, y + k], [x - r, y]],
+    [[x - r, y], [x - r, y - k], [x - k, y - r], [x, y - r]],
+  ], 0.2);
+}
+// The two little circles on the route in the sketch (not pins).
+const RING_A: Pt = [278, 329];
+const RING_C: Pt = [474, 392];
+
+export const MAP_SHAPES: MapShape[] = [
+  { d: buildWobblyCurvePath(501, blob(COAST, 0.9), 0.8), ink: LINE_STROKE_WIDTH },
+  { d: buildWobblyCurvePath(502, blob(ISLE, 0.9), 0.6), ink: LINE_STROKE_WIDTH },
+  { d: ring(503, RING_A[0], RING_A[1], 9), ink: LINE_STROKE_WIDTH, fill: "#fff" },
+  { d: ring(504, RING_C[0], RING_C[1], 9), ink: LINE_STROKE_WIDTH, fill: "#fff" },
+];
 
 // ---------- the route ----------
 
-// The route winds across the island like the sketch's: through these
-// waypoints, stopping at each stop (lib/roadmap.ts) on the way. Each entry
-// is a point, or the id of a stop (its pin's spot).
+// The route winds across the island as in the sketch, through these
+// waypoints (traced from it), stopping at each stop (lib/roadmap.ts) on the
+// way. Each entry is a point, or the id of a stop (its pin's spot).
 const WAYPOINTS: (Pt | string)[] = [
   "calgary",
-  [152, 232], [118, 300], [172, 360], [138, 424], [236, 468], [340, 440],
-  [392, 370], [462, 322], [532, 372],
+  [128, 223], [141, 282], [199, 312], RING_A, [240, 375], [257, 407],
+  [360, 410], [315, 451], [249, 468],
   "waterloo",
-  [680, 384], [742, 318], [800, 258], [790, 186], [818, 132],
+  [278, 532], [391, 510], [439, 442], RING_C, [588, 371], [675, 387], [696, 434],
   "next",
 ];
 
@@ -194,17 +216,3 @@ function buildPaperOutline(seed: number): string {
 }
 
 export const PAPER_PATH = buildPaperOutline(4242);
-
-/** The curled corner (bottom right): a second edge just inside the right
- * side, from about halfway down, sweeping into the bottom edge, as if that
- * corner of the paper is lifting. */
-export const PAPER_CURL = buildWobblyCurvePath(
-  4244,
-  through([
-    [PAPER_W - 26, PAPER_H * 0.56],
-    [PAPER_W - 32, PAPER_H * 0.74],
-    [PAPER_W - 42, PAPER_H * 0.88],
-    [PAPER_W - 74, PAPER_H - 22],
-  ]),
-  0.6,
-);

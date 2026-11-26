@@ -7,9 +7,7 @@ import { geist } from "@/lib/fonts";
 import { ROADMAP_MAP, ROADMAP_STOPS, type RoadmapStop } from "@/lib/roadmap";
 import { buildWobblyCurvePath, buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
 import {
-  cubicBezier,
   EASE_IN,
-  EASE_IN_OUT,
   EASE_OUT,
   EASE_OVERSHOOT,
   ROADMAP_LABEL_LAG_S,
@@ -27,25 +25,13 @@ import {
   ROADMAP_SCRIM_S,
   slowTransition,
 } from "@/lib/motion";
-import { MAP_H, MAP_SHAPES, MAP_W, PAPER_CURL, PAPER_H, PAPER_PATH, PAPER_W, ROUTE_PATH, STOP_ROUTE_T } from "./mapDrawing";
+import { MAP_H, MAP_SHAPES, MAP_W, PAPER_H, PAPER_PATH, PAPER_W, ROUTE_PATH, STOP_ROUTE_T } from "./mapDrawing";
 import styles from "./Roadmap.module.css";
 
-// The route is drawn at an even pen pace eased in and out (EASE_IN_OUT), so
-// the moment it reaches a stop is where that curve's progress hits the
-// stop's share of the route.
-const routeEase = cubicBezier(EASE_IN_OUT);
-function timeAt(progress: number): number {
-  let lo = 0;
-  let hi = 1;
-  for (let i = 0; i < 24; i++) {
-    const mid = (lo + hi) / 2;
-    if (routeEase(mid) < progress) lo = mid;
-    else hi = mid;
-  }
-  return (lo + hi) / 2;
-}
+// The route is drawn at one steady pace (linear), like a pen moving along
+// it, so it reaches each stop at that stop's share of the route.
 const PIN_DELAYS = STOP_ROUTE_T.map((t, i) =>
-  i === 0 ? ROADMAP_ROUTE_DELAY_S * 0.4 : ROADMAP_ROUTE_DELAY_S + timeAt(t) * ROADMAP_ROUTE_DRAW_S - ROADMAP_PIN_POP_S * 0.4,
+  i === 0 ? ROADMAP_ROUTE_DELAY_S * 0.4 : ROADMAP_ROUTE_DELAY_S + t * ROADMAP_ROUTE_DRAW_S - ROADMAP_PIN_POP_S * 0.4,
 );
 
 // ---------- hand-drawn bits ----------
@@ -280,7 +266,7 @@ export default function MapStage() {
     setOpenId(id);
   };
 
-  const routeTransition = slowTransition({ duration: ROADMAP_ROUTE_DRAW_S, ease: EASE_IN_OUT, delay: ROADMAP_ROUTE_DELAY_S });
+  const routeTransition = slowTransition({ duration: ROADMAP_ROUTE_DRAW_S, ease: "linear" as const, delay: ROADMAP_ROUTE_DELAY_S });
 
   return (
     <div className={styles.paper} style={PIN_VARS} onClick={() => setTouchShown(null)}>
@@ -289,7 +275,6 @@ export default function MapStage() {
        * corner curls up. */}
       <svg className={styles.paperSvg} viewBox={`0 0 ${PAPER_W} ${PAPER_H}`} preserveAspectRatio="none" aria-hidden="true">
         <path className={styles.paperFill} d={PAPER_PATH} strokeWidth={LINE_STROKE_WIDTH} strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-        <path d={PAPER_CURL} fill="none" stroke="currentColor" strokeWidth={LINE_STROKE_WIDTH} strokeLinecap="round" vectorEffect="non-scaling-stroke" />
       </svg>
       <div className={styles.mapBox}>
         {/* The map drawing: Amy's own image, or the placeholder. */}
