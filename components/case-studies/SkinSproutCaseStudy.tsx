@@ -511,7 +511,7 @@ export default function SkinSproutCaseStudy() {
               <p className={TEXT.content}>This revealed 4 key insights:</p>
               <div className="space-y-4">
                 {INSIGHTS.map((insight, i) => (
-                  <div key={insight.title} className="flex gap-4 rounded-[10px] bg-[#f7f7f7] p-6">
+                  <div key={insight.title} className="flex gap-4 rounded-[2px] bg-[#f7f7f7] p-6">
                     <span className="font-body text-[14px] font-medium text-black">{i + 1}</span>
                     <div>
                       <p className="font-body text-[14px] font-light text-black text-left">{insight.title}</p>
@@ -541,7 +541,7 @@ export default function SkinSproutCaseStudy() {
         <Row heading="Personas">
           <div className="space-y-4">
             {PERSONAS.map((p) => (
-              <div key={p.name} className="rounded-[10px] bg-[#f7f7f7] p-6">
+              <div key={p.name} className="rounded-[2px] bg-[#f7f7f7] p-6">
                 <div className="flex items-center gap-3">
                   {/* Placeholder for a real persona photo — solid circle,
                       same idea as PlaceholderBox elsewhere on the page.
@@ -849,7 +849,7 @@ export default function SkinSproutCaseStudy() {
               </div>
             </div>
 
-            <div className="rounded-[5px] px-5 py-5" style={{ backgroundColor: "#fbeded" }}>
+            <div className="rounded-[2px] px-5 py-5" style={{ backgroundColor: "#fbeded" }}>
               <p className="font-body text-[14px] font-light leading-relaxed text-center text-black">
                 3/5 users flagged this as too unclear
               </p>

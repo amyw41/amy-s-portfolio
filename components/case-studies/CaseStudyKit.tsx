@@ -104,7 +104,7 @@ export function CaseStudyImage({
       // Border removed per request — every case-study image (screenshots,
       // phone mockups, videos alike) went through this one component, so
       // dropping it here removes it everywhere at once.
-      className={`relative w-full overflow-hidden rounded-[4px] ${className}`}
+      className={`relative w-full overflow-hidden rounded-[2px] ${className}`}
     >
       {/* Loads in softly: a pulsing grey, then a blur-to-sharp fade. */}
       <MediaFade>
@@ -154,7 +154,7 @@ export function PlaceholderBox({
   return (
     <div
       style={{ ...(ratio ? { aspectRatio: ratio } : undefined), backgroundColor: highlightColor }}
-      className={`flex w-full items-center justify-center rounded-[8px] px-6 text-center ${TEXT.frame} ${ratio ? "" : "py-[14px]"} ${className}`}
+      className={`flex w-full items-center justify-center rounded-[2px] px-6 text-center ${TEXT.frame} ${ratio ? "" : "py-[14px]"} ${className}`}
     >
       {label}
     </div>
@@ -165,8 +165,8 @@ export function PlaceholderBox({
 // a problem statement, a challenge, a WIP notice. Was independently
 // hand-copied at 8 sites across the 3 written case studies (CyberSea x2,
 // SkinSprout x3, Spotify x3) with an identical className string, which had
-// already drifted once (an earlier rounded-[8px]/px-5 py-6 version had to be
-// hand-corrected back to rounded-[5px]/px-5 py-5 at every single site — see
+// already drifted once (an earlier rounded-[2px]/px-5 py-6 version had to be
+// hand-corrected back to rounded-[2px]/px-5 py-5 at every single site — see
 // this repo's own git history) before landing here as one shared component.
 // `bg` isn't defaulted the way CaseStudyImage/PlaceholderBox default
 // `highlightColor` — every one of the 8 original sites picked its own tint
@@ -183,7 +183,7 @@ export function HighlightBox({
   className?: string;
 }) {
   return (
-    <div className={`rounded-[5px] px-5 py-5 ${className}`} style={{ backgroundColor: bg }}>
+    <div className={`rounded-[2px] px-5 py-5 ${className}`} style={{ backgroundColor: bg }}>
       <p className="font-body text-[14px] font-light leading-relaxed text-black text-center">{children}</p>
     </div>
   );
@@ -207,7 +207,7 @@ export function CaseStudyCta({
       target="_blank"
       rel="noopener noreferrer"
       style={{ backgroundColor: highlightColor }}
-      className={`block w-full rounded-[8px] px-6 py-[14px] !text-center transition-transform duration-200 hover:scale-[1.01] ${TEXT.frame}`}
+      className={`block w-full rounded-[2px] px-6 py-[14px] !text-center transition-transform duration-200 hover:scale-[1.01] ${TEXT.frame}`}
     >
       {children}
     </a>
@@ -230,7 +230,7 @@ export function StatRow({
 }) {
   return (
     <div
-      className="grid grid-cols-1 gap-6 rounded-[10px] p-6 text-center sm:grid-cols-3 sm:p-8"
+      className="grid grid-cols-1 gap-6 rounded-[2px] p-6 text-center sm:grid-cols-3 sm:p-8"
       style={{ backgroundColor: bg }}
     >
       {stats.map((s) => (
@@ -555,7 +555,7 @@ export function CaseStudyHero({
         className={
           layoutPart === "meta"
             ? "grid grid-cols-2 items-start gap-x-8 gap-y-5 text-left sm:grid-cols-4"
-            : "mt-8 grid grid-cols-2 items-start justify-items-center gap-6 rounded-[10px] border border-gray-200 p-6 text-center sm:grid-cols-4"
+            : "mt-8 grid grid-cols-2 items-start justify-items-center gap-6 rounded-[2px] border border-gray-200 p-6 text-center sm:grid-cols-4"
         }
       >
         {/* Extra bottom padding on every column but the first — added

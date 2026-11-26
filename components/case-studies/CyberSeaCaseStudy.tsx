@@ -202,7 +202,7 @@ export default function CyberSeaCaseStudy() {
         <Row eyebrow="02 / Research" heading="Personas">
           <div className="space-y-4">
             {PERSONAS.map((p) => (
-              <div key={p.name} className="rounded-[10px] bg-[#f7f7f7] p-6">
+              <div key={p.name} className="rounded-[2px] bg-[#f7f7f7] p-6">
                 <div className="flex items-center gap-3">
                   {/* Placeholder for a real persona photo — solid circle,
                       same idea as PlaceholderBox elsewhere on the page. */}

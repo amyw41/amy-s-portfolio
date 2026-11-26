@@ -170,7 +170,7 @@ export default function SpotifyCaseStudy() {
         <Row
           heading="The Brief"
           media={
-            <div className="grid grid-cols-1 gap-8 rounded-[10px] bg-[#f7f7f7] p-6 sm:grid-cols-3 sm:p-8">
+            <div className="grid grid-cols-1 gap-8 rounded-[2px] bg-[#f7f7f7] p-6 sm:grid-cols-3 sm:p-8">
               <BulletList
                 title="Flow"
                 items={[
@@ -269,7 +269,7 @@ export default function SpotifyCaseStudy() {
           media={
             <div className="space-y-4">
               {INSIGHTS.map((insight, i) => (
-                <div key={insight.title} className="flex gap-4 rounded-[10px] bg-[#f7f7f7] p-6">
+                <div key={insight.title} className="flex gap-4 rounded-[2px] bg-[#f7f7f7] p-6">
                   <span className="font-body text-[14px] font-medium text-black">{i + 1}</span>
                   <div>
                     <p className="font-body text-[14px] font-light text-black text-left">{insight.title}</p>

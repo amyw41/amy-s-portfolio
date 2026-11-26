@@ -197,6 +197,9 @@ An unfinished page shows this instead of its content (`UNDER_CONSTRUCTION` in li
 - **Back home:** the hand-drawn ← (18px in a 24px box, 1.2px stroke), top left at the sidebar's padding, where the case studies' sits (`--pad-y` down, `--pad-x` in); 55% black on hover (150ms).
 - **No animation:** it's all simply there when the page opens (no draw-on or fades, removed 2026-11-23).
 
+## Case-study corners
+Every corner on a case-study page is 2px, the same as the home page's project thumbnails (2026-11-26, Amy: "radius should always be consistent, use the project thumbnail"): images and videos, the preview, highlight and stat boxes, persona and insight cards, buttons. Circles stay circles. (The demos' own app UIs, CyberSea's Settings panel and Spotify's phone, keep their own shapes.)
+
 ## Case-study measure
 The writing sits in a narrow column, 680px at most, centred in the content area (`MEASURE` in CaseStudyKit.tsx; 2026-11-25: comfortable 60 to 75 character lines, and an editorial page instead of one wide block like franceszhao.ca). That covers every part's label, title, writing and trailing writing, the TL;DR, and lone section labels. Images, videos, stat boxes and other media sit in the same 680px column, so their edges line up exactly with the words' (2026-11-25, Amy: "the images' width should match the words"; they shrink to fit). CyberSea's three features stack: label and caption, then the video under them, 16px apart. On phones it's simply the full width.
 
