@@ -5,7 +5,7 @@ import { UI_SOUND_MIN_GAP_MS } from "@/lib/motion";
 import { decode, makeSound, play, type Sound } from "@/lib/sound";
 
 /** The sound (mixkit "modern technology select", public/sounds). */
-const SRC = "/sounds/ui-select.wav";
+const SRC = "/sounds/ui-select.mp3";
 const CLICK_VOLUME = 0.5;
 /** What counts as a button: real buttons and links, and anything acting as
  * one. */
