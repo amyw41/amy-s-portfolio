@@ -243,9 +243,9 @@
 }
 
 /* The facts side by side along the bottom left, each as wide as its
- * longest line, 40px apart: the labels in the page's Geist, small and light
- * (12px, white/55%; 2026-11-26, one font, no mono), 4px over the values
- * (13px weight 300, white). */
+ * longest line, 40px apart: the labels in the page's Geist, light (the
+ * subheader: 14px, white/55%; one font, no mono), 4px over the values
+ * (body: 14px weight 300, white). */
 .heroOverlayFacts {
   position: absolute;
   left: var(--pad-x);
@@ -258,7 +258,7 @@
 
 .heroFactLabel {
   margin: 0 0 4px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 400;
   line-height: 1.3;
   color: rgb(255 255 255 / 0.55);
@@ -266,7 +266,7 @@
 
 .heroFactValue {
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 300;
   line-height: 1.45;
 }

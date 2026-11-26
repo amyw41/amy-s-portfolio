@@ -42,14 +42,15 @@ export const TEXT = {
   // The case studies' type (docs/rebrand/design-system.md "Case-study type"):
   // headers 17px (home's intro size), everything else 14px; small headers
   // italic; all black.
-  header: "font-body text-[17px] font-medium leading-[1.3] text-black text-left",
+  // Amy's type scale (2026-11-26): header 18, subheader 14, body 14.
+  header: "font-body text-[18px] font-medium leading-[1.3] text-black text-left",
   // The small label above a title (a section's "01 / Initial Planning"):
   // the page's own Geist, just smaller and lighter (2026-11-26: one font
   // across the page, no mono), with the title under it in `header`.
-  subheader: "font-body text-[13px] font-normal leading-[1.45] text-black/50 text-left",
+  subheader: "font-body text-[14px] font-normal leading-[1.45] text-black/50 text-left",
   content: "font-body text-[14px] font-light leading-[1.45] text-black text-left",
   frame: "font-body text-[14px] font-light leading-[1.45] text-black text-left",
-  groupHeader: "font-body text-[17px] font-medium leading-[1.3] text-black text-left",
+  groupHeader: "font-body text-[18px] font-medium leading-[1.3] text-black text-left",
 };
 
 // The measure (2026-11-25): everything, writing and images alike, sits in
