@@ -67,8 +67,8 @@ export const TILE_LIFT_PX = 6;
 // WORK_HOVER_IN_MS and back out over WORK_HOVER_OUT_MS on a gentle curve, so
 // it eases in instead of flashing white (2026-11-26, Amy: lighter, slower).
 export const WORK_HOVER_WASH = 0.22;
-export const WORK_HOVER_IN_MS = 400;
-export const WORK_HOVER_OUT_MS = 300;
+export const WORK_HOVER_IN_MS = 250;
+export const WORK_HOVER_OUT_MS = 200;
 
 // The jar's cartoon moves (Home/JarView.tsx, brief Part 2.4).
 // jar → work: anticipation — lift JAR_ANTICIPATE_PX and squash to
