@@ -185,9 +185,9 @@
   object-fit: cover;
 }
 
-/* Lightens the hovered tile with the same white wash the jar dims its items
- * with (--dim-white, lib/tokens.css), over the cover only: its caption
- * stays as it is, so the name stays readable. */
+/* Lightens the hovered tile with a soft white wash over the cover only
+ * (--hover-wash, from lib/motion.ts WORK_HOVER_WASH): its caption stays as
+ * it is, so the name stays readable. */
 .cover::after {
   content: "";
   position: absolute;
@@ -198,11 +198,18 @@
 }
 
 .lightened .cover::after {
-  opacity: var(--dim-white);
+  opacity: var(--hover-wash);
 }
 
+/* Fades in slower than it fades out, on a gentle curve (not a front-loaded
+ * ease-out), so it eases in instead of flashing (lib/motion.ts). */
 @media (prefers-reduced-motion: no-preference) {
-  .cover::after,
+  .cover::after {
+    transition: opacity calc(var(--hover-out-ms) * var(--slow, 1)) ease-in-out;
+  }
+  .lightened .cover::after {
+    transition-duration: calc(var(--hover-in-ms) * var(--slow, 1));
+  }
   .caption {
     transition: opacity calc(200ms * var(--slow, 1)) ease;
   }

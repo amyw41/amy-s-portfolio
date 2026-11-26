@@ -28,6 +28,9 @@ import {
   JAR_LIFT_IN_MS,
   JAR_LIFT_OUT_MS,
   TILE_LIFT_PX,
+  WORK_HOVER_IN_MS,
+  WORK_HOVER_OUT_MS,
+  WORK_HOVER_WASH,
   WORK_EXIT_RISE_PX,
   WORK_EXIT_S,
 } from "@/lib/motion";
@@ -40,6 +43,9 @@ const LIFT_VARS = {
   "--tile-lift": `${TILE_LIFT_PX}px`,
   "--lift-in-ms": `${JAR_LIFT_IN_MS}ms`,
   "--lift-out-ms": `${JAR_LIFT_OUT_MS}ms`,
+  "--hover-wash": WORK_HOVER_WASH,
+  "--hover-in-ms": `${WORK_HOVER_IN_MS}ms`,
+  "--hover-out-ms": `${WORK_HOVER_OUT_MS}ms`,
 } as CSSProperties;
 
 /** The sidebar's Works list hovers "extras" for the Extras page: that lifts

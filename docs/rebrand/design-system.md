@@ -110,6 +110,7 @@ Sidebar, top to bottom:
 | Grid tiles in | each 300ms ease-out: rise 12px, scale 0.97 → 1, fade in; 40ms apart, top to bottom down the stage across both columns (left first on a tie) |
 | Leaving work mode | heading + grid slide up 12px and fade out together, 200ms ease-in; then the jar shows |
 | Works hover lift | rise 400ms soft ease-out, settle back 300ms ease-in-out; interruptible, never snaps |
+| Work card hover wash | 22% white, in 400ms, out 300ms, ease-in-out (`WORK_HOVER_*`) |
 | Jar → work | jar lifts 10px + squashes to scaleY 0.96 (120ms), then drops out of the stage (380ms ease-in), smooth; items get kicked up and knock around inside; clink sound on the click. Work only starts coming in once the jar has gone. |
 | "what's inside?" arriving | after the jar has gone: drops 48px from above with a small overshoot, 450ms, while the grid sweeps in |
 | Work → jar | grid leaves (200ms), then the jar drops in from above (420ms ease-in). The moment it stops, the items start falling in — no wait, and the replay skips the stretch where they're still above the window, so the first is in the jar ~250ms after landing; they spawn where they always did, so the settled pile (its arrangement and layering) is the original one — while the jar lands with a squash (scaleX 1.04, scaleY 0.92) springing back (360ms), smooth |
@@ -209,7 +210,7 @@ The same small header (`heroStyle="inline"`, the writing following straight on) 
 
 **Coming back home:** from a case study (its back arrow, the browser's back, or the Home link), home opens exactly where it was left: the same view (jar or work) and, in the work view, the same scroll (CaseZoom keeps both for the visit). The case study's back arrow and contents stay pinned at the top for the whole page, however short, until the footer pushes them up.
 
-**Work card hover (home):** hovering a project card (mouse only), or its name in the sidebar's Works list, lightens that card alone with the white wash over its cover (`--dim-white`, 200ms); its caption and all the other cards stay as they are (flipped 2026-11-26: it used to whiten the others). Nothing lifts in the work view (2026-11-26: lifting is only for the jar's items).
+**Work card hover (home):** hovering a project card (mouse only), or its name in the sidebar's Works list, lightens that card alone with a soft white wash over its cover (22% white, half the jar's dim; fading in over 400ms and out over 300ms, ease-in-out, so it eases in rather than flashing white; reduced motion: instant); its caption and all the other cards stay as they are (flipped 2026-11-26: it used to whiten the others). Nothing lifts in the work view (2026-11-26: lifting is only for the jar's items).
 
 ## Case-study corners
 Every corner on a case-study page is 2px, the same as the home page's project thumbnails (2026-11-26, Amy: "radius should always be consistent, use the project thumbnail"): images and videos, the preview, highlight and stat boxes, persona and insight cards, buttons. Circles stay circles. (The demos' own app UIs, CyberSea's Settings panel and Spotify's phone, keep their own shapes.)
