@@ -175,7 +175,8 @@ export default function WorkGrid({
 }) {
   const reduced = useReducedMotion() ?? false;
   // A card hovered with the mouse, or a case study hovered in the sidebar:
-  // that card stays as it is and the others go white (dimmed). No lift here
+  // that card alone gets the white wash (lightened); the others stay as they
+  // are (flipped 2026-11-26, Amy: it used to whiten the others). No lift here
   // (2026-11-26, Amy: lifting is only for the jar's items). "Extras" picks
   // the teaser extra(s).
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -242,7 +243,7 @@ export default function WorkGrid({
   );
 
   function card(tile: Tile, small: boolean) {
-    const dimmed = isolating && !isPicked(tile);
+    const lightened = isPicked(tile);
     return (
       <motion.li
         key={tile.id}
@@ -274,7 +275,7 @@ export default function WorkGrid({
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
             if (zoom.start({ href: tile.href, slug: tile.id, from: cover, src: tile.cover })) e.preventDefault();
           }}
-          className={`${styles.tile} ${small ? styles.small : ""} ${dimmed ? styles.dimmed : ""}`}
+          className={`${styles.tile} ${small ? styles.small : ""} ${lightened ? styles.lightened : ""}`}
           style={LIFT_VARS}
         >
           <span

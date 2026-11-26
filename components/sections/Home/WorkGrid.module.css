@@ -185,8 +185,9 @@
   object-fit: cover;
 }
 
-/* Dims a filtered-out tile the same way the jar dims its items: a white
- * wash over the cover (--dim-white, lib/tokens.css), plus faded text. */
+/* Lightens the hovered tile with the same white wash the jar dims its items
+ * with (--dim-white, lib/tokens.css), over the cover only: its caption
+ * stays as it is, so the name stays readable. */
 .cover::after {
   content: "";
   position: absolute;
@@ -196,12 +197,8 @@
   pointer-events: none;
 }
 
-.dimmed .cover::after {
+.lightened .cover::after {
   opacity: var(--dim-white);
-}
-
-.dimmed .caption {
-  opacity: 0.45;
 }
 
 @media (prefers-reduced-motion: no-preference) {
