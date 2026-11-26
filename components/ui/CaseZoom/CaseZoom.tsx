@@ -47,6 +47,11 @@ interface CaseZoomValue {
    * the same view. */
   lastMode: Mode;
   setLastMode(mode: Mode): void;
+  /** How far down the work view was scrolled, kept across the trip so
+   * coming back (the back arrow, the browser's back, the Home link) lands
+   * exactly where it was (2026-11-26). */
+  lastScroll: number;
+  setLastScroll(y: number): void;
 }
 
 const CaseZoomContext = createContext<CaseZoomValue | null>(null);
@@ -137,6 +142,7 @@ export default function CaseZoomProvider({ children }: { children: ReactNode }) 
   const [overlay, setOverlay] = useState<{ src: string; from: Box; to: Box; settle: boolean } | null>(null);
   const [returning, setReturning] = useState(false);
   const lastModeRef = useRef<Mode>("jar");
+  const lastScrollRef = useRef(0);
   // Resolves when the grow has arrived (the landing waits for both that and
   // the case study's thumbnail).
   const grownRef = useRef<(() => void) | null>(null);
@@ -240,6 +246,12 @@ export default function CaseZoomProvider({ children }: { children: ReactNode }) 
       },
       setLastMode: (mode) => {
         lastModeRef.current = mode;
+      },
+      get lastScroll() {
+        return lastScrollRef.current;
+      },
+      setLastScroll: (y) => {
+        lastScrollRef.current = y;
       },
     }),
     [phase, slug, start, returning, router],

@@ -77,7 +77,11 @@
   /* In front of the footer (which runs under it), on white. */
   z-index: 1;
   background: #fff;
-  height: 100dvh;
+  /* Only as tall as what's in it (the back arrow and the contents), so it
+   * stays at the top for the whole page until the footer pushes it up, even
+   * on a short page (2026-11-26: a full 100dvh rail ran out of room on the
+   * unfinished pages and scrolled away early). */
+  height: auto;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -285,6 +289,44 @@
   padding-bottom: var(--space-3xl);
 }
 
+/* ---------- header in the writing (heroStyle "inline") ---------- */
+
+/* An unfinished case study (Amy's mock, 2026-11-26): at the top of the
+ * writing, the caption as the title, the media in a 3:2 box the writing's
+ * width (680px), the facts centred in a row under it; 64px down to what
+ * follows (the under-construction sign). */
+.inline {
+  margin-bottom: var(--space-2xl);
+}
+
+.inlineTitle {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.inlineMedia {
+  margin-top: var(--space-lg);
+  aspect-ratio: 3 / 2 !important;
+}
+
+.inlineFacts {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-md) var(--space-xl);
+  margin-top: var(--space-lg);
+}
+
+.inlineFactLabel {
+  margin: 0 0 var(--space-xs);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: rgb(0 0 0 / 0.55);
+}
+
 /* ---------- mobile: a top bar, then everything stacked ---------- */
 
 @media (max-width: 767px) {
@@ -339,6 +381,14 @@
 
   .heroOverlayTitle {
     font-size: 28px;
+  }
+
+  .inlineTitle {
+    font-size: 22px;
+  }
+
+  .inline {
+    margin-bottom: var(--space-xl);
   }
 
   .heroOverlayFacts {

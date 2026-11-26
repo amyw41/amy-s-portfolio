@@ -48,6 +48,9 @@ interface ProjectSeed {
   small?: boolean;
   /** See Project.tint. */
   tint: string;
+  /** Only when the cover isn't at the derived cover.webp path (a new file
+   * name, so browsers and Next's image cache can't keep showing an old one). */
+  cover?: string;
 }
 
 /**
@@ -95,6 +98,27 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     year: 2026,
     tint: "#faf1f6", // light pink, SkinSproutCaseStudy's HIGHLIGHT
   },
+  // UW Flow: hidden for now (2026-11-26, nothing written yet). Uncomment to
+  // bring its card back; its cover is in public/images/projects/uwflow/.
+  // {
+  //   slug: "uwflow",
+  //   title: "UW Flow",
+  //   description: "Redesigning how Waterloo students pick courses.",
+  //   category: "work",
+  //   hasVideo: false,
+  //   year: 2026,
+  //   tint: "#e6f3ef", // light teal, the cover's own background
+  //   cover: "/images/projects/uwflow/cover-green.webp",
+  // },
+  {
+    slug: "blueprint",
+    title: "Blueprint",
+    description: "A volunteer CRM for UW Blueprint's nonprofits.",
+    category: "work",
+    hasVideo: false,
+    year: 2026,
+    tint: "#e4ecfd", // light Blueprint blue, the cover's own background
+  },
 ];
 
 /** Whether `pathname` is a case-study page (app/[slug]/): those have their
@@ -110,7 +134,7 @@ export const PROJECTS: Project[] = PROJECT_SEEDS.map((seed) => ({
   description: seed.description,
   category: seed.category,
   year: seed.year,
-  cover: coverPath(seed.slug),
+  cover: seed.cover ?? coverPath(seed.slug),
   video: seed.hasVideo ? videoPath(seed.slug) : undefined,
   small: seed.small ?? false,
   tint: seed.tint,

@@ -149,3 +149,22 @@
   /* A soft white glow, so it reads over whatever's behind. */
   text-shadow: 0 0 6px #fff, 0 0 12px #fff, 0 0 18px #fff;
 }
+
+/* The sign under an unfinished case study's header (ConstructionSign,
+ * 2026-11-26): smaller (240px), centred in the writing, no lift. */
+.sceneSmall {
+  margin: 0 auto;
+  gap: 16px;
+}
+
+.sceneSmall .barricade {
+  width: min(240px, 72vw);
+}
+
+.sceneSmall .signText {
+  font-size: 15px;
+}
+
+.sceneSmall .label {
+  font-size: 19px;
+}

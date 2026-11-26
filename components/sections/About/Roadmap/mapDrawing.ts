@@ -79,26 +79,14 @@ const ISLE: Pt[] = [
 /** One piece of the drawing: an outline (`ink`, its line weight in px). */
 export type MapShape = { d: string; ink?: number; fill?: string; dash?: string };
 
-/** A small hand-drawn circle round (x, y): the sketch's little stops along
- * the route. */
-function ring(seed: number, x: number, y: number, r: number): string {
-  const k = r * 0.55;
-  return buildWobblyCurvePath(seed, [
-    [[x, y - r], [x + k, y - r], [x + r, y - k], [x + r, y]],
-    [[x + r, y], [x + r, y + k], [x + k, y + r], [x, y + r]],
-    [[x, y + r], [x - k, y + r], [x - r, y + k], [x - r, y]],
-    [[x - r, y], [x - r, y - k], [x - k, y - r], [x, y - r]],
-  ], 0.2);
-}
-// The two little circles on the route in the sketch (not pins).
+// Two points the route bends through (the sketch's little circles, which
+// aren't drawn: Amy, 2026-11-26).
 const RING_A: Pt = [278, 329];
 const RING_C: Pt = [474, 392];
 
 export const MAP_SHAPES: MapShape[] = [
   { d: buildWobblyCurvePath(501, blob(COAST, 0.9), 0.8), ink: LINE_STROKE_WIDTH },
   { d: buildWobblyCurvePath(502, blob(ISLE, 0.9), 0.6), ink: LINE_STROKE_WIDTH },
-  { d: ring(503, RING_A[0], RING_A[1], 9), ink: LINE_STROKE_WIDTH, fill: "#fff" },
-  { d: ring(504, RING_C[0], RING_C[1], 9), ink: LINE_STROKE_WIDTH, fill: "#fff" },
 ];
 
 // ---------- the route ----------

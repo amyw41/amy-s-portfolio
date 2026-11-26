@@ -512,7 +512,7 @@ export function CaseStudyHero({
   /** "cover" (the default): the media fills the top of the page. "preview":
    * the media (and demo) fill the whole first screen (HeroPreview.tsx), with
    * the title, caption and facts over it. */
-  heroStyle?: "cover" | "preview";
+  heroStyle?: "cover" | "preview" | "inline";
 }) {
   const body = layoutPart !== undefined;
   const show = (part: "subtitle" | "meta" | "body") => !layoutPart || layoutPart === part;
@@ -629,13 +629,17 @@ export function CaseStudyLayout({
   const slug = usePathname().replace(/^\//, "");
   const thumbHidden = !!zoom && zoom.phase !== "idle" && zoom.slug === slug;
   const preview = hero?.props.heroStyle === "preview";
+  // "inline" (an unfinished case study, Amy's mock 2026-11-26): no cover; at
+  // the top of the writing the caption as the title, the media in a 3:2 box
+  // the writing's width, and the facts in a row under it.
+  const inline = hero?.props.heroStyle === "inline";
 
   return (
     <div className={`tw-scope ${layoutStyles.frame}`}>
       {/* The cover: the top 5/8 of the screen, the whole window wide: the
        * project's image or video (or a live demo, heroDemo) edge to edge.
        * It's where the zoom from home lands. */}
-      {hero && !preview && (
+      {hero && !preview && !inline && (
         <section className={layoutStyles.hero}>
           <div
             className={layoutStyles.heroMedia}
@@ -721,7 +725,48 @@ export function CaseStudyLayout({
       <main className={layoutStyles.content}>
         <div className={`${layoutStyles.sections} ${layoutStyles.coverEnd} text-left`}>
           {/* Under the cover: the title, its caption, then the facts. */}
-          {hero && !preview && (
+          {hero && inline && (
+            <motion.header
+              className={`${MEASURE} ${layoutStyles.inline}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={FADE_IN_TRANSITION}
+            >
+              <h1 className={layoutStyles.inlineTitle}>{hero.props.subtitle}</h1>
+              <HeroPreview
+                className={layoutStyles.inlineMedia}
+                squareProps={{
+                  [ZOOM_TARGET_ATTR]: slug,
+                  style: thumbHidden ? { visibility: "hidden" } : undefined,
+                }}
+                media={
+                  <CaseStudyImage
+                    src={hero.props.heroSrc}
+                    alt={hero.props.heroAlt}
+                    ratio="auto"
+                    video={hero.props.heroVideo}
+                    highlightColor={hero.props.highlightColor}
+                    className={layoutStyles.heroImage}
+                    sizes="(min-width: 768px) 680px, 100vw"
+                  />
+                }
+                demo={hero.props.heroDemo}
+              />
+              <div className={layoutStyles.inlineFacts} aria-label="Overview">
+                {hero.props.meta.map((m) => (
+                  <div key={m.label}>
+                    <p className={layoutStyles.inlineFactLabel}>{m.label.charAt(0) + m.label.slice(1).toLowerCase()}</p>
+                    {m.values.map((v) => (
+                      <p key={v} className={layoutStyles.heroFactValue}>
+                        {v}
+                      </p>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </motion.header>
+          )}
+          {hero && !preview && !inline && (
             <motion.header
               className={layoutStyles.intro}
               initial={{ opacity: 0 }}

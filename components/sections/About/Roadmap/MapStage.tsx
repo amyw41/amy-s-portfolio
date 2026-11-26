@@ -5,17 +5,17 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { geist } from "@/lib/fonts";
 import { ROADMAP_MAP, ROADMAP_STOPS, type RoadmapStop } from "@/lib/roadmap";
-import { buildWobblyCurvePath, buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
+import { buildWobblyLinePath, LINE_STROKE_WIDTH } from "@/lib/wobbly";
 import {
   EASE_IN,
   EASE_OUT,
   EASE_OVERSHOOT,
-  ROADMAP_LABEL_LAG_S,
-  ROADMAP_PIN_FROM_SCALE,
-  ROADMAP_PIN_GROW,
-  ROADMAP_PIN_GROW_S,
   ROADMAP_PIN_POP_S,
-  ROADMAP_PIN_SHRINK_S,
+  ROADMAP_PIN_HOVER_SCALE,
+  ROADMAP_PIN_LIFT_PX,
+  ROADMAP_PIN_PRESS_S,
+  ROADMAP_PIN_PRESS_SCALE,
+  ROADMAP_PIN_SETTLE_S,
   ROADMAP_POPUP_FROM_SCALE,
   ROADMAP_POPUP_IN_S,
   ROADMAP_POPUP_OUT_S,
@@ -29,26 +29,20 @@ import { MAP_H, MAP_SHAPES, MAP_W, PAPER_H, PAPER_PATH, PAPER_W, ROUTE_PATH, STO
 import styles from "./Roadmap.module.css";
 
 // The route is drawn at one steady pace (linear), like a pen moving along
-// it, so it reaches each stop at that stop's share of the route.
+// it, so it reaches each stop at that stop's share of the route; each pin
+// pops up just as the route gets there.
+
 const PIN_DELAYS = STOP_ROUTE_T.map((t, i) =>
   i === 0 ? ROADMAP_ROUTE_DELAY_S * 0.4 : ROADMAP_ROUTE_DELAY_S + t * ROADMAP_ROUTE_DRAW_S - ROADMAP_PIN_POP_S * 0.4,
 );
 
-// ---------- hand-drawn bits ----------
+// ---------- the pins ----------
 
-// The pin: a teardrop, its tip on the spot, drawn in a PIN_W × PIN_H box.
-// Its round head is centred at (10, 10), HEAD_R across; hovered, the photo
-// shows through it.
-const PIN_W = 20;
-const PIN_H = 27;
-const HEAD_R = 6.6;
-const PIN_SEGMENTS: Parameters<typeof buildWobblyCurvePath>[1] = [
-  [[10, 26], [6, 20], [1.5, 15], [1.5, 10]],
-  [[1.5, 10], [1.5, 4.5], [5.5, 1.2], [10, 1.2]],
-  [[10, 1.2], [14.5, 1.2], [18.5, 4.5], [18.5, 10]],
-  [[18.5, 10], [18.5, 15], [14, 20], [10, 26]],
-];
-const PIN_PATHS = ROADMAP_STOPS.map((_, i) => buildWobblyCurvePath(600 + i, PIN_SEGMENTS, 0.12));
+// Each pin is a real red pushpin (a photo, public/images/about/pin.png),
+// seen from above, PIN_D across, centred on its spot, with its own soft
+// shadow (an element of its own, so it can move with the pin's height).
+const PIN_D = 12;
+const PIN_SRC = "/images/about/pin.png";
 
 // The popup's close ×.
 const CLOSE = 16;
@@ -57,16 +51,7 @@ const CLOSE_PATHS = [
   buildWobblyLinePath(642, [CLOSE - 2, 2], [2, CLOSE - 2], 0.2),
 ];
 
-const PIN_VARS = {
-  "--pin-w": `${PIN_W}px`,
-  "--pin-h": `${PIN_H}px`,
-  "--pin-grow": ROADMAP_PIN_GROW,
-  "--grow-ms": `${ROADMAP_PIN_GROW_S * 1000}ms`,
-  "--shrink-ms": `${ROADMAP_PIN_SHRINK_S * 1000}ms`,
-  "--head-x": `${(10 / PIN_W) * 100}%`,
-  "--head-y": `${(10 / PIN_H) * 100}%`,
-  "--head-d": `${((HEAD_R * 2) / PIN_W) * 100}%`,
-} as CSSProperties;
+const PIN_VARS = { "--pin-d": `${PIN_D}px` } as CSSProperties;
 
 // ---------- pieces ----------
 
@@ -91,17 +76,35 @@ function Pin({
 }) {
   const pointer = useRef("mouse");
   const side = stop.label ?? "right";
+  // The first time it comes to rest is the landing (with its delay and its
+  // squash); after that, rest is just the way back from a hover or press.
+  const [landed, setLanded] = useState(reduced);
+  const settle = { duration: ROADMAP_PIN_SETTLE_S, ease: EASE_OUT };
+  const pop = slowTransition({ duration: ROADMAP_PIN_POP_S, ease: EASE_OVERSHOOT, delay: PIN_DELAYS[index] });
+  // The pin pops up out of the paper at its spot (from nothing, a little
+  // overshoot) as the route reaches it; hovered it lifts, pressed it's
+  // pushed in.
+  const ball = {
+    drop: { scale: 0, y: 0, opacity: 0 },
+    rest: { scale: 1, y: 0, opacity: 1, transition: landed ? settle : pop },
+    lift: { scale: ROADMAP_PIN_HOVER_SCALE, y: -ROADMAP_PIN_LIFT_PX, opacity: 1, transition: settle },
+    press: { scale: ROADMAP_PIN_PRESS_SCALE, y: 0, opacity: 1, transition: { duration: ROADMAP_PIN_PRESS_S, ease: EASE_OUT } },
+  };
+  // Its shadow grows in with it.
+  const shadow = {
+    drop: { scale: 0, x: -3, y: 3, opacity: 0 },
+    rest: { scale: 1, x: -3, y: 3, opacity: 1, transition: landed ? settle : pop },
+    lift: { scale: 1.35, x: -6, y: 7, opacity: 0.6, transition: settle },
+    press: { scale: 0.85, x: -1.5, y: 1.5, opacity: 1, transition: { duration: ROADMAP_PIN_PRESS_S, ease: EASE_OUT } },
+  };
   return (
-    <motion.div
+    <div
       className={styles.pinSpot}
       style={{ left: `${stop.x}%`, top: `${stop.y}%`, zIndex: grown ? 3 : 2 }}
       data-grown={grown || undefined}
       data-side={side}
-      initial={reduced ? false : { opacity: 0, scale: ROADMAP_PIN_FROM_SCALE }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={slowTransition({ duration: ROADMAP_PIN_POP_S, ease: EASE_OVERSHOOT, delay: PIN_DELAYS[index] })}
     >
-      <button
+      <motion.button
         ref={pinRef}
         type="button"
         className={styles.pin}
@@ -109,6 +112,10 @@ function Pin({
         data-open={open || undefined}
         aria-label={`${stop.place}: ${stop.marker.caption}`}
         aria-haspopup="dialog"
+        initial={reduced ? false : "drop"}
+        animate={grown ? "lift" : "rest"}
+        whileTap={reduced ? undefined : "press"}
+        onAnimationComplete={(def) => def === "rest" && setLanded(true)}
         onPointerDown={(e: PointerEvent) => (pointer.current = e.pointerType)}
         onPointerEnter={(e: PointerEvent) => e.pointerType === "mouse" && onHover(stop.id)}
         onPointerLeave={(e: PointerEvent) => e.pointerType === "mouse" && onHover(null)}
@@ -121,29 +128,20 @@ function Pin({
           pointer.current = "mouse";
         }}
       >
-        <svg className={styles.pinIcon} viewBox={`0 0 ${PIN_W} ${PIN_H}`} aria-hidden="true">
-          <path className={styles.pinBody} d={PIN_PATHS[index]} strokeWidth={LINE_STROKE_WIDTH} strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-          <circle className={styles.pinDot} cx={10} cy={10} r={2.8} />
-        </svg>
-        {/* The photo, showing through the head once it has grown. */}
-        <span className={styles.pinPhoto} aria-hidden="true">
-          {stop.marker.photo && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={stop.marker.photo.src} alt="" draggable={false} />
-          )}
-        </span>
-      </button>
+        <motion.span className={styles.pinShadow} variants={shadow} aria-hidden="true" />
+        <motion.img className={styles.pinBall} src={PIN_SRC} alt="" draggable={false} variants={ball} />
+      </motion.button>
       <motion.span
         className={styles.pinText}
         aria-hidden="true"
         initial={reduced ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={slowTransition({ duration: 0.3, ease: EASE_OUT, delay: PIN_DELAYS[index] + ROADMAP_LABEL_LAG_S })}
+        transition={slowTransition({ duration: 0.3, ease: EASE_OUT, delay: PIN_DELAYS[index] + ROADMAP_PIN_POP_S * 0.5 })}
       >
         <span className={styles.pinLabel}>{stop.place}</span>
         <span className={styles.pinCaption}>{stop.marker.caption}</span>
       </motion.span>
-    </motion.div>
+    </div>
   );
 }
 

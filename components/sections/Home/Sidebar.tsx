@@ -70,12 +70,14 @@ const SOCIAL_LINKS = [
   { href: links.email.href, label: copy.social.email, icon: <MailIcon /> },
 ];
 
-// Case studies listed under Works — every project in lib/projects.ts, then
-// Extras last (it isn't a Project, see ExtrasCard.tsx, but has its own case
-// study at /extras). `id` is the project's slug — also its jar item's id and
-// its work-mode tile's id.
+// The projects listed under Works: only Amy's strongest, finished case
+// studies (2026-11-26), in lib/projects.ts order. The rest still have their
+// card in the work grid. Then Extras last (it isn't a Project, see
+// ExtrasCard.tsx, but has its own case study at /extras). `id` is the
+// project's slug — also its jar item's id and its work-mode tile's id.
+const SIDEBAR_PROJECTS = new Set(["cybersea", "spotify"]);
 const WORK_LINKS = [
-  ...PROJECTS.map((project) => ({
+  ...PROJECTS.filter((project) => SIDEBAR_PROJECTS.has(project.slug)).map((project) => ({
     id: project.slug,
     href: `/${project.slug}`,
     label: project.title,

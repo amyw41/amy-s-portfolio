@@ -45,7 +45,7 @@ const META = [
   { label: "ROLE", values: ["Design Engineer"] },
   { label: "TIMELINE", values: ["Jan 2026 (36h)"] },
   { label: "TEAM", values: ["1 designer, 2 devs"] },
-  { label: "RESULTS", values: ["1st overall", "2nd for the Thales Challenge"] },
+  { label: "RESULTS", values: ["1st overall", "2nd for Thales Challenge"] },
 ];
 
 // Persona cards for the Research section — same "one card per person" idea
@@ -369,7 +369,7 @@ export default function CyberSeaCaseStudy() {
             </li>
             <li className="flex gap-2">
               <span aria-hidden="true">–</span>
-              <span>2nd for the Thales Challenge</span>
+              <span>2nd for Thales Challenge</span>
             </li>
           </ul>
         </Row>

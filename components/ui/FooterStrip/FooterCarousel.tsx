@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
 import { animate, motion, useMotionValue, useMotionValueEvent, useReducedMotion, useTransform } from "framer-motion";
+import type { AnimationPlaybackControls, MotionValue } from "framer-motion";
 import styles from "./FooterStrip.module.css";
 import BuzzPath from "@/components/ui/BuzzPath";
 import { WHATS_INSIDE_ITEMS } from "@/lib/whatsInsideItems";
 import { content } from "@/lib/content";
 import { ITEM_BBOXES } from "@/lib/itemBBoxes";
-import { FOOTER_CAROUSEL_SLIDE_S, slowMs } from "@/lib/motion";
+import { FOOTER_CAROUSEL_COAST_MS, FOOTER_CAROUSEL_SLIDE_S, slowMs } from "@/lib/motion";
 import { buildWobblyLinePath, buildWobblyOvalPath, LINE_STROKE_WIDTH, VIEW_BOX } from "@/lib/wobbly";
 
 const copy = content.en.footer;
@@ -222,19 +224,55 @@ function ArrowButton({ dir, seed, label, onClick }: { dir: "prev" | "next"; seed
  * item (ITEM_MAX_W) plus the window's fade, so a neighbour only shows while
  * it's sliding through. */
 const SLOT = 380;
-/** Items drawn either side of the one in view (enough for a fast run of
- * clicks to slide through without gaps). */
-const SPREAD = 2;
-const wrap = (n: number) => ((n % ITEMS.length) + ITEMS.length) % ITEMS.length;
+const N = ITEMS.length;
+const wrap = (n: number) => ((n % N) + N) % N;
+/** Where item `i` sits relative to strip position `p`, in items, taken the
+ * short way round the loop (−N/2 … N/2). Every item is always mounted and
+ * just placed by this, so the loop has no seam and nothing pops in. */
+const offsetOf = (i: number, p: number) => {
+  const d = (((i - p) % N) + N) % N;
+  return d > N / 2 ? d - N : d;
+};
+
+/** A drag is a drag (not a tap) once it's moved this far (px). */
+const DRAG_SLOP = 4;
+/** A flick this fast (px/ms) always moves at least one item, however short. */
+const FLICK_VELOCITY = 0.3;
+/** A single drag or flick moves at most this many items. */
+const MAX_FLING = 3;
+
+/** One item on the strip, placed every frame from the strip's position. */
+function Slot({ index, pos, active }: { index: number; pos: MotionValue<number>; active: boolean }) {
+  const it = ITEMS[index];
+  const x = useTransform(pos, (p) => offsetOf(index, p) * SLOT);
+  return (
+    <motion.div className={styles.slideImageInner} style={{ x }} aria-hidden={!active}>
+      <ItemArt id={it.id} src={it.image} alt={active ? it.name : ""} />
+    </motion.div>
+  );
+}
 
 /**
  * The footer's middle: the jar's items on a strip, one in view at a time,
- * its caption under it, and a hand-drawn circle arrow either side. An arrow
- * slides the strip along to the next item (wrapping round forever), over
- * FOOTER_CAROUSEL_SLIDE_S, ease-out. Clicking again mid-slide just extends
- * it: the strip carries on from where it is to the new item, so clicking
- * quickly glides through several and always comes to rest centred.
- * Reduced motion: it jumps straight there.
+ * its caption under it, and a hand-drawn circle arrow either side.
+ *
+ * It moves like a physical strip rather than a slideshow:
+ * - The strip's position (`pos`, in items, unbounded) is the one source of
+ *   truth; every item and the caption are read straight off it.
+ * - The arrows (and ← / → keys) send it to the next item on a spring with
+ *   no bounce. A spring picks up the speed it already has, so clicking again
+ *   mid-slide just carries it on smoothly to the new item: no restart, no
+ *   jolt. (The old fixed 450ms ease-out restarted from full speed on every
+ *   click and covered most of the distance in its first 100ms, which read as
+ *   a snap.)
+ * - It can be dragged or swiped: the item follows the finger 1:1, and on
+ *   release it coasts by the release speed and settles on the nearest item,
+ *   a quick flick always moving on at least one.
+ * - The caption fades out as an item leaves the middle and back in as the
+ *   next arrives, tied to the position, so it never jumps ahead of the
+ *   picture.
+ * Reduced motion: arrows jump straight there; a drag still follows the
+ * finger, then lands without the glide.
  */
 export default function FooterCarousel() {
   const reduced = useReducedMotion() ?? false;
@@ -261,51 +299,114 @@ export default function FooterCarousel() {
   }, [near]);
   usePreloadItems(near);
 
-  // `target`: the strip position (in items, unbounded) it's heading for;
-  // `pos`: where it is now (animated). The item in view is round(pos).
   const start = Math.max(0, ITEMS.findIndex((item) => item.id === "skullpanda"));
-  const [target, setTarget] = useState(start);
   const pos = useMotionValue(start);
-  const x = useTransform(pos, (p) => -p * SLOT);
+  // Where it's heading (unbounded), so quick clicks add up.
+  const target = useRef(start);
+  const anim = useRef<AnimationPlaybackControls | null>(null);
+  // The item nearest the middle: its caption shows, and it's the one
+  // announced.
   const [at, setAt] = useState(start);
-  useMotionValueEvent(pos, "change", (p) => setAt(Math.round(p)));
-  useEffect(() => {
+  useMotionValueEvent(pos, "change", (p) => setAt(wrap(Math.round(p))));
+  // The caption is fully there on an item and gone halfway between two.
+  const captionOpacity = useTransform(pos, (p) => Math.max(0, 1 - Math.abs(p - Math.round(p)) * 3));
+  useEffect(() => () => anim.current?.stop(), []);
+
+  const settle = (to: number, velocity?: number) => {
+    target.current = to;
+    anim.current?.stop();
     if (reduced) {
-      pos.set(target);
+      pos.set(to);
       return;
     }
-    const controls = animate(pos, target, {
-      duration: slowMs(FOOTER_CAROUSEL_SLIDE_S * 1000) / 1000,
-      ease: [0.22, 1, 0.36, 1],
+    anim.current = animate(pos, to, {
+      type: "spring",
+      visualDuration: slowMs(FOOTER_CAROUSEL_SLIDE_S * 1000) / 1000,
+      bounce: 0,
+      // Left out, it carries on at the speed it already has.
+      ...(velocity !== undefined && { velocity }),
     });
-    return () => controls.stop();
-  }, [target, reduced, pos]);
+  };
+  const step = (by: number) => settle(target.current + by);
 
-  const step = (by: number) => setTarget((t) => t + by);
-  const item = ITEMS[wrap(target)];
-  const slots = [];
-  for (let k = at - SPREAD; k <= at + SPREAD; k++) slots.push(k);
+  // Drag / swipe.
+  const drag = useRef<{ id: number; x0: number; p0: number; moved: boolean; lastX: number; lastT: number; v: number } | null>(null);
+  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 || drag.current) return;
+    anim.current?.stop();
+    drag.current = { id: e.pointerId, x0: e.clientX, p0: pos.get(), moved: false, lastX: e.clientX, lastT: e.timeStamp, v: 0 };
+  };
+  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    if (!d || d.id !== e.pointerId) return;
+    const dx = e.clientX - d.x0;
+    if (!d.moved) {
+      if (Math.abs(dx) < DRAG_SLOP) return;
+      d.moved = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+    const dt = e.timeStamp - d.lastT;
+    if (dt > 0) {
+      // Smoothed, so one jittery event doesn't decide the flick.
+      const v = (e.clientX - d.lastX) / dt;
+      d.v = d.v * 0.4 + v * 0.6;
+    }
+    d.lastX = e.clientX;
+    d.lastT = e.timeStamp;
+    pos.set(d.p0 - dx / SLOT);
+  };
+  const onPointerEnd = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    if (!d || d.id !== e.pointerId) return;
+    drag.current = null;
+    if (!d.moved) {
+      // A tap: carry on to where it was going.
+      settle(target.current);
+      return;
+    }
+    // Held still before letting go: no fling.
+    const v = e.timeStamp - d.lastT > 80 ? 0 : d.v;
+    const p = pos.get();
+    let to = Math.round(p - (v * FOOTER_CAROUSEL_COAST_MS) / SLOT);
+    const from = Math.round(d.p0);
+    if (Math.abs(v) > FLICK_VELOCITY && to === from) to = from - Math.sign(v);
+    to = Math.max(from - MAX_FLING, Math.min(from + MAX_FLING, to));
+    // The strip's speed at release, in items per second.
+    settle(to, (-v * 1000) / SLOT);
+  };
 
+  const onKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "ArrowLeft") step(-1);
+    else if (e.key === "ArrowRight") step(1);
+    else return;
+    e.preventDefault();
+  };
+
+  const item = ITEMS[at];
   if (!item) return null;
   return (
-    <div ref={rootRef} className={styles.carousel} aria-roledescription="carousel" aria-label={copy.carouselLabel}>
+    <div
+      ref={rootRef}
+      className={styles.carousel}
+      role="region"
+      aria-roledescription="carousel"
+      aria-label={copy.carouselLabel}
+      onKeyDown={onKeyDown}
+    >
       <ArrowButton dir="prev" seed={221} label={copy.carouselPrev} onClick={() => step(-1)} />
       <figure className={styles.slide}>
-        <div className={styles.slideImage}>
-          <motion.div className={styles.track} style={{ x }}>
-            {slots.map((k) => {
-              const it = ITEMS[wrap(k)];
-              return (
-                <div key={k} className={styles.slideImageInner} style={{ left: k * SLOT }} aria-hidden={k !== target}>
-                  {near && <ItemArt id={it.id} src={it.image} alt={k === target ? it.name : ""} />}
-                </div>
-              );
-            })}
-          </motion.div>
+        <div
+          className={styles.slideImage}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerEnd}
+          onPointerCancel={onPointerEnd}
+        >
+          {near && ITEMS.map((it, i) => <Slot key={it.id} index={i} pos={pos} active={i === at} />)}
         </div>
-        <figcaption className={styles.caption} aria-live="polite">
+        <motion.figcaption className={styles.caption} style={{ opacity: captionOpacity }} aria-live="polite">
           {item.caption}
-        </figcaption>
+        </motion.figcaption>
       </figure>
       <ArrowButton dir="next" seed={222} label={copy.carouselNext} onClick={() => step(1)} />
     </div>

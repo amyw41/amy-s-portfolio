@@ -323,7 +323,9 @@ export default function SkinSproutCaseStudy() {
         heroSrc="/images/projects/skinsprout/skinsprout.mp4"
         heroAlt="SkinSprout app preview"
         heroVideo
-        heroStyle="preview"
+        // The small header (2026-11-26): only case studies with a playable
+        // demo (CyberSea, Spotify) get the big full-screen one.
+        heroStyle="inline"
         highlightColor={HIGHLIGHT}
         meta={META}
         tldr="SkinSprout helps people track their skincare history and get product recommendations that actually fit their skin — built for everyone from beginners overwhelmed by choice to routine-trackers who forget what they've already tried."

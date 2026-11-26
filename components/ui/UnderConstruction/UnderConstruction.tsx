@@ -74,6 +74,29 @@ const BACK_PATHS = [
   buildWobblyLinePath(132, [7, 3.5], [1.5, BACK / 2], 0.15) + " " + buildWobblyLinePath(133, [1.5, BACK / 2], [7, BACK - 3.5], 0.15),
 ];
 
+/** The sign and "come back soon!" on their own, smaller and not covering the
+ * window: under an unfinished case study's header (app/[slug]/page.tsx). */
+export function ConstructionSign() {
+  return (
+    <div className={`${gaegu.variable} ${styles.scene} ${styles.sceneSmall}`}>
+      <div className={styles.barricade}>
+        <div className={styles.signFill} aria-hidden="true" />
+        <BuzzPath className={styles.lines} variants={VARIANTS} viewBox={`0 0 ${W} ${H}`} strokeWidth={1.2} />
+        <div className={styles.face}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/logos/black-star.png" alt="" className={styles.star} draggable={false} />
+          <p className={styles.signText}>
+            under
+            <br />
+            construction
+          </p>
+        </div>
+      </div>
+      <p className={styles.label}>come back soon!</p>
+    </div>
+  );
+}
+
 export default function UnderConstruction({ children }: { children?: ReactNode }) {
   return (
     <div className={`${geist.variable} ${gaegu.variable} ${styles.page}`}>

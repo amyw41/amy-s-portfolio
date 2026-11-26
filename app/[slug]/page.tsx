@@ -5,7 +5,7 @@ import SkinSproutCaseStudy from "@/components/case-studies/SkinSproutCaseStudy";
 import CyberSeaCaseStudy from "@/components/case-studies/CyberSeaCaseStudy";
 import SpotifyCaseStudy from "@/components/case-studies/SpotifyCaseStudy";
 import ExtrasCaseStudy from "@/components/case-studies/ExtrasCaseStudy";
-import UnderConstruction from "@/components/ui/UnderConstruction";
+import UnfinishedCaseStudy from "@/components/case-studies/UnfinishedCaseStudy";
 import { UNDER_CONSTRUCTION } from "@/lib/underConstruction";
 
 // Keyed by this site's own project slug (lib/projects.ts) — "spotify", not
@@ -36,7 +36,9 @@ const CASE_STUDIES: Record<string, ComponentType> = {
 // for the same path, so there's no collision risk as long as no project
 // slug is ever literally "about" or "playground".
 export function generateStaticParams() {
-  const projectSlugs = PROJECTS.filter((project) => project.slug in CASE_STUDIES).map((project) => ({
+  const projectSlugs = PROJECTS.filter(
+    (project) => project.slug in CASE_STUDIES || UNDER_CONSTRUCTION.caseStudies.has(project.slug),
+  ).map((project) => ({
     slug: project.slug,
   }));
   return [...projectSlugs, { slug: "extras" }];
@@ -45,9 +47,10 @@ export function generateStaticParams() {
 export default async function ProjectPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const CaseStudy = CASE_STUDIES[slug];
+  // Not finished (lib/underConstruction.ts; Amy's mock, 2026-11-26): the case
+  // study's header (title, cover, facts) with the sign under it.
+  if (UNDER_CONSTRUCTION.caseStudies.has(slug)) return <UnfinishedCaseStudy slug={slug} />;
   if (!CaseStudy) notFound();
-  // Not finished yet (lib/underConstruction.ts): the barricade instead.
-  if (UNDER_CONSTRUCTION.caseStudies.has(slug)) return <UnderConstruction><CaseStudy /></UnderConstruction>;
 
   return <CaseStudy />;
 }

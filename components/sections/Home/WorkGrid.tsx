@@ -174,12 +174,16 @@ export default function WorkGrid({
   onJumpToJar?: () => void;
 }) {
   const reduced = useReducedMotion() ?? false;
-  // A case study hovered in the sidebar: its card lifts, the others dim.
-  // "Extras" lifts the teaser extra(s).
+  // A card hovered with the mouse, or a case study hovered in the sidebar:
+  // that card stays as it is and the others go white (dimmed). No lift here
+  // (2026-11-26, Amy: lifting is only for the jar's items). "Extras" picks
+  // the teaser extra(s).
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const pickedId = hoveredId ?? focusedId;
   const isolating =
-    focusedId !== null && (focusedId === EXTRAS_ID || [...BIG_TILES, ...SMALL_TILES].some((t) => t.id === focusedId));
-  const isLifted = (tile: Tile) =>
-    isolating && (tile.id === focusedId || (focusedId === EXTRAS_ID && tile.id.startsWith("extra-")));
+    pickedId !== null && (pickedId === EXTRAS_ID || [...BIG_TILES, ...SMALL_TILES].some((t) => t.id === pickedId));
+  const isPicked = (tile: Tile) =>
+    isolating && (tile.id === pickedId || (pickedId === EXTRAS_ID && tile.id.startsWith("extra-")));
 
 
   // "jump to jar" draws on when it's on screen (the page scrolls on
@@ -238,8 +242,7 @@ export default function WorkGrid({
   );
 
   function card(tile: Tile, small: boolean) {
-    const lifted = isLifted(tile);
-    const dimmed = isolating && !lifted;
+    const dimmed = isolating && !isPicked(tile);
     return (
       <motion.li
         key={tile.id}
@@ -253,9 +256,16 @@ export default function WorkGrid({
           href={tile.href}
           data-work-card={tile.id}
           // Fetch the case study on hover, so the zoom lands without a wait.
-          onPointerEnter={() => {
+          onPointerEnter={(e) => {
             if (!tile.id.startsWith("extra-")) zoom?.prefetch(tile.href);
+            if (e.pointerType === "mouse") setHoveredId(tile.id);
           }}
+          // Also on move: the cards can arrive under a pointer that's
+          // already there (no enter).
+          onPointerMove={(e) => {
+            if (e.pointerType === "mouse" && hoveredId !== tile.id) setHoveredId(tile.id);
+          }}
+          onPointerLeave={() => setHoveredId((id) => (id === tile.id ? null : id))}
           // A case study zooms in from its cover (components/ui/CaseZoom);
           // extras (to the Play page) just navigate.
           onClick={(e) => {
@@ -264,7 +274,7 @@ export default function WorkGrid({
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
             if (zoom.start({ href: tile.href, slug: tile.id, from: cover, src: tile.cover })) e.preventDefault();
           }}
-          className={`${styles.tile} ${small ? styles.small : ""} ${dimmed ? styles.dimmed : ""} ${lifted ? styles.lifted : ""}`}
+          className={`${styles.tile} ${small ? styles.small : ""} ${dimmed ? styles.dimmed : ""}`}
           style={LIFT_VARS}
         >
           <span

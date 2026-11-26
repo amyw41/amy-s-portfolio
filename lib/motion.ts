@@ -287,6 +287,9 @@ export const FOIL_REVEAL_LAG_MS = 180;
 // clicking again mid-slide carries on from where it is to the new item.
 // Reduced motion: instant.
 export const FOOTER_CAROUSEL_SLIDE_S = 0.45;
+// The carousel when dragged or swiped: on release it coasts this long's
+// worth of its release speed (px/ms × ms), then settles on the nearest item.
+export const FOOTER_CAROUSEL_COAST_MS = 160;
 // The footer's credit: its gradient follows the mouse across it, catching
 // up over this (ease-out), and eases back on leave. Reduced motion: still.
 export const FOOTER_CREDIT_SHIFT_MS = 500;
@@ -356,23 +359,25 @@ export const GUESSR_HOP_MS = 600;
 export const UI_SOUND_MIN_GAP_MS = 90;
 
 // ---------- About page: "Amy's roadmap" (components/sections/About/Roadmap) ----------
-// The dotted route draws itself in along the map on load: it starts
-// ROADMAP_ROUTE_DELAY_S in and takes ROADMAP_ROUTE_DRAW_S (ease-in-out, like a
-// pen, 2026-11-25: linear, one steady pace; was ease-in-out). Each pin pops in (ROADMAP_PIN_POP_S, a little overshoot, from
-// ROADMAP_PIN_FROM_SCALE) the moment the route reaches it; the first is there
-// before the route sets off. Its label fades in ROADMAP_LABEL_LAG_S after.
+// The dashed route draws itself in along the map on load: it starts
+// ROADMAP_ROUTE_DELAY_S in and takes ROADMAP_ROUTE_DRAW_S, linear (one steady
+// pace, like a pen).
 export const ROADMAP_ROUTE_DELAY_S = 0.35;
-export const ROADMAP_ROUTE_DRAW_S = 2.6;
+// 0.8s: the same pen speed as home's divider drawing on (~1100px/s: its
+// 664px over INTRO_DIVIDER_DRAW_S), for the route's ~900px at 1536×696.
+export const ROADMAP_ROUTE_DRAW_S = 0.8;
+// The pins (real red pushpins) pop up out of the paper as the route
+// reaches them (2026-11-26: Amy didn't like the gravity bounce): from
+// nothing, with a little overshoot, over ROADMAP_PIN_POP_S. Hovered, a pin
+// lifts ROADMAP_PIN_LIFT_PX and grows to ROADMAP_PIN_HOVER_SCALE over
+// ROADMAP_PIN_SETTLE_S; pressed, it's pushed in to ROADMAP_PIN_PRESS_SCALE
+// over ROADMAP_PIN_PRESS_S, like a button.
 export const ROADMAP_PIN_POP_S = 0.36;
-export const ROADMAP_PIN_FROM_SCALE = 0.4;
-export const ROADMAP_LABEL_LAG_S = 0.08;
-// Hovering (or focusing, or on touch tapping) a pin grows it from its tip
-// to ROADMAP_PIN_GROW× its size over ROADMAP_PIN_GROW_S (ease-out), its
-// round head opening to show the stop's photo, and the caption fades in
-// under its label; it shrinks back over ROADMAP_PIN_SHRINK_S (ease-in-out).
-export const ROADMAP_PIN_GROW = 3;
-export const ROADMAP_PIN_GROW_S = 0.24;
-export const ROADMAP_PIN_SHRINK_S = 0.2;
+export const ROADMAP_PIN_HOVER_SCALE = 1.14;
+export const ROADMAP_PIN_LIFT_PX = 3;
+export const ROADMAP_PIN_SETTLE_S = 0.2;
+export const ROADMAP_PIN_PRESS_SCALE = 0.86;
+export const ROADMAP_PIN_PRESS_S = 0.08;
 // Clicking a pin opens its popup in the middle of the window: the page
 // behind darkens (to ROADMAP_SCRIM_OPACITY black) over ROADMAP_SCRIM_S, and
 // the popup comes in from ROADMAP_POPUP_FROM_SCALE over ROADMAP_POPUP_IN_S

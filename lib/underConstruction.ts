@@ -3,13 +3,15 @@
 // content, which stays in the repo untouched. Take a page out of here once
 // it's done. (2026-11-23: About, Play and every case study.)
 export const UNDER_CONSTRUCTION = {
-  about: false,
+  about: true,
   // The Play page and its category pages.
   play: true,
   // Case studies, by slug (app/[slug]/page.tsx).
-  // Empty on the case-studies branch, so they can be worked on; main keeps
-  // them behind the barricade.
-  caseStudies: new Set<string>([]),
+  // CyberSea, Spotify Guessr and SkinSprout are live (2026-11-26).
+  // Blueprint has a home card but no case study written yet, so it shows its
+  // header with the sign under it (app/[slug]/page.tsx). (UW Flow's card is
+  // hidden for now, lib/projects.ts.)
+  caseStudies: new Set<string>(["blueprint"]),
 };
 
 /** Whether this path shows the barricade (so the taskbar and the big footer

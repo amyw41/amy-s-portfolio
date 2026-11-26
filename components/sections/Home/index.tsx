@@ -56,9 +56,14 @@ export default function Home() {
   // Back from a case study by its logo: come back in the mode it was left
   // in, the rail widening back into the sidebar (zoomStage below).
   const zoom = useCaseZoom();
-  const [mode, setMode] = useState<HomeMode>(() => (zoom?.returning ? zoom.lastMode : "jar"));
+  // Coming back to home in this visit, however (the back arrow, the
+  // browser's back, the Home link), lands exactly where it was left: the same
+  // mode, and in the work view the same scroll (2026-11-26). The first visit
+  // starts on the jar (lastMode's default).
+  const [mode, setMode] = useState<HomeMode>(() => zoom?.lastMode ?? "jar");
   useEffect(() => {
     zoom?.setLastMode(mode);
+    if (mode === "jar") zoom?.setLastScroll(0);
   }, [zoom, mode]);
   // The zoom into a case study (and back): "out" — the sidebar narrowed to
   // the case study's rail, everything else faded and dropped out (leaving,
@@ -123,6 +128,50 @@ export default function Home() {
   // Scrolling is the switch (no toggle): down for work, up for the jar.
   const frameRef = useRef<HTMLElement>(null);
   useScrollSwitch(frameRef, mode, changeMode);
+
+  // The work view's scroll, remembered as it changes (the frame scrolls on
+  // desktop, the window on phones), and put back once when home opens in
+  // work mode: retried each frame until the cards are tall enough to hold
+  // it (they arrive just after mount), for up to a second.
+  const zoomRef = useRef(zoom);
+  const modeRef = useRef(mode);
+  useEffect(() => {
+    zoomRef.current = zoom;
+    modeRef.current = mode;
+  });
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+    let restoring = modeRef.current === "work" && (zoomRef.current?.lastScroll ?? 0) > 0;
+    const save = () => {
+      if (restoring || modeRef.current !== "work") return;
+      zoomRef.current?.setLastScroll(Math.max(frame.scrollTop, window.scrollY));
+    };
+    frame.addEventListener("scroll", save, { passive: true });
+    window.addEventListener("scroll", save, { passive: true });
+    let raf = 0;
+    if (restoring) {
+      const target = zoomRef.current!.lastScroll;
+      const until = performance.now() + 1000;
+      const step = () => {
+        frame.scrollTop = target;
+        window.scrollTo(0, target);
+        const at = Math.max(frame.scrollTop, window.scrollY);
+        if (Math.abs(at - target) < 2 || performance.now() > until) {
+          restoring = false;
+          return;
+        }
+        raf = requestAnimationFrame(step);
+      };
+      raf = requestAnimationFrame(step);
+    }
+    return () => {
+      cancelAnimationFrame(raf);
+      frame.removeEventListener("scroll", save);
+      window.removeEventListener("scroll", save);
+    };
+    // Once, on mount: the mode it opened in decides whether to restore.
+  }, []);
 
   // The taskbar's "work" link on every other page still points at
   // /#projects (the old projects section) — land those visits in work mode.

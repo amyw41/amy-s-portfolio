@@ -303,6 +303,20 @@ const JOSTLE_UP = 9;
 const JOSTLE_SIDE = 2.5;
 const JOSTLE_SPIN = 0.12;
 
+/** Settling after an item leaves (live physics only — the load-in fall is
+ * the precomputed recording and never sees this). A resting item is asleep,
+ * and Matter never wakes a sleeper just because what it rests on went away,
+ * so the pile used to hang in mid-air around the gap. Now, when a moving
+ * item separates from a sleeping one, the sleeper wakes and gravity takes
+ * it; if that drops it off its own neighbours, they wake too, so the pile
+ * tumbles down into the gap as a chain. Separations slower than this
+ * (px/step, at REFERENCE_WIDTH) are resting jitter and don't count. */
+const SUPPORT_LOSS_WAKE_SPEED = 0.6;
+/** A tumble is heard as at most this many soft clinks against the glass,
+ * within this window after the last wake. */
+const TUMBLE_CLINKS = 2;
+const TUMBLE_CLINK_WINDOW_MS = 900;
+
 export interface JarPhysicsOptions {
   /** false holds everything — measuring, spawning, the fall — until it
    * turns true (e.g. until the jar has landed after dropping in). Default
@@ -691,7 +705,7 @@ export function useJarPhysics(
           if (recordedHit.has(id)) return;
           recordedHit.add(id);
           recordedImpacts.push({ tick: recordingTick, strength });
-        } else if (performance.now() < liveWindowUntil && liveClinksLeft > 0 && !liveHit.has(id)) {
+        } else if (performance.now() < liveWindowUntil && liveClinksLeft > 0 && !liveHit.has(id) && body !== dragBody && strength >= MIN_CLINK_STRENGTH) {
           liveHit.add(id);
           liveClinksLeft--;
           onImpactRef.current?.(strength);
@@ -710,6 +724,33 @@ export function useJarPhysics(
       };
       Events.on(engine, "collisionStart", handleCollisionStart);
       cleanupFns.push(() => Events.off(engine, "collisionStart", handleCollisionStart));
+
+      // Support loss (see SUPPORT_LOSS_WAKE_SPEED). Off until the live loop
+      // starts, so the precomputed load-in fall stays exactly as it is.
+      let liveStarted = false;
+      const handleCollisionEnd = (event: Matter.IEventCollision<Matter.Engine>) => {
+        if (!liveStarted) return;
+        for (const { bodyA, bodyB } of event.pairs) {
+          wakeOnSupportLoss(bodyA, bodyB);
+          wakeOnSupportLoss(bodyB, bodyA);
+        }
+      };
+      function wakeOnSupportLoss(sleeper: Matter.Body, leaver: Matter.Body) {
+        if (!sleeper.isSleeping || leaver.isSleeping) return;
+        if (!bodyIdToItemId.has(sleeper.id) || !bodyIdToItemId.has(leaver.id)) return;
+        if (leaver.speed < SUPPORT_LOSS_WAKE_SPEED * scale) return;
+        Sleeping.set(sleeper, false);
+        // The tumble that follows may knock the glass: a couple of soft
+        // clinks, through the same live window the jostle uses.
+        const now = performance.now();
+        if (now >= liveWindowUntil) {
+          liveClinksLeft = TUMBLE_CLINKS;
+          liveHit.clear();
+        }
+        liveWindowUntil = Math.max(liveWindowUntil, now + TUMBLE_CLINK_WINDOW_MS);
+      }
+      Events.on(engine, "collisionEnd", handleCollisionEnd);
+      cleanupFns.push(() => Events.off(engine, "collisionEnd", handleCollisionEnd));
 
       function buildWalls(w: number, h: number, s: number) {
         wallBodies = createJarWallBodies(JAR_INTERIOR_POINTS, w, h, JAR_WALL_THICKNESS * s);
@@ -1457,6 +1498,7 @@ export function useJarPhysics(
       // engine, so there's no state to hand off.
       let rafId = 0;
       function startLiveLoop() {
+        liveStarted = true;
         // Generate blob ring rasters now, after the fall animation is done.
         // This canvas work (24 drawImage calls + composite + PNG encode per
         // blob item) was the main cause of frame drops during the fall: each
