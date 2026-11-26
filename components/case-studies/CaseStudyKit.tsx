@@ -43,11 +43,10 @@ export const TEXT = {
   // headers 17px (home's intro size), everything else 14px; small headers
   // italic; all black.
   header: "font-body text-[17px] font-medium leading-[1.3] text-black text-left",
-  // Small labels in mono caps (2026-11-25, matching the facts' labels over
-  // the cover: Consolas on Windows, the system mono elsewhere). Since
-  // 2026-11-25 this is the small label *above* a title (a section's
-  // "01 / Initial Planning"), with the title under it in `header`.
-  subheader: "font-mono text-[14px] font-normal uppercase tracking-[-0.6px] leading-[1.45] text-black/60 text-left",
+  // The small label above a title (a section's "01 / Initial Planning"):
+  // the page's own Geist, just smaller and lighter (2026-11-26: one font
+  // across the page, no mono), with the title under it in `header`.
+  subheader: "font-body text-[13px] font-normal leading-[1.45] text-black/50 text-left",
   content: "font-body text-[14px] font-light leading-[1.45] text-black text-left",
   frame: "font-body text-[14px] font-light leading-[1.45] text-black text-left",
   groupHeader: "font-body text-[17px] font-medium leading-[1.3] text-black text-left",
@@ -692,7 +691,7 @@ export function CaseStudyLayout({
             <div className={layoutStyles.heroOverlayFacts} aria-label="Overview">
               {hero.props.meta.map((m) => (
                 <div key={m.label}>
-                  <p className={layoutStyles.heroFactLabel}>{m.label}</p>
+                  <p className={layoutStyles.heroFactLabel}>{m.label.charAt(0) + m.label.slice(1).toLowerCase()}</p>
                   {m.values.map((v) => (
                     <p key={v} className={layoutStyles.heroFactValue}>
                       {v}
