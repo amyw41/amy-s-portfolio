@@ -118,6 +118,10 @@ const PROJECT_SEEDS: ProjectSeed[] = [
     hasVideo: false,
     year: 2026,
     tint: "#e4ecfd", // light Blueprint blue, the cover's own background
+    // The cover with a fine grain over its blue, like Blueprint's own
+    // imagery (2026-11-27). A new file name, so no image cache serves the
+    // old smooth one.
+    cover: "/images/projects/blueprint/cover-grain.webp",
   },
 ];
 
