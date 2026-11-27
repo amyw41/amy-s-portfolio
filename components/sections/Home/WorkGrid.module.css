@@ -217,9 +217,10 @@
 
 .caption {
   display: flex;
-  justify-content: space-between;
   align-items: baseline;
-  gap: 12px;
+  /* Name · year together on the left (2026-11-27: the year used to sit at
+   * the far right, which left the short caption looking stretched). */
+  gap: 6px;
   font-size: 14px;
   line-height: 1.45;
 }

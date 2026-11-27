@@ -334,7 +334,15 @@ export default function WorkGrid({
           </span>
           <span className={styles.caption}>
             <span className={styles.title}>{tile.title}</span>
-            {tile.year !== null && <span className={styles.year}>{tile.year}</span>}
+            {tile.year !== null && (
+              <>
+                {/* Name and year side by side, a dot between (2026-11-27). */}
+                <span className={styles.year} aria-hidden="true">
+                  ·
+                </span>
+                <span className={styles.year}>{tile.year}</span>
+              </>
+            )}
           </span>
         </Link>
       </motion.li>
